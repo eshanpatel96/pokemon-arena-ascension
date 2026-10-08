@@ -18,6 +18,12 @@ cp -a "$staging/data/." "$source_root/data/"
 awk '/^--- a\/src\/realtime_arena.c/{skip=1;next} /^--- a\//{skip=0} !skip' "$staging/changes.patch" > "$staging/other.patch"
 (cd "$source_root" && patch --forward -p1 < "$staging/other.patch")
 python3 bootstrap/patch-realtime.py "$source_root/src/realtime_arena.c"
+# Original Arena release defines this battle script in assembly but omits
+# its C extern. Keep the evolution-learning behavior, not a workaround.
+grep -q '^BattleScript_ArenaEvolutionLearn::' "$source_root/data/battle_scripts_1.s"
+if ! grep -q 'extern const u8 BattleScript_ArenaEvolutionLearn\[\]' "$source_root/src/arena_evolution.inc"; then
+  sed -i '1i extern const u8 BattleScript_ArenaEvolutionLearn[];' "$source_root/src/arena_evolution.inc"
+fi
 
 # The city layout duplicates the native Battle Frontier tiles: no new low-res art.
 mkdir -p "$source_root/data/layouts/AscensionCity"
