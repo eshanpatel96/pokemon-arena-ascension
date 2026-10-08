@@ -1,12 +1,8 @@
 name: Emerald Arena engine bootstrap (experimental)
 
 on:
+  # Diagnostic baseline only; no duplicate expensive build on source updates.
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/engine-bootstrap.yml'
-      - 'bootstrap/**'
 
 permissions:
   contents: read
