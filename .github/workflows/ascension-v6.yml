@@ -1,4 +1,4 @@
-name: Ascension V6.1 native GBA build (experimental)
+name: Ascension V7 expanded city GBA build (experimental)
 
 on:
   workflow_dispatch:
@@ -58,6 +58,11 @@ jobs:
           make -j2 generated
           tools/mapjson/mapjson map emerald data/maps/AscensionCity/map.json data/layouts/layouts.json data/maps/AscensionCity
           tools/mapjson/mapjson map emerald data/maps/AscensionTowerHall/map.json data/layouts/layouts.json data/maps/AscensionTowerHall
+          for map in AscensionCityEast AscensionTower1 AscensionTower2 AscensionTower3 AscensionTower4 AscensionTower5 AscensionTower6 AscensionTower7 AscensionTower8 AscensionSummit; do
+            tools/mapjson/mapjson map emerald "data/maps/$map/map.json" data/layouts/layouts.json "data/maps/$map"
+            test -s "data/maps/$map/events.inc"
+            test -s "data/maps/$map/header.inc"
+          done
           test -f data/maps/AscensionCity/events.inc
           test -f data/maps/AscensionTowerHall/events.inc
 
@@ -109,7 +114,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension-V6.1-UNTESTED-GBA
+          name: Ascension-V7-UNTESTED-GBA
           path: engine/Pokemon-Arena-Ascension.gba
           if-no-files-found: error
 
