@@ -52,17 +52,10 @@ def add_metatile(original,new_palette=None,new_tiles=None):
     secondary_attrs[(new-512)*2:(new-512)*2+2]=attrs(attr_bank,index)
     return new
 
-# Separate the formerly identical generic Frontier houses visually.
-# Existing palette 9 makes the Arena Supply roof warmer; 6 gives the Move
-# Studio a unique violet roof; wall and floor tiles remain unchanged.
-for left,right,palette in ((44,49,9),(52,54,6)):
-    replacements={}
-    for y in range(41,44):
-        for x in range(left,right+1):
-            original=mid(x,y)
-            if original not in replacements:
-                replacements[original]=add_metatile(original,new_palette=palette)
-            set_mid(x,y,replacements[original])
+# V10.1: do NOT recolor only one shade of native roofs. In the phone build
+# that created mismatched pixel-art roof pieces instead of finished houses.
+# Leave original Emerald metatiles and palettes intact and identify these
+# services through functional signs, original architecture and the LAB.
 
 # Place LAB letters in two unused tiles of the WEST *secondary* image, not
 # shared Hoenn General tiles spelling MART. Keep native 8px tile resolution.
