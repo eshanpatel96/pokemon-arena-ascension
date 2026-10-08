@@ -8,6 +8,11 @@ on:
       - '.github/workflows/ascension-v6.yml'
       - 'bootstrap/**'
 
+# Prevent overlapping expensive GBA builds from consuming GitHub Actions minutes.
+concurrency:
+  group: ascension-gba-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
