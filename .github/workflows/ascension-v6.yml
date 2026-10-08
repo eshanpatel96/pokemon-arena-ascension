@@ -8,7 +8,7 @@ on:
       - '.github/workflows/ascension-v6.yml'
       - 'bootstrap/**'
   push:
-    branches: [main]
+    branches: [main, v10-friends-beta]
     paths:
       - '.github/workflows/ascension-v6.yml'
       - 'bootstrap/**'
@@ -71,8 +71,9 @@ jobs:
 
       - name: Validate V9 source and static career invariants
         run: |
-          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/v9-tower-exteriors.py bootstrap/v9-championship.py bootstrap/check-v9-invariants.py
+          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/v9-tower-exteriors.py bootstrap/v9-championship.py bootstrap/v10-boss-approach.py bootstrap/check-v9-invariants.py bootstrap/check-v10-friends.py
           python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
+          python3 bootstrap/check-v10-friends.py "$GITHUB_WORKSPACE/engine" "$GITHUB_WORKSPACE/v10-town-visuals"
 
       - name: Export assembled V9 source and city tiles for development diagnostics
         run: |
@@ -83,6 +84,13 @@ jobs:
         with:
           name: V9-ASSEMBLED-SOURCE-INSPECTION
           path: v9-assembled-source.zip
+          if-no-files-found: error
+
+      - name: Preserve clean V10 city tile previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: V10-NATIVE-CITY-VISUAL-AUDIT
+          path: v10-town-visuals/*.png
           if-no-files-found: error
 
       - name: Install pinned agbcc compiler
