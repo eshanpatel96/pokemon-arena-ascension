@@ -78,6 +78,7 @@ assert len(championship)==len(prizes)==5
 assert all(len(x)==6 for _,x in championship)
 assert all(len(x)==5 for x in prizes)
 assert len({p for row in prizes for p in row})==25
+assert {x[-1] for _,x in championship}=={"ARTICUNO","REGISTEEL","RAIKOU","REGICE","HO_OH"}
 animated={entry["species"] for entry in json.loads((root/"tools/arena/roster.json").read_text())}
 valid_moves=(root/"src/arena_moves.c").read_text()
 for _,members in championship:
@@ -317,6 +318,46 @@ sc=once(sc," msgbox AscensionSummit_Text_Ready, MSGBOX_YESNO",
 sc=once(sc,"The Tower Master awaits!\\nStep into the final arena.",
         "WORLD CHAMPION HO-OH awaits!\\nYour final six-on-six fight.",
         "Champion warning")
+# Introduce the Elite stages and World Champion during the native foyer flow.
+sc=once(sc," msgbox AscensionSummit_Text_ChallengerIntro, MSGBOX_DEFAULT",
+        " call AscensionSummit_EventScript_NamedRound",
+        "five named Elite/Champion round briefings")
+sc+="""
+AscensionSummit_EventScript_NamedRound::
+ compare VAR_ASCENSION_FLOOR, 0
+ goto_if_eq AscensionSummit_EventScript_Arctic
+ compare VAR_ASCENSION_FLOOR, 1
+ goto_if_eq AscensionSummit_EventScript_Iron
+ compare VAR_ASCENSION_FLOOR, 2
+ goto_if_eq AscensionSummit_EventScript_Lightning
+ compare VAR_ASCENSION_FLOOR, 3
+ goto_if_eq AscensionSummit_EventScript_Crystal
+ msgbox AscensionSummit_Text_ChampionIntro, MSGBOX_DEFAULT
+ return
+AscensionSummit_EventScript_Arctic::
+ msgbox AscensionSummit_Text_ArcticIntro, MSGBOX_DEFAULT
+ return
+AscensionSummit_EventScript_Iron::
+ msgbox AscensionSummit_Text_IronIntro, MSGBOX_DEFAULT
+ return
+AscensionSummit_EventScript_Lightning::
+ msgbox AscensionSummit_Text_LightningIntro, MSGBOX_DEFAULT
+ return
+AscensionSummit_EventScript_Crystal::
+ msgbox AscensionSummit_Text_CrystalIntro, MSGBOX_DEFAULT
+ return
+AscensionSummit_Text_ArcticIntro:
+ .string "ELITE I: ARCTIC TEMPEST!\\nARTICUNO enters last.$"
+AscensionSummit_Text_IronIntro:
+ .string "ELITE II: IRON ARCHITECT!\\nREGISTEEL enters last.$"
+AscensionSummit_Text_LightningIntro:
+ .string "ELITE III: LIGHTNING!\\nRAIKOU enters last.$"
+AscensionSummit_Text_CrystalIntro:
+ .string "ELITE IV: CRYSTAL ORACLE!\\nREGICE enters last.$"
+AscensionSummit_Text_ChampionIntro:
+ .string "WORLD CHAMPION FINAL!\\nHO-OH enters last.$"
+"""
+
 summit.write_text(sc)
 
 leader=maps/"AscensionLeader9/scripts.inc"
