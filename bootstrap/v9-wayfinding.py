@@ -33,6 +33,13 @@ place=[
 for area,entries in place:
     p=maps/area/"map.json";d=json.loads(p.read_text())
     sc=maps/area/"scripts.inc";text=sc.read_text()
+    if area=="AscensionCity":
+        # Replace three filler pedestrians with real tower attendants while
+        # respecting the hardware/object-event limit.
+        stale={"AscensionLife_AscensionCity_NPC2",
+               "AscensionLife_AscensionCity_NPC4",
+               "AscensionLife_AscensionCity_NPC6"}
+        d["object_events"]=[o for o in d["object_events"] if o["script"] not in stale]
     used={(o["x"],o["y"]) for o in d["object_events"]}
     for i,(x,y,gfx,line) in enumerate(entries):
         if (x,y) in used:
