@@ -44,9 +44,26 @@ assert [tuple(prizes[i*8:i*8+2]) for i in range(8)] == signature_pairs
 assert "for(i=VarGet(VAR_ASCENSION_STARTER_NEXT_INDEX);" in career
 assert "VarSet(VAR_ASCENSION_STARTER_NEXT_INDEX,i+1);" in career
 assert "#define VAR_ASCENSION_STARTER_NEXT_INDEX" in vars_h
-assert "if(part<2 || part>=6)continue;" in career
-assert "if(part<4 && floor<1)continue;" in career
-assert "if(part>=4 && floor<2)continue;" in career
+assert "if(part<2)continue;" in career
+assert "if(floor < 1+(part-2)/2)continue;" in career
+assert "sBronzeSemiFinalTeams[3][4]" in career
+assert "VarSet(VAR_ASCENSION_FLOOR,0); // loss resets this run" in career
+assert "u8 level=59+rank+floor/2+(isBoss?2:0)" in career
+header=(root/"include/ascension_progress.h").read_text()
+assert "Ascension_FloorCount" in header
+assert "4,5,5,6,6,7,8,9,5" in header
+for rank,total in enumerate([4,5,5,6,6,7,8,9],1):
+    script=(maps/f"AscensionTower{rank}"/"scripts.inc").read_text()
+    assert f"compare VAR_ASCENSION_FLOOR, {total-1}" in script
+    assert f"warp MAP_ASCENSION_CITY" in script, f"tower {rank} missing city defeat return"
+assert "AscensionV9City_EventScript_SupplySign" in (maps/"AscensionCity/scripts.inc").read_text()
+assert "AscensionV9City_EventScript_MoveSign" in (maps/"AscensionCity/scripts.inc").read_text()
+import struct
+city_layout=(root/"data/layouts/AscensionCity/map.bin").read_bytes()
+assert len(city_layout)==56*72*2
+city_metatiles=struct.unpack("<"+str(56*72)+"H",city_layout)
+assert city_metatiles[51*56+52]&1023!=0x42
+assert city_metatiles[51*56+53]&1023!=0x43
 assert "if(penalty>1000)penalty=1000;" in career
 
 def stage(map_label):
@@ -85,5 +102,5 @@ for area in ("AscensionCity", "AscensionCityEast"):
 for script in maps.glob("Ascension*/scripts.inc"):
     assert r"\\n" not in script.read_text(), f"{script}: double-escaped dialogue"
 
-print("V9 STATIC PREFLIGHT PASSED: 187 original animations; 80 starters, 64 uniquely gated tower rewards, 43 deferred, eight contrasting native trial/boss stages, bounded money penalty and unique defeat scripts.")
+print("V9 STATIC PREFLIGHT PASSED: 187 unique animation allocation; 4/5/5/6/6/7/8/9 native trainer floors, career/boss routes, Bronze semifinals, gated species, 1,000 loss cap, real middle-campus metatiles and eight contrasting stage settings.")
 print("NOT VERIFIED HERE: emulator boot, real-time faint/send-out, Bag/switch, hazards on screen, new city architecture, saving/reloading, frame rate or Delta playthrough.")
