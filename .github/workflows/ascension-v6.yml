@@ -54,6 +54,9 @@ jobs:
           grep -q 'ASCENSION POKEMON LAB' engine/data/maps/AscensionCity/scripts.inc
           grep -q 'Ascension_NextChallengerSprite' engine/src/ascension_career.c
           grep -q 'sThemePool\[8\]\[6\]' engine/src/ascension_career.c
+          grep -q 'Ascension_ClaimTowerRewards' engine/src/ascension_career.c
+          grep -q 'Ascension_RegisterStarterRoster' engine/src/ascension_career.c
+          test -s engine/data/maps/AscensionLeader9/map.json
           grep -q 'AscensionItemShop_BattleItems' engine/data/maps/AscensionItemShop/scripts.inc
           grep -q 'MAP_ASCENSION_BRONZE_BOSS' engine/data/maps/AscensionBronzeBoss/map.json
           grep -q 'EventScript_AscensionGuide' engine/data/ascension_guide.inc
@@ -72,7 +75,7 @@ jobs:
           make -j2 generated
           tools/mapjson/mapjson map emerald data/maps/AscensionCity/map.json data/layouts/layouts.json data/maps/AscensionCity
           tools/mapjson/mapjson map emerald data/maps/AscensionTowerHall/map.json data/layouts/layouts.json data/maps/AscensionTowerHall
-          for map in AscensionBronzeBoss AscensionCityEast AscensionTower1 AscensionTower2 AscensionTower3 AscensionTower4 AscensionTower5 AscensionTower6 AscensionTower7 AscensionTower8 AscensionSummit AscensionArenaGate1 AscensionArenaGate2 AscensionArenaGate3 AscensionArenaGate4 AscensionArenaGate5 AscensionArenaGate6 AscensionArenaGate7 AscensionArenaGate8 AscensionArenaGate9 AscensionTeamLab AscensionItemShop AscensionMoveStudio AscensionStyleHouse; do
+          for map in AscensionBronzeBoss AscensionLeader2 AscensionLeader3 AscensionLeader4 AscensionLeader5 AscensionLeader6 AscensionLeader7 AscensionLeader8 AscensionLeader9 AscensionCityEast AscensionTower1 AscensionTower2 AscensionTower3 AscensionTower4 AscensionTower5 AscensionTower6 AscensionTower7 AscensionTower8 AscensionSummit AscensionArenaGate1 AscensionArenaGate2 AscensionArenaGate3 AscensionArenaGate4 AscensionArenaGate5 AscensionArenaGate6 AscensionArenaGate7 AscensionArenaGate8 AscensionArenaGate9 AscensionTeamLab AscensionItemShop AscensionMoveStudio AscensionStyleHouse; do
             tools/mapjson/mapjson map emerald "data/maps/$map/map.json" data/layouts/layouts.json "data/maps/$map"
             test -s "data/maps/$map/events.inc"
             test -s "data/maps/$map/header.inc"
