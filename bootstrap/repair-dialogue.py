@@ -14,18 +14,18 @@ hall = root / "data/maps/AscensionTowerHall/scripts.inc"
 for file in (city, hall):
     src = file.read_text()
     src, count = re.subn(
-        r"(?m)^([A-Za-z_][A-Za-z0-9_]*):[ \t]+(\\.string[ \t]+)",
-        r"\\1:\\n\\t\\2", src
+        r"(?m)^([A-Za-z_][A-Za-z0-9_]*):[ \t]+(\.string[ \t]+)",
+        r"\1:\n\t\2", src
     )
     if count < 8:
         raise SystemExit(f"{file}: expected at least 8 malformed strings, found {count}")
-    if re.search(r"(?m)^[A-Za-z_][A-Za-z0-9_]*:[ \t]+\\.string", src):
+    if re.search(r"(?m)^[A-Za-z_][A-Za-z0-9_]*:[ \t]+\.string", src):
         raise SystemExit(f"{file}: unconverted string found")
     file.write_text(src)
     print(f"{file.name}: repaired {count} text labels")
 
 src = city.read_text()
-trigger = " map_script MAP_SCRIPT_ON_FRAME_TABLE, AscensionCity_OnFrame\\n"
+trigger = " map_script MAP_SCRIPT_ON_FRAME_TABLE, AscensionCity_OnFrame\n"
 if src.count(trigger) != 1:
     raise SystemExit("Unexpected city auto-dialogue trigger")
 src = src.replace(trigger, "")
