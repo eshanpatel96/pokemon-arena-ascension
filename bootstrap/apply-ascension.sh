@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source_root="${1:?Usage: bash bootstrap/apply-ascension.sh SOURCE_ROOT STAGING_ROOT}"
+staging="${2:?Usage: bash bootstrap/apply-ascension.sh SOURCE_ROOT STAGING_ROOT}"
+mkdir -p "$staging"
+
+# Reconstruct and verify Ascension source changes before touching the GBA engine.
+cat bootstrap/overlay.part{1,2,3}.b64 | base64 -d > "$staging/ascension-v6.1-overlay.tar.xz"
+printf '%s  %s\n' '585218a612582eab442b99a1d22dd839378649aa5fc6708a59377d617bc39983' "$staging/ascension-v6.1-overlay.tar.xz" | sha256sum -c -
+tar -xJf "$staging/ascension-v6.1-overlay.tar.xz" -C "$staging"
+
+cp -a "$staging/include/." "$source_root/include/"
+cp -a "$staging/src/." "$source_root/src/"
+cp -a "$staging/data/." "$source_root/data/"
+(cd "$source_root" && patch --forward -p1 < "$staging/changes.patch")
+
+# The city layout duplicates the native Battle Frontier tiles: no new low-res art.
+mkdir -p "$source_root/data/layouts/AscensionCity"
+cp "$source_root/data/layouts/BattleFrontier_OutsideWest/map.bin" "$source_root/data/layouts/AscensionCity/map.bin"
+cp "$source_root/data/layouts/BattleFrontier_OutsideWest/border.bin" "$source_root/data/layouts/AscensionCity/border.bin"
+
+echo 'Ascension V6.1 original-engine source changes applied.'
