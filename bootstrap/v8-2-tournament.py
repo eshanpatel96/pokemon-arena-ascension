@@ -121,7 +121,7 @@ for t in range(9):
  special HealPlayerParty
 {name}_EventScript_BossWarp::
  msgbox {name}_Text_BossEntry, MSGBOX_DEFAULT
- warp MAP_ASCENSION_BRONZE_BOSS, 0, 11, 9
+ warp MAP_ASCENSION_BRONZE_BOSS, 11, 9
  waitstate
  end
 """
@@ -221,7 +221,7 @@ boss_script=f"""{boss_name}_MapScripts::
 {boss_name}_EventScript_Lost::
  msgbox {boss_name}_Text_Lost, MSGBOX_DEFAULT
 {boss_name}_EventScript_Leave::
- warp MAP_ASCENSION_TOWER_1, 0, 5, 6
+ warp MAP_ASCENSION_TOWER_1, 5, 6
  waitstate
  end
 {boss_name}_EventScript_Leader::
