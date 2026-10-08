@@ -153,6 +153,21 @@ assert "special Ascension_RecordDefeat" in (maps/"AscensionLeader9/scripts.inc")
 assert "sChampionRewardMoves[i/5][i%5]" in career
 assert "case MAP_ASCENSION_SUMMIT:" in biomes and "case 3:gArenaStage=14;" in biomes
 
+# Championship species use separate permanent flags and native party battles.
+assert "static const struct AscensionThemedMon sChampionTeams[5][6]" in career
+assert "static const u16 sChampionRewards[5][5]" in career
+assert "Ascension_ClaimChampionRewards(void)" in career
+assert "VAR_ASCENSION_CHAMPION_WINS" in vars_h
+flag_src=(root/"include/constants/flags.h").read_text()
+assert "#define FLAG_ASCENSION_CHAMP_PRIZES_FIRST" in flag_src
+assert "#define FLAG_ASCENSION_CHAMP_PRIZE_LAST" in flag_src
+for ace in ("ARTICUNO","REGISTEEL","RAIKOU","REGICE","HO_OH"):
+    assert "SPECIES_"+ace in career
+assert "AscensionTeamLab_EventScript_ChampionClaim" in (maps/"AscensionTeamLab/scripts.inc").read_text()
+assert "AscensionSummit_EventScript_Elite2Heal" in (maps/"AscensionSummit/scripts.inc").read_text()
+assert "AscensionSummit_EventScript_NamedRound" in (maps/"AscensionSummit/scripts.inc").read_text()
+assert "AscensionLeader9_EventScript_Eliminated" in (maps/"AscensionLeader9/scripts.inc").read_text()
+
 for script in maps.glob("Ascension*/scripts.inc"):
     assert r"\\n" not in script.read_text(), f"{script}: double-escaped dialogue"
 
