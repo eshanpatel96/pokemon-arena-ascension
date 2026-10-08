@@ -1,4 +1,4 @@
-name: Ascension V7 expanded city GBA build (experimental)
+name: Ascension V8 city and guide integration (experimental)
 
 on:
   workflow_dispatch:
@@ -49,6 +49,9 @@ jobs:
           grep -q '"AscensionCity"' engine/data/maps/map_groups.json
           grep -q 'Ascension_PrepareTutorial' engine/src/ascension_career.c
           grep -q 'WarpIntoMap' engine/src/realtime_arena.c
+          grep -q 'MENU_ACTION_ARENA_GUIDE' engine/src/start_menu.c
+          grep -q 'EventScript_AscensionGuide' engine/data/ascension_guide.inc
+          grep -q 'MAP_ASCENSION_ARENA_GATE_1' engine/data/maps/AscensionArenaGate1/map.json
 
       - name: Install pinned agbcc compiler
         run: |
@@ -63,7 +66,7 @@ jobs:
           make -j2 generated
           tools/mapjson/mapjson map emerald data/maps/AscensionCity/map.json data/layouts/layouts.json data/maps/AscensionCity
           tools/mapjson/mapjson map emerald data/maps/AscensionTowerHall/map.json data/layouts/layouts.json data/maps/AscensionTowerHall
-          for map in AscensionCityEast AscensionTower1 AscensionTower2 AscensionTower3 AscensionTower4 AscensionTower5 AscensionTower6 AscensionTower7 AscensionTower8 AscensionSummit; do
+          for map in AscensionCityEast AscensionTower1 AscensionTower2 AscensionTower3 AscensionTower4 AscensionTower5 AscensionTower6 AscensionTower7 AscensionTower8 AscensionSummit AscensionArenaGate1 AscensionArenaGate2 AscensionArenaGate3 AscensionArenaGate4 AscensionArenaGate5 AscensionArenaGate6 AscensionArenaGate7 AscensionArenaGate8 AscensionArenaGate9 AscensionTeamLab AscensionItemShop AscensionMoveStudio AscensionStyleHouse; do
             tools/mapjson/mapjson map emerald "data/maps/$map/map.json" data/layouts/layouts.json "data/maps/$map"
             test -s "data/maps/$map/events.inc"
             test -s "data/maps/$map/header.inc"
@@ -119,7 +122,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension-V7-UNTESTED-GBA
+          name: Ascension-V8-WORLD-PREVIEW-UNTESTED-GBA
           path: engine/Pokemon-Arena-Ascension.gba
           if-no-files-found: error
 
