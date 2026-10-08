@@ -192,6 +192,15 @@ assert len(w["warp_events"])==8
 # Original West Mart's building now houses the Lab; more clearly a hub.
 w["warp_events"][3]["dest_map"]="MAP_ASCENSION_ITEM_SHOP"
 w["warp_events"][4]["dest_map"]="MAP_ASCENSION_TEAM_LAB"
+# Item Shop formerly returned to old Mart slot 4; after swapping buildings its
+# actual return must be slot 3 in the city map.
+shop_path=maps/"AscensionItemShop/map.json"
+shop=load(shop_path)
+for doorway in shop["warp_events"]:
+    doorway["dest_map"]="MAP_ASCENSION_CITY"
+    doorway["dest_warp_id"]="3"
+store(shop_path,shop)
+
 # The original shop's two physical sign tiles are a single facility.
 w["bg_events"]=[
     dict(type="sign",x=x,y=y,elevation=0,
