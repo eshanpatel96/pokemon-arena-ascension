@@ -1,4 +1,4 @@
-name: Ascension V8.1 one-door tower and Lab fix (experimental)
+name: Ascension V8.2 tournament, champion chamber and city life (experimental)
 
 on:
   workflow_dispatch:
@@ -52,6 +52,8 @@ jobs:
           grep -q 'MENU_ACTION_ARENA_GUIDE' engine/src/start_menu.c
           grep -q 'LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_BATTLE_ROOM' engine/data/maps/AscensionTower1/map.json
           grep -q 'ASCENSION POKEMON LAB' engine/data/maps/AscensionCity/scripts.inc
+          grep -q 'Ascension_NextChallengerSprite' engine/src/ascension_career.c
+          grep -q 'MAP_ASCENSION_BRONZE_BOSS' engine/data/maps/AscensionBronzeBoss/map.json
           grep -q 'EventScript_AscensionGuide' engine/data/ascension_guide.inc
           grep -q 'MAP_ASCENSION_ARENA_GATE_1' engine/data/maps/AscensionArenaGate1/map.json
 
@@ -68,7 +70,7 @@ jobs:
           make -j2 generated
           tools/mapjson/mapjson map emerald data/maps/AscensionCity/map.json data/layouts/layouts.json data/maps/AscensionCity
           tools/mapjson/mapjson map emerald data/maps/AscensionTowerHall/map.json data/layouts/layouts.json data/maps/AscensionTowerHall
-          for map in AscensionCityEast AscensionTower1 AscensionTower2 AscensionTower3 AscensionTower4 AscensionTower5 AscensionTower6 AscensionTower7 AscensionTower8 AscensionSummit AscensionArenaGate1 AscensionArenaGate2 AscensionArenaGate3 AscensionArenaGate4 AscensionArenaGate5 AscensionArenaGate6 AscensionArenaGate7 AscensionArenaGate8 AscensionArenaGate9 AscensionTeamLab AscensionItemShop AscensionMoveStudio AscensionStyleHouse; do
+          for map in AscensionBronzeBoss AscensionCityEast AscensionTower1 AscensionTower2 AscensionTower3 AscensionTower4 AscensionTower5 AscensionTower6 AscensionTower7 AscensionTower8 AscensionSummit AscensionArenaGate1 AscensionArenaGate2 AscensionArenaGate3 AscensionArenaGate4 AscensionArenaGate5 AscensionArenaGate6 AscensionArenaGate7 AscensionArenaGate8 AscensionArenaGate9 AscensionTeamLab AscensionItemShop AscensionMoveStudio AscensionStyleHouse; do
             tools/mapjson/mapjson map emerald "data/maps/$map/map.json" data/layouts/layouts.json "data/maps/$map"
             test -s "data/maps/$map/events.inc"
             test -s "data/maps/$map/header.inc"
@@ -124,7 +126,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension-V8.1-ONE-DOOR-UNTESTED-GBA
+          name: Ascension-V8.2-TOURNAMENT-UNTESTED-GBA
           path: engine/Pokemon-Arena-Ascension.gba
           if-no-files-found: error
 
