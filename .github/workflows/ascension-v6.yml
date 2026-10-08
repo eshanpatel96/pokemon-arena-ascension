@@ -65,6 +65,19 @@ jobs:
         working-directory: engine
         run: |
           # Upstream macOS packer links libpng but omits libm on Linux.\n          sed -i 's/-lpng -o /-lpng -lm -o /g' tools/arena/dev.sh\n          ./tools/arena/dev.sh assets
+          test -s .arena-dev/art/actions.4bpp
+          test -s .arena-dev/art/props.4bpp
+
+      - name: Preserve original generated arena art (avoid mistaken PNG reconversion)
+        working-directory: engine
+        run: |
+          cat >> Makefile <<'MAKEFILE_EOF'
+
+          # Files created by arena packers have no equivalent source PNG.
+          # Upstream implicit %.4bpp: %.png incorrectly rebuilds them on Linux.
+          PREPACKED_ARENA_ASSETS := $(wildcard .arena-dev/art/*.4bpp .arena-dev/art/*.8bpp .arena-dev/art/*.gbapal .arena-dev/art/*.bin graphics/arena/oswarlin/*.8bpp graphics/arena/storm/*.8bpp graphics/arena/storm/*.gbapal)
+          $(PREPACKED_ARENA_ASSETS): ; @test -s "$@"
+          MAKEFILE_EOF
 
       - name: Compile Ascension from real Emerald Arena engine
         working-directory: engine
