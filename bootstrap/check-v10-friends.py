@@ -13,6 +13,23 @@ from PIL import Image
 root=Path(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True)
 layouts={x["id"]:x for x in json.loads((root/"data/layouts/layouts.json").read_text())["layouts"]}
 maps=root/"data/maps"
+# Masters circuit is an actual additional playable campaign segment; all
+# first-clear rewards are native flags and have independent save progression.
+career=(root/"src/ascension_career.c").read_text()
+vars_h=(root/"include/constants/vars.h").read_text()
+flags_h=(root/"include/constants/flags.h").read_text()
+assert "sMastersTrainerTeams[8][6]" in career
+assert "sMastersRewards[18]" in career
+assert "Ascension_ClaimMastersRewards(void)" in career
+assert "VAR_ASCENSION_MASTERS_STAGE" in vars_h
+assert "VAR_ASCENSION_MASTERS_BEST" in vars_h
+assert "FLAG_ASCENSION_MASTERS_PRIZE_FIRST" in flags_h
+summit=(maps/"AscensionSummit/scripts.inc").read_text()
+assert "AscensionSummit_EventScript_MastersOffer" in summit
+assert "AscensionSummit_EventScript_MastersNext" in summit
+assert "AscensionSummit_EventScript_MastersHeal" in summit
+assert summit.count("special Ascension_RecordMastersDefeat")==1
+assert "special Ascension_ClaimMastersRewards" in (maps/"AscensionTeamLab/scripts.inc").read_text()
 for i in range(1,10):
     label="AscensionBronzeBoss" if i==1 else f"AscensionLeader{i}"
     doc=json.loads((maps/label/"map.json").read_text())
