@@ -71,6 +71,30 @@ for i in range(1,10):
     assert b.count("special Ascension_RecordDefeat")==1
     print(f"{label}: A-trigger leader, walkable entry {entry}, reachable boss {boss}, visible exit {helper}")
 
+# V10.1 requires authentic opposite-sideline staging and functional choices.
+for tier in range(1,9):
+    name=f"AscensionTower{tier}"
+    content=(maps/name/"scripts.inc").read_text()
+    for move in ("Move_MasterAside","Move_MasterReturn","Move_PlayerAdvance",
+                 "Move_PlayerRetreat","Move_ChallengerEnter","Move_ChallengerExit",
+                 "Move_MasterFacing","Move_MasterBackToSide"):
+        assert name+"_"+move+":" in content,(name,move)
+    assert " walk_right\\n walk_right\\n face_left\\n step_end".replace("\\n","\n") in content
+    assert " walk_left\\n walk_left\\n walk_up\\n face_right\\n step_end".replace("\\n","\n") in content
+for label in ("Ascension_TrainChosenStat","Ascension_TrainChosenArenaMove"):
+    assert f"void {label}(void)" in career,label
+west=(maps/"AscensionCity/scripts.inc").read_text()
+studio=(maps/"AscensionMoveStudio/scripts.inc").read_text()
+for key in ("AscensionV101_Text_HP","AscensionV101_Text_Attack",
+            "AscensionV101_Text_Defense","AscensionV101_Text_Speed",
+            "AscensionV101_Text_SpAtk","AscensionV101_Text_SpDef"):
+    assert key in west,key
+for key in ("AscensionV101_Move_Text_Restore","AscensionV101_Move_Text_Guard",
+            "AscensionV101_Move_Text_Evade","AscensionV101_Move_Text_Ranged"):
+    assert key in studio,key
+boss_bronze=json.loads((maps/"AscensionBronzeBoss/map.json").read_text())
+assert boss_bronze["object_events"][1]["graphics_id"]=="OBJ_EVENT_GFX_HIKER"
+
 for area,side,w,h in (("AscensionCity","west",56,72),("AscensionCityEast","east",72,72)):
     city=json.loads((maps/area/"map.json").read_text())
     tile_root=root/"data/tilesets"
