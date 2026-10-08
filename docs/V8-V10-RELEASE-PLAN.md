@@ -1,5 +1,8 @@
 # Pokémon Arena: Ascension — V8–V10 Release Plan
 
+> **Latest V9 agreement (supersedes older V9 healing, roster and economy targets):** [V9 Locked Scope](V9-LOCKED-SCOPE.md). This earlier document remains historical context. All 187 native animated Pokémon, loss-related Arena Credits, functional combat item shop, full-heal checkpoint rules for Towers 5–8, thematic city and boss scenes, and varied real-time AI are defined there.
+
+
 > **V9 scope is now locked in the newer [V9 City, Combat and Economy Specification](V9-FINAL-SCOPE-CITY-COMBAT-ECONOMY.md).** It supersedes older 60-species, city-service, item, arena-art and healing assumptions in this earlier roadmap. The 187-species assignment is in [ALL-187-CAREER-ROSTER.md](ALL-187-CAREER-ROSTER.md). This is planning only; implementation and Delta verification remain outstanding.
 
 **Product target:** By V10, a near-complete, original-Emerald-Arena-based GBA game playable in Delta on iPhone. Eight distinct towers, a five-fight Champion Summit, a functional city, roster and trainer customization, lasting progression, and repeatable endgame. **No replacement arcade combat engine.**
