@@ -1,5 +1,7 @@
 # Pokémon Arena: Ascension — V8–V10 Release Plan
 
+> **V9 scope is now locked in the newer [V9 City, Combat and Economy Specification](V9-FINAL-SCOPE-CITY-COMBAT-ECONOMY.md).** It supersedes older 60-species, city-service, item, arena-art and healing assumptions in this earlier roadmap. The 187-species assignment is in [ALL-187-CAREER-ROSTER.md](ALL-187-CAREER-ROSTER.md). This is planning only; implementation and Delta verification remain outstanding.
+
 **Product target:** By V10, a near-complete, original-Emerald-Arena-based GBA game playable in Delta on iPhone. Eight distinct towers, a five-fight Champion Summit, a functional city, roster and trainer customization, lasting progression, and repeatable endgame. **No replacement arcade combat engine.**
 
 **Baseline:** V7 compiled on GitHub Actions (run `37792959292`), but the expanded world requires a full Delta playthrough test. The source creates two connected districts, distinct tower lobbies and return destinations, rank gates, and rotating dojo trainers. **It does not yet contain themed trial/boss battlefields or the full career.**
