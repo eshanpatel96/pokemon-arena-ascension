@@ -1,4 +1,7 @@
 # Pokémon Arena: Ascension — Career & World Development Plan
+
+**Next three numbered releases:** [V8–V10 implementation and acceptance plan](V8-V10-RELEASE-PLAN.md). This is the authoritative milestone plan for the near-complete V10 game.
+
 **Status:** V7 is source-integrated; its native GBA/Delta build and live playthrough still require verification.
 
 ## Non-negotiables
