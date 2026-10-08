@@ -131,6 +131,28 @@ for area,w,h,start in (("AscensionCity",56,72,(40,45)),
     for warp in json.loads((maps/area/"map.json").read_text())["warp_events"]:
         assert (warp["x"],warp["y"]+1) in seen, (area,warp["dest_map"],"unreachable")
 
+
+# Five-round Championship release gate: four Elite teams + Ho-Oh last.
+champ_section=section(career,"sChampionTeams[5][6]","sChampionRewards[5][5]")
+champ_rewards=section(career,"sChampionRewards[5][5]","sChampionRewardMoves[5][5]")
+champ_names=re.findall(r"SPECIES_([A-Z0-9_]+)",champ_section)
+champ_prizes=re.findall(r"SPECIES_([A-Z0-9_]+)",champ_rewards)
+assert len(champ_names)==30,("Champion team positions",len(champ_names))
+assert len(champ_prizes)==len(set(champ_prizes))==25
+assert not(set(champ_prizes)&set(starters)) and not(set(champ_prizes)&set(prizes))
+assert [champ_names[i*6+5] for i in range(5)]==[
+    "ARTICUNO","REGISTEEL","RAIKOU","REGICE","HO_OH"]
+assert "FLAG_ASCENSION_CHAMP_PRIZES_FIRST" in career
+assert "FLAG_ASCENSION_CHAMP_PRIZE_LAST" in career
+assert "VAR_ASCENSION_CHAMPION_WINS" in vars_h
+assert "Ascension_ClaimChampionRewards" in career
+assert "special Ascension_ClaimChampionRewards" in (maps/"AscensionTeamLab/scripts.inc").read_text()
+assert "AscensionSummit_EventScript_Elite2Heal::" in (maps/"AscensionSummit/scripts.inc").read_text()
+assert "WORLD CHAMPION HO-OH" in (maps/"AscensionSummit/scripts.inc").read_text()
+assert "special Ascension_RecordDefeat" in (maps/"AscensionLeader9/scripts.inc").read_text()
+assert "sChampionRewardMoves[i/5][i%5]" in career
+assert "case MAP_ASCENSION_SUMMIT:" in biomes and "case 3:gArenaStage=14;" in biomes
+
 for script in maps.glob("Ascension*/scripts.inc"):
     assert r"\\n" not in script.read_text(), f"{script}: double-escaped dialogue"
 
