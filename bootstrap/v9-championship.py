@@ -265,6 +265,10 @@ AscensionTeamLab_EventScript_ChampionClaim::
  goto_if_eq VAR_RESULT, 0, AscensionTeamLab_EventScript_NoChampionRewards
  msgbox AscensionTeamLab_Text_ChampionPrizes, MSGBOX_DEFAULT
 AscensionTeamLab_EventScript_NoChampionRewards::""",1)
+lab_script=once(lab_script,
+    "goto_if_eq VAR_RESULT, 0, AscensionTeamLab_EventScript_NoNewRewards",
+    "goto_if_eq VAR_RESULT, 0, AscensionTeamLab_EventScript_ChampionClaim",
+    "Champion rewards still offered if no ordinary tower rewards pending")
 lab_script+="\nAscensionTeamLab_Text_ChampionPrizes:\n\t.string \"ELITE rewards added to BOXES!\\nYour licenses are permanent.$\"\n"
 lab.write_text(lab_script)
 
