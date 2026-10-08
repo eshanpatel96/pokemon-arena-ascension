@@ -120,11 +120,11 @@ static const struct AscensionThemedMon sThemePool[8][3] =
         {SPECIES_ALTARIA,   {MOVE_DRAGON_BREATH, MOVE_PECK, MOVE_GUST, MOVE_PROTECT}},
         {SPECIES_LUGIA,    {MOVE_AEROBLAST, MOVE_GUST, MOVE_SWIFT, MOVE_PROTECT}},
     },
-    // Verdant: grass, cover, healing and a mystical Mew ace
+    // Verdant: grass, cover, and woodland water guardian Suicune ace
     {
         {SPECIES_SCEPTILE, {MOVE_LEAF_BLADE, MOVE_QUICK_ATTACK, MOVE_MEGA_DRAIN, MOVE_PROTECT}},
         {SPECIES_VENUSAUR, {MOVE_GIGA_DRAIN, MOVE_TACKLE, MOVE_SOLAR_BEAM, MOVE_PROTECT}},
-        {SPECIES_MEW,      {MOVE_GIGA_DRAIN, MOVE_SOLAR_BEAM, MOVE_PSYCHIC, MOVE_PROTECT}},
+        {SPECIES_SUICUNE,  {MOVE_AURORA_BEAM, MOVE_GUST, MOVE_RAIN_DANCE, MOVE_PROTECT}},
     },
     // Phantom: Ghost moves and strong mind-game Mewtwo ace
     {
