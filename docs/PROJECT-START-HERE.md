@@ -1,7 +1,7 @@
 # Pokémon Arena: Ascension — Living Project Checkpoint
 
 **Project opened:** 2026-10-08. **The user approved full V9.**
-This document is the repository-side durable continuation record for the ChatGPT Project named **Pokémon Arena Ascension**. Keep the separately uploaded V9 continuation handoff as well.
+This document is the repository-side durable continuation record for the existing ChatGPT Project context **Pokemon Ascension Arena**. Keep the separately uploaded V9 continuation handoff as well.
 
 ## Canonical source and build state
 
@@ -45,6 +45,7 @@ This document is the repository-side durable continuation record for the ChatGPT
 ## New development branch work
 
 - bootstrap/v9-release-safety.py: save-safe partial registration, reward gating, updated economy, matching leader identities, differentiated native trial/boss stages and two native storm-enabled finals, clear reward/next-venue dialogue.
+- bootstrap/v9-city-services.py: native Name Rater in Style House and known-profile four-move restoration in Move Studio; not the planned custom loadout editor, nature/EV service or wardrobe.
 - bootstrap/check-v9-invariants.py: static gate for unique 80+64 recruitment, progression safety, contrasting battle stages, local NPC count and exactly one per-battle loss penalty.
 - bootstrap/apply-ascension.sh: apply new pass after the alpha scripts.
 - Planned CI: static preflight, GBA compile, explicitly labeled V9 DEVELOPMENT ROM, updated memory stats.
@@ -67,6 +68,6 @@ Continue Pokémon Arena Ascension V9 from GitHub branch **v9-full-build**, this 
 
 ## Moving the conversations
 
-In the ChatGPT app, create a Project named **Pokémon Arena Ascension**, move this chat and the older **Create Delta Compatible Zip** chat into it (chat menu → Move to project where supported), and attach the uploaded handoff as a Project source. The GitHub repo stays the reproducible editable source. Chats and a ROM alone cannot replace source or build recipes.
+This conversation is already in a workspace identified as **Pokemon Ascension Arena**. Keep using that Project rather than creating a duplicate. Move the older **Create Delta Compatible Zip** chat into it (chat menu → Move to project where supported), and attach the uploaded handoff and updated checkpoint as Project sources. The GitHub repo stays the reproducible editable source. Chats and a ROM alone cannot replace source or build recipes.
 
 Update this document at every meaningful milestone with commit SHA, CI run/artifact, raw ROM SHA, link memory, verified playtest steps and open blockers.
