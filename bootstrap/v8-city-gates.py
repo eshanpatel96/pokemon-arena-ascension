@@ -40,7 +40,7 @@ def add_map(name,original,building_door):
        "AscensionStyleHouse":"MAP_ASCENSION_STYLE_HOUSE"}[name]
     d["name"]=name
     d["warp_events"]=[warp(w["x"],w["y"],"MAP_ASCENSION_CITY",building_door)
-                       for w in d["warp_events"] if w["dest_map"]=="MAP_BATTLE_FRONTIER_OUTSIDE_WEST"]
+                       for w in d["warp_events"] if w["dest_map"] in ("MAP_BATTLE_FRONTIER_OUTSIDE_WEST","MAP_BATTLE_FRONTIER_OUTSIDE_EAST")]
     if not d["warp_events"]: raise ValueError(name+" no usable return doors")
     d["coord_events"]=[]
     d["bg_events"]=[]
