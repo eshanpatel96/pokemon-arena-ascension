@@ -162,7 +162,7 @@ s=s.replace(needle,"""    if(profile==NULL)
 # Match the visible challenger graphic, sideline photo and actual name.
 needle="    u16 slot = floor+1==Ascension_FloorCount(rank) ? rank%ARRAY_COUNT(gfx) : next;"
 assert s.count(needle)==1
-s=s.replace(needle,"""    if(rank==ASCENSION_SUMMIT_INDEX)
+s=s.replace(needle,needle+"\n"+"""    if(rank==ASCENSION_SUMMIT_INDEX)
     {
         static const u16 eliteTrainers[5]={
             TRAINER_WINONA_1,TRAINER_STEVEN,TRAINER_WATTSON_1,
@@ -178,7 +178,7 @@ s=s.replace(needle,"""    if(rank==ASCENSION_SUMMIT_INDEX)
         gTrainerBattleOpponent_A=eliteTrainers[round];
         return;
     }
-"""+needle,1)
+""",1)
 
 # IMPORTANT: this block comes before generic tier lookup and before the old
 # Summit sThemePool path, so every Elite and World Champion uses six members.
