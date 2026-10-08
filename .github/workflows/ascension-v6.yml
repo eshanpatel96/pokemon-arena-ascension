@@ -1,0 +1,98 @@
+name: Ascension V6.1 native GBA build (experimental)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ascension-v6.yml'
+      - 'bootstrap/**'
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out Ascension project
+        uses: actions/checkout@v4
+
+      - name: Install C, GBA, asset and map dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git patch xz-utils gcc-arm-none-eabi binutils-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl
+
+      - name: Fetch exact Emerald + original Arena source
+        run: |
+          git clone https://github.com/pret/pokeemerald.git engine
+          git -C engine checkout --detach 5eff78649e7170a877b961ef0b3da13b81a16038
+          git clone https://github.com/GBurgardt/pokemon-emerald-arena.git arena-upstream
+          git -C arena-upstream checkout --detach e1502f9f7ed46d969880d73adbf5ab23ef7b2a56
+          git -C engine apply ../arena-upstream/game/native-engine.patch
+          cp -a arena-upstream/game/overlay/. engine/
+          test -s engine/src/realtime_arena.c
+          echo 'Original Emerald Arena native engine restored.'
+
+      - name: Apply Ascension V6.1 city, tutorial and tower source
+        run: |
+          bash bootstrap/apply-ascension.sh "$GITHUB_WORKSPACE/engine" "$RUNNER_TEMP/ascension"
+          grep -q 'MAP_ASCENSION_CITY' engine/data/maps/map_groups.json
+          grep -q 'Ascension_PrepareTutorial' engine/src/ascension_career.c
+          grep -q 'WarpIntoMap' engine/src/realtime_arena.c
+
+      - name: Install pinned agbcc compiler
+        run: |
+          git clone https://github.com/pret/agbcc.git agbcc
+          git -C agbcc checkout --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          (cd agbcc && ./build.sh && ./install.sh "$GITHUB_WORKSPACE/engine")
+
+      - name: Generate native maps and engine helpers
+        working-directory: engine
+        run: |
+          make -j2 -f make_tools.mk
+          make -j2 generated
+          test -f data/maps/AscensionCity/events.inc
+          test -f data/maps/AscensionTowerHall/events.inc
+
+      - name: Restore original animated Pokémon and arena art
+        working-directory: engine
+        run: |
+          ./tools/arena/dev.sh assets
+
+      - name: Compile Ascension from real Emerald Arena engine
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Arena-Ascension 2>&1 | tee ../ascension-build.log
+          test -s Pokemon-Arena-Ascension.gba
+          python3 - <<'PY'
+          from pathlib import Path
+          rom = Path("Pokemon-Arena-Ascension.gba").read_bytes()
+          assert len(rom) >= 16*1024*1024, "ROM unexpectedly small"
+          assert rom[0xAC:0xB0] == b"BPEE", "Invalid Emerald game code"
+          print("GBA header and ROM size valid:", len(rom))
+          PY
+
+      - name: Keep compiler log even if build fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ascension-v6-compiler-log
+          path: ascension-build.log
+          if-no-files-found: ignore
+
+      - name: Publish private DELTA TEST ROM (not gameplay-verified)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ascension-V6.1-UNTESTED-GBA
+          path: engine/Pokemon-Arena-Ascension.gba
+          if-no-files-found: error
+
+# A successful compiler run does NOT establish a completed tower/city playthrough.
+# Live mGBA/Delta checks required before a player release.
