@@ -55,5 +55,6 @@ python3 bootstrap/v9-city-architecture.py "$source_root"
 python3 bootstrap/v9-tower-exteriors.py "$source_root"
 python3 bootstrap/v9-championship.py "$source_root"
 python3 bootstrap/v10-boss-approach.py "$source_root"
+python3 bootstrap/v10-masters-circuit.py "$source_root"
 
 echo 'Ascension V6.2 original-engine source and encoded dialogue applied.'
