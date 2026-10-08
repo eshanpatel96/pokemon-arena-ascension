@@ -32,6 +32,7 @@ cp "$source_root/data/layouts/BattleFrontier_OutsideWest/border.bin" "$source_ro
 
 python3 bootstrap/repair-dialogue.py "$source_root"
 python3 bootstrap/expand-world.py "$source_root"
+python3 bootstrap/v8-city-gates.py "$source_root"
 python3 bootstrap/v8-guide.py "$source_root"
 
 echo 'Ascension V6.2 original-engine source and encoded dialogue applied.'
