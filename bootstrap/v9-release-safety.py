@@ -35,9 +35,22 @@ def change_line(path, label, message):
 # a NATIVE SAVED VAR. A full PC after some grants can no longer duplicate the
 # first successfully handed-out Pokémon on retry. 0..80 is the next index.
 vars_file = root / "include/constants/vars.h"
-update(vars_file, "#define VAR_UNUSED_0x40FC",
-       "#define VAR_ASCENSION_STARTER_NEXT_INDEX               0x40FC // next PC grant\n//#define VAR_UNUSED_0x40FC",
-       "persistent partial starter catalog index")
+saved_var_h = vars_file.read_text()
+# The original overlay already occupies some of Emerald's tail-end save
+# variables. Never assume the last one (0x40FC) remained available: choose an
+# ACTUALLY UNUSED reserved native variable from the current, fully patched
+# engine. Start from 0x40F7 to avoid historical Ascension rank/floor flags.
+for candidate in range(0x40F7, 0x40FD):
+    unused = f"#define VAR_UNUSED_0x{candidate:04X}"
+    if saved_var_h.count(unused) == 1:
+        saved_var_h = saved_var_h.replace(
+            unused,
+            f"#define VAR_ASCENSION_STARTER_NEXT_INDEX               0x{candidate:04X} // next PC grant\\n//{unused}",
+            1)
+        vars_file.write_text(saved_var_h)
+        break
+else:
+    raise RuntimeError("No unallocated native save var for starter progress")
 
 career = root / "src/ascension_career.c"
 s = career.read_text()
