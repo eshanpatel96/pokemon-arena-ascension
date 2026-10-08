@@ -1,7 +1,12 @@
-name: Ascension V9 career, trainers, battle economy (experimental)
+name: Ascension V9 development - static checks and GBA compilation
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ascension-v6.yml'
+      - 'bootstrap/**'
   push:
     branches: [main]
     paths:
@@ -30,7 +35,7 @@ jobs:
       - name: Install C, GBA, asset and map dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git patch xz-utils gcc-arm-none-eabi binutils-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl
+          sudo apt-get install -y --no-install-recommends build-essential git patch xz-utils gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl
 
       - name: Fetch exact Emerald + original Arena source
         run: |
@@ -56,11 +61,29 @@ jobs:
           grep -q 'sThemePool\[8\]\[6\]' engine/src/ascension_career.c
           grep -q 'Ascension_ClaimTowerRewards' engine/src/ascension_career.c
           grep -q 'Ascension_RegisterStarterRoster' engine/src/ascension_career.c
+          grep -q 'Ascension_ResetArenaMoves' engine/src/ascension_career.c
+          grep -q 'special ChoosePartyMon' engine/data/maps/AscensionStyleHouse/scripts.inc
           test -s engine/data/maps/AscensionLeader9/map.json
           grep -q 'AscensionItemShop_BattleItems' engine/data/maps/AscensionItemShop/scripts.inc
           grep -q 'MAP_ASCENSION_BRONZE_BOSS' engine/data/maps/AscensionBronzeBoss/map.json
           grep -q 'EventScript_AscensionGuide' engine/data/ascension_guide.inc
           grep -q 'MAP_ASCENSION_ARENA_GATE_1' engine/data/maps/AscensionArenaGate1/map.json
+
+      - name: Validate V9 source and static career invariants
+        run: |
+          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/v9-tower-exteriors.py bootstrap/v9-championship.py bootstrap/check-v9-invariants.py
+          python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
+
+      - name: Export assembled V9 source and city tiles for development diagnostics
+        run: |
+          python3 bootstrap/v9-diagnostic-export.py "$GITHUB_WORKSPACE/engine" "$GITHUB_WORKSPACE/v9-assembled-source.zip"
+
+      - name: Preserve assembled V9 source diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: V9-ASSEMBLED-SOURCE-INSPECTION
+          path: v9-assembled-source.zip
+          if-no-files-found: error
 
       - name: Install pinned agbcc compiler
         run: |
@@ -131,9 +154,10 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension-V9-ALPHA-UNTESTED-GBA
+          name: Ascension-V9-DEV-UNTESTED-GBA
           path: engine/Pokemon-Arena-Ascension.gba
           if-no-files-found: error
 
 # A successful compiler run does NOT establish a completed tower/city playthrough.
+# Development branch artifacts are NOT finished V9 or Delta-verified.
 # Live mGBA/Delta checks required before a player release.

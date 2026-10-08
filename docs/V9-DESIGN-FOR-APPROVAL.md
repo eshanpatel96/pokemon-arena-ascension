@@ -1,6 +1,6 @@
-# Pokémon Arena: Ascension — V9 Design Sign-off (DRAFT)
+# Pokémon Arena: Ascension — V9 Approved Design Contract
 
-**Status: DESIGN FOR USER APPROVAL — NOT IMPLEMENTED.** Created after the V8.2 playtest and continuing the V9/V10 scope discussion. Once the tower architecture is approved, implementation can be batched into playable GitHub GBA/Delta builds. Preserve upstream Emerald Arena **v0.13.0**, pinned commit `e1502f9`; **do not resurrect the V5 replacement battle renderer**.
+**Status: HIGH-LEVEL DESIGN APPROVED ON 2026-10-08; FULL V9 NOT YET IMPLEMENTED OR GAMEPLAY-ACCEPTED.** Created after the V8.2 playtest and continuing the V9/V10 scope discussion. Once the tower architecture is approved, implementation can be batched into playable GitHub GBA/Delta builds. Preserve upstream Emerald Arena **v0.13.0**, pinned commit `e1502f9`; **do not resurrect the V5 replacement battle renderer**.
 
 ## Release goal
 **V9 = complete competitive Arena City, all eight playable and strongly differentiated towers, meaningful native Trainer-vs-Trainer battles, full 187-sprite Pokémon recruitment/selection plan, varied moves/AI, a working recovery-and-money economy.** V10 = the five-trainer Elite Four + World Champion gauntlet, Masters Circuit, Shiny Licenses, endgame balance and full-campaign QA. V9's code, art, ROM headroom and on-device tests must be evaluated incrementally; source design does not equal shipped gameplay.
@@ -83,10 +83,10 @@ Adopt `docs/ALL-187-CAREER-ROSTER.md` as the authoritative **provisional distrib
 - Final balancing, ending/credits, save migration, completion records/medals and game QA.
 
 ## Approval checklist
-- [ ] Eight tower identities, facades, trial + leader battlefields approved.
-- [ ] Central city Lab, shop, services, NPC signage and themed districts approved.
-- [ ] Economy: 10%-of-carried-money loss fine, max 1,000; free essential healing/entry approved.
-- [ ] Two-signature-reward + extended tower pool, original 187 roster approved.
-- [ ] V9 then V10 division approved.
+- [x] Eight tower identities, facades, trial + leader battlefields approved.
+- [x] Central city Lab, shop, services, NPC signage and themed districts approved.
+- [x] Economy: 10%-of-carried-money loss fine, max 1,000; free essential healing/entry approved.
+- [x] Two-signature-reward + extended tower pool, original 187 roster approved.
+- [x] V9 then V10 division approved.
 
-**Do not start large content builds until user signs off the tower themes/design.** After approval, implement/build/check in batches and offer Delta ROM only once a real artifact exists.
+**User approved the full V9 direction on 2026-10-08.** Continue implementation without re-requesting broad approval. Keep the completed game separate from compiled alpha/development artifacts; Delta acceptance and city/tower visual work remain outstanding.
