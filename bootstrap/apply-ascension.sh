@@ -12,7 +12,12 @@ tar -xJf "$staging/ascension-v6.1-overlay.tar.xz" -C "$staging"
 cp -a "$staging/include/." "$source_root/include/"
 cp -a "$staging/src/." "$source_root/src/"
 cp -a "$staging/data/." "$source_root/data/"
-(cd "$source_root" && patch --forward -p1 < "$staging/changes.patch")
+# Patch other game files from the verified overlay.
+# Clean upstream realtime_arena.c differs from our prior local V4 source:
+# apply its modifications separately using a checked transformation.
+awk '/^--- a\/src\/realtime_arena.c/{skip=1;next} /^--- a\//{skip=0} !skip' "$staging/changes.patch" > "$staging/other.patch"
+(cd "$source_root" && patch --forward -p1 < "$staging/other.patch")
+python3 bootstrap/patch-realtime.py "$source_root/src/realtime_arena.c"
 
 # The city layout duplicates the native Battle Frontier tiles: no new low-res art.
 mkdir -p "$source_root/data/layouts/AscensionCity"
