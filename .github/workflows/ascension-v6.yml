@@ -56,6 +56,7 @@ jobs:
         run: |
           make -j2 -f make_tools.mk
           make -j2 generated
+          make -j2 data/maps/AscensionCity/header.inc data/maps/AscensionTowerHall/header.inc
           test -f data/maps/AscensionCity/events.inc
           test -f data/maps/AscensionTowerHall/events.inc
 
