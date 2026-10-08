@@ -1,0 +1,90 @@
+name: Emerald Arena engine bootstrap (experimental)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/engine-bootstrap.yml'
+      - 'bootstrap/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build-original-arena:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the Ascension build configuration
+        uses: actions/checkout@v4
+
+      - name: Install native and GBA build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git gcc-arm-none-eabi binutils-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl
+
+      - name: Retrieve EXACT Pokémon Emerald revision and original Arena source
+        run: |
+          git clone https://github.com/pret/pokeemerald.git engine
+          git -C engine checkout --detach 5eff78649e7170a877b961ef0b3da13b81a16038
+          git clone --depth 1 https://github.com/GBurgardt/pokemon-emerald-arena.git arena-upstream
+          git -C engine apply ../arena-upstream/game/native-engine.patch
+          cp -a arena-upstream/game/overlay/. engine/
+          test -f engine/src/realtime_arena.c
+          test -f engine/tools/arena/dev.sh
+          printf 'Emerald commit: '; git -C engine rev-parse HEAD
+          printf 'Arena commit: '; git -C arena-upstream rev-parse HEAD
+
+      - name: Install Emerald-compatible agbcc
+        run: |
+          git clone https://github.com/pret/agbcc.git agbcc
+          git -C agbcc checkout --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          (cd agbcc && ./build.sh && ./install.sh "$GITHUB_WORKSPACE/engine")
+
+      - name: Generate native engine tooling and maps
+        working-directory: engine
+        run: |
+          make -j2 -f make_tools.mk
+          make -j2 generated
+
+      - name: Generate original Emerald Arena sprite and environment assets
+        working-directory: engine
+        run: |
+          ./tools/arena/dev.sh assets
+
+      - name: Compile baseline Emerald Arena GBA
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=emerald_arena_baseline 2>&1 | tee ../build.log
+          test -s emerald_arena_baseline.gba
+          python3 - <<'PY'
+          from pathlib import Path
+          rom=Path("emerald_arena_baseline.gba").read_bytes()
+          assert len(rom) >= 16 * 1024 * 1024
+          assert rom[0xAC:0xB0] == b"BPEE", "Unexpected GBA game code"
+          print("ROM verified:", len(rom), "bytes")
+          PY
+
+      - name: Preserve build log for diagnosis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emerald-arena-build-log
+          path: build.log
+          if-no-files-found: ignore
+
+      - name: Save engine baseline for emulator testing
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emerald-arena-baseline-not-ascension
+          path: engine/emerald_arena_baseline.gba
+          if-no-files-found: error
+
+# IMPORTANT: This builds the ORIGINAL Emerald Arena engine, NOT the V6.1 Ascension City.
+# The native city/tower/tutorial source must be integrated and separately tested before release.
