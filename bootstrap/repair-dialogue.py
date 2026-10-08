@@ -21,6 +21,11 @@ for file in (city, hall):
         raise SystemExit(f"{file}: expected at least 8 malformed strings, found {count}")
     if re.search(r"(?m)^[A-Za-z_][A-Za-z0-9_]*:[ \t]+\.string", src):
         raise SystemExit(f"{file}: unconverted string found")
+    # Some older lines also escaped the newline control twice: \\n.
+    # Emerald's preprocessor rejects that sequence after we fix the label.
+    src = src.replace(r"\\n", r"\n")
+    if r"\\n" in src:
+        raise SystemExit(f"{file}: remaining double-escaped newline")
     file.write_text(src)
     print(f"{file.name}: repaired {count} text labels")
 
