@@ -64,7 +64,9 @@ jobs:
       - name: Restore original animated Pokémon and arena art
         working-directory: engine
         run: |
-          # Upstream macOS packer links libpng but omits libm on Linux.\n          sed -i 's/-lpng -o /-lpng -lm -o /g' tools/arena/dev.sh\n          ./tools/arena/dev.sh assets
+          # Upstream macOS packer links libpng but omits libm on Linux.
+          sed -i 's/-lpng -o /-lpng -lm -o /g' tools/arena/dev.sh
+          ./tools/arena/dev.sh assets
           test -s .arena-dev/art/actions.4bpp
           test -s .arena-dev/art/props.4bpp
 
