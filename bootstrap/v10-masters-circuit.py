@@ -235,7 +235,7 @@ p=once(p,"AscensionTeamLab_EventScript_NoChampionRewards::",
  msgbox AscensionTeamLab_Text_MastersPrizes, MSGBOX_DEFAULT
 AscensionTeamLab_EventScript_NoMastersRewards::""",
   "Lab grants Masters after Champion")
-p+="\nAscensionTeamLab_Text_MastersPrizes:\n\t.string \"MASTERS licenses earned!\\\\nClaimed to your party or BOX.$\"\n"
+p+="\nAscensionTeamLab_Text_MastersPrizes:\n\t.string \"MASTERS licenses earned!\\nClaimed to your party or BOX.$\"\n"
 lab.write_text(p)
 
 summit=maps/"AscensionSummit/scripts.inc"
@@ -298,19 +298,19 @@ AscensionSummit_EventScript_MastersComplete::
  waitstate
  end
 AscensionSummit_Text_MastersIntro:
- .string "MASTERS CIRCUIT!\\\\nEight elite six-POKEMON bouts.$"
+ .string "MASTERS CIRCUIT!\\nEight elite six-POKEMON bouts.$"
 AscensionSummit_Text_MastersReady:
- .string "Recovery only after ROUND 4.\\\\nChallenge the Masters?$"
+ .string "Recovery only after ROUND 4.\\nChallenge the Masters?$"
 AscensionSummit_Text_MastersChallenger:
- .string "A MASTER approaches!\\\\nExpect remixed strategies.$"
+ .string "A MASTER approaches!\\nExpect remixed strategies.$"
 AscensionSummit_Text_MastersWin:
- .string "MASTER defeated!\\\\nYou earned new licenses.$"
+ .string "MASTER defeated!\\nYou earned new licenses.$"
 AscensionSummit_Text_MastersHeal:
- .string "MID-CIRCUIT RECOVERY!\\\\nFully heal your team now?$"
+ .string "MID-CIRCUIT RECOVERY!\\nFully heal your team now?$"
 AscensionSummit_Text_MastersLost:
- .string "The MASTERS stopped you.\\\\nRetry from round one.$"
+ .string "The MASTERS stopped you.\\nRetry from round one.$"
 AscensionSummit_Text_MastersComplete:
- .string "MASTERS CIRCUIT CLEARED!\\\\nClaim 18 licenses at the LAB.$"
+ .string "MASTERS CIRCUIT CLEARED!\\nClaim 18 licenses at the LAB.$"
 """
 summit.write_text(p)
 assert len(exclusive)==18
