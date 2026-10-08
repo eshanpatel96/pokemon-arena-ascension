@@ -1,3 +1,9 @@
+## V9 Championship scope update (approved 2026-10-08)
+
+V9 now includes five real six-Pokémon Championship teams: Articuno, Registeel, Raikou, Regice and Ho-Oh as their respective final opponents. Existing native Summit/Champion maps, healing after Elite II and IV, and losses restarting at Elite I are the implementation targets. The Lab must grant 25 separate permanent one-time Championship rewards in addition to 64 tower rewards and 80 starters: **169 species obtainable in V9**. Existing native PC capacity is ample under ordinary play; retain only a simple full-PC failsafe.
+
+**Release proof pending:** this source milestone still requires a successful GitHub ROM build, actual mGBA and Delta fight/save QA, full 55-round campaign and visually polished city/towers. The Masters/shiny extras move to V10.
+
 # V9 — Live Development Status (8 October 2026)
 
 ## Current checkpoint
