@@ -1,13 +1,13 @@
 # Ascension healing, battle items and central supply shop — locked design
 
-**Approved October 8, 2026 — not yet implemented in a verified ROM.** This supersedes earlier partial-heal, one-time Champion heal, and “no items during battle” planning assumptions.
+**Current agreement October 8, 2026 — not yet implemented in a verified ROM.** Normal Elite Four heals occur after battles II and IV, including the heal before Champion. This supersedes older contradictory discussions; in-battle items remain legal.
 
 ## Healing rules
 - Within a multi-Pokémon trainer encounter: no free automatic healing between enemy send-outs. HP, status and PP persist between active Pokémon. Player may pause and access **Bag** to use battle items/healing items; consume stock normally. No infinite item spam or turn-free exploit; implement a measurable recovery/opening cost after a combat item and test that it never lets players bypass recovery windows.
 - Between rounds: no free automatic heal except specified checkpoints. Party may review loadouts, spend purchased items and change lead, with native PP restoration between trainer floors as proposed; test for compatibility with original engine.
 - **Towers 1–4:** keep forgiving full-heal checkpoints at defined points (Bronze before leader, remaining to be tuned).
 - **Towers 5–8:** full-team healing at the clearly labeled recovery room/checkpoint before the leader. Earlier floors still force thoughtful HP/item use; no forced partial-only restoration. Exactly how many earlier checkpoints is a balancing variable, not an implicit second full heal.
-- **Elite Four + Champion:** **automatic full recovery of all party Pokémon, PP and status after every successful Elite Four battle**, including immediately before the World Champion. Each of the five opponents fields a six-Pokémon elite team; difficulty comes from each individual well-designed encounter. Roster and items may be managed between battles, but swap restrictions should be explicit; no mid-run Lab or outside refill.
+- **Elite Four + Champion:** **automatic full recovery of all party Pokémon, PP and status after defeating Elite II and Elite IV only**; there is no free team heal after Elite I or Elite III. The Elite IV checkpoint restores the team immediately before the World Champion. Each of the five opponents fields a six-Pokémon elite team; difficulty comes from each individual well-designed encounter. Roster and items may be managed between battles, but swap restrictions should be explicit; no mid-run Lab or outside refill.
 - Lose Elite II, III, IV or Champion: return to city, fully heal, **restart next attempt from Elite I**. All earned first-clear recruitment licenses remain. Never farm duplicates from repeats.
 - **Masters Circuit:** harder opponents, hazards, team compositions and optional no-heal medals; if healing reductions are introduced, they must be explicitly announced and tested, not silently applied to normal Elite Four.
 
@@ -25,6 +25,6 @@
 2. Use Potion during arena fight: confirm HP changes once, item decreases once, native fight resumes with cooldown and weather preserved.
 3. Use status remedy and Revive where compatible; verify fainted targeting and no wrong party index.
 4. Test battle boost items explicitly for correct effect and duration before selling them.
-5. Full heal after every Normal Elite win, plus before Champion; current run remains locked; loss resets to Elite I while reward inventory persists.
+5. Full heal after winning Elite II and Elite IV only (the latter is before Champion); other Elite transitions carry HP/status. The current run remains locked; loss resets to Elite I while earned recruitment rewards persist.
 6. Tower 5–8 checkpoint full recoveries include fainted Pokémon, not just HP of surviving members.
 7. Shop stocks no Poké Balls, Bag doesn't let player capture a trainer's Pokémon.
