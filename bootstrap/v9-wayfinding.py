@@ -53,4 +53,19 @@ for area,entries in place:
         raise RuntimeError(f"More than 16 local objects in {area}; risk sprite overflow: {len(d['object_events'])}")
     p.write_text(json.dumps(d,indent=2)+"\n")
     sc.write_text(text)
+
+# Final charmap sanity pass. Some authored V9 dialogue uses a double-escaped
+# newline ("\\n"); Emerald's charmap expects a single escaped "\n" inside
+# .string directives. A double escape yields raw garbage or build failure.
+repaired=0
+for script_path in maps.glob("Ascension*/scripts.inc"):
+    original=script_path.read_text()
+    fixed=original.replace(r"\\n", r"\n")
+    if fixed!=original:
+        script_path.write_text(fixed)
+        repaired+=1
+    if r"\\n" in fixed:
+        raise RuntimeError(f"Double-escaped newline still present: {script_path}")
+print(f"V9 text validation: normalized newline escapes in {repaired} Ascension map scripts.")
+
 print("V9 exterior guides: nine new native trainers/scientists at existing passable Frontier tiles, 15/16 outdoor NPCs; tower numbering reinforced.")
