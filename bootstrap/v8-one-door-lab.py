@@ -13,7 +13,7 @@ root=Path(sys.argv[1]); maps=root/"data/maps"; layouts=root/"data/layouts"
 def load(path): return json.loads(path.read_text())
 def store(path,obj): path.write_text(json.dumps(obj,indent=2)+"\n")
 def npc(gfx,x,y,script):
-    return dict(local_id="1",graphics_id=gfx,x=x,y=y,elevation=3,
+    return dict(graphics_id=gfx,x=x,y=y,elevation=3,
         movement_type="MOVEMENT_TYPE_FACE_DOWN",movement_range_x=0,movement_range_y=0,
         trainer_type="TRAINER_TYPE_NONE",trainer_sight_or_berry_tree_id="0",
         script=script,flag="0")
@@ -149,9 +149,6 @@ lab["object_events"]=[
  npc("OBJ_EVENT_GFX_SCIENTIST_1",9,8,"AscensionTeamLab_EventScript_PC"),
  npc("OBJ_EVENT_GFX_SCIENTIST_1",3,6,"AscensionTeamLab_EventScript_Training")
 ]
-lab["object_events"][0]["local_id"]="1"
-lab["object_events"][1]["local_id"]="2"
-lab["object_events"][2]["local_id"]="3"
 lab["warp_events"]=[warp(x,12,"MAP_ASCENSION_CITY",4) for x in (6,7)]
 lab["bg_events"]=[]
 lab["coord_events"]=[]
