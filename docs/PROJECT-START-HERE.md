@@ -11,6 +11,8 @@ This document is the repository-side durable continuation record for the existin
 - Alpha CI: https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37828304827
 - Raw alpha ROM SHA-256: d77017cfe93136a52874fb604b28a426bc8c88ec156099062ac15a66adb4d29f.
 - New implementation branch: **v9-full-build**, source changes underway.
+- Latest confirmed **DEV (NOT FINISHED) CI compile**: `cf2773215714f5a95301a26bd31ac0aea063ec28`, https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37835222951 ; ROM artifact https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37835222951/artifacts/11575238016 . Compiler/static preflight passed. No emulator/Delta gameplay passed or recorded.
+- User-supplied detailed, stable-ID feature acceptance contract is checked in at `docs/V9-FEATURE-ACCEPTANCE-CHECKLIST.txt`. The original checklist predates recent DEV source improvements, with later changes noted at its top.
 - Alpha has **not** passed a complete mGBA or Delta session; do not call it V9 FINAL.
 - Alpha ROM had under 60 KiB free and EWRAM under 3 KiB free. Recheck link results before adding new assets.
 
@@ -48,13 +50,13 @@ This document is the repository-side durable continuation record for the existin
 - bootstrap/v9-city-services.py: native Name Rater in Style House and known-profile four-move restoration in Move Studio; not the planned custom loadout editor, nature/EV service or wardrobe.
 - bootstrap/check-v9-invariants.py: static gate for unique 80+64 recruitment, progression safety, contrasting battle stages, local NPC count and exactly one per-battle loss penalty.
 - bootstrap/apply-ascension.sh: apply new pass after the alpha scripts.
-- Planned CI: static preflight, GBA compile, explicitly labeled V9 DEVELOPMENT ROM, updated memory stats.
+- CI confirmed: static preflight and GBA compile pass; 32 MiB Emerald BPEE ROM. ROM linked 33,494,972 bytes of 33,554,432 (59,460 bytes free), EWRAM 259,989 of 262,144 (2,155 free), IWRAM 30,892 of 32,768 (1,876 free); NO emulator/frame-rate proof.
 
-**These are initial source improvements, not completion of the visible city or production-quality eight-tower remodel.** Never silently reduce architecture and real mechanics to labels/palette swaps.
+**These are initial source improvements, not completion of the visible city or production-quality eight-tower remodel.** The full source-aware checklist is the no-silent-cuts acceptance ledger; the 4/5/5/6/6/7/8/9 earlier floor counts and later milestone questions remain explicitly tracked, not quietly removed. Never silently reduce architecture and real mechanics to labels/palette swaps.
 
 ## Implementation and acceptance order
 
-1. Compile new branch and fix source/build issues; inspect ROM/RAM usage.
+1. COMPILED: development ROM passed source preflight and GitHub build; prioritize recoverable ROM/RAM headroom.
 2. Verify Bronze vertical slice: first KO → next Pokémon, switching, leader, reward gate, defeat penalty, cold save/reload.
 3. Remodel central town metatiles, signs and doors around Lab/shop/studios; compare actual emulator screenshots with plan.
 4. Build each tower exterior+foyer+trial+boss package; test arena visuals and hazard collision/counterplay on screen.
