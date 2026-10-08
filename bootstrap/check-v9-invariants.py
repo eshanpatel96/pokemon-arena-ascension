@@ -166,7 +166,7 @@ for ace in ("ARTICUNO","REGISTEEL","RAIKOU","REGICE","HO_OH"):
 assert "AscensionTeamLab_EventScript_ChampionClaim" in (maps/"AscensionTeamLab/scripts.inc").read_text()
 assert "AscensionSummit_EventScript_Elite2Heal" in (maps/"AscensionSummit/scripts.inc").read_text()
 assert "AscensionSummit_EventScript_NamedRound" in (maps/"AscensionSummit/scripts.inc").read_text()
-assert "AscensionLeader9_EventScript_Eliminated" in (maps/"AscensionLeader9/scripts.inc").read_text()
+assert "AscensionLeader9_Text_Eliminated" in (maps/"AscensionLeader9/scripts.inc").read_text()
 
 for script in maps.glob("Ascension*/scripts.inc"):
     assert r"\\n" not in script.read_text(), f"{script}: double-escaped dialogue"
