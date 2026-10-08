@@ -45,7 +45,7 @@ for candidate in range(0x40F7, 0x40FD):
     if saved_var_h.count(unused) == 1:
         saved_var_h = saved_var_h.replace(
             unused,
-            f"#define VAR_ASCENSION_STARTER_NEXT_INDEX               0x{candidate:04X} // next PC grant\\n//{unused}",
+            f"#define VAR_ASCENSION_STARTER_NEXT_INDEX               0x{candidate:04X} // next PC grant\n//{unused}",
             1)
         vars_file.write_text(saved_var_h)
         break
