@@ -77,7 +77,7 @@ east["warp_events"]=[dict(x=35,y=12,elevation=0,dest_map="MAP_ASCENSION_SUMMIT",
 east["coord_events"]=[]
 east["bg_events"]=[]
 dump(maps/"AscensionCityEast/map.json",east)
-east_scripts="""AscensionEast_MapScripts::
+east_scripts="""AscensionCityEast_MapScripts::
  .byte 0
 AscensionEast_EventScript_Moves::
  msgbox AscensionEast_Text_Moves, MSGBOX_NPC
