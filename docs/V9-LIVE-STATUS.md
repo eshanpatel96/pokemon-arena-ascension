@@ -1,3 +1,15 @@
+## V9 Championship — compiled source checkpoint (8 October 2026)
+
+**CURRENT LATEST COMPILED SOURCE:** `d004c4da56784a3f7c3ac6a69ae6f3c4df7c7264`, [successful GitHub Actions run 37846797245](https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37846797245), [ROM artifact 11580282635](https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37846797245/artifacts/11580282635).
+
+The original Emerald Arena 0.13.0 engine, eight expanded towers and V9 central-city native-tile changes are retained. The previous provisional Summit is replaced with four six-member Elite trainer parties (Articuno, Registeel, Raikou, Regice last) plus six-member World Champion (Ho-Oh last). Native individual trainer sprites/photos, five arena backdrops, healing after II and IV, five-first-clear eligible rewards per round (25 unique Championship rewards), loss fee/restart and native lab PC claim path are authored and compiled. Once-only flags are only set after a successful native Pokémon grant; full storage leaves prize eligible.
+
+**CI PASSED:** source bootstrap, V9 static preflight, original engine GBA compile, valid 32 MiB BPEE ROM. Linked ROM 33,496,984 / 33,554,432 bytes (57,448 bytes free), EWRAM 259,989 / 262,144 (2,155 bytes free), IWRAM 30,892 / 32,768 (1,876 free).
+
+**NOT YET ACCEPTED:** live Delta/mGBA 55-encounter playthrough, in-battle faint/send-out, healing, Bag, save/reload, reward claiming, visuals and runtime performance. All eight bespoke trial/boss battlefields and final city architecture/service polish remain major V9 deliverables. No claim of bug-free completion. Additional Championship rounds are V9; Masters, shinies and postgame remain V10.
+
+---
+
 ## V9 Championship scope update (approved 2026-10-08)
 
 V9 now includes five real six-Pokémon Championship teams: Articuno, Registeel, Raikou, Regice and Ho-Oh as their respective final opponents. Existing native Summit/Champion maps, healing after Elite II and IV, and losses restarting at Elite I are the implementation targets. The Lab must grant 25 separate permanent one-time Championship rewards in addition to 64 tower rewards and 80 starters: **169 species obtainable in V9**. Existing native PC capacity is ample under ordinary play; retain only a simple full-PC failsafe.
@@ -8,7 +20,7 @@ V9 now includes five real six-Pokémon Championship teams: Articuno, Registeel, 
 
 ## Current checkpoint
 
-**Target:** Complete eight-tower V9 with redesigned town, meaningful arena trial/boss fights, preserved Emerald Arena 0.13.0 controls and a stable save/economy/recruiting system. V10 holds the full five-trainer Championship, Masters Circuit and final endgame extras. Full V9 was approved; no need to re-ask.
+**Target:** Complete eight-tower V9 with redesigned town, meaningful arena trial/boss fights, preserved Emerald Arena 0.13.0 controls and a stable save/economy/recruiting system. V9 now contains the five-round Championship source; V10 holds Masters Circuit, shiny licenses and final endgame extras. Full V9 was approved; no need to re-ask.
 
 **Latest fully compiled GitHub run:** [#81, 37843254758](https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37843254758) — **SUCCESS**.
 - Source: `d2b39491306dca041b3ff84db59f44ad834ba5d8` from `v9-full-build`.
