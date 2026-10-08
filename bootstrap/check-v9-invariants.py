@@ -102,6 +102,35 @@ for area in ("AscensionCity", "AscensionCityEast"):
     for ev in info["warp_events"]:
         assert ev["dest_map"].startswith("MAP_ASCENSION_"), f"{area}: unrelated destination"
 
+
+# Native exterior identity and door-route regression checks; static, not Delta.
+from collections import deque
+import struct
+def facade(area,side,w,h,x,y,palette):
+    v=struct.unpack("<"+str(w*h)+"H",(root/f"data/layouts/{area}/map.bin").read_bytes())
+    m=v[y*w+x]&1023
+    bank=root/"data/tilesets"
+    path=(bank/"primary/general/metatiles.bin" if m<512
+          else bank/f"secondary/battle_frontier_outside_{side}/metatiles.bin")
+    tiles=struct.unpack_from("<8H",path.read_bytes(),(m if m<512 else m-512)*16)
+    assert sum(q>>12==palette for q in tiles)>=2,(area,x,y,palette)
+facade("AscensionCity","west",56,72,5,18,6)
+facade("AscensionCity","west",56,72,11,33,8)
+facade("AscensionCityEast","east",72,72,45,50,5)
+facade("AscensionCityEast","east",72,72,39,24,12)
+for area,w,h,start in (("AscensionCity",56,72,(40,45)),
+                       ("AscensionCityEast",72,72,(0,5))):
+    v=struct.unpack("<"+str(w*h)+"H",(root/f"data/layouts/{area}/map.bin").read_bytes())
+    def walk(x,y): return 0<=x<w and 0<=y<h and ((v[y*w+x]>>10)&3)==0
+    seen={start};queue=deque([start])
+    while queue:
+        x,y=queue.popleft()
+        for X,Y in ((x+1,y),(x-1,y),(x,y+1),(x,y-1)):
+            if walk(X,Y) and (X,Y) not in seen:
+                seen.add((X,Y));queue.append((X,Y))
+    for warp in json.loads((maps/area/"map.json").read_text())["warp_events"]:
+        assert (warp["x"],warp["y"]+1) in seen, (area,warp["dest_map"],"unreachable")
+
 for script in maps.glob("Ascension*/scripts.inc"):
     assert r"\\n" not in script.read_text(), f"{script}: double-escaped dialogue"
 

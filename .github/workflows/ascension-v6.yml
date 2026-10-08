@@ -35,7 +35,7 @@ jobs:
       - name: Install C, GBA, asset and map dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git patch xz-utils gcc-arm-none-eabi binutils-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl
+          sudo apt-get install -y --no-install-recommends build-essential git patch xz-utils gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl
 
       - name: Fetch exact Emerald + original Arena source
         run: |
@@ -71,7 +71,7 @@ jobs:
 
       - name: Validate V9 source and static career invariants
         run: |
-          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/check-v9-invariants.py
+          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/v9-tower-exteriors.py bootstrap/check-v9-invariants.py
           python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
 
       - name: Export assembled V9 source and city tiles for development diagnostics
