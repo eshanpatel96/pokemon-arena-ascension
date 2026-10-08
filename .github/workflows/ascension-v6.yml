@@ -41,7 +41,7 @@ jobs:
       - name: Apply Ascension V6.1 city, tutorial and tower source
         run: |
           bash bootstrap/apply-ascension.sh "$GITHUB_WORKSPACE/engine" "$RUNNER_TEMP/ascension"
-          grep -q 'MAP_ASCENSION_CITY' engine/data/maps/map_groups.json
+          grep -q '"AscensionCity"' engine/data/maps/map_groups.json
           grep -q 'Ascension_PrepareTutorial' engine/src/ascension_career.c
           grep -q 'WarpIntoMap' engine/src/realtime_arena.c
 
@@ -56,14 +56,13 @@ jobs:
         run: |
           make -j2 -f make_tools.mk
           make -j2 generated
-          make -j2 data/maps/AscensionCity/header.inc data/maps/AscensionTowerHall/header.inc
           test -f data/maps/AscensionCity/events.inc
           test -f data/maps/AscensionTowerHall/events.inc
 
       - name: Restore original animated Pokémon and arena art
         working-directory: engine
         run: |
-          ./tools/arena/dev.sh assets
+          # Upstream macOS packer links libpng but omits libm on Linux.\n          sed -i 's/-lpng -o /-lpng -lm -o /g' tools/arena/dev.sh\n          ./tools/arena/dev.sh assets
 
       - name: Compile Ascension from real Emerald Arena engine
         working-directory: engine
