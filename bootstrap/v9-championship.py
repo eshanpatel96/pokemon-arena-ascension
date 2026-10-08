@@ -127,7 +127,7 @@ f=once(f,"#define FLAG_UNUSED_0x2D9",
 flags.write_text(f)
 
 s=career.read_text()
-p="struct AscensionOpponent {u16 species, move1, move2; u8 level;};"
+p="static const struct AscensionThemedMon sThemePool[8][6] ="
 assert p in s
 s=s.replace(p,"""// Five mandatory Summit rounds: no extra sprites; native 1v1 send-outs.
 static const struct AscensionThemedMon sChampionTeams[5][6]=
@@ -144,6 +144,19 @@ static const u16 sChampionRewardMoves[5][5][MAX_MON_MOVES]=
 };
 
 """+p,1)
+
+# The existing Move Studio must also recognize these earned Championship
+# species, not only the old starter/tower sets. Keep native move data.
+needle="    if(profile==NULL)return;"
+assert s.count(needle)==1
+s=s.replace(needle,"""    if(profile==NULL)
+        for(i=0;i<5*5;i++)
+            if(sChampionRewards[i/5][i%5]==species)
+            {
+                profile=sChampionRewardMoves[i/5][i%5];
+                break;
+            }
+"""+needle,1)
 
 # Match the visible challenger graphic, sideline photo and actual name.
 needle="    u16 slot = floor+1==Ascension_FloorCount(rank) ? rank%ARRAY_COUNT(gfx) : next;"
