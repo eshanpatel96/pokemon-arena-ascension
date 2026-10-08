@@ -66,6 +66,8 @@ jobs:
         run: |
           # Upstream macOS packer links libpng but omits libm on Linux.
           sed -i 's/-lpng -o /-lpng -lm -o /g' tools/arena/dev.sh
+          # GCC 13 warns on the upstream packers' compact if-statements.
+          sed -i 's/-Werror /-Werror -Wno-error=misleading-indentation /g' tools/arena/dev.sh
           ./tools/arena/dev.sh assets
           test -s .arena-dev/art/actions.4bpp
           test -s .arena-dev/art/props.4bpp
