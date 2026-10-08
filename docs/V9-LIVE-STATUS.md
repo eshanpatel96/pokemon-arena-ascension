@@ -1,3 +1,15 @@
+## Current compiled Championship development checkpoint (8 October 2026)
+
+**GitHub Actions SUCCESS:** https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37846797245
+
+- Build source commit `d004c4da56784a3f7c3ac6a69ae6f3c4df7c7264`.
+- GitHub artifact: https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37846797245/artifacts/11580282635
+- Extracted ROM: 33,554,432 bytes, `BPEE` header, SHA-256 `03206c247e2e6e4671da5726fc60898746ba4dda5feed996a149d34d9f507e87`.
+- Link usage: ROM 33,496,984 / 33,554,432 bytes (57,448 free); EWRAM 259,989 / 262,144 (2,155 free); IWRAM 30,892 / 32,768 (1,876 free).
+- Implemented source: Bronze 4, Gale 5, Verdant 5, Phantom 6, Inferno 6, Tidal 7, Thunder 8, Astral 9; **five full six-Pokémon Championship rounds** (Articuno, Registeel, Raikou, Regice, Ho-Oh as signature last). 80 + 64 + 25 unique award species across the 187 original animated roster; 18 deferred to Masters. Recover after Elite II/IV; once-only rewards through Lab with individual save flags.
+- Static source, generated maps, assembly and GBA compiler passes are **not Delta gameplay certification**. No mGBA/Delta full tower/Championship campaign, reward claim, save/reload, in-battle Bag or frame rate tests yet. Central-town and all-eight-tower full bespoke environmental presentation and customization remain incomplete.
+- The verified Delta test ZIP includes the ROM, source hash manifest and focused test instructions; **not labeled V9 FINAL**.
+
 ## V9 Championship — compiled source checkpoint (8 October 2026)
 
 **CURRENT LATEST COMPILED SOURCE:** `d004c4da56784a3f7c3ac6a69ae6f3c4df7c7264`, [successful GitHub Actions run 37846797245](https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37846797245), [ROM artifact 11580282635](https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37846797245/artifacts/11580282635).
