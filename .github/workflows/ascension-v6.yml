@@ -1,9 +1,9 @@
-name: Ascension V9 career, trainers, battle economy (experimental)
+name: Ascension V9 development - static checks and GBA compilation
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, v9-full-build]
     paths:
       - '.github/workflows/ascension-v6.yml'
       - 'bootstrap/**'
@@ -61,6 +61,11 @@ jobs:
           grep -q 'MAP_ASCENSION_BRONZE_BOSS' engine/data/maps/AscensionBronzeBoss/map.json
           grep -q 'EventScript_AscensionGuide' engine/data/ascension_guide.inc
           grep -q 'MAP_ASCENSION_ARENA_GATE_1' engine/data/maps/AscensionArenaGate1/map.json
+
+      - name: Validate V9 source and static career invariants
+        run: |
+          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/check-v9-invariants.py
+          python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
 
       - name: Install pinned agbcc compiler
         run: |
@@ -131,9 +136,10 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension-V9-ALPHA-UNTESTED-GBA
+          name: Ascension-V9-DEV-UNTESTED-GBA
           path: engine/Pokemon-Arena-Ascension.gba
           if-no-files-found: error
 
 # A successful compiler run does NOT establish a completed tower/city playthrough.
+# Development branch artifacts are NOT finished V9 or Delta-verified.
 # Live mGBA/Delta checks required before a player release.
