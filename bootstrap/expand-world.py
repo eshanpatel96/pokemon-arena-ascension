@@ -194,6 +194,35 @@ void Ascension_CanChallengeTower(void)
     gSpecialVar_Result = (VarGet(VAR_ASCENSION_RANK) == gSpecialVar_0x8004);
 }
 """
+# The practice dojo now chooses a different Arena-supported opponent each run.
+# Four curated moves reduce the old turn-based fallback on exhausted/unsupported attacks.
+assert '#include "random.h"' not in s
+s=s.replace('#include "pokemon.h"', '#include "pokemon.h"\n#include "random.h"')
+fixed="""    CreateScriptedWildMon(SPECIES_SCIZOR, 52, ITEM_NONE);
+    SetMonMoveSlot(&gEnemyParty[0], MOVE_QUICK_ATTACK, 0);
+    SetMonMoveSlot(&gEnemyParty[0], MOVE_SLASH, 1);
+    SetMonMoveSlot(&gEnemyParty[0], MOVE_NONE, 2);
+    SetMonMoveSlot(&gEnemyParty[0], MOVE_NONE, 3);"""
+rotating="""    {
+        static const struct {
+            u16 species;
+            u16 moves[4];
+        } practice[6] = {
+            {SPECIES_SCIZOR, {MOVE_QUICK_ATTACK, MOVE_SLASH, MOVE_DOUBLE_TEAM, MOVE_PROTECT}},
+            {SPECIES_BLAZIKEN, {MOVE_BLAZE_KICK, MOVE_EMBER, MOVE_SLASH, MOVE_PROTECT}},
+            {SPECIES_SCEPTILE, {MOVE_LEAF_BLADE, MOVE_QUICK_ATTACK, MOVE_SLAM, MOVE_PROTECT}},
+            {SPECIES_BLASTOISE, {MOVE_WATER_GUN, MOVE_BITE, MOVE_HYDRO_PUMP, MOVE_PROTECT}},
+            {SPECIES_DRAGONITE, {MOVE_WING_ATTACK, MOVE_SLAM, MOVE_DRAGON_BREATH, MOVE_AGILITY}},
+            {SPECIES_CHARIZARD, {MOVE_FLAMETHROWER, MOVE_WING_ATTACK, MOVE_SLASH, MOVE_PROTECT}}
+        };
+        u16 pick = Random() % 6;
+        u8 slot;
+        CreateScriptedWildMon(practice[pick].species, 54, ITEM_NONE);
+        for (slot = 0; slot < 4; slot++)
+            SetMonMoveSlot(&gEnemyParty[0], practice[pick].moves[slot], slot);
+    }"""
+assert s.count(fixed)==1
+s=s.replace(fixed,rotating)
 career.write_text(s)
 
 # Gameplay invariant checks: unique entries and return destinations.
