@@ -71,7 +71,7 @@ jobs:
 
       - name: Validate V9 source and static career invariants
         run: |
-          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-city-architecture.py bootstrap/check-v9-invariants.py
+          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/check-v9-invariants.py
           python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
 
       - name: Export assembled V9 source and city tiles for development diagnostics

@@ -45,7 +45,10 @@ assert "for(i=VarGet(VAR_ASCENSION_STARTER_NEXT_INDEX);" in career
 assert "VarSet(VAR_ASCENSION_STARTER_NEXT_INDEX,i+1);" in career
 assert "#define VAR_ASCENSION_STARTER_NEXT_INDEX" in vars_h
 assert "if(part<2)continue;" in career
-assert "if(floor < 1+(part-2)/2)continue;" in career
+assert "if(((milestones>>(rank*2))&3)<1+(part-2)/2" in career
+assert "Ascension_RememberClearedFloor(rank,floor+1);" in career
+assert "#define VAR_ASCENSION_RECRUIT_MILESTONES" in vars_h
+assert "switch(sArena.style)" in (root/"src/realtime_arena.c").read_text()
 assert "sBronzeSemiFinalTeams[3][4]" in career
 assert "VarSet(VAR_ASCENSION_FLOOR,0); // loss resets this run" in career
 assert "u8 level=59+rank+floor/2+(isBoss?2:0)" in career
