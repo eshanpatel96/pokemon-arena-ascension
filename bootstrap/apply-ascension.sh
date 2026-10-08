@@ -30,4 +30,6 @@ mkdir -p "$source_root/data/layouts/AscensionCity"
 cp "$source_root/data/layouts/BattleFrontier_OutsideWest/map.bin" "$source_root/data/layouts/AscensionCity/map.bin"
 cp "$source_root/data/layouts/BattleFrontier_OutsideWest/border.bin" "$source_root/data/layouts/AscensionCity/border.bin"
 
-echo 'Ascension V6.1 original-engine source changes applied.'
+python3 bootstrap/repair-dialogue.py "$source_root"
+
+echo 'Ascension V6.2 original-engine source and encoded dialogue applied.'
