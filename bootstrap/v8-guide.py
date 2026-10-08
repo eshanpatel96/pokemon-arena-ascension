@@ -82,7 +82,7 @@ EventScript_AscensionGuide::
  msgbox AscensionGuide_Text_Progress, MSGBOX_DEFAULT
 """
 for i in range(9):
-    data+=f" compare VAR_ASCENSION_RANK, {i}\n goto_if_eq EventScript_AscensionGuide_Tier{i}\n"
+    data+=f" goto_if_eq VAR_ASCENSION_RANK, {i}, EventScript_AscensionGuide_Tier{i}\n"
 data+=" goto EventScript_AscensionGuide_List\n"
 for i,(name,location) in enumerate(directory):
     data+=f"""EventScript_AscensionGuide_Tier{i}::
