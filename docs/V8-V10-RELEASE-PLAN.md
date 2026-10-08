@@ -23,6 +23,12 @@
 
 **V8 blocker:** inventory ROM and RAM; reclaim capacity from unused Emerald story assets, redundant generated graphics and/or compressed/shared tile and palette assets *without breaking the original battle engine*. Record memory totals for every CI build, and gate content growth on headroom and Delta tests. Reuse authentic art and palette/weather/hazard variations; do not promise 18 huge independent animated arena sets when 32 MB is almost full. Prefer a practical target of approximately 2 MB ROM and 8 KB EWRAM reserve before investing heavily in bespoke graphics, then revisit based on actual asset budgets.
 
+## Critical V8 design update — multi-Pokémon trainer floors
+
+[Full V8 combat, balance, and training contract](V8-COMBAT-BALANCE-AND-TRAINING.md) is authoritative for tower battles.
+
+The earlier V7 implementation launches one scripted wild Pokémon per floor with two explicitly selected moves. This is insufficient. V8 must use **trainer parties** (one active enemy at a time, 2–4 enemy Pokémon in Bronze), **four real-time-compatible moves** for each, **physical arena gates**, **HP carried between floors**, one Bronze recovery checkpoint, and no mandatory XP grinding. Completing the whole enemy roster—not one KO—advances the floor. The first implementation proof is **Bronze Floor 1 against a two-Pokémon trainer** with correct faint/send-out handling and no classic battle fallback.
+
 ## V8 — WORLD & VERTICAL SLICE (native Emerald city + one complete tower)
 
 **Release goal:** V8 feels like a new game *around* the proven original combat.
