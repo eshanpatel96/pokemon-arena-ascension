@@ -153,11 +153,11 @@ def setup(name, entry, boss, label, venue):
  release
  end
 {name}_Text_Ready:
- .string "CHALLENGE THE MASTER?\\\\nYour rival's whole team awaits.$"
+ .string "CHALLENGE THE MASTER?\\nYour rival's whole team awaits.$"
 {name}_Text_NoTeam:
- .string "No battle-ready team!\\\\nRecover your POKEMON.$"
+ .string "No battle-ready team!\\nRecover your POKEMON.$"
 {name}_Text_Exit:
- .string "RETURN TO THE TOWER?\\\\nNo battle will start.$"
+ .string "RETURN TO THE TOWER?\\nNo battle will start.$"
 """
     ]
     # Old name-specific dialogue may have aliases depending on Bronze/Elite.
