@@ -1,4 +1,4 @@
-name: Ascension V8 city and guide integration (experimental)
+name: Ascension V8.1 one-door tower and Lab fix (experimental)
 
 on:
   workflow_dispatch:
@@ -50,6 +50,8 @@ jobs:
           grep -q 'Ascension_PrepareTutorial' engine/src/ascension_career.c
           grep -q 'WarpIntoMap' engine/src/realtime_arena.c
           grep -q 'MENU_ACTION_ARENA_GUIDE' engine/src/start_menu.c
+          grep -q 'LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_BATTLE_ROOM' engine/data/maps/AscensionTower1/map.json
+          grep -q 'ASCENSION POKEMON LAB' engine/data/maps/AscensionCity/scripts.inc
           grep -q 'EventScript_AscensionGuide' engine/data/ascension_guide.inc
           grep -q 'MAP_ASCENSION_ARENA_GATE_1' engine/data/maps/AscensionArenaGate1/map.json
 
@@ -122,7 +124,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension-V8-WORLD-PREVIEW-UNTESTED-GBA
+          name: Ascension-V8.1-ONE-DOOR-UNTESTED-GBA
           path: engine/Pokemon-Arena-Ascension.gba
           if-no-files-found: error
 
