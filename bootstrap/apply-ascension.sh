@@ -46,5 +46,6 @@ python3 bootstrap/v9-leader-rooms.py "$source_root"
 python3 bootstrap/v9-rewards.py "$source_root"
 python3 bootstrap/v9-wayfinding.py "$source_root"
 python3 bootstrap/v9-release-safety.py "$source_root"
+python3 bootstrap/v9-city-services.py "$source_root"
 
 echo 'Ascension V6.2 original-engine source and encoded dialogue applied.'
