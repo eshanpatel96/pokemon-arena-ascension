@@ -92,8 +92,6 @@ one(setup,'static void CB2_EndScriptedWildBattle(void)\n{\n    CpuFill16',
 # battle_main.c originally replaces EVERY normal opponent trainer party with
 # the static gTrainers table. Bronze provides its battle party dynamically;
 # keep its Pokémon and avoid that replacement only for Bronze.
-one(main,'static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 firstTrainer)',
-         'static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 firstTrainer)')
 # Safe insertion of extern before the function definition, not its prototype.
 old='''        CreateNPCTrainerParty(&gEnemyParty[0], gTrainerBattleOpponent_A, TRUE);
         if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)'''
