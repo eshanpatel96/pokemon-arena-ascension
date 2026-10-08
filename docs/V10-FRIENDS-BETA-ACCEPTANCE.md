@@ -1,3 +1,13 @@
+## Actual Delta feedback — first V10 private playtest (user report, 8 October 2026)
+
+The player reports the **boss-room approach looks better and works**, but the room is **not visually unique enough yet**. The **first boss room has an out-of-place random gentleman NPC**. Source confirms this is `OBJ_EVENT_GFX_GENTLEMAN` at approximately `(6,8)` in `AscensionBronzeBoss`, added as `AscensionBronzeBoss_EventScript_ExitAttendant`. He handles `RETURN TO THE TOWER?` (YES/NO). This is an intentionally created placeholder for a safe exit, not an ordinary opponent. It must not be deleted before another safe exit is installed and verified.
+
+The player's earlier Delta report also says **the normal tower challenger/Master choreography remains incorrect**, despite source checks. That remains a friends-beta release blocker. Source-level scripting does not override observed gameplay.
+
+**Action for next patched build:** replace or relocate the distracting Bronze exit attendant with a natural, clearly identifiable exit (native doorway/sign/appropriate guide sprite), keeping a tested decline/return path. Ensure the ordinary Tower Master steps aside without disrupting entry/opponent choreography, challengers and player staged on opposite sides, defeated challenger leaves, recovery checkpoints actually look right. Review other boss chambers for duplicate generic helper NPCs. Add unique native scenery and stage differentiation where possible without exceeding 32 MiB. Test in Delta and record a before/after video.
+
+**Current result:** one player-reported boss approach improvement, cosmetic/layout defect confirmed from source, normal tower flow still unaccepted. **Do not claim friends-ready beta.**
+
 ## First compiled V10 milestone — source verified, gameplay not yet certified
 
 - **Successful CI:** https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37851802158
