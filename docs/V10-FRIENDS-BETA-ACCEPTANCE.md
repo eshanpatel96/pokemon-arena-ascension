@@ -1,3 +1,14 @@
+## First compiled V10 milestone — source verified, gameplay not yet certified
+
+- **Successful CI:** https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37851802158
+- **Compiled source commit:** `ed0dd71685d60a0d6b20a9ba623d852c561b6ad6` (`v10-friends-beta`; later documentation commits do not change this ROM).
+- **Native GBA ZIP artifact:** https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37851802158/artifacts/11581739806 — original CI artifact uses inherited V9 label despite containing the V10 source.
+- **Verified extracted 32 MiB `BPEE` ROM SHA-256:** `b37f810efa6b8135256feb6288d6a28250c6ac84a7c72f000b9331ae18045e45`.
+- **Link memory:** ROM 33,498,596/33,554,432 bytes (**55,836 bytes free**); EWRAM 259,989/262,144 (**2,155 free**); IWRAM 30,892/32,768 (**1,876 free**). Performance/actual save runtime untested.
+- **Static checks passed:** all nine native boss entrance/leader/attendant locations walkable and connected; no on-frame auto-trigger, native A/Yes battle event + exit; eight Tower Masters remain sideline; Masters 8x6 teams and 18 rewards; clean West and East tile art audit. Actual screenshots **still required**.
+- **Private review ZIP** with explicit DEV naming/ROM/test instructions and source preview images is available as an artifact in the ChatGPT conversation. Do not call it final friends beta.
+- **Next gate:** real Delta (or mGBA) Bronze four-fight run, press A/decline/accept boss; original Bag, victory/defeat, reload, then representative Championship and Masters progression. Fix bugs reported before friends distribution.
+
 # Pokémon Arena: Ascension — V10 Friends Beta Acceptance
 
 **Scope decision, 8 October 2026:** The user wants a **near-ready V10 game to share with friends**. Include **Masters Circuit**, the completed eight towers and five-round Championship, corrected manual boss approaches and visible Tower Masters, clean/tidy central town and gameplay reliability. Final polish/shinies/extra modalities may follow, but must be tracked rather than silently dropped.
