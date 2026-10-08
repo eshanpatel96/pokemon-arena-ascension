@@ -3,6 +3,17 @@
 **Project opened:** 2026-10-08. **The user approved full V9.**
 This document is the repository-side durable continuation record for the existing ChatGPT Project context **Pokemon Ascension Arena**. Keep the separately uploaded V9 continuation handoff as well.
 
+## Latest V9 expanded-career milestone (source compiled; NOT game verified)
+
+- Source commit: `7226fdad173518890ea19160c81f4ba5e9121448` on `v9-full-build`.
+- Compiled Actions run: https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37838293840
+- GBA build artifact ID: `11577355342`, `Ascension-V9-DEV-UNTESTED-GBA`.
+- Repacked 32 MiB ROM SHA-256: `bf27cbb8865c7e3ce35c4211ac171db9538b4c42c313b5aad8cf22adbd61057d`.
+- New: rank-specific source progression **Bronze 4, Gale 5, Verdant 5, Phantom 6, Inferno 6, Tidal 7, Thunder 8, Astral 9**, with **five provisional Summit battles**; original trainer-party combat, late boss gates, optional mid-run full healing in towers 5–8.
+- Native map generation, source validation, sprite pipeline and GBA compilation succeeded. ZIP, header and ROM size verified separately after downloading the actual artifact.
+- **Still not V9 FINAL:** no live Delta/mGBA full playthrough; middle-campus exterior work and bespoke arena visuals remain incomplete. Older QA checklist assertions about only three floors are now outdated **for this compiled branch**, but their remaining floor flow, save, battle, and visual acceptance items are not completed.
+- Other earlier CI builds listed below are historical baselines.
+
 ## Canonical source and build state
 
 - Repo: https://github.com/eshanpatel96/pokemon-arena-ascension
