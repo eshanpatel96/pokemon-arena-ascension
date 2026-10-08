@@ -60,15 +60,15 @@ src.write_text(v)
 # Readable directory uses the original Emerald text converter.
 # Dynamic progress in gStringVar1/gStringVar2 comes from native career special.
 directory=[
- ("Bronze Trials", "West district - far EAST"),
- ("Gale Tower", "West district - NORTHWEST"),
- ("Verdant Crown", "West district - SOUTHWEST"),
- ("Phantom Spire", "West district - SOUTHEAST"),
- ("Inferno Forge", "West district - far SOUTH"),
- ("Tidal Bastion", "West district - far NORTH"),
- ("Thunder Citadel", "West district - EAST"),
- ("Astral Apex", "West district - NORTHWEST"),
- ("Champion Summit", "EAST district - grand hall")
+ ("Bronze Trials", "WEST district - EAST side"),
+ ("Gale Tower", "WEST district - NORTHWEST"),
+ ("Verdant Crown", "WEST district - SOUTHWEST"),
+ ("Phantom Spire", "WEST district - FAR WEST"),
+ ("Inferno Forge", "EAST district - NORTHEAST"),
+ ("Tidal Bastion", "EAST district - SOUTH"),
+ ("Thunder Citadel", "EAST district - CENTRAL"),
+ ("Astral Apex", "EAST district - NORTHWEST"),
+ ("Champion Summit", "EAST district - NORTH hall")
 ]
 # Construct short 2-line messages, avoid unsupported glyphs and longer than
 # two typical Emerald text lines. Additional guide dialogs are opt-in.
@@ -128,7 +128,7 @@ city_scripts.write_text(v)
 city=json.loads(west.read_text())
 assert len(city["warp_events"])==8
 assert len(city["bg_events"])>=2
-city["bg_events"][0]["script"]="AscensionCity_EventScript_Directory"
+# Existing authentic city signs already have tower labels from V8 layout.
 west.write_text(json.dumps(city,indent=2)+"\n")
 
 # Existing East district NPC points to the right destination; keep the text
