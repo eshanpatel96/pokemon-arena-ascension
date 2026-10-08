@@ -2,8 +2,13 @@ name: Ascension V9 development - static checks and GBA compilation
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ascension-v6.yml'
+      - 'bootstrap/**'
   push:
-    branches: [main, v9-full-build]
+    branches: [main]
     paths:
       - '.github/workflows/ascension-v6.yml'
       - 'bootstrap/**'
@@ -56,6 +61,8 @@ jobs:
           grep -q 'sThemePool\[8\]\[6\]' engine/src/ascension_career.c
           grep -q 'Ascension_ClaimTowerRewards' engine/src/ascension_career.c
           grep -q 'Ascension_RegisterStarterRoster' engine/src/ascension_career.c
+          grep -q 'Ascension_ResetArenaMoves' engine/src/ascension_career.c
+          grep -q 'special ChoosePartyMon' engine/data/maps/AscensionStyleHouse/scripts.inc
           test -s engine/data/maps/AscensionLeader9/map.json
           grep -q 'AscensionItemShop_BattleItems' engine/data/maps/AscensionItemShop/scripts.inc
           grep -q 'MAP_ASCENSION_BRONZE_BOSS' engine/data/maps/AscensionBronzeBoss/map.json
@@ -64,7 +71,7 @@ jobs:
 
       - name: Validate V9 source and static career invariants
         run: |
-          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/check-v9-invariants.py
+          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/check-v9-invariants.py
           python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
 
       - name: Install pinned agbcc compiler
