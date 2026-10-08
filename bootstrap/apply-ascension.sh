@@ -39,5 +39,6 @@ python3 bootstrap/v8-one-door-lab.py "$source_root"
 python3 bootstrap/v8-2-tournament.py "$source_root"
 python3 bootstrap/v8-2-city-life.py "$source_root"
 python3 bootstrap/v8-2-rematches.py "$source_root"
+python3 bootstrap/v9-core.py "$source_root"
 
 echo 'Ascension V6.2 original-engine source and encoded dialogue applied.'
