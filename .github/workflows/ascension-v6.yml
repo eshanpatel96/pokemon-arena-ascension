@@ -56,6 +56,8 @@ jobs:
         run: |
           make -j2 -f make_tools.mk
           make -j2 generated
+          tools/mapjson/mapjson map emerald data/maps/AscensionCity/map.json data/layouts/layouts.json data/maps/AscensionCity
+          tools/mapjson/mapjson map emerald data/maps/AscensionTowerHall/map.json data/layouts/layouts.json data/maps/AscensionTowerHall
           test -f data/maps/AscensionCity/events.inc
           test -f data/maps/AscensionTowerHall/events.inc
 
