@@ -74,6 +74,17 @@ jobs:
           python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/check-v9-invariants.py
           python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
 
+      - name: Export assembled V9 source and city tiles for development diagnostics
+        run: |
+          python3 bootstrap/v9-diagnostic-export.py "$GITHUB_WORKSPACE/engine" "$GITHUB_WORKSPACE/v9-assembled-source.zip"
+
+      - name: Preserve assembled V9 source diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: V9-ASSEMBLED-SOURCE-INSPECTION
+          path: v9-assembled-source.zip
+          if-no-files-found: error
+
       - name: Install pinned agbcc compiler
         run: |
           git clone https://github.com/pret/agbcc.git agbcc
