@@ -1,4 +1,4 @@
-name: Ascension V8.2 tournament, champion chamber and city life (experimental)
+name: Ascension V9 career, trainers, battle economy (experimental)
 
 on:
   workflow_dispatch:
@@ -53,6 +53,8 @@ jobs:
           grep -q 'LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_BATTLE_ROOM' engine/data/maps/AscensionTower1/map.json
           grep -q 'ASCENSION POKEMON LAB' engine/data/maps/AscensionCity/scripts.inc
           grep -q 'Ascension_NextChallengerSprite' engine/src/ascension_career.c
+          grep -q 'sThemePool\[8\]\[6\]' engine/src/ascension_career.c
+          grep -q 'AscensionItemShop_BattleItems' engine/data/maps/AscensionItemShop/scripts.inc
           grep -q 'MAP_ASCENSION_BRONZE_BOSS' engine/data/maps/AscensionBronzeBoss/map.json
           grep -q 'EventScript_AscensionGuide' engine/data/ascension_guide.inc
           grep -q 'MAP_ASCENSION_ARENA_GATE_1' engine/data/maps/AscensionArenaGate1/map.json
@@ -126,7 +128,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension-V8.2-TOURNAMENT-UNTESTED-GBA
+          name: Ascension-V9-ALPHA-UNTESTED-GBA
           path: engine/Pokemon-Arena-Ascension.gba
           if-no-files-found: error
 
