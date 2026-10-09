@@ -80,7 +80,8 @@ for tier in range(1,9):
                  "Move_MasterFacing","Move_MasterBackToSide"):
         assert name+"_"+move+":" in content,(name,move)
     assert " walk_right\\n walk_right\\n face_left\\n step_end".replace("\\n","\n") in content
-    assert " walk_left\\n walk_left\\n walk_up\\n face_right\\n step_end".replace("\\n","\n") in content
+    assert "AscensionTower"+str(tier)+"_Move_PlayerAdvance:\n walk_up\n walk_up\n face_right\n step_end" in content
+    assert "AscensionTower"+str(tier)+"_Move_MasterAside:\n walk_left\n walk_down\n walk_down\n face_up\n step_end" in content
 for label in ("Ascension_TrainChosenStat","Ascension_TrainChosenArenaMove"):
     assert f"void {label}(void)" in career,label
 west=(maps/"AscensionCity/scripts.inc").read_text()
@@ -89,9 +90,23 @@ for key in ("AscensionV101_Text_HP","AscensionV101_Text_Attack",
             "AscensionV101_Text_Defense","AscensionV101_Text_Speed",
             "AscensionV101_Text_SpAtk","AscensionV101_Text_SpDef"):
     assert key in west,key
-for key in ("AscensionV101_Move_Text_Restore","AscensionV101_Move_Text_Guard",
-            "AscensionV101_Move_Text_Evade","AscensionV101_Move_Text_Ranged"):
-    assert key in studio,key
+# Native Emerald's detailed scrolling move list, slot replacement and cancel
+# should be used. Only move profiles genuinely implemented in Arena may show.
+assert "AscensionV102_Move_Text_ChooseMove" in studio
+assert "special TeachMoveRelearnerMove" in studio
+assert "special Ascension_StudioOn" in studio
+assert "special Ascension_StudioOff" in studio
+assert "Ascension_GetStudioMoves(struct Pokemon" in career
+assert (root/"src/ascension_studio_legal.inc").is_file()
+report=json.loads((root/"v10-2-move-coverage.json").read_text())
+assert report["roster"]==187
+assert report["existing_Arena_move_profiles"]>=80
+assert report["usable_species_move_pairs"]>2500
+assert report["missing_species_move_pairs"]>0
+bronze=(maps/"AscensionTower1/scripts.inc").read_text()
+assert "warp MAP_ASCENSION_BRONZE_BOSS, 5, 12" in bronze
+biomes=(root/"src/arena_biomes.inc").read_text()
+assert "case MAP_ASCENSION_LEADER_8:gArenaBiome=4;gArenaStage=12;break;" in biomes
 boss_bronze=json.loads((maps/"AscensionBronzeBoss/map.json").read_text())
 assert boss_bronze["object_events"][1]["graphics_id"]=="OBJ_EVENT_GFX_HIKER"
 
