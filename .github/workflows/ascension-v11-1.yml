@@ -2,7 +2,7 @@ name: V11.1 actual ROM - campus and tactical AI development
 on:
   push:
     branches: [v11-1-beta]
-    paths: ['.github/workflows/ascension-v11-1.yml', 'bootstrap/v11-1/**']
+    paths: ['.github/workflows/ascension-v11-1.yml', 'bootstrap/v11-1/**', 'bootstrap/v11-smoke.c']
   workflow_dispatch:
 concurrency:
   group: ascension-v11-1-${{ github.ref }}
