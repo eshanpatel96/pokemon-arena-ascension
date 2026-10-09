@@ -1,0 +1,33 @@
+name: V11 headless emulator SDK
+on:
+  push:
+    branches: [v11-tower-redesign]
+    paths: ['.github/workflows/v11-headless-sdk.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned dependency without desktop or multimedia libraries
+        run: |
+          git clone --depth 1 --branch 0.10.3 https://github.com/mgba-emu/mgba.git mgba
+          cmake -S mgba -B mgba-build -DCMAKE_BUILD_TYPE=Release -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_GL=OFF -DBUILD_GLES2=OFF -DBUILD_GLES3=OFF -DBUILD_LTO=OFF -DBUILD_SHARED=ON -DBUILD_STATIC=OFF -DDISABLE_DEPS=ON -DUSE_DEBUGGERS=OFF -DENABLE_SCRIPTING=OFF -DM_CORE_GBA=ON -DM_CORE_GB=OFF
+          cmake --build mgba-build -j2
+          mkdir -p sdk/include
+          cp -a mgba/include/mgba mgba/include/mgba-util sdk/include/
+          cp mgba-build/include/mgba/flags.h sdk/include/mgba/flags.h
+          cp -a mgba-build/libmgba.so* sdk/
+          gcc -O2 -I sdk/include bootstrap/v11-smoke.c -L sdk -lmgba -Wl,-rpath,'$ORIGIN' -o sdk/v11-smoke
+          git -C mgba rev-parse HEAD > sdk/mgba-source-sha.txt
+          cp mgba/LICENSE sdk/LICENSE-mGBA
+          ldd sdk/v11-smoke
+          tar -czf v11-headless-sdk.tar.gz sdk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: V11-HEADLESS-EMULATOR-SDK
+          path: v11-headless-sdk.tar.gz
+          if-no-files-found: error
