@@ -35,7 +35,7 @@ jobs:
           echo '9dd86e04c4503b4969cd4000175631c09a205621db6a027bea83e075c77a4e58  rom/Pokemon-Arena-Ascension-V11.gba' | sha256sum -c
           cp rom/manifest.json output/rom-manifest.json
           cp bootstrap/v11-visual-proof.c output/
-          gcc -O2 -std=c11 bootstrap/v11-visual-proof.c -lmgba -o output/native-proof
+          gcc -O2 -std=c11 -D_GNU_SOURCE bootstrap/v11-visual-proof.c -lmgba -o output/native-proof
           set -o pipefail
           timeout 180 output/native-proof rom/Pokemon-Arena-Ascension-V11.gba evidence/symbols.txt output 2>&1 | tee output/proof.log
       - name: Lossless capture conversion
