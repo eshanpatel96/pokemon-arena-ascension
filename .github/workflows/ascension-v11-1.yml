@@ -1,8 +1,8 @@
-name: V11.1 actual ROM - campus and tactical AI development
+name: V11.1 gameplay build - compact bosses, roster and campus
 on:
   push:
     branches: [v11-1-beta]
-    paths: ['.github/workflows/ascension-v11-1.yml', 'bootstrap/v11-1/**', 'bootstrap/v11-smoke.c']
+    paths: ['.github/workflows/ascension-v11-1.yml', 'bootstrap/v11-1/**']
   workflow_dispatch:
 concurrency:
   group: ascension-v11-1-${{ github.ref }}
@@ -19,37 +19,27 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - name: Native build and emulator dependencies
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-ASSEMBLED-SOURCE
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Native dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential git patch xz-utils gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl libmgba-dev
-      - name: Reconstruct pinned existing engine
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3-pil libmgba-dev
+      - name: Verify exact assembled baseline and apply game changes
         run: |
-          git clone https://github.com/pret/pokeemerald.git engine
-          git -C engine checkout --detach 5eff78649e7170a877b961ef0b3da13b81a16038
-          git clone https://github.com/GBurgardt/pokemon-emerald-arena.git arena-upstream
-          git -C arena-upstream checkout --detach e1502f9f7ed46d969880d73adbf5ab23ef7b2a56
-          git -C engine apply ../arena-upstream/game/native-engine.patch
-          cp -a arena-upstream/game/overlay/. engine/
-          bash bootstrap/apply-ascension.sh "$GITHUB_WORKSPACE/engine" "$RUNNER_TEMP/ascension"
-          python3 bootstrap/check-v9-invariants.py engine
-          python3 bootstrap/check-v10-friends.py engine baseline-native-previews
-      - name: Preserve V11 and apply first V11.1 campus and AI code slice
-        run: |
-          python3 bootstrap/apply-v11.py engine
-          python3 bootstrap/v11-hotfix.py engine
+          echo '0812cedb0e1b9affae7d9705157ff392fad7f51211e4889f30a4e4927ae726c7  baseline/v11-1-assembled-source.tar.gz' | sha256sum -c
+          tar -xzf baseline/v11-1-assembled-source.tar.gz engine
           mkdir -p delivery evidence
-          python3 bootstrap/v11-1/apply.py engine | tee evidence/v11-1-apply.log
+          python3 bootstrap/v11-1/phase2.py engine | tee evidence/phase2-static.log
           gcc -std=c99 -Wall -Wextra -Werror -I engine/include -I bootstrap/v11-1 bootstrap/v11-1/test_ai.c -o evidence/test-ai
           evidence/test-ai | tee evidence/ai-unit-tests.txt
-          cp engine/v11-static-report.json engine/v11-room-manifest.json engine/v10-2-move-coverage.json engine/v11-1-first-slice-report.json evidence/
+          cp engine/v11-1-phase2-report.json engine/v11-room-manifest.json engine/v10-2-move-coverage.json evidence/
           git rev-parse HEAD > evidence/source-commit.txt
-      - name: Install pinned GBA compiler
-        run: |
-          git clone https://github.com/pret/agbcc.git agbcc
-          git -C agbcc checkout --detach da598c1d918402c42c0c0d7128ba14567f3175e9
-          (cd agbcc && ./build.sh && ./install.sh "$GITHUB_WORKSPACE/engine")
-      - name: Generate native maps and original Arena artwork
+      - name: Generate native maps and pinned original Arena art
         working-directory: engine
         run: |
           make -j2 -f make_tools.mk
@@ -59,72 +49,61 @@ jobs:
             tools/mapjson/mapjson map emerald "$map" data/layouts/layouts.json "$dir"
             test -s "$dir/events.inc"
           done
-          sed -i 's/-lpng -o /-lpng -lm -o /g' tools/arena/dev.sh
-          sed -i 's/-Werror /-Werror -Wno-error=misleading-indentation /g' tools/arena/dev.sh
           ./tools/arena/dev.sh assets
-          cat >> Makefile <<'MAKEFILE_EOF'
-
-          PREPACKED_ARENA_ASSETS := $(wildcard .arena-dev/art/*.4bpp .arena-dev/art/*.8bpp .arena-dev/art/*.gbapal .arena-dev/art/*.bin graphics/arena/oswarlin/*.8bpp graphics/arena/storm/*.8bpp graphics/arena/storm/*.gbapal graphics/title_screen/ascension_v11/*)
-          $(PREPACKED_ARENA_ASSETS): ; @test -s "$@"
-          MAKEFILE_EOF
-      - name: Compile actual V11.1 development GBA, not the final Beta
+          python3 ../bootstrap/v11-1/deduplicate_art.py .
+          cp v11-1-art-dedup-proof.json ../evidence/
+      - name: Compile the changed real GBA ROM
         working-directory: engine
         run: |
           set -o pipefail
-          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Arena-Ascension-V11-1-DEV 2>&1 | tee ../v11-1-build.log
-          cp Pokemon-Arena-Ascension-V11-1-DEV.gba ../delivery/
-          cp Pokemon-Arena-Ascension-V11-1-DEV.elf Pokemon-Arena-Ascension-V11-1-DEV.map ../evidence/
-          arm-none-eabi-nm -n Pokemon-Arena-Ascension-V11-1-DEV.elf > ../evidence/symbols.txt
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Ascension-Arena-V11-1-GAMEPLAY-TEST 2>&1 | tee ../evidence/build.log
+          cp Pokemon-Ascension-Arena-V11-1-GAMEPLAY-TEST.gba ../delivery/
+          cp Pokemon-Ascension-Arena-V11-1-GAMEPLAY-TEST.elf Pokemon-Ascension-Arena-V11-1-GAMEPLAY-TEST.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-Ascension-Arena-V11-1-GAMEPLAY-TEST.elf > ../evidence/symbols.txt
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,json,os
-          b=Path('Pokemon-Arena-Ascension-V11-1-DEV.gba').read_bytes()
-          assert 16*1024*1024<=len(b)<=32*1024*1024 and b[0xac:0xb0]==b'BPEE'
-          m={'source_commit':os.environ['GITHUB_SHA'],'rom_sha256':hashlib.sha256(b).hexdigest(),'rom_bytes':len(b),'status':'V11.1 DEVELOPMENT FIRST SLICE - NOT FINAL BETA','native_engine':'Emerald Arena 0.13.0','delta_test':'not performed by CI','new_legal_moves':0,'remaining_scope':'Full approved V11.1 requirements remain open except explicitly evidenced tests.'}
-          for p in ('../delivery/manifest.json','../evidence/build-manifest.json'):
-              Path(p).write_text(json.dumps(m,indent=2)+'\n')
-          g=json.loads(Path('data/maps/map_groups.json').read_text())
-          for gi,k in enumerate(g['group_order']):
-              if 'AscensionCity' in g[k]:
-                  Path('../evidence/city-id.txt').write_text(f"{gi} {g[k].index('AscensionCity')}")
-          assert Path('../evidence/city-id.txt').exists()
-          Path('../delivery/README.txt').write_text('Development checkpoint only. First campus paving/signs and tactical AI code. NOT complete V11.1 Beta. Do not replace the main save. Full town, boss mechanics, legal move coverage, services, save/campaign and Delta acceptance remain open. Inspect runtime.log even when the ROM compiles.\n')
+          p=Path('Pokemon-Ascension-Arena-V11-1-GAMEPLAY-TEST.gba');b=p.read_bytes()
+          assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
+          m={'source_commit':os.environ['GITHUB_SHA'],'rom_sha256':hashlib.sha256(b).hexdigest(),'rom_bytes':len(b),'status':'V11.1 GAMEPLAY TEST - not full approved Beta acceptance','native_engine':'Emerald Arena 0.13.0','save_policy':'Accepted title and native save code unchanged; expanded save testing deferred by user','delta_test':'not performed by CI','new_move_profiles':0,'remaining':'Full legal move profiles and Box editor, nature service, complete interactive environments, remaining architecture, full normal campaign and Delta tests'}
+          for target in ('../delivery/manifest.json','../evidence/build-manifest.json'):Path(target).write_text(json.dumps(m,indent=2)+'\n')
+          Path('../delivery/README.txt').write_text('V11.1 gameplay test: compact 13 boss courts, native center mosaics, expanded campus paving/planter, batched starter catalog, rewards-only Birch, legal supported enemy loadouts and EV reset. Not the entire approved Beta. Keep your prior ROM and Delta states together. Native Save/Continue and title/menu are unchanged. Cross-ROM state compatibility is not asserted. See manifest.json for remaining work.\n')
           print(json.dumps(m,indent=2))
           PY
-      - name: Native mGBA boot, New Game and existing save smoke - do not waive failures
+      - name: Native startup and actual boss/city/battle framebuffer captures
         run: |
-          gcc -O2 -std=c11 bootstrap/v11-smoke.c -lmgba -o evidence/v11-smoke
+          gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/v11-visual-proof.c -lmgba -o evidence/gameplay-proof
           set -o pipefail
-          timeout 180 evidence/v11-smoke delivery/Pokemon-Arena-Ascension-V11-1-DEV.gba evidence/symbols.txt evidence/runtime auto - $(cat evidence/city-id.txt) 2>&1 | tee evidence/runtime.log
-      - name: Preserve actual runtime images and logs including failures
+          timeout 240 evidence/gameplay-proof delivery/Pokemon-Ascension-Arena-V11-1-GAMEPLAY-TEST.gba evidence/symbols.txt evidence/runtime 2>&1 | tee evidence/gameplay.log
+      - name: Preserve evidence and fully rebuildable packed source
         if: always()
         run: |
           mkdir -p evidence
-          cp v11-1-build.log evidence/ 2>/dev/null || true
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image
           for p in Path('evidence').rglob('*.ppm'):
               Image.open(p).save(p.with_suffix('.png'));p.unlink()
+          Path('evidence/README.txt').write_text('Actual mGBA framebuffer captures. Debugger-selected room/rank fixtures accelerate inspection; they do not prove earned progression. No extended save testing was added in this pass. Check logs and images; successful compilation/capture is not full campaign/Delta acceptance.\n')
           PY
-          if [ -f engine/v11-room-manifest.json ]; then
-            tar --exclude='.git' --exclude='.arena-dev' --exclude='*.gba' --exclude='*.elf' --exclude='*.map' --exclude='build' -czf v11-1-assembled-source.tar.gz engine bootstrap docs
+          if [ -d engine ]; then
+            tar --exclude='.git' --exclude='source' --exclude='*.gba' --exclude='*.elf' --exclude='*.map' --exclude='build' -czf v11-1-packed-gameplay-source.tar.gz engine bootstrap docs
           fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: V11-1-DEVELOPMENT-ROM-NOT-FINAL-BETA
+          name: V11-1-GAMEPLAY-TEST-ROM
           path: delivery/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: V11-1-FIRST-SLICE-BUILD-AND-TEST-EVIDENCE
+          name: V11-1-GAMEPLAY-EVIDENCE
           path: evidence/
           if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: V11-1-ASSEMBLED-SOURCE
-          path: v11-1-assembled-source.tar.gz
+          name: V11-1-PACKED-GAMEPLAY-SOURCE
+          path: v11-1-packed-gameplay-source.tar.gz
           if-no-files-found: ignore
