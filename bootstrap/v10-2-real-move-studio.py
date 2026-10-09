@@ -73,7 +73,7 @@ s+="""
 
 // Original Emerald four-move learner UI bridge; no fake scripted move drills.
 #include "ascension_studio_legal.inc"
-u8 gAscensionStudioMode=FALSE;
+EWRAM_DATA u8 gAscensionStudioMode=0;
 void Ascension_StudioOn(void) {gAscensionStudioMode=TRUE;}
 void Ascension_StudioOff(void) {gAscensionStudioMode=FALSE;}
 u8 Ascension_GetStudioMoves(struct Pokemon *mon,u16 *output)
