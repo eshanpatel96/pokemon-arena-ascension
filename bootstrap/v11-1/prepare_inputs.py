@@ -20,4 +20,21 @@ b=' goto_if_set FLAG_ASCENSION_STARTER_ROSTER_CLAIMED, AscensionV111_RosterReady
 assert s.count(a)==1 or s.count(b)==1
 p.write_text(s.replace(a,b,1))
 (r/'v11-1-preserved-build-inputs.json').write_text(json.dumps(proof,indent=2)+'\n')
-print('Verified and restored three byte-identical embedded native programs; native flag macro corrected.')
+# Host-only inspection fixture. A fixed one-frame callback injection can be
+# missed while native field code is still running. Require the actual warp.
+p=Path(__file__).resolve().parents[1]/'v11-visual-proof.c';s=p.read_text()
+a='w32(sym("gMain")+4,sym("WarpIntoMap")|1);frames(1,0);'
+b='''w32(sym("gMain")+4,sym("WarpIntoMap")|1);
+ unsigned wait;
+ for(wait=0;wait<180;wait++){
+  frames(1,0);uint32_t sb=r32(sym("gSaveBlock1Ptr"));
+  if(r8(sb+4)==26 && r8(sb+5)==map && r16(sb)==x && r16(sb+2)==y)break;
+ }
+ if(wait==180){fprintf(stderr,"Native warp fixture did not execute to %u\\n",map);exit(6);}'''
+assert s.count(a)==1 or 'Native warp fixture did not execute' in s
+s=s.replace(a,b,1).replace('frames(480,0);snap("02-city")','frames(900,0);snap("02-city")')
+a='frames(240,0);\n printf("DEBUG_FIXTURE'
+b='frames(240,0);\n uint32_t sb=r32(sym("gSaveBlock1Ptr"));if(r8(sb+4)!=26 || r8(sb+5)!=map){fprintf(stderr,"Wrong capture map, expected %u\\n",map);exit(7);}\n printf("DEBUG_FIXTURE'
+s=s.replace(a,b,1)
+p.write_text(s)
+print('Verified three unchanged embedded programs; native flag macro and actual-room capture assertions corrected.')
