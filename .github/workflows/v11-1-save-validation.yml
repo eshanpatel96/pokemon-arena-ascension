@@ -1,0 +1,95 @@
+name: V11.1 save and cold-continue verification
+on:
+  push:
+    branches: [v11-1-beta]
+    paths: ['.github/workflows/v11-1-save-validation.yml', 'bootstrap/v11-smoke.c']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-DEVELOPMENT-ROM-NOT-FINAL-BETA
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: rom
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-FIRST-SLICE-BUILD-AND-TEST-EVIDENCE
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: previous-evidence
+      - name: Install matching native mGBA headers and library
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc libmgba-dev python3-pil
+      - name: Verify unchanged ROM and corrected test-runner ABI
+        run: |
+          mkdir -p proof
+          echo '93e6a36e7f3b85dc6c6328b4f479bb264ef9ecfbb8ab08b053ca786531a36770  rom/Pokemon-Arena-Ascension-V11-1-DEV.gba' | sha256sum -c
+          cp rom/manifest.json proof/rom-manifest.json
+          cp bootstrap/v11-smoke.c proof/
+          git rev-parse HEAD > proof/test-source-commit.txt
+          gcc -O2 -std=c11 -Wall -Wextra bootstrap/v11-smoke.c -lmgba -o proof/save-smoke
+          set -o pipefail
+          timeout 180 proof/save-smoke rom/Pokemon-Arena-Ascension-V11-1-DEV.gba previous-evidence/symbols.txt proof/runtime auto - $(cat previous-evidence/city-id.txt) 2>&1 | tee proof/runtime.log
+      - name: Cold process must load the actual exported disk save
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          group,num=map(int,Path('previous-evidence/city-id.txt').read_text().split())
+          commands=f'''frames 300 0
+          expect gSaveFileStatus 0 2 1
+          press 8
+          frames 140 0
+          snap disk-continue-menu
+          press 1
+          frames 380 0
+          map {group} {num}
+          expect gPlayerPartyCount 0 1 6
+          snap disk-loaded-city
+          save disk-roundtrip
+          '''
+          Path('proof/cold-continue.txt').write_text(commands)
+          PY
+          set -o pipefail
+          timeout 120 proof/save-smoke rom/Pokemon-Arena-Ascension-V11-1-DEV.gba previous-evidence/symbols.txt proof/cold proof/cold-continue.txt proof/runtime/fresh-career.sav 2>&1 | tee proof/cold.log
+          cmp proof/runtime/fresh-career.sav proof/runtime/after-canceled-restart.sav
+          cmp proof/runtime/fresh-career.sav proof/cold/disk-roundtrip.sav
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,struct
+          data=Path('proof/runtime/fresh-career.sav').read_bytes()
+          assert len(data)==131072
+          valid=[]
+          for i in range(28):
+              section,checksum,signature,counter=struct.unpack_from('<HHII',data,i*4096+4084)
+              if signature==0x08012025:
+                  valid.append({'sector':i,'section':section,'counter':counter})
+          assert len(valid)>=14 and set(v['section'] for v in valid)==set(range(14)), 'Expected complete native save-slot sections'
+          result={'rom_sha256':hashlib.sha256(Path('rom/Pokemon-Arena-Ascension-V11-1-DEV.gba').read_bytes()).hexdigest(),'save_bytes':len(data),'save_sha256':hashlib.sha256(data).hexdigest(),'disk_continue':'passed in separate process','restart_cancel_flash_unchanged':True,'valid_native_sections':valid,'scope':'Fresh-city save/Continue/restart-cancel smoke only. Not full campaign, legacy save migration, corrupted-save recovery, complete V11.1 Beta or Delta acceptance.'}
+          Path('proof/result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Preserve real framebuffer images and failures
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('proof').rglob('*.ppm'):
+              Image.open(p).save(p.with_suffix('.png'));p.unlink()
+          Path('proof/README.txt').write_text('Actual native mGBA inputs and framebuffer captures. Save files are newly generated test fixtures, not the user main save. ROM is the unchanged c9166a8 development artifact. Include mgba/flags.h before core.h so the host structure matches the distribution library. B is sent only once the native restart-confirmation task accepts input. No game memory is written by the runner. This validation does not complete town, moves, bosses, services, campaign or Delta acceptance. Check result.json and both logs.\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V11-1-SAVE-CONTINUE-PROOF-NOT-RELEASE
+          path: proof/
+          if-no-files-found: error
