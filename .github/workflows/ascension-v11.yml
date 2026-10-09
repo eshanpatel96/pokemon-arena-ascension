@@ -41,6 +41,7 @@ jobs:
           mkdir -p delivery evidence
           cp engine/v11-static-report.json engine/v11-room-manifest.json engine/v10-2-move-coverage.json evidence/
           cp bootstrap/v11-native-build.py evidence/
+          cp bootstrap/v11-hotfix.py evidence/ 2>/dev/null || true
           git rev-parse HEAD > evidence/source-commit.txt
       - name: Install pinned GBA compiler
         run: |
@@ -83,9 +84,10 @@ jobs:
           Path('../delivery/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           Path('../evidence/build-manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           g=json.loads(Path('data/maps/map_groups.json').read_text())
-          for gi,k in enumerate(g['_group_order']):
+          for gi,k in enumerate(g['group_order']):
               if 'AscensionCity' in g[k]:
                   Path('../evidence/city-id.txt').write_text(f"{gi} {g[k].index('AscensionCity')}")
+          assert Path('../evidence/city-id.txt').exists(), 'Native Ascension city group not found'
           print(json.dumps(m,indent=2))
           PY
       - name: Native mGBA fresh boot, New Game, SAVE and CONTINUE smoke
