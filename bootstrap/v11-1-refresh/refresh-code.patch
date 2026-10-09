@@ -1,0 +1,368 @@
+--- a/src/realtime_arena.c
++++ b/src/realtime_arena.c
+@@ -189,6 +189,8 @@
+ static void StormBiome(const u32 *tiles,const u16 *pal);
+ static void StormSprites(void);
+ static u16 StormSpeed(u8 side,u16 speed);
++static bool8 AscensionRefresh_Wet(u8 side);
++#include "ascension_refresh_math.inc"
+ static bool8 StormEvade(void);
+ static bool8 StormActive(void);
+ static void StormDraw(u16 budget);
+@@ -1926,6 +1928,10 @@
+ {
+     u8 targetSide=side^1;
+     struct ArenaBody *target=&sArena.bodies[targetSide];
++    damage=AscensionRefresh_DamageValue(damage,
++        VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1,AscensionRefresh_Wet(side),
++        gBattleMoves[move].type==TYPE_WATER,(gBattleWeather&B_WEATHER_RAIN)!=0,
++        move==MOVE_SEISMIC_TOSS||move==MOVE_NIGHT_SHADE,move==MOVE_BIDE);
+     if(damage>0)
+     {
+         u16 hp=gBattleMons[targetSide].hp;
+@@ -2928,8 +2934,8 @@
+     StringCopy(gSaveBlock2Ptr->playerName, sDemoName);
+     gSaveBlock2Ptr->playerGender = MALE;
+     gSaveBlock2Ptr->optionsTextSpeed = OPTIONS_TEXT_SPEED_FAST;
+-    SetWarpDestination(MAP_GROUP(MAP_ASCENSION_CITY), MAP_NUM(MAP_ASCENSION_CITY),
+-                       WARP_ID_NONE, 26, 40);
++    SetWarpDestination(MAP_GROUP(MAP_ASCENSION_TEAM_LAB), MAP_NUM(MAP_ASCENSION_TEAM_LAB),
++                       WARP_ID_NONE, 6, 5);
+     WarpIntoMap();
+     SetLastHealLocationWarp(HEAL_LOCATION_ASCENSION_CITY);
+     VarSet(VAR_ASCENSION_CAREER_ACTIVE, 1);
+@@ -2969,5 +2975,6 @@
+ 
+ void RealtimeArena_DemoFieldCallback(void)
+ {
+-    Ascension_V111StartRosterTask();
+-}
++    // Show the lab first. Birch owns the visible, batched registration flow.
++    FieldCB_WarpExitFadeFromBlack();
++}
+--- a/src/ascension_v111_services.inc
++++ b/src/ascension_v111_services.inc
+@@ -113,7 +113,7 @@
+ static void Task_V111Roster(u8 id)
+ {
+     u8 i;
+-    for(i=0;i<2;i++)if(V111StarterStep())
++    for(i=0;i<1;i++)if(V111StarterStep())
+     {
+         bool8 fromScript=gTasks[id].data[0];
+         DestroyTask(id);
+--- a/data/maps/AscensionTeamLab/scripts.inc
++++ b/data/maps/AscensionTeamLab/scripts.inc
+@@ -1,5 +1,9 @@
+ AscensionTeamLab_MapScripts::
++ map_script MAP_SCRIPT_ON_FRAME_TABLE, AscensionRefresh_LabOnFrame
+  .byte 0
++AscensionRefresh_LabOnFrame:
++ map_script_2 VAR_ASCENSION_TUTORIAL, 0, AscensionRefresh_Onboarding
++ .2byte 0
+ AscensionTeamLab_EventScript_Professor::
+  lock
+  faceplayer
+@@ -79,3 +83,47 @@
+  .string "Sync your starting collection?\nExisting POKEMON stay unchanged.$"
+ AscensionV111_RosterDoneText:
+  .string "Starting collection ready!\nBIRCH handles earned rewards.$"
++
++@ New career only. Existing INTRO/menu art is unchanged; no Emerald story detour.
++AscensionRefresh_Onboarding::
++ lockall
++ setvar VAR_ASCENSION_TUTORIAL, 1
++ turnobject LOCALID_PLAYER, DIR_NORTH
++ msgbox AscensionRefresh_Welcome, MSGBOX_DEFAULT
++ msgbox AscensionRefresh_Register, MSGBOX_DEFAULT
++ special Ascension_V111SyncRoster
++ waitstate
++ goto_if_eq VAR_RESULT, 0, AscensionRefresh_NoSpace
++ msgbox AscensionRefresh_RosterReady, MSGBOX_DEFAULT
++AscensionRefresh_Briefing::
++ msgbox AscensionRefresh_ExplainChoice, MSGBOX_YESNO
++ goto_if_eq VAR_RESULT, NO, AscensionRefresh_LeaveLab
++ msgbox AscensionRefresh_Team, MSGBOX_DEFAULT
++ msgbox AscensionRefresh_Controls, MSGBOX_DEFAULT
++ msgbox AscensionRefresh_Runs, MSGBOX_DEFAULT
++ msgbox AscensionRefresh_Services, MSGBOX_DEFAULT
++AscensionRefresh_LeaveLab::
++ msgbox AscensionRefresh_FirstGoal, MSGBOX_DEFAULT
++ releaseall
++ end
++AscensionRefresh_NoSpace::
++ msgbox AscensionTeamLab_Text_NoStorage, MSGBOX_DEFAULT
++ goto AscensionRefresh_Briefing
++AscensionRefresh_Welcome:
++ .string "BIRCH: Welcome to ASCENSION!\nBuild a team. Climb eight towers.$"
++AscensionRefresh_Register:
++ .string "Registering your collection...\nThis takes a moment. Please wait.$"
++AscensionRefresh_RosterReady:
++ .string "Your party and BOXES are ready!\nUse the PC to choose your team.$"
++AscensionRefresh_ExplainChoice:
++ .string "Hear the arena basics?\nChoose NO to skip the briefing.$"
++AscensionRefresh_Team:
++ .string "Six POKEMON travel with you.\nThe rest wait in your BOXES.\pUse the PC before a tower run.\nI register your earned recruits.$"
++AscensionRefresh_Controls:
++ .string "L/R selects a move. A attacks.\nB + direction dodges.\pSTART opens battle menus.\nUse items or switch POKEMON.$"
++AscensionRefresh_Runs:
++ .string "Defeat the whole enemy team!\nA single knockout is not a win.\pHP carries between encounters.\nAccept advertised recovery stops.$"
++AscensionRefresh_Services:
++ .string "START > CITY MAP shows both\ndistricts, towers and services.\pThe LAB aide heals for free.\nMOVE STUDIO edits party moves.$"
++AscensionRefresh_FirstGoal:
++ .string "Begin with BRONZE TRIALS.\nOpen CITY MAP for directions.\pTake your time preparing.\nReturn here whenever you need.$"
+--- /dev/null
++++ b/src/ascension_refresh_math.inc
+@@ -0,0 +1,15 @@
++/* Pure integer policies; both sides share exactly the same rules. */
++static s32 AscensionRefresh_DamageValue(s32 raw, bool8 career, bool8 wet,
++    bool8 waterMove, bool8 raining, bool8 fixedDamage, bool8 retaliation)
++{
++    if (!career || raw <= 0 || retaliation) return raw;
++    /* A rain bonus already exists in native damage. Do not multiply it twice. */
++    if (wet && waterMove && !raining && !fixedDamage) raw = raw * 120 / 100;
++    return (raw + 1) / 2;
++}
++static u16 AscensionRefresh_SpeedValue(u16 speed, bool8 career, bool8 wet,
++    bool8 grounded, bool8 waterType)
++{
++    if (!career || !wet || !grounded) return speed;
++    return waterType ? speed * 115 / 100 : speed * 3 / 4;
++}
+--- a/src/arena_elements.inc
++++ b/src/arena_elements.inc
+@@ -113,8 +113,17 @@
+     u32 i,j,pass,mask=0,changed=0;
+     u8 type=gBattleMoves[shot->move].type;
+     s16 x=shot->x/Q,y=shot->y/Q;
++    if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1 && type==TYPE_FIRE && !(shot->age%12))
++    {
++        bool8 wet=RealtimeArena_IsFlooded(x,y);
++        for(i=0;i<ELEMENT_COUNT;i++)
++            if(sSurfaces[i].kind && ElementContains(&sSurfaces[i],x,y))wet=TRUE;
++        if(!wet && x>=30 && x<=210 && y>=45 && y<=132
++           && ArenaNav_LineClear(x,y,x,y,4))ArenaTerrain_Scorch(x,y);
++    }
+     if(type==TYPE_WATER)
+     {
++        ArenaTerrain_ExtinguishScorch(x,y);
+         if(!(shot->age%6))
+         {
+             if(shot->move==MOVE_SURF)
+@@ -241,3 +250,16 @@
+         {ArenaRender_Copy(sElementBreak+frame*512,(u8*)OBJ_VRAM0+GetSpriteTileStartByTag(ELEMENT_TAG+3)*32,2048);sElementFrames[3]=frame;}
+     }
+ }
++
++static bool8 AscensionRefresh_Wet(u8 side)
++{
++    u32 i;
++    s16 x=sArena.bodies[side].x/Q,y=sArena.bodies[side].y/Q;
++    if(!ElementGrounded(side))return FALSE;
++    if(RealtimeArena_IsFlooded(x,y))return TRUE;
++    for(i=0;i<ELEMENT_COUNT;i++)
++        if((sSurfaces[i].kind==SURFACE_WATER||sSurfaces[i].kind==SURFACE_CHARGED)
++           && sSurfaces[i].life && sSurfaces[i].sprite<MAX_SPRITES
++           && ElementContains(&sSurfaces[i],x,y))return TRUE;
++    return FALSE;
++}
+--- a/src/arena_storm.inc
++++ b/src/arena_storm.inc
+@@ -71,6 +71,9 @@
+ static bool8 StormActive(void){return sStorm.life!=0;}
+ static u16 StormSpeed(u8 side,u16 speed)
+ {
++    if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1)
++        return AscensionRefresh_SpeedValue(speed,TRUE,AscensionRefresh_Wet(side),
++            ElementGrounded(side),IS_BATTLER_OF_TYPE(side,TYPE_WATER));
+     if(sStorm.life&&StormWet(sArena.bodies[side].x/Q,sArena.bodies[side].y/Q)
+         &&ElementGrounded(side)&&!IS_BATTLER_OF_TYPE(side,TYPE_WATER))return speed*3/4;
+     return speed;
+--- a/src/arena_terrain.c
++++ b/src/arena_terrain.c
+@@ -28,7 +28,7 @@
+ static const u32 sCrater[]=INCBIN_U32(".arena-dev/art/crater.4bpp");
+ static const struct OamData sCraterOam={.shape=SPRITE_SHAPE(64x32),.size=SPRITE_SIZE(64x32),.priority=1};
+ static EWRAM_DATA u8 sCraterSprite=0,sCraterFrame=0;
+-static EWRAM_DATA u16 sCraterAge=0;
++static EWRAM_DATA u16 sCraterAge=0, sScorchLife=0;
+ static const u16 sPalette[16]={0,RGB(6,9,7),RGB(11,14,10),RGB(15,18,15),RGB(21,24,18),
+     RGB(28,30,24),RGB(13,8,5),RGB(21,13,7),RGB(13,20,7),RGB(30,23,11),
+     RGB(22,27,10),RGB(5,20,27),RGB(22,31,31),RGB(17,10,25),RGB(31,10,4),RGB(31,30,19)};
+@@ -93,18 +93,33 @@
+     template.tileTag=TAG+ARENA_OBSTACLES+2;template.oam=&sCraterOam;
+     sCraterSprite=CreateSprite(&template,0,0,11);
+     if(sCraterSprite!=MAX_SPRITES)gSprites[sCraterSprite].invisible=TRUE;
+-    sCraterAge=0;sCraterFrame=255;
++    sCraterAge=0;sCraterFrame=255;sScorchLife=0;
+ }
+ // DidierRLopes, PR #1: last impact remains visible throughout the battle.
+ void ArenaTerrain_Crater(s16 x,s16 y)
+ {
++    sScorchLife=0;
+     if(sCraterSprite==MAX_SPRITES)return;
+     gSprites[sCraterSprite].x=x;gSprites[sCraterSprite].y=y;
+     gSprites[sCraterSprite].invisible=FALSE;sCraterAge=1;
+ }
++void ArenaTerrain_Scorch(s16 x,s16 y)
++{
++    if(sCraterSprite==MAX_SPRITES || sScorchLife>150)return;
++    ArenaTerrain_Crater(x,y);
++    sScorchLife=180;
++}
++void ArenaTerrain_ExtinguishScorch(s16 x,s16 y)
++{
++    if(sScorchLife && sCraterSprite<MAX_SPRITES
++        && abs(gSprites[sCraterSprite].x-x)<30 && abs(gSprites[sCraterSprite].y-y)<16)
++    {sScorchLife=0;sCraterAge=0;gSprites[sCraterSprite].invisible=TRUE;}
++}
+ void ArenaTerrain_Draw(bool8 paused,bool8 frozen)
+ {
+     u32 i;
++    if(sScorchLife && !paused && !frozen && !--sScorchLife)
++    {sCraterAge=0;if(sCraterSprite<MAX_SPRITES)gSprites[sCraterSprite].invisible=TRUE;}
+     if(sCraterSprite!=MAX_SPRITES&&sCraterAge)
+     {
+         u8 frame=sCraterAge<30?0:1;
+--- a/include/arena_terrain.h
++++ b/include/arena_terrain.h
+@@ -4,6 +4,8 @@
+ extern u8 gArenaBiome;
+ void ArenaTerrain_Init(void);
+ void ArenaTerrain_Crater(s16 x,s16 y);
++void ArenaTerrain_Scorch(s16 x,s16 y);
++void ArenaTerrain_ExtinguishScorch(s16 x,s16 y);
+ bool8 ArenaTerrain_ReserveProjectile(void);
+ void ArenaTerrain_Draw(bool8 paused,bool8 frozen);
+ #endif
+--- /dev/null
++++ b/src/ascension_city_map_markers.inc
+@@ -0,0 +1,3 @@
++struct RefreshMapMarker {u8 x,y;const u8 name[20];};
++static const struct RefreshMapMarker sRefreshMarkers0[]={{78,43,_("BRONZE")},{42,27,_("GALE")},{30,60,_("VERDANT")},{83,69,_("SUPPLIES")},{92,80,_("LAB / PC")},{81,9,_("WARDROBE")},{95,69,_("MOVE STUDIO")},{21,32,_("PHANTOM")}};
++static const struct RefreshMapMarker sRefreshMarkers1[]={{55,19,_("SUMMIT")},{91,23,_("INFERNO")},{71,88,_("TIDAL")},{61,46,_("THUNDER")},{26,23,_("ASTRAL")}};
+--- /dev/null
++++ b/src/ascension_city_map.inc
+@@ -0,0 +1,67 @@
++#include "decompress.h"
++#include "constants/maps.h"
++#include "ascension_city_map_assets.inc"
++#include "ascension_city_map_markers.inc"
++static const u8 sRefreshTitleWest[] = _("ASCENSION - WEST DISTRICT");
++static const u8 sRefreshTitleEast[] = _("ASCENSION - EAST DISTRICT");
++static const u8 sRefreshFooter[] = _("L/R: DISTRICT    B: CLOSE");
++static const struct BgTemplate sRefreshMapBg={.bg=0,.charBaseIndex=0,.mapBaseIndex=31,.screenSize=0,.paletteMode=0,.priority=0};
++static const struct WindowTemplate sRefreshMapWindow={.bg=0,.tilemapLeft=1,.tilemapTop=1,.width=28,.height=18,.paletteNum=13,.baseBlock=1};
++static void RefreshMap_Print(u8 win,u8 x,u8 y,const u8 *text)
++{
++    static const u8 colors[3]={1,2,3};
++    AddTextPrinterParameterized3(win,FONT_SMALL,x,y,colors,TEXT_SKIP_DRAW,text);
++}
++static void RefreshMap_Draw(u8 id)
++{
++    u8 win=gTasks[id].data[0],page=gTasks[id].data[1],i;
++    const struct RefreshMapMarker *markers=page?sRefreshMarkers1:sRefreshMarkers0;
++    u8 count=page?ARRAY_COUNT(sRefreshMarkers1):ARRAY_COUNT(sRefreshMarkers0);
++    FillWindowPixelBuffer(win,PIXEL_FILL(1));
++    RefreshMap_Print(win,0,0,page?sRefreshTitleEast:sRefreshTitleWest);
++    BlitBitmapToWindow(win,page?sRefreshMap1:sRefreshMap0,0,16,112,112);
++    for(i=0;i<count;i++)
++    {
++        u8 label[4]={CHAR_1+i,EOS};
++        FillWindowPixelRect(win,PIXEL_FILL(1),markers[i].x-2,markers[i].y+12,8,10);
++        RefreshMap_Print(win,markers[i].x-1,markers[i].y+11,label);
++        RefreshMap_Print(win,115,17+i*12,label);
++        RefreshMap_Print(win,125,17+i*12,markers[i].name);
++    }
++    RefreshMap_Print(win,0,131,sRefreshFooter);
++    PutWindowTilemap(win);CopyWindowToVram(win,COPYWIN_FULL);
++}
++static void Task_RefreshMap(u8 id)
++{
++    if(gPaletteFade.active)return;
++    if(gTasks[id].data[2])
++    {FreeAllWindowBuffers();DestroyTask(id);SetMainCallback2(CB2_ReturnToFieldWithOpenMenu);return;}
++    if(JOY_NEW(B_BUTTON|START_BUTTON))
++    {gTasks[id].data[2]=1;BeginNormalPaletteFade(PALETTES_ALL,0,0,16,RGB_BLACK);return;}
++    if(JOY_NEW(L_BUTTON|R_BUTTON|DPAD_LEFT|DPAD_RIGHT))
++    {gTasks[id].data[1]^=1;RefreshMap_Draw(id);PlaySE(SE_SELECT);}
++}
++static void RefreshMap_Main(void){RunTasks();UpdatePaletteFade();}
++static void RefreshMap_VBlank(void){TransferPlttBuffer();}
++static void RefreshMap_Init(void)
++{
++    u8 id,win;
++    SetVBlankCallback(NULL);SetGpuReg(REG_OFFSET_DISPCNT,0);
++    ResetTasks();ResetBgsAndClearDma3BusyFlags(0);InitBgsFromTemplates(0,&sRefreshMapBg,1);
++    FreeAllWindowBuffers();win=AddWindow(&sRefreshMapWindow);
++    if(win==WINDOW_NONE){SetMainCallback2(CB2_ReturnToFieldWithOpenMenu);return;}
++    LoadPalette(sRefreshMapPalette,13*16,32);
++    id=CreateTask(Task_RefreshMap,0);gTasks[id].data[0]=win;
++    gTasks[id].data[1]=gSaveBlock1Ptr->location.mapGroup==MAP_GROUP(MAP_ASCENSION_CITY_EAST)
++                     &&gSaveBlock1Ptr->location.mapNum==MAP_NUM(MAP_ASCENSION_CITY_EAST);
++    RefreshMap_Draw(id);ShowBg(0);
++    SetGpuReg(REG_OFFSET_BLDCNT,0);SetGpuReg(REG_OFFSET_BLDALPHA,0);SetGpuReg(REG_OFFSET_BLDY,0);
++    BeginNormalPaletteFade(PALETTES_ALL,0,16,0,RGB_BLACK);
++    SetVBlankCallback(RefreshMap_VBlank);SetMainCallback2(RefreshMap_Main);
++}
++static bool8 StartMenuCityMapCallback(void)
++{
++    if(gPaletteFade.active)return FALSE;
++    PlayRainStoppingSoundEffect();RemoveExtraStartMenuWindows();CleanupOverworldWindowsAndTilemaps();
++    SetMainCallback2(RefreshMap_Init);return TRUE;
++}
+--- a/src/start_menu.c
++++ b/src/start_menu.c
+@@ -64,7 +64,8 @@
+     MENU_ACTION_REST_FRONTIER,
+     MENU_ACTION_RETIRE_FRONTIER,
+     MENU_ACTION_PYRAMID_BAG,
+-    MENU_ACTION_ARENA_GUIDE
++    MENU_ACTION_ARENA_GUIDE,
++    MENU_ACTION_CITY_MAP
+ };
+ 
+ // Save status
+@@ -98,6 +99,7 @@
+ static bool8 StartMenuBagCallback(void);
+ static bool8 StartMenuPokeNavCallback(void);
+ static bool8 StartMenuArenaGuideCallback(void);
++static bool8 StartMenuCityMapCallback(void);
+ static bool8 StartMenuPlayerNameCallback(void);
+ static bool8 StartMenuSaveCallback(void);
+ static bool8 StartMenuOptionCallback(void);
+@@ -183,6 +185,7 @@
+ };
+ 
+ static const u8 sText_ArenaGuide[] = _("ARENA GUIDE");
++static const u8 sText_CityMap[] = _("CITY MAP");
+ extern const u8 EventScript_AscensionGuide[];
+ 
+ static const struct MenuAction sStartMenuItems[] =
+@@ -200,7 +203,8 @@
+     [MENU_ACTION_REST_FRONTIER]   = {gText_MenuRest,    {.u8_void = StartMenuSaveCallback}},
+     [MENU_ACTION_RETIRE_FRONTIER] = {gText_MenuRetire,  {.u8_void = StartMenuBattlePyramidRetireCallback}},
+     [MENU_ACTION_PYRAMID_BAG]     = {gText_MenuBag,     {.u8_void = StartMenuBattlePyramidBagCallback}},
+-    [MENU_ACTION_ARENA_GUIDE]     = {sText_ArenaGuide,    {.u8_void = StartMenuArenaGuideCallback}}
++    [MENU_ACTION_ARENA_GUIDE]     = {sText_ArenaGuide,    {.u8_void = StartMenuArenaGuideCallback}},
++    [MENU_ACTION_CITY_MAP]        = {sText_CityMap,       {.u8_void = StartMenuCityMapCallback}}
+ };
+ 
+ static const struct BgTemplate sBgTemplates_LinkBattleSave[] =
+@@ -339,7 +343,10 @@
+ 
+     AddStartMenuAction(MENU_ACTION_PLAYER);
+     if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1)
++    {
++        AddStartMenuAction(MENU_ACTION_CITY_MAP);
+         AddStartMenuAction(MENU_ACTION_ARENA_GUIDE);
++    }
+ 
+     AddStartMenuAction(MENU_ACTION_SAVE);
+     AddStartMenuAction(MENU_ACTION_OPTION);
+@@ -1457,3 +1464,5 @@
+     list[*pos] = newEntry;
+     (*pos)++;
+ }
++
++#include "ascension_city_map.inc"
