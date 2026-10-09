@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Run after upstream Arena asset generation. No new RAM or decoding path."""
 from pathlib import Path
-import re, sys, hashlib, json
-r=Path(sys.argv[1]);p=r/'graphics/arena/oswarlin/stages.inc';s=p.read_text()
+import re, sys, hashlib, json, subprocess
+r=Path(sys.argv[1]).resolve()
+# The source archive retained flood.8bpp timestamps but omitted its hidden raw
+# stage dependencies. Regenerate from the original checked-in PNGs, not copies
+# of the flood data; equality below remains an independent byte-level check.
+subprocess.run([sys.executable,str(r/'tools/arena/import_oswarlin.py')],cwd=r,check=True)
+p=r/'graphics/arena/oswarlin/stages.inc';s=p.read_text()
 f=(r/'graphics/arena/oswarlin/flood.8bpp').read_bytes()
 rows=re.findall(r'static const u32 sStage(\d+)Tiles\[\]=INCBIN_U32\("([^"]+)"\);',s)
 assert len(rows)==17, 'Expected pinned original 17-stage catalog'
