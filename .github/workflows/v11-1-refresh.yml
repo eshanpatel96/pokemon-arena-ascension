@@ -1,0 +1,115 @@
+name: V11.1 INTERNAL refresh - Birch, map and pacing prototypes
+on:
+  push:
+    branches: [v11-1-refresh]
+    paths: ['.github/workflows/v11-1-refresh.yml', 'bootstrap/v11-1-refresh/**']
+  workflow_dispatch:
+concurrency:
+  group: ascension-v11-1-refresh-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  internal:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-PACKED-GAMEPLAY-SOURCE
+          run-id: 37970683816
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Native dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil libmgba-dev
+      - name: Apply reproducible refresh to exact assembled source
+        run: |
+          echo '2215b5c25c48c2643f6bfeb95851528400569739c5f310c207bc985917456f6b  baseline/v11-1-packed-gameplay-source.tar.gz' | sha256sum -c
+          tar -xzf baseline/v11-1-packed-gameplay-source.tar.gz engine
+          mkdir -p evidence internal
+          sha256sum engine/src/title_screen.c engine/src/main_menu.c engine/src/save.c engine/src/load_save.c engine/src/new_game.c engine/include/constants/vars.h engine/include/constants/flags.h > evidence/protected-before.sha256
+          patch --batch --fuzz=0 -d engine -p1 < bootstrap/v11-1-refresh/refresh-code.patch
+          python3 bootstrap/v11-1-refresh/generate_map.py engine evidence/native-map-data-renders
+          sha256sum -c evidence/protected-before.sha256
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I engine/src bootstrap/v11-1-refresh/test_refresh_math.c -o evidence/test-refresh-math
+          evidence/test-refresh-math | tee evidence/math-tests.log
+          git rev-parse HEAD > evidence/source-commit.txt
+      - name: Compile internal GBA - not an external Beta
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Ascension-Arena-V11-1-REFRESH-INTERNAL 2>&1 | tee ../evidence/build.log
+          cp Pokemon-Ascension-Arena-V11-1-REFRESH-INTERNAL.gba ../internal/
+          cp Pokemon-Ascension-Arena-V11-1-REFRESH-INTERNAL.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-Ascension-Arena-V11-1-REFRESH-INTERNAL.elf > ../evidence/symbols.txt
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          b=Path('Pokemon-Ascension-Arena-V11-1-REFRESH-INTERNAL.gba').read_bytes()
+          assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
+          m={'source_commit':os.environ['GITHUB_SHA'],'baseline_game_source':'7eb86415e918e3176b828632322e712f29300d5b','rom_sha256':hashlib.sha256(b).hexdigest(),'rom_bytes':len(b),'status':'INTERNAL REFRESH: NOT EXTERNAL BETA','changes':'Birch Lab new-game onboarding, visible starter registration, native START City Map with West/East pages; experimental symmetric direct-damage pacing, wet-floor damage/speed and one temporary cosmetic scorch','pacing_prototype':'Direct hit damage approximately halved for both sides. Not doubled saved HP. Residual/item balance and actual match durations not accepted yet.','terrain_prototypes':'Wet grounded Water moves +20% before pacing unless native rain active; grounded Water-type movement +15%; one reused temporary footprint, water extinguishes it. Not a complete hazard system.','remaining':'Main town architecture and usable-space redesign, visible world population, authentic native boss destinations and matching real-time scenes, full legal move profiles, direct Box editor, nature selection, full campaign/combat/Delta acceptance','native_saving_work':'EXCLUDED; accepted implementation left unchanged','distribution':'Internal diagnostics only. User rejected previous build for external testing.'}
+          Path('../internal/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          Path('../internal/README.txt').write_text('INTERNAL REFRESH ONLY. Not a full or external V11.1 Beta. See manifest. Native title/menu remain unchanged. No additional saving work. Main architecture, authentic boss destinations and the remaining approved gameplay scope are not complete.\n')
+          print(json.dumps(m,indent=2))
+          PY
+      - name: Real Birch onboarding and both City Map pages - no saving suite
+        run: |
+          gcc -O2 -std=c11 bootstrap/v11-smoke.c -lmgba -o evidence/native-probe
+          set -o pipefail
+          timeout 180 evidence/native-probe internal/Pokemon-Ascension-Arena-V11-1-REFRESH-INTERNAL.gba evidence/symbols.txt evidence/runtime bootstrap/v11-1-refresh/onboarding-map.commands - 2>&1 | tee evidence/onboarding-map.log
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          symbols={}
+          for line in Path('evidence/symbols.txt').read_text().splitlines():
+              p=line.split()
+              if len(p)==3: symbols[p[2]]=int(p[0],16)
+          log=Path('evidence/onboarding-map.log').read_text()
+          assert 'CHECK FAIL' not in log
+          target=symbols['RefreshMap_Main']&~1
+          for stage in ('07-city-map-west','08-city-map-east'):
+              m=re.search(r'STATE '+stage+r'.*?callback2=([0-9a-f]+)',log)
+              assert m and (int(m[1],16)&~1)==target,(stage,'wrong screen')
+          m=re.search(r'STATE 09-map-closed.*?callback2=([0-9a-f]+).*?map=26,110',log)
+          assert m and (int(m[1],16)&~1)!=target,'Map did not return to lab field'
+          print('PASS: actual map-screen callbacks for both pages and return to lab. No saving commands executed.')
+          PY
+      - name: Preserve bounded evidence and reproducible internal source
+        if: always()
+        run: |
+          mkdir -p evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('evidence').rglob('*.ppm'):
+              Image.open(p).save(p.with_suffix('.png'));p.unlink()
+          Path('evidence/README.txt').write_text('INTERNAL ONLY. Runtime PNGs are actual mGBA framebuffer captures from key input. Native-map-data-renders are source reconstructions, not emulator views. Arithmetic checks are not live fight-duration/terrain acceptance. No saving suite was run. Major town/boss architecture and full gameplay scope remain open.\n')
+          PY
+          if [ -d engine ]; then
+            tar --exclude='.git' --exclude='source' --exclude='engine/Pokemon-*.gba' --exclude='*.elf' --exclude='*.map' --exclude='build' -czf v11-1-internal-refresh-source.tar.gz engine bootstrap docs
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V11-1-INTERNAL-REFRESH-NOT-EXTERNAL-BETA
+          path: internal/
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V11-1-INTERNAL-REFRESH-EVIDENCE
+          path: evidence/
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V11-1-INTERNAL-REFRESH-SOURCE
+          path: v11-1-internal-refresh-source.tar.gz
+          if-no-files-found: ignore
