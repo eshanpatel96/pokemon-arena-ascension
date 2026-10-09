@@ -1,3 +1,17 @@
+## Verified compiled V10.2 development milestone — 9 Oct 2026 UTC
+
+**Source SHA:** `c879a1c90d37bff86f8733d4ad06c19eaf9e5059`  
+**Successful Actions CI:** https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37868101102  
+**Original ROM artifact (name inherited from V9 pipeline):** https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37868101102/artifacts/11588668631  
+**Extracted ROM:** 33,554,432 bytes, BPEE, SHA-256 `cd03bd4c5dce2651e69c7d813c741d572d1c28180a4dd1c58d8e5c511c4cd705`.  
+**Linked capacities:** ROM 33,506,952 bytes / 33,554,432 (**47,480 free**); EWRAM 259,990/262,144 (**2,154 free**); IWRAM 30,892/32,768 (**1,876 free**).
+
+**New source features compiled:** real native four-slot Move Relearner UI filtered by Pokémon-specific legal moves and real-time support; player center/Master lower; Bronze boss entry lower; Astral distinct actual Arena backdrop; original boss physical cover differences; nine themed boss introductions; native saved five-choice Wardrobe and still-working-in-source Name Rater. These are **not gameplay certified** until Delta/mGBA tests.
+
+**Hard gap:** 88 native selectable Arena move profiles support **3,051/8,776** audited species-move combinations; **5,725** pairs are missing realtime move behaviors. Native four-slot UI is coded, not full any-legally-learnable-move availability. No direct Box browsing from Studio, only party selection. Eight physical boss stages reuse existing native art; full custom art/hazards and trainer sprite variants need actual Delta visual review. Friends beta remains unapproved. Original long-test ZIP in ChatGPT contains ROM, complete move coverage audit, and test notes.
+
+---
+
 # V10.2 — Implementation checkpoint and expanded-test plan
 
 **User scope (8 October 2026):** V10.2 should become the larger near-complete test campaign with genuine Pokémon-specific four-slot move teaching, meaningfully distinct boss experiences, finalized Master/player movement, native character customization and a stable town. V11 is post-Masters expansion and should not silently inherit broken V10.2 systems.
@@ -16,9 +30,9 @@
 
 **Original compiled V10.1 preserved:** 50 encounters across eight towers, five six-Pokémon Championship rounds ending Ho-Oh, eight post-Champion Masters rounds; 187 animated Pokémon, one-time earned licenses, money penalties/shops, native in-battle combat/dodge/Bag, Lab/Move Studio/EV selection and physically valid nine boss approaches.
 
-## Candidate follow-on source once first source build passes
+## Wardrobe and boss-cover implementation
 
-A compact native trainer wardrobe is prepared (5 existing Emerald overworld visuals, saved choice and Name Rater retained); eight physically different boss prop/cover setups are also prepared from the existing realtime Arena obstacle engine with no new graphics sheets. **Do not count these as shipped until integrated/compiled and demonstrated in Delta.** Full skin/hair design, bespoke architecture and entirely new gfx still require memory reclamation and explicit art QA.
+The five native avatar sprite choices and eight original Arena boss-cover configurations have now **compiled successfully** in build `c879a1c`; **in-game appearance, persistence, physics and device performance remain unverified**. Full skin/hair customization, bespoke boss-room architecture and original artwork still require further development and memory headroom.
 
 ## V10.2 gating tests — evidence needed
 
