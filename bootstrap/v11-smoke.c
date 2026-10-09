@@ -112,6 +112,19 @@ int main(int argc,char **argv) {
     core->setVideoBuffer(core,pixels,240);
     if(!mCoreLoadFile(core,argv[1])){fprintf(stderr,"ROM load failed\n");return 2;}
     if(argc>5 && strcmp(argv[5],"-") && !mCoreLoadSaveFile(core,argv[5],true)){fprintf(stderr,"save fixture load failed\n");return 2;}
+    if(argc<=5 || !strcmp(argv[5],"-"))
+    {
+        // The native savedataClone interface requires an attached save backend.
+        // Use an erased 128 KiB Flash fixture, not an in-memory-only emulator.
+        char fixture[1024]; snprintf(fixture,sizeof(fixture),"%s/%s",outdir,"flash-backend.sav");
+        FILE *fp=fopen(fixture,"wb");
+        if(!fp){fprintf(stderr,"cannot create flash fixture\n");return 2;}
+        unsigned char erased[4096];memset(erased,0xFF,sizeof(erased));
+        for(int block=0;block<32;block++) if(fwrite(erased,1,sizeof(erased),fp)!=sizeof(erased)){fprintf(stderr,"flash fixture write failed\n");fclose(fp);return 2;}
+        fclose(fp);
+        if(!mCoreLoadSaveFile(core,fixture,true)){fprintf(stderr,"flash backend attach failed\n");return 2;}
+        printf("TEST FLASH BACKEND: fresh erased 131072-byte save attached; runtime save/export still must pass.\n");
+    }
     core->reset(core);
     if(strcmp(argv[4],"auto"))return commands(argv[4]);
     frames(300,0);snapshot("01-title");
