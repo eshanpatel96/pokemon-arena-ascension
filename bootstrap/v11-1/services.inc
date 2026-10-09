@@ -64,15 +64,25 @@ static void Ascension_V111LegalizeEnemyParty(void)
     for(i=0;i<PARTY_SIZE;i++)
         if(GetMonData(&gEnemyParty[i],MON_DATA_SPECIES))V111Loadout(&gEnemyParty[i],NULL);
 }
-static bool8 V111Owned(u16 species)
+static EWRAM_DATA u8 sV111Owned[(NUM_SPECIES+7)/8] = {0};
+static void V111Remember(u16 species)
+{
+    if(species<NUM_SPECIES)sV111Owned[species/8]|=1<<(species%8);
+}
+static void V111ScanOwned(void)
 {
     u16 box,slot;
+    for(slot=0;slot<sizeof(sV111Owned);slot++)sV111Owned[slot]=0;
     for(slot=0;slot<PARTY_SIZE;slot++)
-        if(GetMonData(&gPlayerParty[slot],MON_DATA_SPECIES)==species)return TRUE;
+        V111Remember(GetMonData(&gPlayerParty[slot],MON_DATA_SPECIES));
     for(box=0;box<TOTAL_BOXES_COUNT;box++)
         for(slot=0;slot<IN_BOX_COUNT;slot++)
-            if(GetBoxMonDataAt(box,slot,MON_DATA_SPECIES)==species)return TRUE;
-    return FALSE;
+            if(GetBoxMonDataAt(box,slot,MON_DATA_SANITY_HAS_SPECIES))
+                V111Remember(GetBoxMonDataAt(box,slot,MON_DATA_SPECIES));
+}
+static bool8 V111Owned(u16 species)
+{
+    return species<NUM_SPECIES && (sV111Owned[species/8]&(1<<(species%8)))!=0;
 }
 static bool8 V111StarterStep(void)
 {
@@ -93,9 +103,10 @@ static bool8 V111StarterStep(void)
         if(GiveMonToPlayer(&mon)==MON_CANT_GIVE)
         {
             gSpecialVar_Result=0;
-            return TRUE; /* Keep the retry index and unclaimed rights. */
+            return TRUE;
         }
     }
+    V111Remember(entry->species);
     VarSet(VAR_ASCENSION_STARTER_NEXT_INDEX,index+1);
     return FALSE;
 }
@@ -116,6 +127,7 @@ void Ascension_V111StartRosterTask(void)
     u8 task;
     gSpecialVar_Result=1;
     LockPlayerFieldControls();
+    V111ScanOwned();
     task=CreateTask(Task_V111Roster,0);
     if(task==NUM_TASKS)FieldCB_WarpExitFadeFromBlack();
 }
@@ -123,6 +135,7 @@ void Ascension_V111SyncRoster(void)
 {
     u8 task;
     gSpecialVar_Result=1;
+    V111ScanOwned();
     task=CreateTask(Task_V111Roster,0);
     if(task<NUM_TASKS)gTasks[task].data[0]=1;
     else {gSpecialVar_Result=0;ScriptContext_Enable();}
