@@ -47,12 +47,12 @@ lay=layouts[bossmap["layout"]];w,h=lay["width"],lay["height"]
 meta=struct.unpack("<"+str(w*h)+"H",(root/lay["blockdata_filepath"]).read_bytes())
 assert 0<=12<h and ((meta[12*w+5]>>10)&3)==0
 # A small but meaningful distinct stage fix: Phantom already uses original
-# stage 14; Astral now uses the ORIGINAL Arena stage 7, visually different.
+# stage 14; Astral now uses ORIGINAL Arena stage 12, visually different.
 biomes=root/"src/arena_biomes.inc"
 src=biomes.read_text()
 src=once(src,
  "case MAP_ASCENSION_LEADER_8:gArenaBiome=4;gArenaStage=14;break;",
- "case MAP_ASCENSION_LEADER_8:gArenaBiome=4;gArenaStage=7;break;",
+ "case MAP_ASCENSION_LEADER_8:gArenaBiome=4;gArenaStage=12;break;",
  "different actual Astral battle background")
 biomes.write_text(src)
 
