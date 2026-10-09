@@ -98,3 +98,37 @@ if p.exists():
     s=s.replace('check("encrypted money unchanged after reload",rd32(sb+0x490)==money);','check("decrypted native money unchanged after reload",(rd32(sb+0x490)^rd32(rd32(symbol("gSaveBlock2Ptr"))+0xac))==money);')
     p.write_text(s)
 print('V11 native cache bounds, actor-safe Continue migration, VRAM-safe title and host smoke corrections applied.')
+
+# Some native Gym architectural tiles use the upper background layer and
+# were never walkable. Our new courts intentionally reuse their artwork as
+# floor; private attributes keep those tiles below actors. Shared native
+# tilesets remain unchanged. Blank voids likewise must not expose the
+# original renderer's magenta diagnostic garbage layer.
+import json,re,struct
+manifest=json.loads((r/'v11-room-manifest.json').read_text())
+layoutdefs={x['id']:x for x in json.loads((r/'data/layouts/layouts.json').read_text())['layouts']}
+p=r/'src/data/tilesets/headers.h';headers=p.read_text()
+g=r/'src/data/tilesets/graphics.h';gfx=g.read_text()
+attribute_bytes=0
+for room in manifest:
+    layout=layoutdefs[room['layout']]
+    words=struct.unpack('<399H',(r/layout['blockdata_filepath']).read_bytes())
+    borders=struct.unpack('<4H',(r/layout['border_filepath']).read_bytes())
+    floor_ids={v&1023 for v in words if not (v&0xc00)}
+    void_ids={v&1023 for v in borders}
+    native=r/'data/tilesets/secondary'/room['secondary_native']/'metatile_attributes.bin'
+    data=native.read_bytes();attrs=list(struct.unpack('<%dH'%(len(data)//2),data))
+    for mid in floor_ids|void_ids:
+        if mid>=512:
+            assert mid-512<len(attrs),(room['name'],hex(mid))
+            attrs[mid-512]=0x1000 # COVERED layer and ordinary non-puzzle floor
+    symbol='gMetatileAttributes_AscensionV11'+room['slug']
+    gfx+='\nconst u16 '+symbol+'[] = {\n'+',\n'.join('    '+','.join(hex(x) for x in attrs[i:i+16]) for i in range(0,len(attrs),16))+'\n};\n'
+    name='gTileset_AscensionV11'+room['slug']
+    pattern=r'const struct Tileset '+name+r' =\s*\{.*?\n\};'
+    match=re.search(pattern,headers,re.S);assert match
+    replacement=re.sub(r'\.metatileAttributes = \w+', '.metatileAttributes = '+symbol, match.group(0))
+    headers=headers[:match.start()]+replacement+headers[match.end():]
+    attribute_bytes+=len(data)
+p.write_text(headers);g.write_text(gfx)
+print('Private V11 walkable/void tile layers corrected; extra constant attribute bytes:',attribute_bytes)
