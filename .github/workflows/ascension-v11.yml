@@ -1,0 +1,134 @@
+name: Ascension V11 native ROM and mGBA smoke
+on:
+  push:
+    branches: [v11-tower-redesign]
+    paths: ['.github/workflows/ascension-v11.yml', 'bootstrap/v11-payload/**', 'bootstrap/apply-v11.py', 'bootstrap/v11-hotfix.py']
+  workflow_dispatch:
+concurrency:
+  group: ascension-v11-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Native build and emulator dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential git patch xz-utils gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3 python3-pil perl libmgba-dev
+      - name: Reconstruct pinned V10.2 engine
+        run: |
+          git clone https://github.com/pret/pokeemerald.git engine
+          git -C engine checkout --detach 5eff78649e7170a877b961ef0b3da13b81a16038
+          git clone https://github.com/GBurgardt/pokemon-emerald-arena.git arena-upstream
+          git -C arena-upstream checkout --detach e1502f9f7ed46d969880d73adbf5ab23ef7b2a56
+          git -C engine apply ../arena-upstream/game/native-engine.patch
+          cp -a arena-upstream/game/overlay/. engine/
+          bash bootstrap/apply-ascension.sh "$GITHUB_WORKSPACE/engine" "$RUNNER_TEMP/ascension"
+          python3 bootstrap/check-v9-invariants.py engine
+          python3 bootstrap/check-v10-friends.py engine baseline-native-previews
+      - name: Apply V11 with protected save and map invariants
+        run: |
+          python3 bootstrap/apply-v11.py engine
+          if [ -f bootstrap/v11-hotfix.py ]; then python3 bootstrap/v11-hotfix.py engine; fi
+          mkdir -p delivery evidence
+          cp engine/v11-static-report.json engine/v11-room-manifest.json engine/v10-2-move-coverage.json evidence/
+          cp bootstrap/v11-native-build.py evidence/
+          git rev-parse HEAD > evidence/source-commit.txt
+      - name: Install pinned GBA compiler
+        run: |
+          git clone https://github.com/pret/agbcc.git agbcc
+          git -C agbcc checkout --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          (cd agbcc && ./build.sh && ./install.sh "$GITHUB_WORKSPACE/engine")
+      - name: Generate all native maps and real Arena art
+        working-directory: engine
+        run: |
+          make -j2 -f make_tools.mk
+          make -j2 generated
+          for map in data/maps/Ascension*/map.json; do
+            dir=$(dirname "$map")
+            tools/mapjson/mapjson map emerald "$map" data/layouts/layouts.json "$dir"
+            test -s "$dir/events.inc"
+          done
+          sed -i 's/-lpng -o /-lpng -lm -o /g' tools/arena/dev.sh
+          sed -i 's/-Werror /-Werror -Wno-error=misleading-indentation /g' tools/arena/dev.sh
+          ./tools/arena/dev.sh assets
+          cat >> Makefile <<'MAKEFILE_EOF'
+
+          PREPACKED_ARENA_ASSETS := $(wildcard .arena-dev/art/*.4bpp .arena-dev/art/*.8bpp .arena-dev/art/*.gbapal .arena-dev/art/*.bin graphics/arena/oswarlin/*.8bpp graphics/arena/storm/*.8bpp graphics/arena/storm/*.gbapal graphics/title_screen/ascension_v11/*)
+          $(PREPACKED_ARENA_ASSETS): ; @test -s "$@"
+          MAKEFILE_EOF
+      - name: Compile real V11 GBA
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Arena-Ascension-V11 2>&1 | tee ../v11-build.log
+          cp Pokemon-Arena-Ascension-V11.gba ../delivery/
+          cp Pokemon-Arena-Ascension-V11.elf Pokemon-Arena-Ascension-V11.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-Arena-Ascension-V11.elf > ../evidence/symbols.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          p=Path('Pokemon-Arena-Ascension-V11.gba'); b=p.read_bytes()
+          assert 16*1024*1024 <= len(b) <= 32*1024*1024
+          assert b[0xac:0xb0] == b'BPEE'
+          m={'source_commit':os.environ['GITHUB_SHA'],'rom_sha256':hashlib.sha256(b).hexdigest(),'rom_bytes':len(b),'status':'V11 DEVELOPMENT: compile is not gameplay acceptance','native_engine':'Emerald Arena 0.13.0','delta_test':'not performed by CI'}
+          Path('../delivery/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          Path('../evidence/build-manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          g=json.loads(Path('data/maps/map_groups.json').read_text())
+          for gi,k in enumerate(g['_group_order']):
+              if 'AscensionCity' in g[k]:
+                  Path('../evidence/city-id.txt').write_text(f"{gi} {g[k].index('AscensionCity')}")
+          print(json.dumps(m,indent=2))
+          PY
+      - name: Native mGBA fresh boot, New Game, SAVE and CONTINUE smoke
+        run: |
+          gcc -O2 -std=c11 bootstrap/v11-smoke.c -lmgba -o evidence/v11-smoke
+          set -o pipefail
+          timeout 180 evidence/v11-smoke delivery/Pokemon-Arena-Ascension-V11.gba evidence/symbols.txt evidence/runtime auto - $(cat evidence/city-id.txt) 2>&1 | tee evidence/runtime.log
+      - name: Convert real emulator frame captures
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('evidence').rglob('*.ppm'):
+              Image.open(p).save(p.with_suffix('.png'))
+              p.unlink()
+          PY
+      - name: Export exact assembled V11 source
+        if: always()
+        run: |
+          mkdir -p evidence
+          cp v11-build.log evidence/ 2>/dev/null || true
+          if [ -f engine/v11-room-manifest.json ]; then
+            tar --exclude='.git' --exclude='.arena-dev' --exclude='*.gba' --exclude='*.elf' --exclude='*.map' --exclude='build' -czf v11-assembled-source.tar.gz engine bootstrap docs
+          fi
+      - name: Preserve compiled development ROM even if a smoke check fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pokemon-Ascension-Arena-V11-DEVELOPMENT-ROM
+          path: delivery/
+          if-no-files-found: ignore
+      - name: Preserve source and runtime evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: V11-BUILD-RUNTIME-EVIDENCE
+          path: evidence/
+          if-no-files-found: warn
+      - name: Preserve readable complete source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: V11-ASSEMBLED-SOURCE
+          path: v11-assembled-source.tar.gz
+          if-no-files-found: ignore
