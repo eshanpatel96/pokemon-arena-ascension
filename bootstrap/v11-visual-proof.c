@@ -44,6 +44,9 @@ int main(int argc,char**argv){
  unsigned maps[]={114,115,116,117,118,119,120,121,122,123,124,125,126};unsigned floors[]={3,4,4,5,5,6,7,8,4,0,1,2,3};
  for(unsigned i=0;i<13;i++){if(!c->loadState(c,base))return 5;warp(maps[i],9,10,i<9?i:8,floors[i]);snap(names[i]);char view[120];snprintf(view,sizeof(view),"%s-north",names[i]);frames(64,64);frames(30,0);snap(view);}
  c->loadState(c,base);warp(92,5,6,0,0);snap("16-trial-room");
- c->loadState(c,base);warp(114,9,18,0,3);snap("17-bronze-entry");record=1;frames(35,0);frames(208,64);frames(30,0);snap("18-bronze-walk-up");press(1);frames(120,0);snap("19-bronze-dialogue");press(1);frames(100,0);press(1);frames(100,0);snap("20-bronze-confirm");press(1);frames(300,0);snap("21-battle-or-staging");frames(150,1);frames(60,0);snap("22-native-battle");record=0;
+ c->loadState(c,base);warp(114,9,18,0,3);snap("17-bronze-entry");record=1;frames(35,0);frames(208,64);frames(30,0);snap("18-bronze-walk-up");press(1);frames(120,0);snap("19-bronze-dialogue");press(1);frames(100,0);press(1);frames(100,0);snap("20-bronze-confirm");press(1);frames(300,0);snap("21-battle-or-staging");
+ frames(300,0);snap("22-native-battle");
+ for(unsigned i=0;i<6;i++){press(1);frames(10,0);}snap("23-native-attacks");
+ frames(80,64);press(1);frames(80,16);press(1);frames(80,128);press(1);frames(80,32);press(1);frames(60,0);snap("24-native-movement");record=0;
  free(base);mCoreConfigDeinit(&c->config);c->deinit(c);printf("COMPLETE: real framebuffer captures, debug room fixtures. No full campaign/save/Delta acceptance claimed.\n");return 0;
 }
