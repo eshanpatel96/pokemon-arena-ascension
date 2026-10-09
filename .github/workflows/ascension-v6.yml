@@ -71,7 +71,7 @@ jobs:
 
       - name: Validate V9 source and static career invariants
         run: |
-          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/v9-tower-exteriors.py bootstrap/v9-championship.py bootstrap/v10-boss-approach.py bootstrap/v10-masters-circuit.py bootstrap/v10-1-court-choreography.py bootstrap/v10-1-training-services.py bootstrap/v10-1-native-town-polish.py bootstrap/v10-2-real-move-studio.py bootstrap/v10-2-stage-and-boss.py bootstrap/check-v9-invariants.py bootstrap/check-v10-friends.py
+          python3 -m py_compile bootstrap/v9-release-safety.py bootstrap/v9-city-services.py bootstrap/v9-campaign-depth.py bootstrap/v9-circuit-polish.py bootstrap/v9-reward-milestones.py bootstrap/v9-ai-archetypes.py bootstrap/v9-city-architecture.py bootstrap/v9-tower-exteriors.py bootstrap/v9-championship.py bootstrap/v10-boss-approach.py bootstrap/v10-masters-circuit.py bootstrap/v10-1-court-choreography.py bootstrap/v10-1-training-services.py bootstrap/v10-1-native-town-polish.py bootstrap/v10-2-real-move-studio.py bootstrap/v10-2-stage-and-boss.py bootstrap/v10-2-boss-physics.py bootstrap/v10-2-wardrobe.py bootstrap/check-v9-invariants.py bootstrap/check-v10-friends.py
           python3 bootstrap/check-v9-invariants.py "$GITHUB_WORKSPACE/engine"
           python3 bootstrap/check-v10-friends.py "$GITHUB_WORKSPACE/engine" "$GITHUB_WORKSPACE/v10-town-visuals"
 

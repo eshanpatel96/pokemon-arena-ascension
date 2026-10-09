@@ -110,6 +110,21 @@ assert "case MAP_ASCENSION_LEADER_8:gArenaBiome=4;gArenaStage=12;break;" in biom
 boss_bronze=json.loads((maps/"AscensionBronzeBoss/map.json").read_text())
 assert boss_bronze["object_events"][1]["graphics_id"]=="OBJ_EVENT_GFX_HIKER"
 
+# Native wardrobe is a real player graphics change with a saved choice,
+# and boss physiques must change actual Arena props (not only map dialogue).
+assert "#define VAR_ASCENSION_WARDROBE" in vars_h
+player=(root/"src/field_player_avatar.c").read_text()
+assert "VAR_ASCENSION_WARDROBE" in player
+assert "OBJ_EVENT_GFX_RIVAL_MAY_NORMAL" in player
+style=(maps/"AscensionStyleHouse/scripts.inc").read_text()
+assert "special Ascension_ChooseWardrobeOutfit" in style
+assert "AscensionStyleHouse_EventScript_NameRater" in style
+assert "special ChoosePartyMon" in style
+rta=(root/"src/realtime_arena.c").read_text()
+assert "V10.2: thematic physical terrain" in rta
+assert "gArenaProps[j].kind=ARENA_PROP_CRYSTAL" in rta
+assert "gArenaProps[j].kind=ARENA_PROP_POD" in rta
+
 for area,side,w,h in (("AscensionCity","west",56,72),("AscensionCityEast","east",72,72)):
     city=json.loads((maps/area/"map.json").read_text())
     tile_root=root/"data/tilesets"
