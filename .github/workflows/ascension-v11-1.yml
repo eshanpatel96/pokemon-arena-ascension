@@ -25,6 +25,12 @@ jobs:
           run-id: 37959084673
           github-token: ${{ github.token }}
           path: baseline
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-DEVELOPMENT-ROM-NOT-FINAL-BETA
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline-rom
       - name: Native dependencies
         run: |
           sudo apt-get update -qq
@@ -35,9 +41,10 @@ jobs:
           tar -xzf baseline/v11-1-assembled-source.tar.gz engine
           mkdir -p delivery evidence
           python3 bootstrap/v11-1/phase2.py engine | tee evidence/phase2-static.log
+          python3 bootstrap/v11-1/prepare_inputs.py engine baseline-rom/Pokemon-Arena-Ascension-V11-1-DEV.gba | tee evidence/preserved-inputs.log
           gcc -std=c99 -Wall -Wextra -Werror -I engine/include -I bootstrap/v11-1 bootstrap/v11-1/test_ai.c -o evidence/test-ai
           evidence/test-ai | tee evidence/ai-unit-tests.txt
-          cp engine/v11-1-phase2-report.json engine/v11-room-manifest.json engine/v10-2-move-coverage.json evidence/
+          cp engine/v11-1-phase2-report.json engine/v11-room-manifest.json engine/v10-2-move-coverage.json engine/v11-1-preserved-build-inputs.json evidence/
           git rev-parse HEAD > evidence/source-commit.txt
       - name: Generate native maps and pinned original Arena art
         working-directory: engine
@@ -87,7 +94,7 @@ jobs:
           Path('evidence/README.txt').write_text('Actual mGBA framebuffer captures. Debugger-selected room/rank fixtures accelerate inspection; they do not prove earned progression. No extended save testing was added in this pass. Check logs and images; successful compilation/capture is not full campaign/Delta acceptance.\n')
           PY
           if [ -d engine ]; then
-            tar --exclude='.git' --exclude='source' --exclude='*.gba' --exclude='*.elf' --exclude='*.map' --exclude='build' -czf v11-1-packed-gameplay-source.tar.gz engine bootstrap docs
+            tar --exclude='.git' --exclude='source' --exclude='engine/Pokemon-*.gba' --exclude='*.elf' --exclude='*.map' --exclude='build' -czf v11-1-packed-gameplay-source.tar.gz engine bootstrap docs
           fi
       - uses: actions/upload-artifact@v4
         if: always()
