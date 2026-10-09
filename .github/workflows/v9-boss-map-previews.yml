@@ -1,0 +1,69 @@
+name: V9 native boss room visual audit (no game build)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/v9-boss-map-previews.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  room_assets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out Ascension project
+        uses: actions/checkout@v4
+      - name: Fetch pinned original Emerald tile map artwork
+        run: |
+          git clone --quiet https://github.com/pret/pokeemerald.git engine
+          git -C engine checkout --quiet --detach 5eff78649e7170a877b961ef0b3da13b81a16038
+      - name: Package exact original boss-room layouts and native artwork
+        run: |
+          python3 - <<'PY'
+          import json,re,zipfile
+          from pathlib import Path
+          root=Path("engine")
+          layoutdata=json.loads((root/"data/layouts/layouts.json").read_text())["layouts"]
+          lookup={x["id"]:x for x in layoutdata}
+          originals=["RustboroCity_Gym","FortreeCity_Gym",
+                     "BattleFrontier_BattlePalaceBattleRoom",
+                     "MtPyre_2F","LavaridgeTown_Gym_1F",
+                     "SootopolisCity_Gym_1F","MauvilleCity_Gym",
+                     "MossdeepCity_Gym"]
+          paths={"data/layouts/layouts.json"}
+          def to_snake(s):return re.sub(r'(?<!^)(?=[A-Z])','_',s).lower()
+          info={}
+          for idx,name in enumerate(originals):
+              src=f"data/maps/{name}/map.json"
+              x=json.loads((root/src).read_text())
+              layout=lookup[x["layout"]]
+              info[name]={"tier":idx+1,"layout":layout["id"],
+                          "width":layout["width"],"height":layout["height"],
+                          "primary":layout["primary_tileset"],"secondary":layout["secondary_tileset"]}
+              paths.add(src)
+              paths.add(layout["blockdata_filepath"])
+              paths.add(layout["border_filepath"])
+              for family in ("primary","secondary"):
+                  key=layout[family+"_tileset"]
+                  folder=root/"data/tilesets"/family/to_snake(key.removeprefix("gTileset_"))
+                  if not folder.is_dir():raise RuntimeError(f"tileset folder missing: {folder}")
+                  for f in folder.rglob("*"):
+                      if f.is_file():paths.add(str(f.relative_to(root)))
+          with zipfile.ZipFile("v9-eight-boss-native-map-assets.zip","w",zipfile.ZIP_DEFLATED) as z:
+              z.writestr("BOSS-NATIVE-ASSETS-README.json",json.dumps(info,indent=2))
+              for path in sorted(paths):
+                  f=root/path
+                  if not f.is_file():raise RuntimeError(f"missing map data: {path}")
+                  z.write(f,arcname=path)
+          print("Exported",len(paths),"pinned original Emerald map and tileset files")
+          PY
+      - name: Save eight-room source visual audit assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: V9-BOSS-NATIVE-MAP-ASSETS
+          path: v9-eight-boss-native-map-assets.zip
+          if-no-files-found: error

@@ -1,0 +1,526 @@
+V9 CHECKLIST — PROJECT PRESERVATION NOTE (added after 8 Oct 2026 CI)
+
+This file reproduces the original user-supplied V9 feature and acceptance checklist below WITHOUT removing its stable A/B/C/D/E/F/X identifiers. Its original implementation statuses describe the older alpha snapshot and should be read with the following later V9 DEV source evidence.
+
+Most recent development ROM that compiled successfully: source cf2773215714f5a95301a26bd31ac0aea063ec28 on v9-full-build; CI https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37835222951 ; artifact Ascension-V9-DEV-UNTESTED-GBA (id 11575238016). 32 MiB BPEE header verified in CI; NOT PLAYTESTED. ROM 33,494,972 bytes linked; EWRAM 259,989 bytes; IWRAM 30,892 bytes. No full Delta/mGBA pass and NO full V9 acceptance.
+
+Later source changes AFTER the checklist's alpha snapshot: saved incremental starter registration instead of duplicate-prone partial retries (D08); current-rank boss reward gate and loss cap 1,000 (D07/E02); Verdant/Phantom trainer identity source adjustment (C04); distinct native trial vs boss stage mappings (C06-C13, still NOT bespoke finished battlefields); native Tidal/Thunder flood effects at boss start (C11/C12); native Name Rater (B06, gameplay unverified); four-move BASELINE restoration at Move Studio (B04 still missing the actual custom editor); static preflight with 80+64 species/43 V10 reservation and source invariants.
+
+REMAINING REQUIRED V9 CORE: real visible central campus, all eight complete exterior/foyer/trial/boss packages with differentiated real-time effects and fight staging, proper full team and per-species loadout validation, deeper five-archetype AI, correct multi-Pokemon replacement, all required progression floor counts/checkpoints (4/5/5/6/6/7/8/9 earlier target, NOT silently reduced to three), usable V9 facilities/currency/rewards, no blocking bugs, Delta/mGBA end-to-end tests and old-save policy. Previous six-Pokemon roster/three-active-squad design language also needs reconciliation; it is not source proof. Ask user only for genuinely material changes; full V9 was already approved.
+
+V10 CURRENTLY RESERVED: full four-Elite-plus-World-Champion gauntlet, Masters, shinies, broader endgame and final extras. An item only appears in V10 when a dated decision supports deferral; a prior plan is not license to drop original V9 content. All final acceptance boxes below remain UNCHECKED absent actual emulator/device test evidence.
+
+----- ORIGINAL FEATURE ACCEPTANCE CHECKLIST (unchanged below) -----
+
+POKEMON ARENA ASCENSION V9 FEATURE AND ACCEPTANCE CHECKLIST
+Snapshot 8 October 2026
+Prepared for the continuing Ascension Project
+
+Purpose
+
+Keep the original vision, later decisions, current implementation and remaining tests in one portable record. V9 alpha is a compiled foundation. It is not the finished eight-tower V9 requested by the user.
+
+Nothing disappears from this checklist merely because a newer summary omits it. Keep a stable feature ID. A changed requirement needs the later decision and reason recorded; a deferred feature needs its destination milestone and approval evidence. A document saying “locked,” “approved” or “V10” does not by itself prove the user agreed to that exact change.
+
+This audit changes no game code, triggers no build and performs no gameplay test. All gameplay acceptance boxes remain open.
+
+Decision evidence
+
+U1. Direct user message, 8 October 2026 at 19:22 UTC:
+“Can you instruct it to: Let’s create V9 I feel good. Then I want to lift and shift this chat into a project so we don’t run into more issues. I expect all of this to be done, especially the middle town and all the redoing of the towers and fights etc. want it to be near perfect for V9. Let’s do a project as this will keep building.”
+
+U2. Direct user messages, 19:29 UTC:
+“Help me manage and cook to get me a testable V9”
+“There is more it planned to do but stuff kept going away”
+
+U3. Recovered original-chat quote at approximately 14:41 UTC:
+“Let’s map V8-10, would like V10 to be near complete.”
+This supports staged releases. It does not independently approve every later feature-level postponement.
+
+H. Recovered user feedback preserved in the continuation handoff:
+- 14:13: earlier fighting called “flawless”; liked smaller sprites; requested bigger city, separate themed towers, more Pokemon/customization, challenge and play beyond a few hours.
+- By 17:16: opposite-side trainers, clear lane, better bosses/reward dialogue, different trainer sprites and less repetitive attacks.
+- 17:23: expanded roster target to all 187 existing animated species.
+- 17:56: “Losing should deduct money as well - will create more of an economy for battle items.”
+These are recovered historical reports. The complete original transcript has not been independently reread for this checklist.
+
+D. Detailed specifications in the source documents listed at the end. Their features remain tracked under the full V9 direction. An assistant-authored proposal is identified as such where the exact user decision is unavailable.
+
+How to read status
+
+SOURCE: implemented in inspected source, but not gameplay-verified.
+PARTIAL: a prototype or subset exists; acceptance needs more implementation.
+MISSING: requested behavior is absent or still a placeholder in inspected source.
+UNVERIFIED: insufficient evidence to establish implementation or actual behavior.
+LATER PLAN: retained campaign/optional feature currently staged beyond V9 by documents; exact feature-level user-approved deferral is not established unless a decision is cited.
+SUPERSEDED TARGET: older specification differs from newer direction; preserve the history and verify any material user choice.
+
+A checkmark may be added only with source/build version, test steps, result and evidence. “Compiles,” “sprite exists” and “move profile exists” are not gameplay passes.
+
+Current version anchors
+
+Built V9 alpha source:
+9a295be08f20ed7f54126798c6292e6c52b318e7
+Build: https://github.com/eshanpatel96/pokemon-arena-ascension/actions/runs/37828304827
+Artifact name: Ascension-V9-ALPHA-UNTESTED-GBA
+ROM: Pokemon-Arena-Ascension-V9-ALPHA-UNTESTED.gba
+ROM size: 33,554,432 bytes
+ROM SHA-256: d77017cfe93136a52874fb604b28a426bc8c88ec156099062ac15a66adb4d29f
+
+Latest inspected design snapshot:
+98263224872021a0b508c442ca291ce75897fd1a
+The four commits after the built SHA changed documentation only, according to the recovered build handoff. Do not present documentation updates as a new ROM.
+
+Reported alpha link use:
+ROM 33,494,684 / 33,554,432 bytes; 59,748 free.
+EWRAM 259,989 / 262,144 bytes; 2,155 free.
+IWRAM 30,892 / 32,768 bytes; 1,876 free.
+These are link-time figures, not peak-runtime safety or measured frame pacing.
+
+The continuation handoff reports a successful compile and verified artifact/header/hash. It reports no Delta or mGBA gameplay session on this alpha.
+
+Most consequential gaps
+
+1. The distinctive middle-town campus and genuinely functional customization services are not completed by the current native PC/shop prototypes.
+2. All eight full tower packages require actual exterior, foyer, trial battlefield and boss battlefield work. Reused native rooms are foundations, not visual acceptance.
+3. The code still uses three encounters per venue. Earlier 4/5/5/6/6/7/8/9 tower targets remain unresolved; silently calling three “complete” would shrink the plan.
+4. Eighty starter grants and sixty-four tower grants use shared move styles. A real 187-entry locked/unlocked catalog, per-species loadouts and gameplay compatibility evidence remain incomplete.
+5. AI adds a recency/range adjustment, not the complete tactical archetypes or measured anti-spam result.
+6. Source review finds starter partial-storage duplication risk, trainer-identity mismatches and level-normalization questions. These require focused tests/fixes.
+7. Healing and economy documents still contradict one another. See the conflict register.
+8. Full Championship, Masters, shinies, medals, tutorial/training depth and Mega-related proposals must remain visible in the project, with their milestone and approval status explicit.
+
+V9 feature checklist
+
+A  Engine controls and reliability
+
+[ ] A01  Preserve the native engine and artwork
+Origin: H + D. Status: SOURCE, acceptance untested.
+Keep Emerald Arena 0.13.0 at e1502f9, native animation/effects, size/weight-aware smaller sprites and Emerald-quality world art. No return to the V5 replacement renderer, V4 boot gimmicks or custom low-resolution replacement title screen.
+Pass: compare this exact ROM with the accepted combat baseline; normal fights, switching and replacements stay in the native renderer.
+
+[ ] A02  Phone controls and readable combat information
+Origin: D. Status: inherited native behavior, UNVERIFIED in alpha.
+D-pad movement/manual aim, L/R four-move selection, A attack, B plus direction dodge, native party switching and START Pokemon/Bag/Moves/Resume. Show selected move, HP and remaining enemy-team information clearly.
+Pass: every control and menu exit works repeatedly on Delta without consuming unintended inputs or bypassing recovery.
+
+[ ] A03  Faint PP status and switch safety
+Origin: H + D. Status: UNVERIFIED.
+Test first and second enemy faint, final enemy faint, forced and voluntary player replacement, full party defeat, zero PP/Struggle, abilities, status and held-item eligibility.
+Pass: correct party index/state, one floor advance only after total opposing-party defeat, no stuck UI or involuntary classic-mode fallback.
+
+[ ] A04  Save integrity and migration
+Origin: D. Status: existing native persistence plus new variables/flags; UNVERIFIED.
+Source includes save variables for rank, floor, tutorial, career-active, challenger rotation and rematch cycle, plus starter/tower reward flags and native money/party/PC state. These hooks are not reload proof.
+Persist rank/floor, unlocks and claims, party/boxes/order/loadout/nicknames/cosmetics, money, inventory, rematch cycle, tutorial state and eventual medals/records. Back up saves before tests.
+Pass: save, fully quit, cold boot and reload at fresh city, mid-career, after defeat and after reward claim. Old V8 saves require an explicit supported migration/reset policy; never assume compatibility.
+
+[ ] A05  Resource and performance gate
+Origin: D. Status: compile totals known; runtime UNVERIFIED.
+Recover headroom before expanding graphics, respect 16-object map limits, profile worst-case battle effects/menu transitions and city walkers.
+Pass: valid 32 MiB GBA, documented ROM/EWRAM/IWRAM totals, no memory corruption and measured stable pacing on mGBA and Delta. Earlier 2 MiB ROM/8 KiB EWRAM reserve was a planning target, not achieved headroom.
+
+B  Middle town and services
+
+[ ] B01  Coherent two-district redesign
+Origin: U1 + H + D. Status: PARTIAL.
+Keep connected West/East footprint; four towers West, four East, Summit east/north. Redesign the center as recognizable Lab/research/preparation campus, with actual native facade/metatile/layout work, clear paths, planting, benches, signs and believable residential edges.
+Pass: real emulator/Delta screenshots show the redesigned center, not signs applied to unchanged generic Frontier houses.
+
+[ ] B02  Functional Lab and team building
+Origin: H + D. Status: PARTIAL.
+Professor Birch opens native boxes; starter/reward grants exist. Still require usable catalog of locked/unlocked/selected/loaner states, lock reasons, party/team ordering, loadouts, type/stat/size/speed/weight/role information and deliberate team selection.
+Pass: form and alter several teams, transfer party/box members, cancel safely, inspect every service and cold reload the result.
+
+[ ] B03  Battle Supply Shop
+Origin: H + D. Status: SOURCE stock/menu, visual and gameplay acceptance open.
+Separate visible storefront. Stock supported healing, status, revive, PP and X/battle items; add held items only after compatibility validation. No Poke Balls or story/capture goods.
+Pass: buy correct quantity at displayed price, refuse unaffordable purchase, consume intended item, save/reload inventory and money; every sold item is useful in the native arena. Stock-scaling remains to be checked.
+
+[ ] B04  Move Studio
+Origin: D, repeatedly retained V9 service. Status: MISSING full service; current placeholder noted in source audit.
+Choose four genuinely compatible, differentiated moves; preview role/range/power/windup/recovery/cooldown/status, warn about unsupported choices. Optional unlockable move choices must remain tracked.
+Pass: make and revert a loadout, save it, enter native fight, use all four moves and exhaust PP without fallback.
+
+[ ] B05  Training Nature and EV specialist
+Origin: D. Status: MISSING full service.
+Optional capped EV/nature tuning, clear costs/refund or free between-run respec, move/type practice, timing dummies, time trials and boss-pattern replay. Training must not be a mandatory XP grind.
+Pass: one complete reversible adjustment/practice flow with displayed effect and preserved identity/base stats. Decide which advanced practice modes are V9 versus later explicitly.
+
+[ ] B06  Name Rater
+Origin: D. Status: MISSING from inspected Ascension additions.
+Pokemon nickname changes using native controls, readable text and save-safe strings.
+Pass: rename, cancel, use the Pokemon in battle, reload and verify name and all other data.
+
+[ ] B07  Wardrobe and trainer customization
+Origin: H + D. Status: MISSING full service; current Style House placeholder.
+Native trainer sprite/palette/outfit choices; battle pose/insignia options remain proposals where engine viability is unknown. No stat advantage.
+Pass: select and revert appearance, verify overworld/intro/battle representation and persistence. Do not move all customization to V10 because outfits are mentioned there too.
+
+[ ] B08  Safe living town
+Origin: H + D. Status: PARTIAL.
+Residents, short useful dialogue, themed trainers and wandering Pokemon; optional sparring/quests/lore/records retained. No fake tower doors in residences.
+Pass: inspect every NPC origin and movement destination; no overlaps with roofs, counters, walls, sole paths, doors or warps. Test object counts and worst-case movement.
+
+[ ] B09  Signs Arena Guide and returns
+Origin: H + D. Status: PARTIAL.
+One obvious entrance per venue, functional adjacent signs with name/number/destination. Guide shows ordered venues, district/directions, rank/floor, locked/unlocked/cleared, next objective, money and recent unlocks where specified.
+Pass: follow guide without outside instructions; read every sign; enter/exit every facility and tower; confirm exact originating doorstep and no inaccessible hotspots.
+
+[ ] B10  Tutorial and dojo variety
+Origin: D, early requirement retained. Status: PARTIAL source implementation.
+The welcome NPC offers optional practice; automatic arrival orientation was removed. Practice heals before/after without recording career results. Six Lv54 opponents are chosen using Random()%6, so consecutive repeats are possible. The revised welcome shows move selection/attack instruction but skips the old dodge/party instruction.
+Target: optional/skippable, replayable complete controls tutorial; free practice, non-repeating compatible opponents, eventually AI/environment variety.
+Pass: both tutorial and skip paths reach the same functioning career; repeat dojo, lose, win, switch team and reload without resetting progression.
+
+C  Eight complete tower experiences
+
+[ ] C01  Shared tournament choreography
+Origin: H + D. Status: PARTIAL.
+Street > single entrance > themed foyer > Master explains floor/team/hazards/heal schedule > Master clears lane > player deliberately approaches/crosses visible arena threshold > challenger enters from far side > trainer-party fight > defeated trainer speaks/leaves > next challenger or advertised checkpoint > boss warning > separate boss battlefield > reward/next-tower dialogue > correct exit.
+Pass: complete this sequence in all eight towers, including cancel/withdraw/loss/retry; no fight caused by merely speaking to a desk clerk.
+
+[ ] C02  True trainer teams and progression
+Origin: H + D. Status: SOURCE implementation, UNVERIFIED behavior.
+One active Pokemon each side, sequential 2–6-member enemy teams; whole party defeated before one advancement. Boss 4–6 with signature legendary last.
+Alpha: first two encounters use 2 and 3 enemies; leaders 4 or 5, Summit prototype 6; Bronze retains 2/3/4.
+Pass: record every send-out, final result and next floor/rank; no one-KO clear or pretend multi-fight wild sequence.
+
+[ ] C03  Full floor counts and lasting challenge
+Origin: D + H goal of longer play. Status: MISSING earlier target; milestone unresolved.
+Earlier campaign targets: Bronze 4, Gale 5, Verdant 5, Phantom 6, Inferno 6, Tidal 7, Thunder 8, Astral 9; Summit 5. These sum to 55 including Summit.
+Decoded source defines three encounters per venue: 24 tower fights plus 3 Summit fights, 27 total. Early V8 contract specifically called for four Bronze encounters, while an older roadmap places all 55 in V10.
+Pass: record chosen V9 floor counts and explicit reason before reducing earlier scope. Measure actual duration/challenge; original Bronze 10–15 minutes was a tuning target, not a guarantee.
+
+[ ] C04  Matched trainer identities
+Origin: H + D. Status: PARTIAL with concrete source discrepancies.
+v9-core changes actual native trainer IDs for ordinary challengers and leaders. However Verdant boss room uses female Expert overworld graphic while battle ID is Juan; Phantom uses male Psychic while battle ID is Norman. Static assertions do not establish identity parity.
+Pass: screenshot name, entering NPC, sideline sprite and leader for every floor/tower; player and opponent on opposite sides, Master out of lane.
+
+[ ] C05  Rematches and variation
+Origin: H + D. Status: PARTIAL; failed-attempt rotation exists, cleared-tower replay is missing from the exact-rank entry gate.
+Source requires the chosen tower to equal saved current rank, despite guide text saying “Rematches await you.” Distinguish retrying a failed run from replaying a cleared tower.
+Loss rotates ordinary lineups while fixed legendary stays last. Vary useful moves and tactics, not just species labels. Preserve rewards and rank.
+Pass: lose and retry each tier, compare lineups/move frequencies, cold reload and ensure no duplicated payout/claim.
+
+[ ] C06  Bronze Trials
+Origin: D under U1 tower redesign. Status: PARTIAL native Rustboro boss prototype.
+Target: carved rock/bronze guild and foyer; quarry/stone-cover trial; monumental Regirock coliseum. Teach dodge timing, slow heavy strikes and destructible cover.
+First-clear pair: Regirock + Aggron.
+Pass: exterior, foyer and two visibly different actual combat scenes; telegraphed working stone mechanic; full flow/rewards/save.
+
+[ ] C07  Gale Tower
+Status: PARTIAL native Fortree boss prototype.
+Target: wind/high tower facade; sky terraces; storm/cloud boss ring. Lateral evasion, gusts and range.
+Pair: Lugia + Dragonite.
+Pass: C06-equivalent visual/flow evidence plus real readable wind/counterplay.
+
+[ ] C08  Verdant Crown
+Status: PARTIAL native Palace boss prototype.
+Target: vine/forest architecture; canopy/grass-cover trial; giant ancient-tree sanctuary. Sun, cover, healing and terrain control.
+Pair: Suicune + Sceptile.
+Pass: distinct active scenes, real cover/terrain interaction and corrected trainer identity.
+
+[ ] C09  Phantom Spire
+Status: PARTIAL native Mt Pyre boss prototype.
+Target: gothic manor/chapel; foggy graveyard; spectral crypt. Feints, fog, visibility breaks and defensive openings.
+Pair: Mewtwo + Gengar.
+Pass: distinct active scenes, counterable visibility mechanic and corrected trainer identity.
+
+[ ] C10  Inferno Forge
+Status: PARTIAL native Lavaridge boss prototype.
+Target: blackstone foundry; heated vents with safe routes; molten furnace boss scene. Telegraphed heat and Flamethrower interactions.
+Pair in latest design: Entei + Blaziken. Earlier Charizard reward request is in the conflict register.
+Pass: real timed hazard, readable escape route, flame interaction and no damage duplication.
+
+[ ] C11  Tidal Bastion
+Status: PARTIAL native Sootopolis boss prototype.
+Target: seaside/canal citadel; shallow pools/islands; flooded amphitheater with rain/waterfall effects. Water/ice/electric conduction.
+Pair: Kyogre + Swampert.
+Pass: visible water-state changes, freeze/melt/conduction correctness and reachable safe routes.
+
+[ ] C12  Thunder Citadel
+Status: PARTIAL native Mauville boss prototype.
+Target: coil/generator facade; conductive electric rooftop; lightning reactor. Speed, guard/interruption, telegraphed pulses and conduction.
+Pair: Zapdos + Metagross.
+Pass: visible counterable shock patterns; consistent Zapdos last, not obsolete Raikou assignment.
+
+[ ] C13  Astral Apex
+Status: PARTIAL native Mossdeep boss prototype.
+Target: observatory/crystal gardens; shifting crystal-cover trial; celestial boss arena. Psychic props, prediction and timing.
+Pair: Rayquaza + Salamence.
+Pass: actual changing cover/prop behavior, distinct leader scene, performance and full clear.
+
+For C06–C13: a copied overworld room, different music or palette alone is not acceptance. Show what the player sees during combat. Exact artistic embellishments are design proposals to fit native asset/performance limits; the required distinct themed experience remains.
+
+D  Roster combat and rewards
+
+[ ] D01  Exact 187-species plan and catalog
+Origin: H + D. Status: PARTIAL.
+80 starters + 64 tower rewards + 25 Championship + 18 Masters = 187 unique original animated species. No new Groudon/Tyranitar sprites for this scope. Last 43 remain in the later-plan register, visibly locked if not yet obtainable.
+Pass: machine-check allocation/uniqueness/native IDs; show catalog and unlock reason for every entry. Do not claim all 187 are currently selectable or battle-safe.
+
+[ ] D02  Four suitable moves per species
+Origin: H + D. Status: MISSING full matrix; shared alpha presets.
+Alpha starters share 11 style loadouts; rewards share one profile per tower, including unnatural combinations. Source explicitly says specialized learnsets are later work.
+Pass: each offered Pokemon has four supported, role-diverse moves with animation/ability/PP/status/items/switch/faint tests. Decide explicitly whether canonical learnset legality is required; do not silently equate existing move profiles with a good species loadout.
+
+[ ] D03  Tactical AI
+Origin: H + D. Status: PARTIAL.
+Alpha adds last-move penalty, melee/rush/projectile/cone range bonuses, low-HP Protect/Double Team bias and close-range Hyper Beam penalty.
+Target: rushdown, zoner/sniper, defender, bait-and-counter, balanced; range/type/line-of-sight, setup/status, target windup, cover, recovery and terrain awareness.
+Pass: move-choice telemetry across several teams/ranges/towers; demonstrate tactical diversity and counterable pressure. Repetition penalty alone is not proof spam is solved.
+
+[ ] D04  Native move interactions and environmental effects
+Origin: D. Status: inherited upstream source; alpha behavior UNVERIFIED.
+Retain qualifying hit interrupts; Protect stops Hyper Beam; opposing Flamethrowers clash; water/wet/ice/fire/electric/rain/flood interactions; Psychic rocks/cover; Dig, Fly, Teleport, Rollout, Seismic Toss, Double Team, Substitute, smoke/screens, status and native PP.
+Pass: representative interaction cases show correct single damage/effect resolution, costs/recovery and frame pacing. No universal free manual-cancel promise.
+
+[ ] D05  Independent per-slot cooldowns
+Origin: assistant design proposal, explicitly engine-contingent. Status: UNVERIFIED / retained proposal.
+Native shared recovery is the baseline. Per-slot cooldowns must not bypass committed actions.
+Pass if adopted: four visible independent timers, no switching/menu exploit, balanced AI/player behavior. Do not advertise as implemented or silently remove it from future consideration.
+
+[ ] D06  Level normalization squad limits and evolution gates
+Origin: D. Status: normalization UNVERIFIED; evolution/squad/legendary gates MISSING from inspected Ascension additions.
+Entry only checks for a healthy non-egg party member. No dedicated evolution-lock, squad-limit or legendary-quota check was found; bootstrap retains upstream evolution-learning behavior.
+Design: no mandatory grinding, promotion brackets, early 4-mon then 6-mon squads; provisional legendary caps 1 then 2; prevent evolution bypassing locked licenses.
+Alpha creates starter/reward Pokemon at Lv60; non-Bronze enemy levels are 59 + 2*rank + floor, making Astral boss Lv75. No full normalization proof was established in this audit. Team-size/legendary-limit and evolution checks need actual implementation before they can be enforced.
+Pass: inspect entry/return levels/stats and growth, enforce documented party rules, block unlicensed evolution, compare multiple viable teams without grinding. Squad/legendary caps are balance proposals, not independently verified direct-user choices.
+
+[ ] D07  Permanent licenses and deliberate claims
+Origin: H + D. Status: PARTIAL.
+64 grants use individual success flags; ordinary floors grant two species each and boss clear the remaining four. This differs from richer optional-feat/medal reward design.
+Professor automatically attempts eligible grants before presenting other services; design calls for inspect/select/claim licenses rather than uncontrolled insertion.
+Pass: announce named pair and next tower, claim deliberately, preserve unclaimed rights with full storage, no duplicate normal-rematch legendary, no credits needed for an earned license.
+
+[ ] D08  Starter and reward storage safety
+Origin: D. Status: SOURCE risk requiring fix/test.
+Starter loop sets one completion flag only after all 80 succeed. If storage fills midway, earlier successful grants remain but the flag stays unset; retry may duplicate them. Reward loop has per-species success flags and is safer, still untested.
+Pass: test nearly full/full party and PC, interruption, partial grants, retry and cold reload; no lost Pokemon, duplicate grants, wrong slot or falsely completed catalog.
+
+[ ] D09  Full tower species pools
+Origin: D. Status: SOURCE lists, gameplay untested.
+Bronze: Regirock, Aggron, Aron, Lairon, Golem, Graveler, Geodude, Rhydon.
+Gale: Lugia, Dragonite, Pidgeot, Taillow, Swellow, Wingull, Pelipper, Altaria.
+Verdant: Suicune, Sceptile, Treecko, Grovyle, Roselia, Vileplume, Oddish, Gloom.
+Phantom: Mewtwo, Gengar, Gastly, Haunter, Shuppet, Banette, Duskull, Dusclops.
+Inferno: Entei, Blaziken, Torchic, Combusken, Torkoal, Numel, Camerupt, Magmar.
+Tidal: Kyogre, Swampert, Mudkip, Marshtomp, Kingdra, Milotic, Sealeo, Walrein.
+Thunder: Zapdos, Metagross, Pikachu, Raichu, Electrike, Manectric, Plusle, Minun.
+Astral: Rayquaza, Salamence, Shelgon, Flygon, Trapinch, Gardevoir, Kirlia, Ralts.
+Pass: each unlock at documented condition, exactly once, inspectable in Lab, safe four-move loadout and save behavior. Earlier 70–80% tower-locked enemy composition is a design heuristic to retain for balance review.
+
+E  Items healing money and recovery
+
+[ ] E01  One currency and victory payouts
+Origin: H + D. Status: SOURCE, balance mismatch.
+Use native money, optionally displayed as Arena Credits. Alpha adds 650 + rank*160 + floor*125. Starting-wallet and boss/replay payouts in design are not implementation proof.
+Pass: award once per whole trainer victory, correct boss/replay amounts, no overflow or duplicated payout through save/withdraw/repeat script.
+
+[ ] E02  Defeat deduction and restart
+Origin: direct recovered H quote + D. Status: SOURCE fee; restart semantics UNVERIFIED.
+Alpha deducts floor(wallet/10), capped at 1,200. Latest comprehensive design target is 1,000. Permanent rewards survive; one deduction per failed attempt, no per-Pokemon tax, no negative money.
+Pass: defeats at low/zero/high balances, multiple faints, forfeit, repeated loss and cold reload; confirm intended restart floor and no double fee.
+
+[ ] E03  Free recovery from zero
+Origin: D. Status: source services partly exist; UNVERIFIED.
+Free basic city full heal, practice and tower entry; repeatable modest earnings. No paywall for career or earned licenses, no real-money mechanic.
+Pass: zero wallet and exhausted/fainted party can heal, form a team, enter practice/tower and earn again.
+
+[ ] E04  In-fight items and pause integrity
+Origin: H + D latest direction. Status: inherited menus and source shop; gameplay UNVERIFIED.
+START > Bag pauses safely; selected item affects correct party member and consumes stock once on success. Test Potion/status cure/Revive/PP/X-items and compatible held items. Preserve cooldown, weather, AI and animation across menus.
+Pass: no enemy damage while choosing, wrong target, inventory exploit or infinite reset. Cooldown/action cost or item limit is a tested balancing choice, not permission to remove in-battle items.
+
+[ ] E05  Tower healing and between-round preparation
+Origin: D latest direction. Status: PARTIAL pre-boss full-heal prompt.
+No automatic free heal between one trainer's Pokemon. HP/status/faints carry between trainer encounters except advertised checkpoints; PP refresh rule explicit. Towers 5–8 full-team checkpoints, earlier towers designated recovery.
+Pass: restore fainted members/HP/PP/status when promised, preserve otherwise; review team/lead/items, continue or withdraw safely. Reconcile checkpoint position and number with actual floor counts.
+
+F  Later campaign and retained proposals
+
+These are not silently mandatory in V9 simply because they appeared once. They are also not canceled. U3 supports V8–V10 staging; current documents place the following mostly in V10. Exact feature-level approved deferral remains unverified. Keep each item in the continuing project until implemented, explicitly reallocated or declined.
+
+[ ] F01  Full five-trainer Championship
+Status: LATER PLAN; current Summit is a short prototype.
+Elite I Articuno, II Registeel, III Raikou, IV Regice, Champion Ho-Oh; each six-Pokemon team, signature last, themed chambers/arenas and dialogue.
+
+[ ] F02  Championship recovery and reset
+Status: LATER PLAN.
+Current reconciled rule: full heal after Elite II and IV, including pre-Champion; no free heal after I or III. Items allowed, no mid-run Lab/outside refill. Any loss resets next attempt to Elite I; earned licenses persist. Healing-source conflict remains below.
+
+[ ] F03  Twenty-five Championship recruits
+Status: LATER PLAN.
+Articuno + Glalie/Spheal/Dewgong/Cloyster.
+Registeel + Skarmory/Scizor/Magneton/Armaldo.
+Raikou + Electabuzz/Ninjask/Sandslash/Crobat.
+Regice + Alakazam/Jynx/Slowbro/Claydol.
+Ho-Oh + Slaking/Absol/Gyarados/Machamp.
+Legendary first wins and other optional feats/rematches/medals must have explicit conditions.
+
+[ ] F04  Masters Circuit and eighteen exclusive species
+Status: LATER PLAN.
+Remixed teams, advanced tactics/hazards, advertised stricter healing; not just inflated levels and identical fights.
+Species: Shedinja, Nincada, Wailord, Wailmer, Sharpedo, Carvanha, Cacturne, Cradily, Solrock, Crawdaunt, Corphish, Nidoking, Nidoqueen, Exeggutor, Kecleon, Sableye, Kingler, Starmie.
+
+[ ] F05  Shiny licenses and cosmetics
+Status: LATER PLAN.
+First normal Champion reward, first Masters tower clears and harder repeat Summit opportunities; select an already unlocked species; cosmetic only. Preserve first-clear rules and avoid trivial farm exploits.
+
+[ ] F06  Ending records medals and long-term challenges
+Status: LATER PLAN.
+Champion rank, ceremony/credits, completion/records screen, clean/no-heal/timed medals, tower-leader rematches, ranking challenges, challenge modifiers, repeatable post-Champion gauntlet and dojo/boss practice records.
+
+[ ] F07  Mega Evolution or Ascension Burst
+Status: assistant roadmap stretch proposal; no implementation proof.
+Combat-earned meter, normally one activation per team/round; limited compatible forms if memory/assets allow. Temporary existing-sprite Ascension Burst was offered as fallback, not equivalent to Mega Evolution. Retain as a decision, not a shipped claim.
+
+[ ] F08  Other optional depth
+Status: retained proposals with milestone unresolved.
+Little Cup/low-form formats, local quests/sparring, extra move unlocks, optional rare Raikou rematch, deeper trainer poses/insignia and training-event variation.
+
+Conflict register
+
+X01  Floor count and campaign size
+Three encounters per alpha venue versus four Bronze and 4/5/5/6/6/7/8/9 targets; old roadmap places the full 55 in V10 while latest V9 says “complete eight towers” without restating counts. Keep count choice open and visible; do not silently shrink.
+
+X02  Loss fee
+Alpha and BUILD-AND-ACCEPTANCE: 10% capped 1,200.
+LOCKED-SCOPE: tiered caps 200/400/700/1,000.
+Latest comprehensive DESIGN-FOR-APPROVAL and FINAL-SCOPE: 1,000 flat.
+Older TOWER-APPROVAL-DRAFT: 2,000.
+Working latest target is 1,000, but record the actual user/balance decision and update all active references when implemented.
+
+X03  Starting money and payout
+Older final-scope: start 1,500, ordinary 200–650, boss 1,500–3,500, lower replay payout.
+Latest design: start 2,000, ordinary 300–600, boss 1,500–3,000.
+Alpha: formula above; none of these examples proves the current starting wallet. Treat as tuning targets.
+
+X04  Elite healing still contradictory on main
+9826322 corrects HEALING-ITEMS-ARENA-SHOP to II/IV. EMERALD-ARENA-ENGINE-FEATURE-AUDIT still states “after each Elite Four victory,” including acceptance test 8. Use reconciled II/IV as current design, preserve original decision trail and repair stale references before implementation.
+
+X05  Tower checkpoints
+Older Bronze full recovery after floor 2 versus later before leader; other earlier partial-heal suggestions superseded by full later-tower checkpoints. The source currently offers pre-boss full heal for later venues. Map exact checkpoint positions to agreed floor counts.
+
+X06  Consumable limits
+Older two per trainer and one per opponent deployment proposals versus latest optional tested cooldown/usage limit. In-battle item availability is preserved; exact anti-spam mechanism remains design/QA work.
+
+X07  Reward substitutions
+Older TOWER-ACES-AND-REWARDS calls Inferno Entei + Charizard an original user request and Bronze Tyranitar with Aggron interim. Later 187-only plan changes to Entei + Blaziken and Regirock + Aggron, with Charizard a starter and no Tyranitar assets. These are latest working assignments, but explicit feature-level approval of substitutions was not recovered here. Keep historical choice visible rather than pretending it never existed.
+
+X08  License interface versus bulk Pokemon grants
+Design says inspect/claim/select permanent licenses and avoid automatic insertion. Alpha registers 80 Pokemon and automatically attempts earned grants when speaking to Professor. Better UI, claim intent and storage behavior remain acceptance gaps.
+
+X09  Player growth and restrictions
+Documents call for normalized promotion brackets, early four/later six members and legendary caps. Source creates recruits at 60, later enemies reach 75/77. Verify real normalization and evolution/squad restrictions; do not rely on documentation.
+
+X10  V9 versus V10 boundaries
+Complete city/services/eight towers remain V9; full Championship/Masters mostly staged V10. Several details, floor counts, outfit depth and all-187 “validated” versus “obtainable,” cross documents inconsistently. Record exact scope without either promoting every old proposal into V9 or dropping it.
+
+X11  Approval labels
+19:22 direct approval supersedes broad “awaiting approval/do not build” labels. No need to ask the user again whether to build V9. Genuinely unresolved material choices can be grouped and presented with a recommendation after recovering available context.
+
+X12  Source claims versus accepted behavior
+“Safe,” “matches,” “working,” “exactly once” comments/print statements and static profile assertions are not tests. Identify actual source risks and attach runtime evidence before closing any row.
+
+Release acceptance and delivery
+
+Milestone 1  Safe reference tower
+[ ] Pin source/ROM/hash and back up saves.
+[ ] Resolve build headroom plan and high-risk persistence issues.
+[ ] Bronze: fresh career, Lab/team, deliberate entry, two enemy send-outs, player switch/PP/faint, whole-party win, loss/retry, checkpoint/boss, rewards and cold reload.
+[ ] Show expected versus actual result for each step.
+
+Milestone 2  Functional town
+[ ] Complete B01–B10; every intended service demonstrably works.
+[ ] Real screenshots and all routes/signs/returns checked; no placeholder service counted complete.
+
+Milestone 3  Eight tower packages
+[ ] Establish intended count and checkpoint pattern per tower.
+[ ] Complete every exterior/foyer/trial/boss environment and themed mechanic.
+[ ] Verify identity/choreography, rematch variation, legendary last, payout/reward and exit.
+
+Milestone 4  Roster combat and economy
+[ ] Catalog and per-species compatibility report, gameplay-tested enabled loadouts.
+[ ] AI telemetry, item/held-item/menu safety, normalization, storage and license safety.
+[ ] Zero-money recovery and once-only loss/payout behavior.
+
+Milestone 5  Testable delivery and release acceptance
+[ ] Versioned downloadable ROM with source SHA, hash, changes, known limitations and save instructions.
+[ ] mGBA smoke/regression results supplied.
+[ ] Focused Delta checklist supplied; actual device tests recorded rather than assumed.
+[ ] Full eight-tower fresh career, loss/retry, save/cold reload and representative long sessions pass.
+[ ] No “complete,” “near perfect” or “fully tested” label until the evidence supports the intended scope.
+
+For each test record:
+Feature/test ID:
+Source commit and ROM hash:
+Platform/emulator/device:
+Starting save/team:
+Steps:
+Expected result:
+Actual result:
+Pass/fail/not run:
+Screenshot/video/log:
+Defect and retest version:
+
+A limited milestone can be genuinely testable before all final V9 rows pass, but its missing features and test purpose must be explicit. Never relabel the existing alpha as full V9.
+
+Sources
+
+S1  Pokemon-Arena-Ascension-V9-Continuation-Handoff.txt, Library version 1, updated 8 October 2026 at 19:23 UTC. Read in full. Preserves build/hash evidence and recovered feedback. It is a continuation record, not a complete original transcript.
+Original conversation title: Create Delta Compatible Zip, conversation identifier 737214946. New Project name reported by user: Pokemon Acnsions Arena.
+
+S2  Latest comprehensive design
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/V9-DESIGN-FOR-APPROVAL.md
+
+S3  Locked scope and detailed city/combat scope
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/V9-LOCKED-SCOPE.md
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/V9-FINAL-SCOPE-CITY-COMBAT-ECONOMY.md
+
+S4  Acceptance and tower blueprint
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/V9-BUILD-AND-ACCEPTANCE.md
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/V9-TOWER-APPROVAL-DRAFT.md
+
+S5  Full named 187 allocation
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/ALL-187-CAREER-ROSTER.md
+
+S6  Earlier roadmap combat and rewards
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/ROADMAP.md
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/V8-V10-RELEASE-PLAN.md
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/V8-COMBAT-BALANCE-AND-TRAINING.md
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/TOWER-ACES-AND-REWARDS.md
+
+S7  Healing reconciliation and remaining stale audit
+https://github.com/eshanpatel96/pokemon-arena-ascension/commit/98263224872021a0b508c442ca291ce75897fd1a
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/HEALING-ITEMS-ARENA-SHOP.md
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/98263224872021a0b508c442ca291ce75897fd1a/docs/EMERALD-ARENA-ENGINE-FEATURE-AUDIT.md
+
+S8  Built alpha implementation
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v9-core.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v9-ai.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v9-lab-roster.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v9-rewards.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v9-leader-rooms.py
+
+S9  Additional inspected city tutorial and progression source
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v8-city-gates.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v8-2-city-life.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/repair-dialogue.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/expand-world.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/v8-guide.py
+https://github.com/eshanpatel96/pokemon-arena-ascension/blob/9a295be08f20ed7f54126798c6292e6c52b318e7/bootstrap/apply-ascension.sh
+The embedded three-part overlay was decoded read-only and its checksum matched the manifest. Generated include/ascension_progress.h and src/ascension_career.c supply the rank/floor definitions; they are not separately checked-in full source files.
+
+S10  Earlier issue acceptance criteria, read 1–6
+https://github.com/eshanpatel96/pokemon-arena-ascension/issues/1
+https://github.com/eshanpatel96/pokemon-arena-ascension/issues/2
+https://github.com/eshanpatel96/pokemon-arena-ascension/issues/3
+https://github.com/eshanpatel96/pokemon-arena-ascension/issues/4
+https://github.com/eshanpatel96/pokemon-arena-ascension/issues/5
+https://github.com/eshanpatel96/pokemon-arena-ascension/issues/6
+
+Updating this checklist
+
+Keep the same document identity and stable IDs. Add discovered original-chat details with date/source/provenance. Record changed scope beside the old requirement and exact decision, not by deleting the row. For each meaningful build update the source/hash, implemented delta, tests, unresolved defects and next step. Preserve the separate later-campaign register. Attach this file to the continuing Project alongside the source-aware handoff; a ROM alone cannot carry the plan.
