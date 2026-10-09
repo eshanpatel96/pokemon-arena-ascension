@@ -1,0 +1,41 @@
+name: V11.1 native development toolchain
+on:
+  push:
+    branches: [v11-1-beta]
+    paths: ['.github/workflows/v11-1-toolchain.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tools:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM assembler and linker
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi build-essential cmake
+          mkdir -p native-sdk/bin native-sdk/lib native-sdk/include
+          cp -a /usr/bin/arm-none-eabi-* native-sdk/bin/
+          for p in /usr/bin/arm-none-eabi-*; do ldd "$p" 2>/dev/null | awk '/=> \/.*lib(bfd|opcodes|ctf|sframe)/ {print $3}'; done | sort -u | while read p; do cp -L "$p" native-sdk/lib/; done
+      - name: Build pinned headless mGBA for real native runtime tests
+        run: |
+          git clone --depth 1 --branch 0.10.3 https://github.com/mgba-emu/mgba.git mgba
+          cmake -S mgba -B mgba-build -DCMAKE_BUILD_TYPE=Release -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_GL=OFF -DBUILD_GLES2=OFF -DBUILD_GLES3=OFF -DBUILD_LTO=OFF -DBUILD_SHARED=ON -DBUILD_STATIC=OFF -DDISABLE_DEPS=ON -DUSE_DEBUGGERS=OFF -DENABLE_SCRIPTING=OFF -DM_CORE_GBA=ON -DM_CORE_GB=OFF
+          cmake --build mgba-build -j4
+          cp -a mgba/include/mgba mgba/include/mgba-util native-sdk/include/
+          cp mgba-build/include/mgba/flags.h native-sdk/include/mgba/flags.h
+          cp -a mgba-build/libmgba.so* native-sdk/lib/
+          git -C mgba rev-parse HEAD > native-sdk/mgba-source-sha.txt
+          cp mgba/LICENSE native-sdk/LICENSE-mGBA
+          tar --exclude='.git' -czf v11-1-native-sdk.tar.gz native-sdk
+          tar --exclude='.git' -czf v11-1-repository.tar.gz bootstrap docs .github
+          sha256sum v11-1-native-sdk.tar.gz v11-1-repository.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: V11-1-NATIVE-DEVELOPMENT-TOOLS
+          path: |
+            v11-1-native-sdk.tar.gz
+            v11-1-repository.tar.gz
+          if-no-files-found: error
