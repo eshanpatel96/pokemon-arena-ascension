@@ -1,0 +1,57 @@
+name: V11 actual ROM visual proof
+on:
+  push:
+    branches: [v11-tower-redesign]
+    paths: ['.github/workflows/v11-visual-proof.yml', 'bootstrap/v11-visual-proof.c']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Pokemon-Ascension-Arena-V11-DEVELOPMENT-ROM
+          run-id: 37880942824
+          github-token: ${{ github.token }}
+          path: rom
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-BUILD-RUNTIME-EVIDENCE
+          run-id: 37880942824
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Native mGBA dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc libmgba-dev python3-pil
+      - name: Verify exact unchanged ROM and capture actual native graphics
+        run: |
+          mkdir -p output
+          echo '9dd86e04c4503b4969cd4000175631c09a205621db6a027bea83e075c77a4e58  rom/Pokemon-Arena-Ascension-V11.gba' | sha256sum -c
+          cp rom/manifest.json output/rom-manifest.json
+          cp bootstrap/v11-visual-proof.c output/
+          gcc -O2 -std=c11 bootstrap/v11-visual-proof.c -lmgba -o output/native-proof
+          set -o pipefail
+          timeout 180 output/native-proof rom/Pokemon-Arena-Ascension-V11.gba evidence/symbols.txt output 2>&1 | tee output/proof.log
+      - name: Lossless capture conversion
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('output').rglob('*.ppm'):
+              Image.open(p).save(p.with_suffix('.png'))
+              p.unlink()
+          Path('output/README.txt').write_text('ACTUAL mGBA framebuffer captures from unchanged V11 ROM 54ebd5c. Native resolution 240x160. Room screenshots use debugger-selected native warp/rank fixtures for fast visual inspection, not earned progression. Map pixels and actors are rendered by the ROM, not a map-image compositor or AI art. Bronze clip uses button input after the room warp. This is not a full campaign/save-safety/Delta test. Inspect proof.log for positions and callback evidence. Prior build failed at save export and remains DEVELOPMENT.\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V11-ACTUAL-EMULATOR-VISUAL-PROOF
+          path: output/
+          if-no-files-found: error
