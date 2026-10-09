@@ -1,0 +1,42 @@
+name: V11 source and emulator preflight
+on:
+  push:
+    branches: [v11-tower-redesign]
+    paths: ['.github/workflows/v11-source-preflight.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-pil libmgba-dev
+      - name: Assemble exact preserved baseline
+        run: |
+          git clone https://github.com/pret/pokeemerald.git engine
+          git -C engine checkout --detach 5eff78649e7170a877b961ef0b3da13b81a16038
+          git clone https://github.com/GBurgardt/pokemon-emerald-arena.git arena-upstream
+          git -C arena-upstream checkout --detach e1502f9f7ed46d969880d73adbf5ab23ef7b2a56
+          git -C engine apply ../arena-upstream/game/native-engine.patch
+          cp -a arena-upstream/game/overlay/. engine/
+          bash bootstrap/apply-ascension.sh "$GITHUB_WORKSPACE/engine" "$RUNNER_TEMP/ascension"
+          python3 bootstrap/check-v9-invariants.py engine
+          python3 bootstrap/check-v10-friends.py engine native-previews
+      - name: Export source, pinned upstream patch, and emulator headers
+        run: |
+          mkdir -p sdk
+          cp -a /usr/include/mgba sdk/
+          cp -a /usr/include/mgba-util sdk/
+          cp -a /usr/lib/x86_64-linux-gnu/libmgba* sdk/
+          tar --exclude='.git' --exclude='*.gba' -czf v11-baseline-full-source.tar.gz engine bootstrap .github docs sdk native-previews arena-upstream/game/native-engine.patch
+          sha256sum v11-baseline-full-source.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: V11-EXACT-BASELINE-SOURCE-AND-SDK
+          path: v11-baseline-full-source.tar.gz
+          if-no-files-found: error
