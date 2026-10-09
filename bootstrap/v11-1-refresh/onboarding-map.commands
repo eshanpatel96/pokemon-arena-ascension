@@ -1,0 +1,64 @@
+# Normal GBA key input only. No native saving commands or debugger writes.
+frames 300 0
+snap 01-title
+press 8
+frames 150 0
+press 1
+frames 480 0
+snap 02-lab-welcome
+map 26 110
+expect gPlayerPartyCount 0 1 6
+press 1
+frames 100 0
+snap 03-register-prompt
+press 1
+frames 600 0
+snap 04-roster-ready
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+press 1
+frames 100 0
+snap 05-briefing-finished
+map 26 110
+press 8
+frames 80 0
+snap 06-menu
+press 128
+press 128
+press 128
+press 128
+press 1
+frames 180 0
+snap 07-city-map-west
+press 256
+frames 90 0
+snap 08-city-map-east
+press 2
+frames 240 0
+snap 09-map-closed
+map 26 110
+expect gPlayerPartyCount 0 1 6
