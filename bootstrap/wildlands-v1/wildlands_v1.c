@@ -1,0 +1,975 @@
+#include "global.h"
+#include "wildlands_v1.h"
+#include "arena_moves.h"
+#include "arena_sprites.h"
+#include "battle_main.h"
+#include "data.h"
+#include "event_object_movement.h"
+#include "field_player_avatar.h"
+#include "field_message_box.h"
+#include "field_effect.h"
+#include "fieldmap.h"
+#include "main.h"
+#include "metatile_behavior.h"
+#include "overworld.h"
+#include "palette.h"
+#include "pokemon.h"
+#include "random.h"
+#include "script.h"
+#include "sound.h"
+#include "sprite.h"
+#include "string_util.h"
+#include "constants/event_objects.h"
+#include "constants/field_effects.h"
+#include "constants/maps.h"
+#include "constants/moves.h"
+#include "constants/rgb.h"
+#include "constants/songs.h"
+#include "constants/species.h"
+
+#define WL_MAX_ACTORS 7
+#define WL_MAX_SHOTS 12
+#define WL_MAX_LOOT 4
+#define WL_PLAYER 0
+#define WL_PARTNER 1
+#define WL_RAYQUAZA 6
+#define WL_MON_TILE_TAG 0xB200
+#define WL_MON_PAL_TAG 0xB240
+#define WL_SHOT_TILE_TAG 0xB280
+#define WL_SHOT_PAL_TAG 0xB281
+#define WL_Q 256
+#define WL_BODY_RADIUS 10
+#define WL_GRASS_HIDE_DISTANCE 56
+#define WL_RAY_X (19 + MAP_OFFSET)
+#define WL_RAY_Y (7 + MAP_OFFSET)
+
+struct WildActor
+{
+    bool8 active;
+    bool8 ai;
+    bool8 legendary;
+    bool8 concealed;
+    u8 team;
+    u8 spriteId;
+    u8 moveSlot;
+    u8 facing;
+    u8 revealTimer;
+    u8 flash;
+    u8 invuln;
+    u8 attackTimer;
+    u8 attackWindup;
+    u8 attackMoveSlot;
+    u16 species;
+    u16 moves[4];
+    u16 hp;
+    u16 maxHp;
+    u16 atk;
+    u16 def;
+    u16 cooldown;
+    u16 dashCooldown;
+    s32 x;
+    s32 y;
+    s16 attackX;
+    s16 attackY;
+    const struct ArenaSpriteSet *art;
+};
+
+struct WildShot
+{
+    bool8 active;
+    u8 owner;
+    u8 team;
+    u8 spriteId;
+    u8 life;
+    u16 move;
+    s32 x;
+    s32 y;
+    s16 vx;
+    s16 vy;
+};
+
+struct WildLoot
+{
+    bool8 active;
+    u8 kind;
+    u8 spriteId;
+    s16 x;
+    s16 y;
+};
+
+static EWRAM_DATA struct WildActor sActors[WL_MAX_ACTORS] = {0};
+static EWRAM_DATA struct WildShot sShots[WL_MAX_SHOTS] = {0};
+static EWRAM_DATA struct WildLoot sLoot[WL_MAX_LOOT] = {0};
+static EWRAM_DATA u32 sFrameTiles[WL_MAX_ACTORS][512] = {0};
+static EWRAM_DATA bool8 sInitialized = FALSE;
+static EWRAM_DATA bool8 sRayquazaRecruitable = FALSE;
+static EWRAM_DATA u16 sFrames = 0;
+
+static const u32 sShotTiles[8] =
+{
+    0x00022000, 0x00211200, 0x02111120, 0x21111112,
+    0x21111112, 0x02111120, 0x00211200, 0x00022000
+};
+static const u16 sShotPalette[16] =
+{
+    RGB_BLACK, RGB_WHITE, RGB(31, 20, 4), RGB(7, 26, 31),
+    RGB(18, 31, 10), RGB(27, 8, 31), RGB(31, 8, 8)
+};
+static const struct OamData sMonOam =
+{
+    .shape = SPRITE_SHAPE(64x64),
+    .size = SPRITE_SIZE(64x64),
+    .priority = 1,
+};
+static const struct OamData sShotOam =
+{
+    .shape = SPRITE_SHAPE(8x8),
+    .size = SPRITE_SIZE(8x8),
+    .priority = 0,
+};
+static const struct SpriteTemplate sMonTemplate =
+{
+    .tileTag = TAG_NONE,
+    .paletteTag = TAG_NONE,
+    .oam = &sMonOam,
+    .anims = gDummySpriteAnimTable,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
+};
+static const struct SpriteSheet sShotSheet =
+{
+    sShotTiles, sizeof(sShotTiles), WL_SHOT_TILE_TAG
+};
+static const struct SpritePalette sShotPal =
+{
+    sShotPalette, WL_SHOT_PAL_TAG
+};
+static const struct SpriteTemplate sShotTemplate =
+{
+    .tileTag = WL_SHOT_TILE_TAG,
+    .paletteTag = WL_SHOT_PAL_TAG,
+    .oam = &sShotOam,
+    .anims = gDummySpriteAnimTable,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
+};
+
+static const u8 sTextBoot[] = _("POKEMON WILDLANDS V1\\nFIELD COMBAT TEST.$");
+static const u8 sTextHp[] = _("HP BOOST FOUND!$");
+static const u8 sTextAtk[] = _("ATTACK BOOST FOUND!$");
+static const u8 sTextDef[] = _("DEFENSE BOOST FOUND!$");
+static const u8 sTextMove[] = _("MOVE LOOT: FIRE BLAST!$");
+static const u8 sTextRay[] = _("RAYQUAZA JOINED YOUR TEAM!$");
+
+static s32 Abs32(s32 n) { return n < 0 ? -n : n; }
+static s32 Max32(s32 a, s32 b) { return a > b ? a : b; }
+static s32 Min32(s32 a, s32 b) { return a < b ? a : b; }
+static s32 Dist(s32 ax, s32 ay, s32 bx, s32 by)
+{
+    s32 dx = Abs32(ax - bx);
+    s32 dy = Abs32(ay - by);
+    return Max32(dx, dy) + Min32(dx, dy) / 2;
+}
+
+static bool8 OnWildlandsMap(void)
+{
+    return gSaveBlock1Ptr != NULL
+        && gSaveBlock1Ptr->location.mapGroup == MAP_GROUP(MAP_ROUTE119)
+        && gSaveBlock1Ptr->location.mapNum == MAP_NUM(MAP_ROUTE119);
+}
+
+bool8 WildlandsV1_IsActive(void)
+{
+    return OnWildlandsMap();
+}
+
+static bool8 IsWater(u8 behavior)
+{
+    return MetatileBehavior_IsSurfableWaterOrUnderwater(behavior)
+        || MetatileBehavior_IsDeepOrOceanWater(behavior)
+        || MetatileBehavior_IsShallowFlowingWater(behavior);
+}
+
+static bool8 IsGrass(u8 behavior)
+{
+    return MetatileBehavior_IsPokeGrass(behavior)
+        || MetatileBehavior_IsTallGrass(behavior)
+        || MetatileBehavior_IsLongGrass(behavior);
+}
+
+static bool8 CanSwim(u16 species)
+{
+    switch (species)
+    {
+    case SPECIES_BLASTOISE:
+    case SPECIES_SWAMPERT:
+    case SPECIES_GYARADOS:
+    case SPECIES_MILOTIC:
+    case SPECIES_LAPRAS:
+    case SPECIES_FERALIGATR:
+    case SPECIES_KINGDRA:
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static bool8 CanFly(u16 species)
+{
+    switch (species)
+    {
+    case SPECIES_CHARIZARD:
+    case SPECIES_DRAGONITE:
+    case SPECIES_SALAMENCE:
+    case SPECIES_CROBAT:
+    case SPECIES_SKARMORY:
+    case SPECIES_RAYQUAZA:
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static bool8 CanBurrow(u16 species)
+{
+    switch (species)
+    {
+    case SPECIES_DUGTRIO:
+    case SPECIES_SANDSLASH:
+    case SPECIES_FLYGON:
+    case SPECIES_RHYDON:
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static bool8 ActorCanUseTile(const struct WildActor *actor, s16 px, s16 py)
+{
+    s16 tx = px / 16;
+    s16 ty = py / 16;
+    u8 behavior = MapGridGetMetatileBehaviorAt(tx, ty);
+    if (IsWater(behavior))
+        return CanSwim(actor->species) || CanFly(actor->species);
+    return MapGridGetCollisionAt(tx, ty) == 0;
+}
+
+static void FreeActorArt(u8 id)
+{
+    if (sActors[id].spriteId < MAX_SPRITES && gSprites[sActors[id].spriteId].inUse)
+        DestroySprite(&gSprites[sActors[id].spriteId]);
+    FreeSpriteTilesByTag(WL_MON_TILE_TAG + id);
+    FreeSpritePaletteByTag(WL_MON_PAL_TAG + id);
+    sActors[id].spriteId = MAX_SPRITES;
+}
+
+static bool8 LoadActorArt(u8 id)
+{
+    struct WildActor *actor = &sActors[id];
+    struct SpriteSheet sheet;
+    struct SpritePalette pal;
+    struct SpriteTemplate tmpl = sMonTemplate;
+    u8 spriteId;
+
+    actor->art = ArenaSprites_Get(actor->species);
+    if (actor->art == NULL)
+        return FALSE;
+    if (!ArenaSprites_Decode(&actor->art->animations[ARENA_ANIM_IDLE], 0, 0, sFrameTiles[id]))
+        return FALSE;
+    sheet.data = sFrameTiles[id];
+    sheet.size = 2048;
+    sheet.tag = WL_MON_TILE_TAG + id;
+    if (LoadSpriteSheet(&sheet) == 0xFFFF)
+        return FALSE;
+    pal.data = actor->art->palette;
+    pal.tag = WL_MON_PAL_TAG + id;
+    if (LoadSpritePalette(&pal) == 0xFF)
+    {
+        FreeSpriteTilesByTag(sheet.tag);
+        return FALSE;
+    }
+    tmpl.tileTag = sheet.tag;
+    tmpl.paletteTag = pal.tag;
+    spriteId = CreateSprite(&tmpl, 120, 80, 1);
+    if (spriteId == MAX_SPRITES)
+    {
+        FreeSpriteTilesByTag(sheet.tag);
+        FreeSpritePaletteByTag(pal.tag);
+        return FALSE;
+    }
+    actor->spriteId = spriteId;
+    gSprites[spriteId].coordOffsetEnabled = TRUE;
+    return TRUE;
+}
+
+static void ConfigureStats(struct WildActor *actor)
+{
+    const struct SpeciesInfo *base = &gSpeciesInfo[actor->species];
+    actor->maxHp = 120 + base->baseHP;
+    actor->hp = actor->maxHp;
+    actor->atk = (base->baseAttack + base->baseSpAttack) / 2 + 40;
+    actor->def = (base->baseDefense + base->baseSpDefense) / 2 + 40;
+}
+
+static void InitActor(u8 id, u16 species, u8 team, bool8 ai, bool8 legendary,
+                      s16 mapX, s16 mapY, u16 m0, u16 m1, u16 m2, u16 m3)
+{
+    struct WildActor *actor = &sActors[id];
+    if (actor->spriteId < MAX_SPRITES && gSprites[actor->spriteId].inUse)
+        FreeActorArt(id);
+    memset(actor, 0, sizeof(*actor));
+    actor->active = TRUE;
+    actor->species = species;
+    actor->team = team;
+    actor->ai = ai;
+    actor->legendary = legendary;
+    actor->spriteId = MAX_SPRITES;
+    actor->moves[0] = m0;
+    actor->moves[1] = m1;
+    actor->moves[2] = m2;
+    actor->moves[3] = m3;
+    actor->moveSlot = 0;
+    actor->x = mapX * 16 + 8;
+    actor->y = mapY * 16 + 8;
+    actor->facing = DIR_SOUTH;
+    ConfigureStats(actor);
+    if (!LoadActorArt(id))
+        actor->active = FALSE;
+}
+
+static void InitLoot(void)
+{
+    static const s16 pos[WL_MAX_LOOT][2] =
+    {
+        {12 + MAP_OFFSET, 121 + MAP_OFFSET},
+        {33 + MAP_OFFSET, 117 + MAP_OFFSET},
+        {4 + MAP_OFFSET, 96 + MAP_OFFSET},
+        {29 + MAP_OFFSET, 53 + MAP_OFFSET},
+    };
+    u32 i;
+    for (i = 0; i < WL_MAX_LOOT; i++)
+    {
+        sLoot[i].active = TRUE;
+        sLoot[i].kind = i;
+        sLoot[i].x = pos[i][0];
+        sLoot[i].y = pos[i][1];
+        sLoot[i].spriteId = CreateObjectGraphicsSprite(OBJ_EVENT_GFX_ITEM_BALL,
+                                                       SpriteCallbackDummy, 0, 0, 1);
+        if (sLoot[i].spriteId < MAX_SPRITES)
+            gSprites[sLoot[i].spriteId].coordOffsetEnabled = TRUE;
+    }
+}
+
+static void PositionMapSprite(u8 spriteId, s32 px, s32 py, s8 yLift)
+{
+    s16 tx = px / 16;
+    s16 ty = py / 16;
+    s16 dx = 8 + (px & 15);
+    s16 dy = 8 + (py & 15) + yLift;
+    SetSpritePosToOffsetMapCoords(&tx, &ty, dx, dy);
+    gSprites[spriteId].x = tx;
+    gSprites[spriteId].y = ty;
+}
+
+static void PositionSprites(void)
+{
+    u32 i;
+    struct ObjectEvent *playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
+    struct Sprite *playerSprite = &gSprites[gPlayerAvatar.spriteId];
+    s32 playerX = playerObj->currentCoords.x * 16 + 8;
+    s32 playerY = playerObj->currentCoords.y * 16 + 8;
+
+    sActors[WL_PLAYER].x = playerX;
+    sActors[WL_PLAYER].y = playerY;
+    if (sActors[WL_PLAYER].active && sActors[WL_PLAYER].spriteId < MAX_SPRITES)
+    {
+        struct Sprite *sprite = &gSprites[sActors[WL_PLAYER].spriteId];
+        sprite->coordOffsetEnabled = FALSE;
+        sprite->x = playerSprite->x;
+        sprite->y = playerSprite->y - 12;
+        sprite->invisible = FALSE;
+    }
+    playerSprite->invisible = TRUE;
+
+    for (i = 1; i < WL_MAX_ACTORS; i++)
+    {
+        struct WildActor *actor = &sActors[i];
+        if (!actor->active || actor->spriteId >= MAX_SPRITES)
+            continue;
+        PositionMapSprite(actor->spriteId, actor->x, actor->y, -12);
+        gSprites[actor->spriteId].invisible = actor->concealed && actor->team != 0
+            && Dist(actor->x, actor->y, playerX, playerY) > WL_GRASS_HIDE_DISTANCE;
+        if (actor->flash)
+            gSprites[actor->spriteId].invisible ^= (sFrames & 2) != 0;
+    }
+
+    for (i = 0; i < WL_MAX_SHOTS; i++)
+        if (sShots[i].active && sShots[i].spriteId < MAX_SPRITES)
+            PositionMapSprite(sShots[i].spriteId, sShots[i].x, sShots[i].y, -4);
+
+    for (i = 0; i < WL_MAX_LOOT; i++)
+        if (sLoot[i].active && sLoot[i].spriteId < MAX_SPRITES)
+            PositionMapSprite(sLoot[i].spriteId, sLoot[i].x * 16 + 8, sLoot[i].y * 16 + 8, -8);
+}
+
+static u16 TypeMultiplier(u16 move, u16 species)
+{
+    u32 i;
+    u16 mult = 100;
+    u8 type = gBattleMoves[move].type;
+    const struct SpeciesInfo *target = &gSpeciesInfo[species];
+    for (i = 0; i < sizeof(gTypeEffectiveness); i += 3)
+    {
+        u8 attack = TYPE_EFFECT_ATK_TYPE(i);
+        u8 defense = TYPE_EFFECT_DEF_TYPE(i);
+        if (attack == TYPE_ENDTABLE)
+            break;
+        if (attack == TYPE_FORESIGHT)
+            continue;
+        if (attack == type && (defense == target->types[0] || defense == target->types[1]))
+            mult = mult * TYPE_EFFECT_MULTIPLIER(i) / 10;
+    }
+    return mult;
+}
+
+static void DamageActor(u8 source, u8 target, u16 move)
+{
+    struct WildActor *a = &sActors[source];
+    struct WildActor *b = &sActors[target];
+    s32 damage;
+    u16 mult;
+    if (!a->active || !b->active || b->invuln)
+        return;
+    mult = TypeMultiplier(move, b->species);
+    if (mult == 0)
+        return;
+    damage = gBattleMoves[move].power / 2 + a->atk / 5 - b->def / 8;
+    if (damage < 3)
+        damage = 3;
+    damage = damage * mult / 100;
+    if (damage < 1)
+        damage = 1;
+    if (damage > b->hp)
+        damage = b->hp;
+    b->hp -= damage;
+    b->flash = 12;
+    b->revealTimer = 90;
+    PlaySE(SE_M_COMET_PUNCH);
+    if (b->hp == 0)
+    {
+        b->active = FALSE;
+        if (b->spriteId < MAX_SPRITES)
+            gSprites[b->spriteId].invisible = TRUE;
+        if (target == WL_RAYQUAZA)
+            sRayquazaRecruitable = TRUE;
+    }
+}
+
+static s8 FindNearestEnemy(u8 source, s32 maxDistance)
+{
+    u32 i;
+    s8 bestId = -1;
+    s32 best = maxDistance + 1;
+    struct WildActor *actor = &sActors[source];
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+    {
+        s32 d;
+        if (i == source || !sActors[i].active || sActors[i].team == actor->team)
+            continue;
+        d = Dist(actor->x, actor->y, sActors[i].x, sActors[i].y);
+        if (sActors[i].concealed && sActors[i].revealTimer == 0 && d > WL_GRASS_HIDE_DISTANCE)
+            continue;
+        if (d < best)
+        {
+            best = d;
+            bestId = i;
+        }
+    }
+    return bestId;
+}
+
+static void NormalizeAim(s32 dx, s32 dy, s16 *outX, s16 *outY)
+{
+    s32 len = Max32(Abs32(dx), Abs32(dy)) + Min32(Abs32(dx), Abs32(dy)) / 2;
+    if (len < 1)
+    {
+        *outX = 0;
+        *outY = -WL_Q;
+        return;
+    }
+    *outX = dx * WL_Q / len;
+    *outY = dy * WL_Q / len;
+}
+
+static void PlayerAim(s16 *x, s16 *y)
+{
+    switch (GetPlayerFacingDirection())
+    {
+    case DIR_NORTH: *x = 0; *y = -WL_Q; break;
+    case DIR_SOUTH: *x = 0; *y = WL_Q; break;
+    case DIR_WEST:  *x = -WL_Q; *y = 0; break;
+    default:        *x = WL_Q; *y = 0; break;
+    }
+}
+
+static void SpawnShot(u8 owner, u16 move, s16 aimX, s16 aimY)
+{
+    u32 i;
+    const struct ArenaMoveProfile *profile = ArenaMoves_Get(move);
+    if (profile == NULL)
+        return;
+    for (i = 0; i < WL_MAX_SHOTS; i++)
+        if (!sShots[i].active)
+            break;
+    if (i == WL_MAX_SHOTS)
+        return;
+    memset(&sShots[i], 0, sizeof(sShots[i]));
+    sShots[i].active = TRUE;
+    sShots[i].owner = owner;
+    sShots[i].team = sActors[owner].team;
+    sShots[i].move = move;
+    sShots[i].x = sActors[owner].x;
+    sShots[i].y = sActors[owner].y - 8;
+    sShots[i].vx = aimX * Max32(2, profile->speed / WL_Q) / WL_Q;
+    sShots[i].vy = aimY * Max32(2, profile->speed / WL_Q) / WL_Q;
+    if (profile->speed == 0)
+    {
+        sShots[i].vx = aimX * 4 / WL_Q;
+        sShots[i].vy = aimY * 4 / WL_Q;
+    }
+    sShots[i].life = Min32(60, Max32(12, profile->range / Max32(1, Max32(Abs32(sShots[i].vx), Abs32(sShots[i].vy)))));
+    sShots[i].spriteId = CreateSprite(&sShotTemplate, 120, 80, 0);
+    if (sShots[i].spriteId == MAX_SPRITES)
+        sShots[i].active = FALSE;
+    else
+        gSprites[sShots[i].spriteId].coordOffsetEnabled = TRUE;
+}
+
+static void ResolveDirectAttack(u8 owner, u16 move, s16 aimX, s16 aimY)
+{
+    u32 i;
+    const struct ArenaMoveProfile *profile = ArenaMoves_Get(move);
+    if (profile == NULL)
+        return;
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+    {
+        s32 dx, dy;
+        if (!sActors[i].active || sActors[i].team == sActors[owner].team || i == owner)
+            continue;
+        dx = sActors[i].x - sActors[owner].x;
+        dy = sActors[i].y - sActors[owner].y;
+        if (Dist(0, 0, dx, dy) > profile->range)
+            continue;
+        if (profile->kind == ARENA_MOVE_CONE)
+        {
+            if (!ArenaMoves_InCone(dx, dy, aimX, aimY, profile->range, profile->cone))
+                continue;
+        }
+        else if (dx * aimX + dy * aimY <= 0)
+            continue;
+        DamageActor(owner, i, move);
+        if (profile->kind != ARENA_MOVE_CONE)
+            break;
+    }
+}
+
+static void FireAttack(u8 id)
+{
+    struct WildActor *actor = &sActors[id];
+    u16 move = actor->moves[actor->attackMoveSlot];
+    const struct ArenaMoveProfile *profile = ArenaMoves_Get(move);
+    if (profile == NULL)
+        return;
+    actor->revealTimer = 90;
+    if (profile->kind == ARENA_MOVE_PROJECTILE || profile->kind == ARENA_MOVE_RUSH)
+        SpawnShot(id, move, actor->attackX, actor->attackY);
+    else if (profile->kind == ARENA_MOVE_MELEE || profile->kind == ARENA_MOVE_CONE)
+        ResolveDirectAttack(id, move, actor->attackX, actor->attackY);
+    else if (profile->kind == ARENA_MOVE_SELF)
+    {
+        if (move == MOVE_PROTECT)
+            actor->invuln = 45;
+        else if (move == MOVE_AGILITY)
+            actor->dashCooldown = 0;
+    }
+}
+
+static void BeginAttack(u8 id, s16 aimX, s16 aimY)
+{
+    struct WildActor *actor = &sActors[id];
+    const struct ArenaMoveProfile *profile;
+    u16 move;
+    if (!actor->active || actor->cooldown || actor->attackTimer)
+        return;
+    move = actor->moves[actor->moveSlot];
+    profile = ArenaMoves_Get(move);
+    if (profile == NULL)
+        return;
+    actor->attackMoveSlot = actor->moveSlot;
+    actor->attackX = aimX;
+    actor->attackY = aimY;
+    actor->attackWindup = profile->windup;
+    actor->attackTimer = profile->windup + 1;
+    actor->cooldown = profile->windup + profile->active + profile->recovery;
+    if (profile->windup == 0)
+    {
+        FireAttack(id);
+        actor->attackTimer = 0;
+    }
+}
+
+static void TickActorAttack(u8 id)
+{
+    struct WildActor *actor = &sActors[id];
+    if (actor->cooldown)
+        actor->cooldown--;
+    if (actor->dashCooldown)
+        actor->dashCooldown--;
+    if (actor->invuln)
+        actor->invuln--;
+    if (actor->flash)
+        actor->flash--;
+    if (actor->revealTimer)
+        actor->revealTimer--;
+    if (actor->attackTimer)
+    {
+        actor->attackTimer--;
+        if (actor->attackTimer == 1)
+            FireAttack(id);
+    }
+}
+
+static void TickShots(void)
+{
+    u32 i, j;
+    for (i = 0; i < WL_MAX_SHOTS; i++)
+    {
+        struct WildShot *shot = &sShots[i];
+        s32 oldX, oldY;
+        if (!shot->active)
+            continue;
+        oldX = shot->x;
+        oldY = shot->y;
+        shot->x += shot->vx;
+        shot->y += shot->vy;
+        for (j = 0; j < WL_MAX_ACTORS; j++)
+        {
+            if (!sActors[j].active || sActors[j].team == shot->team)
+                continue;
+            if (ArenaMoves_SegmentHit(oldX, oldY, shot->x, shot->y,
+                                      sActors[j].x, sActors[j].y, WL_BODY_RADIUS))
+            {
+                DamageActor(shot->owner, j, shot->move);
+                shot->life = 0;
+                break;
+            }
+        }
+        if (MapGridGetCollisionAt(shot->x / 16, shot->y / 16) && !IsWater(MapGridGetMetatileBehaviorAt(shot->x / 16, shot->y / 16)))
+            shot->life = 0;
+        if (shot->life)
+            shot->life--;
+        if (!shot->life)
+        {
+            shot->active = FALSE;
+            if (shot->spriteId < MAX_SPRITES)
+                DestroySprite(&gSprites[shot->spriteId]);
+            shot->spriteId = MAX_SPRITES;
+        }
+    }
+}
+
+static void MoveActorToward(u8 id, s32 tx, s32 ty, s16 speed)
+{
+    struct WildActor *actor = &sActors[id];
+    s32 dx = tx - actor->x;
+    s32 dy = ty - actor->y;
+    s32 len = Max32(Abs32(dx), Abs32(dy)) + Min32(Abs32(dx), Abs32(dy)) / 2;
+    s16 mx, my;
+    if (len < 1)
+        return;
+    mx = dx * speed / len;
+    my = dy * speed / len;
+    if (ActorCanUseTile(actor, actor->x + mx, actor->y))
+        actor->x += mx;
+    if (ActorCanUseTile(actor, actor->x, actor->y + my))
+        actor->y += my;
+}
+
+static void TickAI(u8 id)
+{
+    struct WildActor *actor = &sActors[id];
+    s8 target;
+    const struct ArenaMoveProfile *profile;
+    s32 distance;
+    s16 ax, ay;
+    if (!actor->active || !actor->ai || actor->attackTimer)
+        return;
+    target = FindNearestEnemy(id, actor->legendary ? 220 : 150);
+    if (id == WL_PARTNER && target < 0)
+    {
+        if (Dist(actor->x, actor->y, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y) > 36)
+            MoveActorToward(id, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 2);
+        return;
+    }
+    if (target < 0)
+        return;
+    profile = ArenaMoves_Get(actor->moves[actor->moveSlot]);
+    if (profile == NULL)
+        return;
+    distance = Dist(actor->x, actor->y, sActors[target].x, sActors[target].y);
+    if (distance > profile->range * 3 / 4)
+        MoveActorToward(id, sActors[target].x, sActors[target].y, actor->legendary ? 2 : 1);
+    if (!actor->cooldown && distance <= profile->range)
+    {
+        NormalizeAim(sActors[target].x - actor->x, sActors[target].y - actor->y, &ax, &ay);
+        BeginAttack(id, ax, ay);
+        actor->moveSlot = (actor->moveSlot + 1) & 3;
+    }
+}
+
+static void UpdateConcealment(void)
+{
+    u32 i;
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+    {
+        struct WildActor *actor = &sActors[i];
+        u8 behavior;
+        if (!actor->active)
+            continue;
+        behavior = MapGridGetMetatileBehaviorAt(actor->x / 16, actor->y / 16);
+        actor->concealed = IsGrass(behavior) && actor->revealTimer == 0;
+    }
+}
+
+static void TickPlayerInput(void)
+{
+    s16 ax, ay;
+    struct WildActor *player = &sActors[WL_PLAYER];
+    if (JOY_NEW(L_BUTTON))
+        player->moveSlot = (player->moveSlot + 3) & 3;
+    if (JOY_NEW(R_BUTTON))
+        player->moveSlot = (player->moveSlot + 1) & 3;
+    if (JOY_NEW(A_BUTTON) && !ArePlayerFieldControlsLocked())
+    {
+        PlayerAim(&ax, &ay);
+        BeginAttack(WL_PLAYER, ax, ay);
+    }
+    if ((gMain.heldKeys & B_BUTTON) && (gMain.heldKeys & (DPAD_UP | DPAD_DOWN | DPAD_LEFT | DPAD_RIGHT))
+        && !player->dashCooldown)
+    {
+        player->invuln = 8;
+        player->dashCooldown = 45;
+    }
+}
+
+static bool8 NearPlayer(s32 px, s32 py, s32 dist)
+{
+    return Dist(sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, px, py) <= dist;
+}
+
+static bool8 TryLoot(void)
+{
+    u32 i;
+    for (i = 0; i < WL_MAX_LOOT; i++)
+    {
+        struct WildLoot *loot = &sLoot[i];
+        struct WildActor *p = &sActors[WL_PLAYER];
+        if (!loot->active || !NearPlayer(loot->x * 16 + 8, loot->y * 16 + 8, 28))
+            continue;
+        loot->active = FALSE;
+        if (loot->spriteId < MAX_SPRITES)
+            DestroySprite(&gSprites[loot->spriteId]);
+        switch (loot->kind)
+        {
+        case 0:
+            p->maxHp += 30;
+            p->hp += 30;
+            ShowFieldMessage(sTextHp);
+            break;
+        case 1:
+            p->moves[p->moveSlot] = MOVE_FIRE_BLAST;
+            ShowFieldMessage(sTextMove);
+            break;
+        case 2:
+            p->atk += 18;
+            ShowFieldMessage(sTextAtk);
+            break;
+        default:
+            p->def += 18;
+            ShowFieldMessage(sTextDef);
+            break;
+        }
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static bool8 TryRecruitRayquaza(void)
+{
+    if (!sRayquazaRecruitable || !NearPlayer(WL_RAY_X * 16 + 8, WL_RAY_Y * 16 + 8, 42))
+        return FALSE;
+    sRayquazaRecruitable = FALSE;
+    InitActor(WL_PARTNER, SPECIES_RAYQUAZA, 0, TRUE, FALSE,
+              sActors[WL_PLAYER].x / 16 + 1, sActors[WL_PLAYER].y / 16,
+              MOVE_DRAGON_CLAW, MOVE_EXTREME_SPEED, MOVE_FLY, MOVE_HYPER_BEAM);
+    sActors[WL_PARTNER].hp = sActors[WL_PARTNER].maxHp * 2 / 3;
+    ShowFieldMessage(sTextRay);
+    return TRUE;
+}
+
+static bool8 TryTraversal(void)
+{
+    s16 x, y;
+    u8 behavior;
+    if (IsPlayerFacingSurfableFishableWater() && (CanSwim(sActors[WL_PARTNER].species) || CanFly(sActors[WL_PARTNER].species)))
+    {
+        // Native Surf movement/collision is the V1 mount implementation.
+        // Party slot 1 is the visible AI partner configured at match start.
+        gFieldEffectArguments[0] = 1;
+        FieldEffectStart(FLDEFF_USE_SURF);
+        return TRUE;
+    }
+    PlayerGetDestCoords(&x, &y);
+    behavior = MapGridGetMetatileBehaviorAt(x, y);
+    if ((CanBurrow(sActors[WL_PLAYER].species) || CanBurrow(sActors[WL_PARTNER].species)
+         || sActors[WL_PLAYER].moves[0] == MOVE_DIG || sActors[WL_PLAYER].moves[1] == MOVE_DIG
+         || sActors[WL_PLAYER].moves[2] == MOVE_DIG || sActors[WL_PLAYER].moves[3] == MOVE_DIG)
+        && (MetatileBehavior_IsSandOrDeepSand(behavior) || MetatileBehavior_IsMountain(behavior)))
+    {
+        // V1 burrow shortcut: two distant soft-ground checkpoints on Route 119.
+        // Same-map warp keeps the BR simulation alive; V1.1 will replace the
+        // instant relocation with a short visible dirt-trail traversal state.
+        if (y > 105 + MAP_OFFSET)
+        {
+            SetWarpDestination(MAP_GROUP(MAP_ROUTE119), MAP_NUM(MAP_ROUTE119), WARP_ID_NONE, 8, 58);
+            WarpIntoMap();
+            return TRUE;
+        }
+        if (y < 70 + MAP_OFFSET)
+        {
+            SetWarpDestination(MAP_GROUP(MAP_ROUTE119), MAP_NUM(MAP_ROUTE119), WARP_ID_NONE, 19, 130);
+            WarpIntoMap();
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static void TickContextAction(void)
+{
+    if (!JOY_NEW(SELECT_BUTTON) || ArePlayerFieldControlsLocked())
+        return;
+    if (TryLoot())
+        return;
+    if (TryRecruitRayquaza())
+        return;
+    TryTraversal();
+}
+
+static void DestroyAll(void)
+{
+    u32 i;
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+        if (sActors[i].spriteId < MAX_SPRITES && gSprites[sActors[i].spriteId].inUse)
+            FreeActorArt(i);
+    for (i = 0; i < WL_MAX_SHOTS; i++)
+        if (sShots[i].active && sShots[i].spriteId < MAX_SPRITES)
+            DestroySprite(&gSprites[sShots[i].spriteId]);
+    for (i = 0; i < WL_MAX_LOOT; i++)
+        if (sLoot[i].active && sLoot[i].spriteId < MAX_SPRITES)
+            DestroySprite(&gSprites[sLoot[i].spriteId]);
+    FreeSpriteTilesByTag(WL_SHOT_TILE_TAG);
+    FreeSpritePaletteByTag(WL_SHOT_PAL_TAG);
+    memset(sActors, 0, sizeof(sActors));
+    memset(sShots, 0, sizeof(sShots));
+    memset(sLoot, 0, sizeof(sLoot));
+}
+
+void WildlandsV1_Reset(void)
+{
+    if (sInitialized)
+        DestroyAll();
+    sInitialized = FALSE;
+    sRayquazaRecruitable = FALSE;
+    sFrames = 0;
+}
+
+static void InitWildlands(void)
+{
+    u32 i;
+    if (!OnWildlandsMap() || gPlayerAvatar.spriteId >= MAX_SPRITES)
+        return;
+    memset(sActors, 0, sizeof(sActors));
+    memset(sShots, 0, sizeof(sShots));
+    memset(sLoot, 0, sizeof(sLoot));
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+        sActors[i].spriteId = MAX_SPRITES;
+    for (i = 0; i < WL_MAX_SHOTS; i++)
+        sShots[i].spriteId = MAX_SPRITES;
+
+    LoadSpriteSheet(&sShotSheet);
+    LoadSpritePalette(&sShotPal);
+
+    InitActor(WL_PLAYER, SPECIES_CHARIZARD, 0, FALSE, FALSE,
+              19 + MAP_OFFSET, 133 + MAP_OFFSET,
+              MOVE_FLAMETHROWER, MOVE_SLASH, MOVE_WING_ATTACK, MOVE_DIG);
+    InitActor(WL_PARTNER, SPECIES_BLASTOISE, 0, TRUE, FALSE,
+              18 + MAP_OFFSET, 132 + MAP_OFFSET,
+              MOVE_WATER_GUN, MOVE_BITE, MOVE_HYDRO_PUMP, MOVE_PROTECT);
+    InitActor(2, SPECIES_SCEPTILE, 1, TRUE, FALSE,
+              12 + MAP_OFFSET, 123 + MAP_OFFSET,
+              MOVE_LEAF_BLADE, MOVE_GIGA_DRAIN, MOVE_QUICK_ATTACK, MOVE_AGILITY);
+    InitActor(3, SPECIES_BLAZIKEN, 1, TRUE, FALSE,
+              26 + MAP_OFFSET, 123 + MAP_OFFSET,
+              MOVE_BLAZE_KICK, MOVE_FIRE_PUNCH, MOVE_MACH_PUNCH, MOVE_PROTECT);
+    InitActor(4, SPECIES_GARDEVOIR, 2, TRUE, FALSE,
+              5 + MAP_OFFSET, 125 + MAP_OFFSET,
+              MOVE_PSYCHIC, MOVE_SHOCK_WAVE, MOVE_DOUBLE_TEAM, MOVE_PROTECT);
+    InitActor(5, SPECIES_METAGROSS, 2, TRUE, FALSE,
+              34 + MAP_OFFSET, 122 + MAP_OFFSET,
+              MOVE_METEOR_MASH, MOVE_PSYCHIC, MOVE_SLAM, MOVE_PROTECT);
+    InitActor(WL_RAYQUAZA, SPECIES_RAYQUAZA, 3, TRUE, TRUE,
+              WL_RAY_X, WL_RAY_Y,
+              MOVE_DRAGON_CLAW, MOVE_EXTREME_SPEED, MOVE_FLY, MOVE_HYPER_BEAM);
+    if (sActors[WL_RAYQUAZA].active)
+    {
+        sActors[WL_RAYQUAZA].maxHp = sActors[WL_RAYQUAZA].maxHp * 2;
+        sActors[WL_RAYQUAZA].hp = sActors[WL_RAYQUAZA].maxHp;
+        sActors[WL_RAYQUAZA].atk += 40;
+        sActors[WL_RAYQUAZA].def += 30;
+    }
+    InitLoot();
+    sInitialized = TRUE;
+    sFrames = 0;
+    ShowFieldMessage(sTextBoot);
+}
+
+void WildlandsV1_Tick(void)
+{
+    u32 i;
+    if (!OnWildlandsMap())
+    {
+        if (sInitialized)
+            WildlandsV1_Reset();
+        return;
+    }
+    if (!sInitialized)
+    {
+        InitWildlands();
+        return;
+    }
+    sFrames++;
+    PositionSprites();
+    if (ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked() || gPaletteFade.active)
+        return;
+
+    TickPlayerInput();
+    TickContextAction();
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+        if (sActors[i].active)
+            TickActorAttack(i);
+    for (i = 1; i < WL_MAX_ACTORS; i++)
+        TickAI(i);
+    TickShots();
+    UpdateConcealment();
+    PositionSprites();
+}
