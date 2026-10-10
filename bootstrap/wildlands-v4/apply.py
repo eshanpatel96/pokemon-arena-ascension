@@ -326,7 +326,6 @@ old='''    // A native NEW GAME preset, never an imported save or a fixture mail
                        20, TRUE, i * 2, OT_ID_PLAYER_ID, 0);'''
 new='''    // Wildlands uses the native PC as the immersive team picker. Two are in
     // the party; every other curated species is waiting in Boxes.
-    u32 storageSlot = 0;
     FlagSet(FLAG_ARENA_PRACTICE);
     gPlayerPartyCount = ARRAY_COUNT(team);
     for (i = 0; i < ARRAY_COUNT(team); i++)
@@ -470,7 +469,7 @@ static void WildlandsPartner_Init(void)
     p->species=GetMonData(&gPlayerParty[1],MON_DATA_SPECIES);
     p->art=ArenaSprites_Get(p->species);
     if(!p->art)return;
-    ArenaSprites_Decode(&p->art->animations[ARENA_ANIM_IDLE],FACE_DOWN,0,gDecompressionBuffer);
+    ArenaSprites_Decode(&p->art->animations[ARENA_ANIM_IDLE],FACE_DOWN,0,(u32 *)gDecompressionBuffer);
     sheet.data=gDecompressionBuffer;sheet.size=2048;sheet.tag=WILDLANDS_PARTNER_TAG;
     LoadSpriteSheet(&sheet);
     pal.data=p->art->palette;pal.tag=WILDLANDS_PARTNER_TAG;
@@ -481,7 +480,7 @@ static void WildlandsPartner_Init(void)
     p->shadow=CreateSprite(&sShadowTemplate,p->x/Q,p->y/Q+8,9);
     p->marker=CreateSprite(&sShotTemplate,p->x/Q,p->y/Q-27,0);
     spr=&gSprites[p->sprite];
-    spr->oam.affineAnimPaused=TRUE;spr->oam.affineAnimBeginning=FALSE;
+    spr->affineAnimPaused=TRUE;spr->affineAnimBeginning=FALSE;
     SetOamMatrix(spr->oam.matrixNum,256*256/230,0,0,256*256/230);
     gSprites[p->marker].oam.paletteNum=IndexOfSpritePaletteTag(SHOT_TAG);
     p->drawnFrame=p->drawnDirection=255;p->active=TRUE;
@@ -540,7 +539,7 @@ static void WildlandsPartner_Update(void)
     spr->y += 8-p->art->ground[(p->moving?ARENA_ANIM_WALK:ARENA_ANIM_IDLE)*8+p->facing]*230/256;
     if(frame!=p->drawnFrame || p->facing!=p->drawnDirection)
     {
-        ArenaSprites_Decode(anim,p->facing,frame,gDecompressionBuffer);
+        ArenaSprites_Decode(anim,p->facing,frame,(u32 *)gDecompressionBuffer);
         ArenaRender_Copy(gDecompressionBuffer,
             (u8*)OBJ_VRAM0+GetSpriteTileStartByTag(WILDLANDS_PARTNER_TAG)*32,2048);
         p->drawnFrame=frame;p->drawnDirection=p->facing;
