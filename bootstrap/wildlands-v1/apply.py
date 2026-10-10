@@ -63,7 +63,10 @@ new = '''    SetWarpDestination(MAP_GROUP(MAP_ROUTE119), MAP_NUM(MAP_ROUTE119),
                        WARP_ID_NONE, 19, 133);
     WarpIntoMap();
     SetLastHealLocationWarp(HEAL_LOCATION_OLDALE_TOWN);
-    VarSet(VAR_ASCENSION_CAREER_ACTIVE, 0);'''
+    VarSet(VAR_ASCENSION_CAREER_ACTIVE, 0);
+    FlagSet(FLAG_HIDE_ROUTE_119_RIVAL);
+    FlagSet(FLAG_HIDE_ROUTE_119_RIVAL_ON_BIKE);
+    FlagSet(FLAG_HIDE_ROUTE_119_SCOTT);'''
 if s.count(old) != 1:
     raise SystemExit('new game warp anchor drift')
 s = s.replace(old, new, 1)
@@ -97,7 +100,17 @@ p.write_text(s)
 # grass/water/bridges and terrain; remove story/NPC/warp interactions.
 p = root / 'data/maps/Route119/map.json'
 m = json.loads(p.read_text())
-m['object_events'] = []
+# Three hidden object stubs retain assembler-local IDs referenced by dormant
+# vanilla Route 119 scripts. Their hide flags are forced at Wildlands startup,
+# so no trainer/NPC is rendered while the old script_data still links safely.
+m['object_events'] = [
+    e for e in m['object_events']
+    if e.get('local_id') in (
+        'LOCALID_ROUTE119_RIVAL',
+        'LOCALID_ROUTE119_RIVAL_ON_BIKE',
+        'LOCALID_ROUTE119_SCOTT',
+    )
+]
 m['warp_events'] = []
 m['coord_events'] = []
 m['bg_events'] = []
