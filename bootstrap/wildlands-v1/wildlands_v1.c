@@ -38,11 +38,10 @@
 #define WL_MON_PAL_TAG 0xB240
 #define WL_SHOT_TILE_TAG 0xB280
 #define WL_SHOT_PAL_TAG 0xB281
+#define WL_ALLY_TILE_TAG 0xB282
 #define WL_Q 256
 #define WL_BODY_RADIUS 10
 #define WL_GRASS_HIDE_DISTANCE 56
-#define WL_RAY_X (19 + MAP_OFFSET)
-#define WL_RAY_Y (7 + MAP_OFFSET)
 
 struct WildActor
 {
@@ -103,6 +102,7 @@ static EWRAM_DATA struct WildShot sShots[WL_MAX_SHOTS] = {0};
 static EWRAM_DATA struct WildLoot sLoot[WL_MAX_LOOT] = {0};
 static EWRAM_DATA bool8 sInitialized = FALSE;
 static EWRAM_DATA bool8 sRayquazaRecruitable = FALSE;
+static EWRAM_DATA u8 sPartnerMarkerSprite = MAX_SPRITES;
 static EWRAM_DATA u16 sFrames = 0;
 
 static const u32 sShotTiles[8] =
@@ -114,6 +114,11 @@ static const u16 sShotPalette[16] =
 {
     RGB_BLACK, RGB_WHITE, RGB(31, 20, 4), RGB(7, 26, 31),
     RGB(18, 31, 10), RGB(27, 8, 31), RGB(31, 8, 8)
+};
+static const u32 sAllyTiles[8] =
+{
+    0x00033000, 0x00333300, 0x03333330, 0x33333333,
+    0x03333330, 0x00333300, 0x00033000, 0x00000000
 };
 static const struct OamData sMonOam =
 {
@@ -144,6 +149,20 @@ static const struct SpriteSheet sShotSheet =
 static const struct SpritePalette sShotPal =
 {
     sShotPalette, WL_SHOT_PAL_TAG
+};
+static const struct SpriteSheet sAllySheet =
+{
+    sAllyTiles, sizeof(sAllyTiles), WL_ALLY_TILE_TAG
+};
+static const struct SpriteTemplate sAllyTemplate =
+{
+    .tileTag = WL_ALLY_TILE_TAG,
+    .paletteTag = WL_SHOT_PAL_TAG,
+    .oam = &sShotOam,
+    .anims = gDummySpriteAnimTable,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
 };
 static const struct SpriteTemplate sShotTemplate =
 {
@@ -386,37 +405,95 @@ static void PositionMapSprite(u8 spriteId, s32 px, s32 py, s8 yLift)
     gSprites[spriteId].y = ty;
 }
 
-static void PositionSprites(void)
+void WildlandsV1_PreOam(void)
 {
     u32 i;
-    struct ObjectEvent *playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
-    struct Sprite *playerSprite = &gSprites[gPlayerAvatar.spriteId];
-    s32 playerX = playerObj->currentCoords.x * 16 + 8;
-    s32 playerY = playerObj->currentCoords.y * 16 + 8;
+    bool8 mounted;
+    struct ObjectEvent *playerObj;
+    struct Sprite *playerSprite;
+    s32 playerX;
+    s32 playerY;
+
+    if (!sInitialized || !OnWildlandsMap() || gPlayerAvatar.spriteId >= MAX_SPRITES)
+        return;
+
+    playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
+    playerSprite = &gSprites[gPlayerAvatar.spriteId];
+    playerX = playerObj->currentCoords.x * 16 + 8;
+    playerY = playerObj->currentCoords.y * 16 + 8;
+    mounted = TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
+        && sActors[WL_PARTNER].active
+        && (CanSwim(sActors[WL_PARTNER].species) || CanFly(sActors[WL_PARTNER].species));
 
     sActors[WL_PLAYER].x = playerX;
     sActors[WL_PLAYER].y = playerY;
+
+    // The native player object remains the collision/camera anchor but must never
+    // be rendered in Wildlands. Do this after AnimateSprites and CameraUpdate so
+    // Emerald cannot restore the trainer sprite later in the frame.
+    playerSprite->invisible = TRUE;
+
     if (sActors[WL_PLAYER].active && sActors[WL_PLAYER].spriteId < MAX_SPRITES)
     {
         struct Sprite *sprite = &gSprites[sActors[WL_PLAYER].spriteId];
         sprite->coordOffsetEnabled = FALSE;
         sprite->x = playerSprite->x;
         sprite->y = playerSprite->y - 12;
-        sprite->invisible = FALSE;
+        sprite->invisible = mounted;
     }
-    playerSprite->invisible = TRUE;
+
+    if (mounted)
+    {
+        // During partner Surf, the teammate becomes the visible mount/body.
+        sActors[WL_PARTNER].x = playerX;
+        sActors[WL_PARTNER].y = playerY;
+        if (playerObj->fieldEffectSpriteId < MAX_SPRITES
+            && gSprites[playerObj->fieldEffectSpriteId].inUse)
+            gSprites[playerObj->fieldEffectSpriteId].invisible = TRUE;
+    }
 
     for (i = 1; i < WL_MAX_ACTORS; i++)
     {
         struct WildActor *actor = &sActors[i];
         if (!actor->active || actor->spriteId >= MAX_SPRITES)
             continue;
-        PositionMapSprite(actor->spriteId, actor->x, actor->y, -12);
-        gSprites[actor->spriteId].invisible = actor->concealed && actor->team != 0
-            && Dist(actor->x, actor->y, playerX, playerY) > WL_GRASS_HIDE_DISTANCE;
+        if (mounted && i == WL_PARTNER)
+        {
+            struct Sprite *sprite = &gSprites[actor->spriteId];
+            sprite->coordOffsetEnabled = FALSE;
+            sprite->x = playerSprite->x;
+            sprite->y = playerSprite->y - 12;
+            sprite->invisible = FALSE;
+        }
+        else
+        {
+            PositionMapSprite(actor->spriteId, actor->x, actor->y, -12);
+            gSprites[actor->spriteId].invisible = actor->concealed && actor->team != 0
+                && Dist(actor->x, actor->y, playerX, playerY) > WL_GRASS_HIDE_DISTANCE;
+        }
         if (actor->flash)
             gSprites[actor->spriteId].invisible ^= (sFrames & 2) != 0;
     }
+
+    // Persistent cyan ally marker: always identifies the current AI teammate,
+    // including a recruited Rayquaza and while moving through tall grass.
+    if (sPartnerMarkerSprite < MAX_SPRITES && sActors[WL_PARTNER].active)
+    {
+        if (mounted)
+        {
+            gSprites[sPartnerMarkerSprite].coordOffsetEnabled = FALSE;
+            gSprites[sPartnerMarkerSprite].x = playerSprite->x;
+            gSprites[sPartnerMarkerSprite].y = playerSprite->y - 46;
+        }
+        else
+        {
+            gSprites[sPartnerMarkerSprite].coordOffsetEnabled = TRUE;
+            PositionMapSprite(sPartnerMarkerSprite, sActors[WL_PARTNER].x, sActors[WL_PARTNER].y, -46);
+        }
+        gSprites[sPartnerMarkerSprite].invisible = FALSE;
+    }
+    else if (sPartnerMarkerSprite < MAX_SPRITES)
+        gSprites[sPartnerMarkerSprite].invisible = TRUE;
 
     for (i = 0; i < WL_MAX_SHOTS; i++)
         if (sShots[i].active && sShots[i].spriteId < MAX_SPRITES)
@@ -719,6 +796,8 @@ static void TickAI(u8 id)
     s16 ax, ay;
     if (!actor->active || !actor->ai || actor->attackTimer)
         return;
+    if (id == WL_PARTNER && TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
+        return;
     target = FindNearestEnemy(id, actor->legendary ? 220 : 150);
     if (id == WL_PARTNER && target < 0)
     {
@@ -821,7 +900,8 @@ static bool8 TryLoot(void)
 
 static bool8 TryRecruitRayquaza(void)
 {
-    if (!sRayquazaRecruitable || !NearPlayer(WL_RAY_X * 16 + 8, WL_RAY_Y * 16 + 8, 42))
+    if (!sRayquazaRecruitable
+        || !NearPlayer(sActors[WL_RAYQUAZA].x, sActors[WL_RAYQUAZA].y, 42))
         return FALSE;
     sRayquazaRecruitable = FALSE;
     InitActor(WL_PARTNER, SPECIES_RAYQUAZA, 0, TRUE, FALSE,
@@ -836,12 +916,15 @@ static bool8 TryTraversal(void)
 {
     s16 x, y;
     u8 behavior;
-    if (IsPlayerFacingSurfableFishableWater() && (CanSwim(sActors[WL_PARTNER].species) || CanFly(sActors[WL_PARTNER].species)))
+    if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
+        && IsPlayerFacingSurfableFishableWater()
+        && sActors[WL_PARTNER].active
+        && (CanSwim(sActors[WL_PARTNER].species) || CanFly(sActors[WL_PARTNER].species)))
     {
-        // Native Surf movement/collision is the V1 mount implementation.
-        // Party slot 1 is the visible AI partner configured at match start.
-        gFieldEffectArguments[0] = 1;
-        FieldEffectStart(FLDEFF_USE_SURF);
+        // Wildlands traversal deliberately bypasses Emerald's HM/badge gate.
+        // The native surfing movement state is used only for collision/movement;
+        // the trainer and native surf blob are hidden by WildlandsV1_PreOam.
+        SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_SURFING);
         return TRUE;
     }
     PlayerGetDestCoords(&x, &y);
@@ -893,6 +976,10 @@ static void DestroyAll(void)
     for (i = 0; i < WL_MAX_LOOT; i++)
         if (sLoot[i].active && sLoot[i].spriteId < MAX_SPRITES)
             DestroySprite(&gSprites[sLoot[i].spriteId]);
+    if (sPartnerMarkerSprite < MAX_SPRITES && gSprites[sPartnerMarkerSprite].inUse)
+        DestroySprite(&gSprites[sPartnerMarkerSprite]);
+    sPartnerMarkerSprite = MAX_SPRITES;
+    FreeSpriteTilesByTag(WL_ALLY_TILE_TAG);
     FreeSpriteTilesByTag(WL_SHOT_TILE_TAG);
     FreeSpritePaletteByTag(WL_SHOT_PAL_TAG);
     memset(sActors, 0, sizeof(sActors));
@@ -909,11 +996,51 @@ void WildlandsV1_Reset(void)
     sFrames = 0;
 }
 
+static void PlaceActorNear(u8 id, s16 targetX, s16 targetY, u8 maxRadius)
+{
+    s16 radius;
+    s16 dx;
+    s16 dy;
+    s16 x;
+    s16 y;
+    u8 behavior;
+    struct WildActor *actor = &sActors[id];
+
+    for (radius = 0; radius <= maxRadius; radius++)
+    {
+        for (dy = -radius; dy <= radius; dy++)
+        {
+            for (dx = -radius; dx <= radius; dx++)
+            {
+                if (radius && Abs32(dx) != radius && Abs32(dy) != radius)
+                    continue;
+                x = targetX + dx;
+                y = targetY + dy;
+                behavior = MapGridGetMetatileBehaviorAt(x, y);
+                if (MapGridGetCollisionAt(x, y) == 0 && !IsWater(behavior))
+                {
+                    actor->x = x * 16 + 8;
+                    actor->y = y * 16 + 8;
+                    return;
+                }
+            }
+        }
+    }
+}
+
 static void InitWildlands(void)
 {
     u32 i;
+    s16 px;
+    s16 py;
+    struct ObjectEvent *playerObj;
     if (!OnWildlandsMap() || gPlayerAvatar.spriteId >= MAX_SPRITES)
         return;
+
+    playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
+    px = playerObj->currentCoords.x;
+    py = playerObj->currentCoords.y;
+
     memset(sActors, 0, sizeof(sActors));
     memset(sShots, 0, sizeof(sShots));
     memset(sLoot, 0, sizeof(sLoot));
@@ -921,31 +1048,48 @@ static void InitWildlands(void)
         sActors[i].spriteId = MAX_SPRITES;
     for (i = 0; i < WL_MAX_SHOTS; i++)
         sShots[i].spriteId = MAX_SPRITES;
+    sPartnerMarkerSprite = MAX_SPRITES;
 
     LoadSpriteSheet(&sShotSheet);
     LoadSpritePalette(&sShotPal);
+    LoadSpriteSheet(&sAllySheet);
 
+    // Seed every actor from the actual native player coordinates rather than
+    // assuming the requested warp coordinates survived Emerald's map setup.
     InitActor(WL_PLAYER, SPECIES_CHARIZARD, 0, FALSE, FALSE,
-              19 + MAP_OFFSET, 133 + MAP_OFFSET,
+              px, py,
               MOVE_FLAMETHROWER, MOVE_SLASH, MOVE_WING_ATTACK, MOVE_DIG);
     InitActor(WL_PARTNER, SPECIES_BLASTOISE, 0, TRUE, FALSE,
-              18 + MAP_OFFSET, 132 + MAP_OFFSET,
+              px, py,
               MOVE_WATER_GUN, MOVE_BITE, MOVE_HYDRO_PUMP, MOVE_PROTECT);
+    PlaceActorNear(WL_PARTNER, px - 2, py + 1, 4);
+
     InitActor(2, SPECIES_SCEPTILE, 1, TRUE, FALSE,
-              12 + MAP_OFFSET, 123 + MAP_OFFSET,
+              px, py,
               MOVE_LEAF_BLADE, MOVE_GIGA_DRAIN, MOVE_QUICK_ATTACK, MOVE_AGILITY);
+    PlaceActorNear(2, px - 7, py - 3, 6);
     InitActor(3, SPECIES_BLAZIKEN, 1, TRUE, FALSE,
-              26 + MAP_OFFSET, 123 + MAP_OFFSET,
+              px, py,
               MOVE_BLAZE_KICK, MOVE_FIRE_PUNCH, MOVE_MACH_PUNCH, MOVE_PROTECT);
+    PlaceActorNear(3, px - 6, py - 1, 6);
+
     InitActor(4, SPECIES_GARDEVOIR, 2, TRUE, FALSE,
-              5 + MAP_OFFSET, 125 + MAP_OFFSET,
+              px, py,
               MOVE_PSYCHIC, MOVE_SHOCK_WAVE, MOVE_DOUBLE_TEAM, MOVE_PROTECT);
+    PlaceActorNear(4, px + 7, py + 3, 6);
     InitActor(5, SPECIES_METAGROSS, 2, TRUE, FALSE,
-              34 + MAP_OFFSET, 122 + MAP_OFFSET,
+              px, py,
               MOVE_METEOR_MASH, MOVE_PSYCHIC, MOVE_SLAM, MOVE_PROTECT);
+    PlaceActorNear(5, px + 6, py + 1, 6);
+
     InitActor(WL_RAYQUAZA, SPECIES_RAYQUAZA, 3, TRUE, TRUE,
-              WL_RAY_X, WL_RAY_Y,
+              px, py,
               MOVE_DRAGON_CLAW, MOVE_EXTREME_SPEED, MOVE_FLY, MOVE_HYPER_BEAM);
+    PlaceActorNear(WL_RAYQUAZA, px, py - 16, 8);
+
+    sPartnerMarkerSprite = CreateSprite(&sAllyTemplate, 120, 48, 0);
+    if (sPartnerMarkerSprite < MAX_SPRITES)
+        gSprites[sPartnerMarkerSprite].coordOffsetEnabled = TRUE;
     if (sActors[WL_RAYQUAZA].active)
     {
         sActors[WL_RAYQUAZA].maxHp = sActors[WL_RAYQUAZA].maxHp * 2;
@@ -974,7 +1118,6 @@ void WildlandsV1_Tick(void)
         return;
     }
     sFrames++;
-    PositionSprites();
     if (ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked() || gPaletteFade.active)
         return;
 
@@ -987,5 +1130,4 @@ void WildlandsV1_Tick(void)
         TickAI(i);
     TickShots();
     UpdateConcealment();
-    PositionSprites();
 }
