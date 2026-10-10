@@ -286,6 +286,320 @@ static bool8 IsGrass(u8 behavior)
         || MetatileBehavior_IsLongGrass(behavior);
 }
 
+
+static const u8 sLoadoutTitlePlayer[] = _("WILDLANDS - PICK YOUR POKEMON");
+static const u8 sLoadoutTitlePartner[] = _("WILDLANDS - PICK AI PARTNER");
+static const u8 sLoadoutTitleMoves[] = _("PICK 4 MOVES");
+static const u8 sLoadoutTitleConfirm[] = _("READY TO DEPLOY?");
+static const u8 sLoadoutHintSpecies[] = _("< > CHANGE   A SELECT");
+static const u8 sLoadoutHintMoves[] = _("< > MOVE   A ADD   B BACK");
+static const u8 sLoadoutHintConfirm[] = _("A DEPLOY   B EDIT");
+static const u8 sTraitFly[] = _("FLY");
+static const u8 sTraitSwim[] = _("SWIM");
+static const u8 sTraitBurrow[] = _("BURROW");
+static const u8 sTraitLand[] = _("LAND");
+
+static u8 FacingFromDelta(s32 dx, s32 dy)
+{
+    if (Abs32(dx) * 2 < Abs32(dy))
+        return dy < 0 ? FACE_UP : FACE_DOWN;
+    if (Abs32(dy) * 2 < Abs32(dx))
+        return dx < 0 ? FACE_LEFT : FACE_RIGHT;
+    return dy < 0 ? (dx < 0 ? 5 : 3) : (dx < 0 ? 7 : 1);
+}
+
+static const u8 *TraversalName(u16 species)
+{
+    if (CanFly(species))
+        return sTraitFly;
+    if (CanSwim(species))
+        return sTraitSwim;
+    if (CanBurrow(species))
+        return sTraitBurrow;
+    return sTraitLand;
+}
+
+static u8 FindLoadoutChoice(u16 species)
+{
+    u8 i;
+    for (i = 0; i < WL_LOADOUT_COUNT; i++)
+        if (sLoadoutChoices[i].species == species)
+            return i;
+    return 0;
+}
+
+static void LoadoutPrint(const u8 *text, u8 x, u8 y)
+{
+    AddTextPrinterParameterized(sLoadoutWindowId, FONT_NORMAL, text, x, y,
+                                TEXT_SKIP_DRAW, NULL);
+}
+
+static void LoadoutPrintNumber(const u8 *label, s32 value, u8 x, u8 y)
+{
+    StringCopy(gStringVar4, label);
+    ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 3);
+    StringAppend(gStringVar4, gStringVar1);
+    LoadoutPrint(gStringVar4, x, y);
+}
+
+static void DrawLoadout(void)
+{
+    const struct SpeciesInfo *info;
+    u16 species;
+    u8 side;
+    u8 choice;
+    u8 i;
+
+    if (!sLoadoutOpen || sLoadoutWindowId == WINDOW_NONE)
+        return;
+
+    FillWindowPixelBuffer(sLoadoutWindowId, PIXEL_FILL(1));
+
+    if (sLoadoutPhase <= 1)
+    {
+        species = sLoadoutChoices[sLoadoutCursor].species;
+        info = &gSpeciesInfo[species];
+        LoadoutPrint(sLoadoutPhase == 0 ? sLoadoutTitlePlayer : sLoadoutTitlePartner, 4, 2);
+        LoadoutPrint(gSpeciesNames[species], 72, 22);
+        LoadoutPrint(gTypeNames[info->types[0]], 12, 42);
+        if (info->types[1] != info->types[0])
+            LoadoutPrint(gTypeNames[info->types[1]], 100, 42);
+        LoadoutPrintNumber(_("HP "), info->baseHP, 12, 62);
+        LoadoutPrintNumber(_("ATK "), Max32(info->baseAttack, info->baseSpAttack), 100, 62);
+        LoadoutPrintNumber(_("DEF "), Max32(info->baseDefense, info->baseSpDefense), 12, 80);
+        LoadoutPrintNumber(_("SPD "), info->baseSpeed, 100, 80);
+        LoadoutPrint(_("TRAVEL "), 12, 100);
+        LoadoutPrint(TraversalName(species), 76, 100);
+        LoadoutPrint(sLoadoutHintSpecies, 26, 124);
+    }
+    else if (sLoadoutPhase <= 3)
+    {
+        side = sLoadoutPhase - 2;
+        choice = FindLoadoutChoice(sSelectedSpecies[side]);
+        LoadoutPrint(sLoadoutTitleMoves, 70, 2);
+        LoadoutPrint(gSpeciesNames[sSelectedSpecies[side]], 72, 20);
+        LoadoutPrint(_("CANDIDATE"), 10, 40);
+        LoadoutPrint(gMoveNames[sLoadoutChoices[choice].moves[sLoadoutCursor]], 92, 40);
+        LoadoutPrint(gTypeNames[gBattleMoves[sLoadoutChoices[choice].moves[sLoadoutCursor]].type], 92, 56);
+        for (i = 0; i < 4; i++)
+        {
+            ConvertIntToDecimalStringN(gStringVar1, i + 1, STR_CONV_MODE_LEFT_ALIGN, 1);
+            StringCopy(gStringVar4, gStringVar1);
+            StringAppend(gStringVar4, _(". "));
+            if (i < sLoadoutMoveSlot)
+                StringAppend(gStringVar4, gMoveNames[sSelectedMoves[side][i]]);
+            else
+                StringAppend(gStringVar4, _("---"));
+            LoadoutPrint(gStringVar4, 20, 72 + i * 12);
+        }
+        LoadoutPrint(sLoadoutHintMoves, 14, 124);
+    }
+    else
+    {
+        LoadoutPrint(sLoadoutTitleConfirm, 66, 4);
+        LoadoutPrint(_("YOU"), 20, 28);
+        LoadoutPrint(gSpeciesNames[sSelectedSpecies[0]], 78, 28);
+        LoadoutPrint(_("ALLY"), 20, 46);
+        LoadoutPrint(gSpeciesNames[sSelectedSpecies[1]], 78, 46);
+        LoadoutPrint(_("PLAYER MOVES"), 20, 68);
+        for (i = 0; i < 4; i++)
+            LoadoutPrint(gMoveNames[sSelectedMoves[0][i]], 34 + (i & 1) * 104, 84 + (i >> 1) * 14);
+        LoadoutPrint(_("ALLY MOVES"), 20, 112);
+        LoadoutPrint(sLoadoutHintConfirm, 128, 124);
+    }
+
+    PutWindowTilemap(sLoadoutWindowId);
+    CopyWindowToVram(sLoadoutWindowId, COPYWIN_FULL);
+}
+
+static bool8 MoveAlreadyPicked(u8 side, u16 move)
+{
+    u8 i;
+    for (i = 0; i < sLoadoutMoveSlot; i++)
+        if (sSelectedMoves[side][i] == move)
+            return TRUE;
+    return FALSE;
+}
+
+static void ApplySelectedLoadout(void)
+{
+    u8 side;
+    u8 slot;
+
+    ZeroPlayerPartyMons();
+    gPlayerPartyCount = 2;
+    for (side = 0; side < 2; side++)
+    {
+        CreateMon(&gPlayerParty[side], sSelectedSpecies[side], 60,
+                  20, TRUE, side * 2, OT_ID_PLAYER_ID, 0);
+        for (slot = 0; slot < 4; slot++)
+            SetMonMoveSlot(&gPlayerParty[side], sSelectedMoves[side][slot], slot);
+    }
+
+    gWildlandsV2LoadoutAudit[3] = 1;
+    sLoadoutReady = TRUE;
+    sLoadoutOpen = FALSE;
+    if (sLoadoutWindowId != WINDOW_NONE)
+    {
+        ClearStdWindowAndFrameToTransparent(sLoadoutWindowId, TRUE);
+        RemoveWindow(sLoadoutWindowId);
+        sLoadoutWindowId = WINDOW_NONE;
+    }
+    UnlockPlayerFieldControls();
+}
+
+static void OpenLoadout(void)
+{
+    struct WindowTemplate window;
+
+    if (sLoadoutOpen)
+        return;
+
+    window = CreateWindowTemplate(0, 1, 1, 28, 18, 15, 0x100);
+    sLoadoutWindowId = AddWindow(&window);
+    SetStandardWindowBorderStyle(sLoadoutWindowId, FALSE);
+    sLoadoutOpen = TRUE;
+    sLoadoutPending = FALSE;
+    sLoadoutReady = FALSE;
+    sLoadoutPhase = 0;
+    sLoadoutCursor = 0;
+    sLoadoutMoveSlot = 0;
+    memset(sSelectedMoves, 0, sizeof(sSelectedMoves));
+    gWildlandsV2LoadoutAudit[0] = 1;
+    LockPlayerFieldControls();
+    DrawLoadout();
+}
+
+void WildlandsV1_StartLoadout(void)
+{
+    sLoadoutPending = TRUE;
+    sLoadoutReady = FALSE;
+    memset(gWildlandsV2LoadoutAudit, 0, sizeof(gWildlandsV2LoadoutAudit));
+}
+
+static void HandleLoadoutInput(u16 newKeys)
+{
+    u8 side;
+    u8 choice;
+    u16 move;
+
+    if (!sLoadoutOpen)
+        return;
+
+    if (sLoadoutPhase <= 1)
+    {
+        if (newKeys & DPAD_LEFT)
+        {
+            do
+                sLoadoutCursor = (sLoadoutCursor + WL_LOADOUT_COUNT - 1) % WL_LOADOUT_COUNT;
+            while (sLoadoutPhase == 1
+                && sLoadoutChoices[sLoadoutCursor].species == sSelectedSpecies[0]);
+            PlaySE(SE_SELECT);
+            DrawLoadout();
+        }
+        else if (newKeys & DPAD_RIGHT)
+        {
+            do
+                sLoadoutCursor = (sLoadoutCursor + 1) % WL_LOADOUT_COUNT;
+            while (sLoadoutPhase == 1
+                && sLoadoutChoices[sLoadoutCursor].species == sSelectedSpecies[0]);
+            PlaySE(SE_SELECT);
+            DrawLoadout();
+        }
+        else if (newKeys & A_BUTTON)
+        {
+            sSelectedSpecies[sLoadoutPhase] = sLoadoutChoices[sLoadoutCursor].species;
+            gWildlandsV2LoadoutAudit[sLoadoutPhase + 1] = 1;
+            sLoadoutPhase++;
+            sLoadoutCursor = 0;
+            if (sLoadoutPhase == 1
+                && sLoadoutChoices[0].species == sSelectedSpecies[0])
+                sLoadoutCursor = 1;
+            if (sLoadoutPhase == 2)
+                sLoadoutMoveSlot = 0;
+            PlaySE(SE_SELECT);
+            DrawLoadout();
+        }
+        else if ((newKeys & B_BUTTON) && sLoadoutPhase == 1)
+        {
+            sLoadoutPhase = 0;
+            sLoadoutCursor = FindLoadoutChoice(sSelectedSpecies[0]);
+            DrawLoadout();
+        }
+        return;
+    }
+
+    if (sLoadoutPhase <= 3)
+    {
+        side = sLoadoutPhase - 2;
+        choice = FindLoadoutChoice(sSelectedSpecies[side]);
+        if (newKeys & DPAD_LEFT)
+        {
+            sLoadoutCursor = (sLoadoutCursor + WL_LOADOUT_MOVE_COUNT - 1) % WL_LOADOUT_MOVE_COUNT;
+            PlaySE(SE_SELECT);
+            DrawLoadout();
+        }
+        else if (newKeys & DPAD_RIGHT)
+        {
+            sLoadoutCursor = (sLoadoutCursor + 1) % WL_LOADOUT_MOVE_COUNT;
+            PlaySE(SE_SELECT);
+            DrawLoadout();
+        }
+        else if (newKeys & A_BUTTON)
+        {
+            move = sLoadoutChoices[choice].moves[sLoadoutCursor];
+            if (!MoveAlreadyPicked(side, move))
+            {
+                sSelectedMoves[side][sLoadoutMoveSlot++] = move;
+                PlaySE(SE_SELECT);
+                if (sLoadoutMoveSlot >= 4)
+                {
+                    sLoadoutPhase++;
+                    sLoadoutMoveSlot = 0;
+                    sLoadoutCursor = 0;
+                }
+                DrawLoadout();
+            }
+            else
+                PlaySE(SE_FAILURE);
+        }
+        else if (newKeys & B_BUTTON)
+        {
+            if (sLoadoutMoveSlot)
+            {
+                sLoadoutMoveSlot--;
+                sSelectedMoves[side][sLoadoutMoveSlot] = MOVE_NONE;
+            }
+            else if (sLoadoutPhase == 2)
+            {
+                sLoadoutPhase = 1;
+                sLoadoutCursor = FindLoadoutChoice(sSelectedSpecies[1]);
+            }
+            else
+            {
+                sLoadoutPhase = 2;
+                sLoadoutMoveSlot = 3;
+                sLoadoutCursor = 0;
+            }
+            DrawLoadout();
+        }
+        return;
+    }
+
+    if (newKeys & A_BUTTON)
+    {
+        PlaySE(SE_SELECT);
+        ApplySelectedLoadout();
+    }
+    else if (newKeys & B_BUTTON)
+    {
+        sLoadoutPhase = 3;
+        sLoadoutMoveSlot = 3;
+        sLoadoutCursor = 0;
+        DrawLoadout();
+    }
+}
+
 static bool8 SpawnLandTile(s16 x, s16 y)
 {
     u8 behavior = MapGridGetMetatileBehaviorAt(x, y);
