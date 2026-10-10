@@ -10,6 +10,7 @@
 #include "field_effect.h"
 #include "fieldmap.h"
 #include "main.h"
+#include "malloc.h"
 #include "metatile_behavior.h"
 #include "overworld.h"
 #include "palette.h"
@@ -100,7 +101,6 @@ struct WildLoot
 static EWRAM_DATA struct WildActor sActors[WL_MAX_ACTORS] = {0};
 static EWRAM_DATA struct WildShot sShots[WL_MAX_SHOTS] = {0};
 static EWRAM_DATA struct WildLoot sLoot[WL_MAX_LOOT] = {0};
-static EWRAM_DATA u32 sFrameTiles[WL_MAX_ACTORS][512] = {0};
 static EWRAM_DATA bool8 sInitialized = FALSE;
 static EWRAM_DATA bool8 sRayquazaRecruitable = FALSE;
 static EWRAM_DATA u16 sFrames = 0;
@@ -268,18 +268,34 @@ static bool8 LoadActorArt(u8 id)
     struct SpriteSheet sheet;
     struct SpritePalette pal;
     struct SpriteTemplate tmpl = sMonTemplate;
+    u32 *frameTiles;
     u8 spriteId;
 
     actor->art = ArenaSprites_Get(actor->species);
     if (actor->art == NULL)
         return FALSE;
-    if (!ArenaSprites_Decode(&actor->art->animations[ARENA_ANIM_IDLE], 0, 0, sFrameTiles[id]))
+
+    // ArenaSprites_Decode needs a 2 KB scratch frame, but LoadSpriteSheet copies
+    // those bytes into OBJ VRAM immediately. Reuse the engine heap instead of
+    // permanently reserving one 2 KB EWRAM frame for every active Pokemon.
+    frameTiles = Alloc(2048);
+    if (frameTiles == NULL)
         return FALSE;
-    sheet.data = sFrameTiles[id];
+    if (!ArenaSprites_Decode(&actor->art->animations[ARENA_ANIM_IDLE], 0, 0, frameTiles))
+    {
+        Free(frameTiles);
+        return FALSE;
+    }
+    sheet.data = frameTiles;
     sheet.size = 2048;
     sheet.tag = WL_MON_TILE_TAG + id;
     if (LoadSpriteSheet(&sheet) == 0xFFFF)
+    {
+        Free(frameTiles);
         return FALSE;
+    }
+    Free(frameTiles);
+
     pal.data = actor->art->palette;
     pal.tag = WL_MON_PAL_TAG + id;
     if (LoadSpritePalette(&pal) == 0xFF)
