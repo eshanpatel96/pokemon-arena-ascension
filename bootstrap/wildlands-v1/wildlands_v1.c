@@ -301,6 +301,18 @@ static const u8 sLoadoutTitleConfirm[] = _("READY TO DEPLOY?");
 static const u8 sLoadoutHintSpecies[] = _("< > CHANGE   A SELECT");
 static const u8 sLoadoutHintMoves[] = _("< > MOVE   A ADD   B BACK");
 static const u8 sLoadoutHintConfirm[] = _("A DEPLOY   B EDIT");
+static const u8 sLabelHp[] = _("HP ");
+static const u8 sLabelAtk[] = _("ATK ");
+static const u8 sLabelDef[] = _("DEF ");
+static const u8 sLabelSpd[] = _("SPD ");
+static const u8 sLabelTravel[] = _("TRAVEL ");
+static const u8 sLabelCandidate[] = _("CANDIDATE");
+static const u8 sLabelDotSpace[] = _(". ");
+static const u8 sLabelDashes[] = _("---");
+static const u8 sLabelYou[] = _("YOU");
+static const u8 sLabelAlly[] = _("ALLY");
+static const u8 sLabelPlayerMoves[] = _("PLAYER MOVES");
+static const u8 sLabelAllyMoves[] = _("ALLY MOVES");
 static const u8 sTraitFly[] = _("FLY");
 static const u8 sTraitSwim[] = _("SWIM");
 static const u8 sTraitBurrow[] = _("BURROW");
@@ -371,11 +383,11 @@ static void DrawLoadout(void)
         LoadoutPrint(gTypeNames[info->types[0]], 12, 42);
         if (info->types[1] != info->types[0])
             LoadoutPrint(gTypeNames[info->types[1]], 100, 42);
-        LoadoutPrintNumber(_("HP "), info->baseHP, 12, 62);
-        LoadoutPrintNumber(_("ATK "), Max32(info->baseAttack, info->baseSpAttack), 100, 62);
-        LoadoutPrintNumber(_("DEF "), Max32(info->baseDefense, info->baseSpDefense), 12, 80);
-        LoadoutPrintNumber(_("SPD "), info->baseSpeed, 100, 80);
-        LoadoutPrint(_("TRAVEL "), 12, 100);
+        LoadoutPrintNumber(sLabelHp, info->baseHP, 12, 62);
+        LoadoutPrintNumber(sLabelAtk, Max32(info->baseAttack, info->baseSpAttack), 100, 62);
+        LoadoutPrintNumber(sLabelDef, Max32(info->baseDefense, info->baseSpDefense), 12, 80);
+        LoadoutPrintNumber(sLabelSpd, info->baseSpeed, 100, 80);
+        LoadoutPrint(sLabelTravel, 12, 100);
         LoadoutPrint(TraversalName(species), 76, 100);
         LoadoutPrint(sLoadoutHintSpecies, 26, 124);
     }
@@ -385,18 +397,18 @@ static void DrawLoadout(void)
         choice = FindLoadoutChoice(sSelectedSpecies[side]);
         LoadoutPrint(sLoadoutTitleMoves, 70, 2);
         LoadoutPrint(gSpeciesNames[sSelectedSpecies[side]], 72, 20);
-        LoadoutPrint(_("CANDIDATE"), 10, 40);
+        LoadoutPrint(sLabelCandidate, 10, 40);
         LoadoutPrint(gMoveNames[sLoadoutChoices[choice].moves[sLoadoutCursor]], 92, 40);
         LoadoutPrint(gTypeNames[gBattleMoves[sLoadoutChoices[choice].moves[sLoadoutCursor]].type], 92, 56);
         for (i = 0; i < 4; i++)
         {
             ConvertIntToDecimalStringN(gStringVar1, i + 1, STR_CONV_MODE_LEFT_ALIGN, 1);
             StringCopy(gStringVar4, gStringVar1);
-            StringAppend(gStringVar4, _(". "));
+            StringAppend(gStringVar4, sLabelDotSpace);
             if (i < sLoadoutMoveSlot)
                 StringAppend(gStringVar4, gMoveNames[sSelectedMoves[side][i]]);
             else
-                StringAppend(gStringVar4, _("---"));
+                StringAppend(gStringVar4, sLabelDashes);
             LoadoutPrint(gStringVar4, 20, 72 + i * 12);
         }
         LoadoutPrint(sLoadoutHintMoves, 14, 124);
@@ -404,14 +416,14 @@ static void DrawLoadout(void)
     else
     {
         LoadoutPrint(sLoadoutTitleConfirm, 66, 4);
-        LoadoutPrint(_("YOU"), 20, 28);
+        LoadoutPrint(sLabelYou, 20, 28);
         LoadoutPrint(gSpeciesNames[sSelectedSpecies[0]], 78, 28);
-        LoadoutPrint(_("ALLY"), 20, 46);
+        LoadoutPrint(sLabelAlly, 20, 46);
         LoadoutPrint(gSpeciesNames[sSelectedSpecies[1]], 78, 46);
-        LoadoutPrint(_("PLAYER MOVES"), 20, 68);
+        LoadoutPrint(sLabelPlayerMoves, 20, 68);
         for (i = 0; i < 4; i++)
             LoadoutPrint(gMoveNames[sSelectedMoves[0][i]], 34 + (i & 1) * 104, 84 + (i >> 1) * 14);
-        LoadoutPrint(_("ALLY MOVES"), 20, 112);
+        LoadoutPrint(sLabelAllyMoves, 20, 112);
         LoadoutPrint(sLoadoutHintConfirm, 128, 124);
     }
 
