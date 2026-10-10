@@ -1,92 +1,56 @@
-# Pokemon Wildlands V4 — Field Dex Team Picker
+# Pokemon Wildlands V4 — Native Lab Interfaces
 
-## Roster shown by the picker
+The custom Field Dex selector concept is superseded by the native-Pokemon-interface decision.
 
-The selector uses the strict **101-species** Wildlands launch pool:
-- animated in the actual Arena/PMD catalog
-- final evolution in the broader franchise, not merely an Emerald endpoint
-- not one of the five boss-only legends
-- at least four legal Arena-adapted moves (current minimum is eight)
+## Team selection
 
-Boss-only legends remain visible in the Field Dex as locked silhouettes:
-**Mewtwo, Lugia, Ho-Oh, Kyogre, Rayquaza**.
+Use the real Emerald Pokemon Storage System in the Wildlands Research Lab.
 
-## Screen concept
+- The curated launch pool is **105 selectable Pokemon**.
+- The party is hard-capped at exactly **two** in Wildlands.
+- The PC provides familiar Pokemon icons, box browsing, party movement and Summary access.
+- Five boss-only legends are never placed in the PC: **Mewtwo, Lugia, Ho-Oh, Kyogre, Rayquaza**.
+- Curated legacy-form exceptions retained: **Rhydon, Electabuzz, Dusclops, Roselia**.
 
-Use a dedicated menu callback/VRAM state. Never draw this over the live Arena or Emerald field.
+This is more immersive and lower-risk than a new selector UI.
 
-### Browse view
+## Moves
 
-- Header: `WILDLANDS FIELD DEX   023/101`
-- Left pane: five visible entries, each with a 32x32 Pokemon icon and species name
-- Right pane: large animated Arena idle sprite using the actual PMD/Arena art
-- Type icons
-- Role: BRAWLER / RANGED / TANK / CONTROL / SUPPORT / HYBRID
-- four short bars: POWER / BULK / SPEED / RANGE
-- traversal tag: LAND / SWIM / FLY / BURROW where applicable
-- special tag for specialist designs such as SHEDINJA
-- L/R filters by TYPE, ROLE and TRAVERSAL
-- A chooses; B backs out; START confirms a completed squad
+Use the native Bag / TM teaching flow.
 
-Do not shrink the large preview to an overworld icon. The point of the terminal is to make the Pokemon feel like Arena combatants before deployment.
+- Every TM whose move has a native Arena move profile is stocked in the Lab save.
+- Wildlands TMs are reusable.
+- HMs are not stocked and are never required for traversal.
+- Surf/Fly/Dig traversal is a species/world trait, separate from the four combat moves.
+- Non-TM Arena-supported moves can later be exposed through native Move Tutor/relearner-style NPCs.
 
-### Partner selection
+## Battle items
 
-After the lead is chosen, pin its portrait in the header.
+Use the native Bag presentation for inventory and item descriptions.
 
-The second selection panel adds a live `TEAM FIT` summary:
-- shared severe weakness warning
-- useful resistance/coverage
-- melee/ranged complement
-- mobility/traversal complement
-- recommended AI role
+V4 Alpha stocks a small practice supply. Full Battle Royale rules will cap what can be deployed/consumed so an unlimited Lab stock cannot become unlimited healing inside a match.
 
-Examples:
-- `GREAT FIT — Water coverage / ranged partner / no major shared weakness`
-- `RISKY — both weak to Rock`
+## EVs and level
 
-This is advisory, never a hard lock.
+No EV grinding. Wildlands owns deployment balance.
 
-### Locked legendary page
+For V4 Alpha, curated Pokemon are created at a common level with neutral training. The final rules will assign standardized Wildlands stat profiles automatically while retaining species identity and the intentional higher legendary bands.
 
-The five boss-only legends appear as silhouettes with:
-`FIELD LEGEND — DEFEAT IN WILDLANDS`
+## World map
 
-After a player has encountered one in a run, its Dex silhouette can reveal for career-history purposes, but it remains unavailable at match start.
+A dedicated in-game Field Map screen belongs in the Lab and later in the match pause menu.
 
-## Power communication
+It shows:
+- 16 x 12 sector grid over the 4096 x 3072 world
+- named biome regions
+- the five legendary lairs from the beginning
+- sector coordinates
+- later: current player location, discovered cave links, current/next closing field
+- never enemy-team positions
 
-Do not hide roster hierarchy.
-
-Use four stat bars plus a compact class badge:
-- STANDARD
-- APEX
-- LEGENDARY
-
-Low-BST but mechanically distinctive Pokemon are not automatically removed. Instead the UI makes their role obvious:
-- Shedinja: SPECIALIST / Wonder Guard
-- Plusle / Minun: SUPPORT / pair synergy
-- Sableye: CONTROL
-- Butterfree / Dustox: CONTROL / ranged status
-- Delcatty: SUPPORT
-
-Selectable legends are stronger by design. Boss legends are stronger still after recruitment, while their boss encounter form additionally owns boss-only mechanics.
-
-## Move selection
-
-After each Pokemon selection, open a matching Field Dex loadout page:
-- animated Pokemon preview remains on screen
-- four equipped move slots
-- scrollable legal Arena move list
-- each move shows type, power class, range, cooldown and action type
-- invalid/unsupported moves never appear
-
-The same UI is reused at the Lab MOVE TERMINAL.
-
-## Technical notes
-
-- Use Emerald's existing small Pokemon icon assets for list rows.
-- Use the imported Arena sprite decoder for the large animated preview.
-- Reuse one affine matrix for ordinary preview scaling where possible.
-- Dedicated menu BG/OAM setup prevents the V2 garbage/VRAM overlap bug.
-- Keep selector data table-driven from the audited roster rather than manually duplicating 101 names.
+Fixed lair coordinates in the first plan:
+- **B3 — Lugia / Tempest Shrine**
+- **H2 — Rayquaza / Sky Spire**
+- **N3 — Mewtwo / Research Facility**
+- **C11 — Kyogre / Abyssal Basin**
+- **N11 — Ho-Oh / Ember Temple**
