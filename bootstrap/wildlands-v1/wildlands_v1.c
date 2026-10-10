@@ -863,7 +863,11 @@ static void InitActor(u8 id, u16 species, u8 team, bool8 ai, bool8 legendary,
     actor->moveSlot = 0;
     actor->x = mapX * 16 + 8;
     actor->y = mapY * 16 + 8;
-    actor->facing = DIR_SOUTH;
+    actor->facing = FACE_DOWN;
+    actor->animation = 255;
+    actor->drawnFrame = 255;
+    actor->drawnDirection = 255;
+    actor->animClock = 0;
     ConfigureStats(actor);
     if (!LoadActorArt(id))
         actor->active = FALSE;
@@ -903,6 +907,82 @@ static void PositionMapSprite(u8 spriteId, s32 px, s32 py, s8 yLift)
     gSprites[spriteId].y = ty;
 }
 
+static u16 ActorSpeedQ8(u8 id)
+{
+    u16 speed = gSpeciesInfo[sActors[id].species].baseSpeed;
+    return 256 + Min32(speed, 120) * 2;
+}
+
+static void UpdateActorAnimation(u8 id)
+{
+    struct WildActor *actor = &sActors[id];
+    struct Sprite *sprite;
+    const struct ArenaMoveProfile *profile = NULL;
+    const struct ArenaSpriteAnimation *anim;
+    u8 animation;
+    u8 direction;
+    u8 frame;
+    u16 tick;
+
+    if (!actor->active || actor->spriteId >= MAX_SPRITES || actor->art == NULL
+        || sAnimScratch == NULL)
+        return;
+
+    sprite = &gSprites[actor->spriteId];
+    if (actor->attackTimer)
+    {
+        profile = ArenaMoves_Get(actor->moves[actor->attackMoveSlot]);
+        animation = profile ? profile->animation : ARENA_ANIM_IDLE;
+        direction = actor->facing;
+    }
+    else
+    {
+        animation = actor->moving ? ARENA_ANIM_WALK : ARENA_ANIM_IDLE;
+        direction = actor->facing;
+    }
+
+    anim = &actor->art->animations[animation];
+    if (actor->animation != animation)
+    {
+        actor->animation = animation;
+        actor->animClock = 0;
+        actor->drawnFrame = 255;
+    }
+
+    tick = actor->animClock / WL_Q;
+    if (actor->attackTimer && profile)
+    {
+        if (actor->attackElapsed <= profile->windup)
+            tick = actor->attackElapsed * anim->hitTick / Max32(1, profile->windup);
+        else
+            tick = anim->hitTick
+                + (actor->attackElapsed - profile->windup)
+                * Max32(1, anim->totalTicks - anim->hitTick - 1)
+                / Max32(1, profile->active + profile->recovery);
+    }
+
+    frame = ArenaSprites_Frame(anim, tick);
+    sprite->y2 = 8 - actor->art->ground[animation * 8 + direction];
+    if (actor->drawnFrame != frame || actor->drawnDirection != direction)
+    {
+        if (ArenaSprites_Decode(anim, direction, frame, sAnimScratch))
+        {
+            ArenaRender_Copy(sAnimScratch,
+                (u8 *)OBJ_VRAM0 + GetSpriteTileStartByTag(WL_MON_TILE_TAG + id) * 32,
+                2048);
+            actor->drawnFrame = frame;
+            actor->drawnDirection = direction;
+        }
+    }
+
+    if (actor->attackTimer)
+        actor->animClock += WL_Q;
+    else if (actor->moving)
+        actor->animClock += Max32(128, Min32(512, ActorSpeedQ8(id)));
+    else
+        actor->animClock += WL_Q;
+}
+
 void WildlandsV1_PreOam(void)
 {
     u32 i;
@@ -927,14 +1007,11 @@ void WildlandsV1_PreOam(void)
                         OBJ_PLTT_ID(WL_ACTOR_PAL_BASE + i), PLTT_SIZE_4BPP);
     LoadPalette(sShotPalette, OBJ_PLTT_ID(WL_EFFECT_PAL), PLTT_SIZE_4BPP);
 
-    playerX = playerObj->currentCoords.x * 16 + 8;
-    playerY = playerObj->currentCoords.y * 16 + 8;
+    playerX = sActors[WL_PLAYER].x;
+    playerY = sActors[WL_PLAYER].y;
     mounted = TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
         && sActors[WL_PARTNER].active
         && (CanSwim(sActors[WL_PARTNER].species) || CanFly(sActors[WL_PARTNER].species));
-
-    sActors[WL_PLAYER].x = playerX;
-    sActors[WL_PLAYER].y = playerY;
 
     // The native player object remains the collision/camera anchor but must never
     // be rendered in Wildlands. Do this after AnimateSprites and CameraUpdate so
@@ -959,6 +1036,10 @@ void WildlandsV1_PreOam(void)
             && gSprites[playerObj->fieldEffectSpriteId].inUse)
             gSprites[playerObj->fieldEffectSpriteId].invisible = TRUE;
     }
+
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+        if (sActors[i].active)
+            UpdateActorAnimation(i);
 
     for (i = 1; i < WL_MAX_ACTORS; i++)
     {
