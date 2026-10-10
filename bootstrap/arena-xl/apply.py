@@ -167,13 +167,16 @@ new='''    now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
 if s.count(old)!=1: raise SystemExit('frame OAM anchor drift')
 s=s.replace(old,new,1)
 
-# The original water-deposit bounds were screen coordinates; make them world
-# bounds so elemental moves still function anywhere in XL.
+p.write_text(s)
+
+# The original water-deposit bounds live in the included element module and
+# were hard-coded to the 240x160 screen. Make them world bounds too.
+p=root/'src/arena_elements.inc'
+s=p.read_text()
 old='''    if(x<30||x>210||y<45||y>132||!ArenaNav_LineClear(x,y,x,y,4))return;'''
 new='''    if(x<ARENA_MIN_X+18||x>ARENA_MAX_X-18||y<ARENA_MIN_Y+13||y>ARENA_MAX_Y-11
         ||!ArenaNav_LineClear(x,y,x,y,4))return;'''
 if s.count(old)!=1: raise SystemExit('element deposit anchor drift')
-s=s.replace(old,new,1)
+p.write_text(s.replace(old,new,1))
 
-p.write_text(s)
 print('Applied native Arena XL 16384x12288 camera/world stress patch')
