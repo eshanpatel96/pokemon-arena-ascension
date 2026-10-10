@@ -774,6 +774,77 @@ static bool8 ActorCanUseTile(const struct WildActor *actor, s16 px, s16 py)
     return MapGridGetCollisionAt(tx, ty) == 0;
 }
 
+static bool8 ActorCanStandAt(u8 id, s32 px, s32 py)
+{
+    static const s8 corners[4][2] = {{-7,-7},{7,-7},{-7,7},{7,7}};
+    u8 i;
+    for (i = 0; i < 4; i++)
+    {
+        s16 tx = (px + corners[i][0]) / 16;
+        s16 ty = (py + corners[i][1]) / 16;
+        u8 behavior = MapGridGetMetatileBehaviorAt(tx, ty);
+        if (IsWater(behavior))
+        {
+            if (id == WL_PLAYER)
+            {
+                if (!CanSwim(sActors[id].species) && !CanFly(sActors[id].species)
+                    && !(TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
+                        && sActors[WL_PARTNER].active
+                        && (CanSwim(sActors[WL_PARTNER].species)
+                            || CanFly(sActors[WL_PARTNER].species))))
+                    return FALSE;
+            }
+            else if (!CanSwim(sActors[id].species) && !CanFly(sActors[id].species))
+                return FALSE;
+        }
+        else if (MapGridGetCollisionAt(tx, ty) != 0)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static void MoveActorArena(u8 id, s32 dx, s32 dy, u16 speedQ8)
+{
+    struct WildActor *actor = &sActors[id];
+    s32 stepX;
+    s32 stepY;
+    s32 oldX = actor->x;
+    s32 oldY = actor->y;
+
+    actor->moving = dx || dy;
+    if (!actor->moving)
+        return;
+
+    if (dx && dy)
+        speedQ8 = speedQ8 * 181 / 256;
+    actor->facing = FacingFromDelta(dx, dy);
+
+    actor->moveFracX += dx * speedQ8;
+    actor->moveFracY += dy * speedQ8;
+    stepX = actor->moveFracX / WL_Q;
+    stepY = actor->moveFracY / WL_Q;
+    actor->moveFracX -= stepX * WL_Q;
+    actor->moveFracY -= stepY * WL_Q;
+
+    if (stepX && ActorCanStandAt(id, actor->x + stepX, actor->y))
+        actor->x += stepX;
+    if (stepY && ActorCanStandAt(id, actor->x, actor->y + stepY))
+        actor->y += stepY;
+
+    if (id == WL_PLAYER && gPlayerAvatar.spriteId < MAX_SPRITES)
+    {
+        gSprites[gPlayerAvatar.spriteId].x += actor->x - oldX;
+        gSprites[gPlayerAvatar.spriteId].y += actor->y - oldY;
+        if (actor->x != oldX || actor->y != oldY)
+            gWildlandsV2MotionAudit[0] = 1;
+        if (dx && dy && (actor->x != oldX || actor->y != oldY))
+            gWildlandsV2MotionAudit[1] = 1;
+        if (TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
+            && !IsWater(MapGridGetMetatileBehaviorAt(actor->x / 16, actor->y / 16)))
+            SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_ON_FOOT);
+    }
+}
+
 static void FreeActorArt(u8 id)
 {
     if (sActors[id].spriteId < MAX_SPRITES && gSprites[sActors[id].spriteId].inUse)
@@ -1294,13 +1365,17 @@ static void BeginAttack(u8 id, s16 aimX, s16 aimY)
     actor->attackX = aimX;
     actor->attackY = aimY;
     actor->attackWindup = profile->windup;
-    actor->attackTimer = profile->windup + 1;
-    actor->cooldown = profile->windup + profile->active + profile->recovery;
+    actor->attackElapsed = 0;
+    actor->attackTotal = profile->windup + profile->active + profile->recovery;
+    if (actor->attackTotal == 0)
+        actor->attackTotal = 1;
+    actor->attackTimer = actor->attackTotal;
+    actor->cooldown = actor->attackTotal;
+    actor->facing = FacingFromDelta(aimX, aimY);
+    actor->animClock = 0;
+    actor->drawnFrame = 255;
     if (profile->windup == 0)
-    {
         FireAttack(id);
-        actor->attackTimer = 0;
-    }
 }
 
 static void TickActorAttack(u8 id)
@@ -1318,9 +1393,12 @@ static void TickActorAttack(u8 id)
         actor->revealTimer--;
     if (actor->attackTimer)
     {
-        actor->attackTimer--;
-        if (actor->attackTimer == 1)
+        actor->attackElapsed++;
+        if (actor->attackElapsed == actor->attackWindup)
             FireAttack(id);
+        actor->attackTimer--;
+        if (!actor->attackTimer)
+            actor->attackElapsed = 0;
     }
 }
 
@@ -1376,16 +1454,14 @@ static void MoveActorToward(u8 id, s32 tx, s32 ty, s16 speed)
     struct WildActor *actor = &sActors[id];
     s32 dx = tx - actor->x;
     s32 dy = ty - actor->y;
-    s32 len = Max32(Abs32(dx), Abs32(dy)) + Min32(Abs32(dx), Abs32(dy)) / 2;
-    s16 mx, my;
-    if (len < 1)
+    if (Abs32(dx) < 2 && Abs32(dy) < 2)
+    {
+        actor->moving = FALSE;
         return;
-    mx = dx * speed / len;
-    my = dy * speed / len;
-    if (ActorCanUseTile(actor, actor->x + mx, actor->y))
-        actor->x += mx;
-    if (ActorCanUseTile(actor, actor->x, actor->y + my))
-        actor->y += my;
+    }
+    dx = dx > 1 ? 1 : dx < -1 ? -1 : 0;
+    dy = dy > 1 ? 1 : dy < -1 ? -1 : 0;
+    MoveActorArena(id, dx, dy, speed * WL_Q);
 }
 
 static void TickAI(u8 id)
@@ -1450,25 +1526,81 @@ static void UpdateConcealment(void)
     }
 }
 
-static void TickPlayerInput(void)
+void WildlandsV1_HandleInput(u16 newKeys, u16 heldKeys)
 {
-    s16 ax, ay;
+    if (sLoadoutOpen)
+    {
+        HandleLoadoutInput(newKeys);
+        return;
+    }
+    if (!sLoadoutReady)
+        return;
+    sInputNewKeys = newKeys;
+    sInputHeldKeys = heldKeys;
+}
+
+static void TickPlayerController(bool8 attacksAllowed)
+{
     struct WildActor *player = &sActors[WL_PLAYER];
-    if (JOY_NEW(L_BUTTON))
+    s32 dx = ((sInputHeldKeys & DPAD_RIGHT) != 0) - ((sInputHeldKeys & DPAD_LEFT) != 0);
+    s32 dy = ((sInputHeldKeys & DPAD_DOWN) != 0) - ((sInputHeldKeys & DPAD_UP) != 0);
+    s16 ax;
+    s16 ay;
+    u16 speed = ActorSpeedQ8(WL_PLAYER);
+
+    player->moving = FALSE;
+
+    if (sInputNewKeys & L_BUTTON)
         player->moveSlot = (player->moveSlot + 3) & 3;
-    if (JOY_NEW(R_BUTTON))
+    if (sInputNewKeys & R_BUTTON)
         player->moveSlot = (player->moveSlot + 1) & 3;
-    if (JOY_NEW(A_BUTTON) && !ArePlayerFieldControlsLocked())
+
+    if ((sInputNewKeys & B_BUTTON) && (dx || dy)
+        && !player->dashCooldown && !player->attackTimer)
     {
-        PlayerAim(&ax, &ay);
+        player->dash = 10;
+        player->dashCooldown = 75;
+        player->dashX = dx;
+        player->dashY = dy;
+        player->invuln = 10;
+        gWildlandsV2MotionAudit[2] = 1;
+        PlaySE(SE_M_DOUBLE_TEAM);
+    }
+
+    if (player->dash)
+    {
+        dx = player->dashX;
+        dy = player->dashY;
+        speed *= 3;
+        player->dash--;
+    }
+    else if (player->attackTimer)
+        speed /= 2;
+
+    MoveActorArena(WL_PLAYER, dx, dy, speed);
+
+    if (attacksAllowed && (sInputNewKeys & A_BUTTON)
+        && !player->cooldown && !player->dash && !player->attackTimer)
+    {
+        if (dx || dy)
+            NormalizeAim(dx, dy, &ax, &ay);
+        else
+        {
+            static const s8 dirs[8][2] =
+            {
+                {0,1},{1,1},{1,0},{1,-1},
+                {0,-1},{-1,-1},{-1,0},{-1,1}
+            };
+            NormalizeAim(dirs[player->facing][0], dirs[player->facing][1], &ax, &ay);
+        }
         BeginAttack(WL_PLAYER, ax, ay);
+        gWildlandsV2MotionAudit[3] = 1;
     }
-    if ((gMain.heldKeys & B_BUTTON) && (gMain.heldKeys & (DPAD_UP | DPAD_DOWN | DPAD_LEFT | DPAD_RIGHT))
-        && !player->dashCooldown)
-    {
-        player->invuln = 8;
-        player->dashCooldown = 45;
-    }
+
+    if (sInputNewKeys & SELECT_BUTTON)
+        TickContextAction();
+
+    sInputNewKeys = 0;
 }
 
 static bool8 NearPlayer(s32 px, s32 py, s32 dist)
