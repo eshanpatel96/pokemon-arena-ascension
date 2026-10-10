@@ -2,6 +2,8 @@
 #include "wildlands_v1.h"
 #include "arena_moves.h"
 #include "arena_sprites.h"
+#include "arena_render.h"
+#include "bg.h"
 #include "battle_main.h"
 #include "data.h"
 #include "event_object_movement.h"
@@ -18,6 +20,10 @@
 #include "random.h"
 #include "script.h"
 #include "sound.h"
+#include "task.h"
+#include "text.h"
+#include "window.h"
+#include "menu.h"
 #include "sprite.h"
 #include "string_util.h"
 #include "constants/event_objects.h"
@@ -47,6 +53,13 @@
 #define WL_MIN_TEAM_SPAWN_TILES 18
 #define WL_SPAWN_MIN_CONNECTED_TILES 36
 #define WL_SPAWN_MIN_REACH_TILES 8
+#define WL_LOADOUT_COUNT 16
+#define WL_LOADOUT_MOVE_COUNT 6
+#define WL_LOADOUT_NONE 0xFF
+#define FACE_DOWN 0
+#define FACE_RIGHT 2
+#define FACE_UP 4
+#define FACE_LEFT 6
 
 struct WildActor
 {
@@ -64,6 +77,18 @@ struct WildActor
     u8 attackTimer;
     u8 attackWindup;
     u8 attackMoveSlot;
+    u8 attackElapsed;
+    u8 attackTotal;
+    u8 moving;
+    u8 animation;
+    u8 drawnFrame;
+    u8 drawnDirection;
+    u8 dash;
+    s8 dashX;
+    s8 dashY;
+    s16 moveFracX;
+    s16 moveFracY;
+    u32 animClock;
     u16 species;
     u16 moves[4];
     u16 hp;
@@ -112,6 +137,46 @@ static EWRAM_DATA u16 sFrames = 0;
 static EWRAM_DATA u16 sWarmupTimer = 0;
 EWRAM_DATA u8 gWildlandsSurfTransitions = 0;
 EWRAM_DATA u8 gWildlandsSpawnAudit[4] = {0};
+EWRAM_DATA u8 gWildlandsV2MotionAudit[6] = {0};
+EWRAM_DATA u8 gWildlandsV2LoadoutAudit[4] = {0};
+static EWRAM_DATA u16 sInputNewKeys = 0;
+static EWRAM_DATA u16 sInputHeldKeys = 0;
+static EWRAM_DATA bool8 sLoadoutPending = FALSE;
+static EWRAM_DATA bool8 sLoadoutOpen = FALSE;
+static EWRAM_DATA bool8 sLoadoutReady = FALSE;
+static EWRAM_DATA u8 sLoadoutWindowId = WINDOW_NONE;
+static EWRAM_DATA u8 sLoadoutPhase = 0;
+static EWRAM_DATA u8 sLoadoutCursor = 0;
+static EWRAM_DATA u8 sLoadoutMoveSlot = 0;
+static EWRAM_DATA u16 sSelectedSpecies[2] = {SPECIES_CHARIZARD, SPECIES_BLASTOISE};
+static EWRAM_DATA u16 sSelectedMoves[2][4] = {{0}};
+static EWRAM_DATA u32 *sAnimScratch = NULL;
+
+struct WildLoadoutChoice
+{
+    u16 species;
+    u16 moves[WL_LOADOUT_MOVE_COUNT];
+};
+
+static const struct WildLoadoutChoice sLoadoutChoices[WL_LOADOUT_COUNT] =
+{
+    {SPECIES_CHARIZARD, {MOVE_FLAMETHROWER, MOVE_FIRE_BLAST, MOVE_WING_ATTACK, MOVE_AERIAL_ACE, MOVE_SLASH, MOVE_PROTECT}},
+    {SPECIES_BLASTOISE, {MOVE_WATER_GUN, MOVE_HYDRO_PUMP, MOVE_SURF, MOVE_BITE, MOVE_ICY_WIND, MOVE_PROTECT}},
+    {SPECIES_VENUSAUR, {MOVE_GIGA_DRAIN, MOVE_SOLAR_BEAM, MOVE_GROWTH, MOVE_BODY_SLAM, MOVE_TACKLE, MOVE_PROTECT}},
+    {SPECIES_GENGAR, {MOVE_SHADOW_BALL, MOVE_SHADOW_PUNCH, MOVE_NIGHT_SHADE, MOVE_PSYCHIC, MOVE_DOUBLE_TEAM, MOVE_PROTECT}},
+    {SPECIES_ALAKAZAM, {MOVE_PSYCHIC, MOVE_SHOCK_WAVE, MOVE_LIGHT_SCREEN, MOVE_REFLECT, MOVE_TELEPORT, MOVE_PROTECT}},
+    {SPECIES_MACHAMP, {MOVE_CROSS_CHOP, MOVE_SEISMIC_TOSS, MOVE_BODY_SLAM, MOVE_ROCK_SLIDE, MOVE_FOCUS_ENERGY, MOVE_PROTECT}},
+    {SPECIES_SNORLAX, {MOVE_BODY_SLAM, MOVE_SLAM, MOVE_ROLLOUT, MOVE_DEFENSE_CURL, MOVE_HYPER_BEAM, MOVE_PROTECT}},
+    {SPECIES_DRAGONITE, {MOVE_DRAGON_CLAW, MOVE_WING_ATTACK, MOVE_SLAM, MOVE_HYPER_BEAM, MOVE_AGILITY, MOVE_PROTECT}},
+    {SPECIES_TYRANITAR, {MOVE_CRUNCH, MOVE_ROCK_SLIDE, MOVE_ROCK_TOMB, MOVE_BITE, MOVE_HYPER_BEAM, MOVE_PROTECT}},
+    {SPECIES_SCEPTILE, {MOVE_LEAF_BLADE, MOVE_GIGA_DRAIN, MOVE_QUICK_ATTACK, MOVE_AERIAL_ACE, MOVE_AGILITY, MOVE_PROTECT}},
+    {SPECIES_BLAZIKEN, {MOVE_BLAZE_KICK, MOVE_FIRE_PUNCH, MOVE_MACH_PUNCH, MOVE_AERIAL_ACE, MOVE_SLASH, MOVE_PROTECT}},
+    {SPECIES_SWAMPERT, {MOVE_SURF, MOVE_HYDRO_PUMP, MOVE_MUD_SHOT, MOVE_ROCK_SLIDE, MOVE_SLAM, MOVE_PROTECT}},
+    {SPECIES_GARDEVOIR, {MOVE_PSYCHIC, MOVE_SHOCK_WAVE, MOVE_REFLECT, MOVE_LIGHT_SCREEN, MOVE_DOUBLE_TEAM, MOVE_PROTECT}},
+    {SPECIES_METAGROSS, {MOVE_METEOR_MASH, MOVE_PSYCHIC, MOVE_ROCK_SLIDE, MOVE_BODY_SLAM, MOVE_AGILITY, MOVE_PROTECT}},
+    {SPECIES_SALAMENCE, {MOVE_DRAGON_CLAW, MOVE_AERIAL_ACE, MOVE_FLY, MOVE_CRUNCH, MOVE_FLAMETHROWER, MOVE_PROTECT}},
+    {SPECIES_MILOTIC, {MOVE_SURF, MOVE_HYDRO_PUMP, MOVE_ICY_WIND, MOVE_AURORA_BEAM, MOVE_RAIN_DANCE, MOVE_PROTECT}},
+};
 
 static const u32 sShotTiles[8] =
 {
