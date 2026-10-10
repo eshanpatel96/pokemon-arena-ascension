@@ -8,14 +8,16 @@ This file is derived from the actual Arena animation catalog in `tools/arena/ros
 - Emerald endpoints or single-stage species among those 187: **114**
 - Boss-only legends: **5**
 - Emerald-era selectable endpoints after bosses: **109**
-- Later-evolution forms removed by strict Wildlands rule: **8**
-- **Canonical selectable launch pool: 101**
-- Minimum legal Arena-adapted moves among the 101: **8**
+- Later-evolution forms removed from the curated Wildlands pool: **4**
+- **Canonical selectable launch pool: 105**
+- Minimum legal Arena-adapted moves among the 105: **8**
 - Groudon Arena sprite: **absent**
 
 ## Removed because they are not true final evolutions
 
-Primeape -> Annihilape; Magneton -> Magnezone; Rhydon -> Rhyperior; Electabuzz -> Electivire; Magmar -> Magmortar; Nosepass -> Probopass; Dusclops -> Dusknoir; Roselia -> Roserade.
+Primeape -> Annihilape; Magneton -> Magnezone; Magmar -> Magmortar; Nosepass -> Probopass.
+
+Curated legacy exceptions retained despite later evolutions: **Rhydon, Electabuzz, Dusclops, Roselia**.
 
 ## Boss-only legends
 
@@ -31,17 +33,17 @@ These cannot be selected in the Lab. They must be defeated in-world and may repl
 
 **Articuno, Zapdos, Raikou, Entei, Suicune, Regirock, Regice, Registeel**
 
-## Playable Gen I — 42
+## Playable Gen I — 44
 
-Venusaur, Charizard, Blastoise, Butterfree, Beedrill, Pidgeot, Arbok, Raichu, Sandslash, Nidoqueen, Nidoking, Clefable, Ninetales, Vileplume, Venomoth, Dugtrio, Persian, Golduck, Arcanine, Poliwrath, Alakazam, Machamp, Victreebel, Tentacruel, Golem, Rapidash, Slowbro, Dewgong, Cloyster, Gengar, Kingler, Exeggutor, Marowak, Seaking, Starmie, Jynx, Gyarados, Lapras, Flareon, Articuno, Zapdos, Dragonite.
+Venusaur, Charizard, Blastoise, Butterfree, Beedrill, Pidgeot, Arbok, Raichu, Sandslash, Nidoqueen, Nidoking, Clefable, Ninetales, Vileplume, Venomoth, Dugtrio, Persian, Golduck, Arcanine, Poliwrath, Alakazam, Machamp, Victreebel, Tentacruel, Golem, Rapidash, Slowbro, Dewgong, Cloyster, Gengar, Kingler, Exeggutor, Marowak, Rhydon, Seaking, Starmie, Jynx, Electabuzz, Gyarados, Lapras, Flareon, Articuno, Zapdos, Dragonite.
 
 ## Playable Gen II — 9
 
 Crobat, Bellossom, Azumarill, Scizor, Skarmory, Kingdra, Raikou, Entei, Suicune.
 
-## Playable Gen III — 50
+## Playable Gen III — 52
 
-Sceptile, Blaziken, Swampert, Mightyena, Linoone, Beautifly, Dustox, Ludicolo, Shiftry, Swellow, Pelipper, Gardevoir, Breloom, Slaking, Ninjask, Shedinja, Exploud, Hariyama, Delcatty, Sableye, Aggron, Medicham, Manectric, Plusle, Minun, Swalot, Sharpedo, Wailord, Camerupt, Torkoal, Flygon, Cacturne, Altaria, Solrock, Whiscash, Crawdaunt, Claydol, Cradily, Armaldo, Milotic, Kecleon, Banette, Absol, Glalie, Walrein, Salamence, Metagross, Regirock, Regice, Registeel.
+Sceptile, Blaziken, Swampert, Mightyena, Linoone, Beautifly, Dustox, Ludicolo, Shiftry, Swellow, Pelipper, Gardevoir, Breloom, Slaking, Ninjask, Shedinja, Exploud, Hariyama, Delcatty, Sableye, Aggron, Medicham, Manectric, Plusle, Minun, Swalot, Sharpedo, Wailord, Camerupt, Torkoal, Flygon, Cacturne, Altaria, Solrock, Whiscash, Crawdaunt, Claydol, Cradily, Armaldo, Milotic, Kecleon, Roselia, Dusclops, Banette, Absol, Glalie, Walrein, Salamence, Metagross, Regirock, Regice, Registeel.
 
 ## Single-stage audit
 
@@ -53,7 +55,7 @@ Low raw-stat finals are kept only with a clear realtime role. Shedinja is a spec
 
 ## Current realtime ability work
 
-Four of the 101 need Wildlands realtime ability support before the full V4 selector exposes them: Slaking (Truant), Ninjask (Speed Boost), Exploud (Soundproof), and Sharpedo (Rough Skin).
+Four of the 105 need Wildlands realtime ability support before the full V4 selector exposes them: Slaking (Truant), Ninjask (Speed Boost), Exploud (Soundproof), and Sharpedo (Rough Skin).
 
 Tentacruel, Gardevoir, Swalot and Dugtrio already have at least one Arena-supported ability and can use that supported ability until their alternate ability is adapted.
 
