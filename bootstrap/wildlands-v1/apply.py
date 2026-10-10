@@ -44,9 +44,9 @@ if s.count(old) != 1:
     raise SystemExit('overworld render-order anchor drift')
 p.write_text(s.replace(old, new, 1))
 
-# Wildlands owns A/Select/L/R. Feed a masked copy to Emerald's ordinary field
-# input so attacks, move cycling and context traversal cannot simultaneously
-# trigger NPC interaction, registered-item or HM field scripts.
+# Wildlands V2 owns the entire player controller. Emerald's PlayerStep is
+# intentionally bypassed so the visible Pokemon can use Arena-style per-frame
+# movement, diagonals, dodge and attack input without tile-step locking.
 p = root / 'src/overworld.c'
 s = p.read_text()
 old = '''static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
@@ -59,26 +59,19 @@ old = '''static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
 new = '''static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
 {
     struct FieldInput inputStruct;
-    u16 fieldNewKeys = newKeys;
-    u16 fieldHeldKeys = heldKeys;
-
-    if (WildlandsV1_IsActive())
-    {
-        fieldNewKeys &= ~(A_BUTTON | SELECT_BUTTON | L_BUTTON | R_BUTTON);
-        fieldHeldKeys &= ~(A_BUTTON | SELECT_BUTTON | L_BUTTON | R_BUTTON);
-    }
 
     UpdatePlayerAvatarTransitionState();
+    if (WildlandsV1_IsActive())
+    {
+        WildlandsV1_HandleInput(newKeys, heldKeys);
+        return;
+    }
     FieldClearPlayerInput(&inputStruct);
-    FieldGetPlayerInput(&inputStruct, fieldNewKeys, fieldHeldKeys);'''
+    FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);'''
 if s.count(old) != 1:
-    raise SystemExit('Wildlands field-input anchor drift')
+    raise SystemExit('Wildlands V2 field-input anchor drift')
 s = s.replace(old, new, 1)
-old = '            PlayerStep(inputStruct.dpadDirection, newKeys, heldKeys);'
-new = '            PlayerStep(inputStruct.dpadDirection, fieldNewKeys, fieldHeldKeys);'
-if s.count(old) != 1:
-    raise SystemExit('Wildlands PlayerStep anchor drift')
-p.write_text(s.replace(old, new, 1))
+p.write_text(s)
 
 # Grass is concealment, never an encounter transition.
 p = root / 'src/wild_encounter.c'
@@ -102,6 +95,8 @@ p.write_text(s)
 # two-Pokemon squad on Route 119 instead of activating the Ascension career.
 p = root / 'src/realtime_arena.c'
 s = p.read_text()
+if '#include "wildlands_v1.h"' not in s:
+    s = '#include "wildlands_v1.h"\n' + s
 old = '''    SetWarpDestination(MAP_GROUP(MAP_ASCENSION_CITY), MAP_NUM(MAP_ASCENSION_CITY),
                        WARP_ID_NONE, 26, 40);
     WarpIntoMap();
@@ -151,6 +146,7 @@ old_cb = '''void RealtimeArena_DemoFieldCallback(void)
 new_cb = '''void RealtimeArena_DemoFieldCallback(void)
 {
     FieldCB_WarpExitFadeFromBlack();
+    WildlandsV1_StartLoadout();
 }'''
 if s.count(old_cb) != 1:
     raise SystemExit('Wildlands field callback anchor drift')
@@ -179,15 +175,15 @@ m['connections'] = None
 p.write_text(json.dumps(m, indent=2) + '\n')
 
 report = {
-    'name': 'Pokemon Wildlands V1',
-    'scope': 'continuous-overworld vertical slice',
+    'name': 'Pokemon Wildlands V2',
+    'scope': 'Arena-controller + pre-match loadout vertical slice',
     'map': 'Route 119 Emerald layout, story/NPC events stripped',
-    'player': 'Charizard fixed test loadout',
-    'partner': 'Blastoise AI partner with Surf traversal',
+    'player': 'selected in pre-match loadout',
+    'partner': 'selected AI teammate in pre-match loadout',
     'enemy_teams': 2,
     'legendary_boss': 'Rayquaza; defeat then recruit to replace partner',
     'field_systems': ['A attack', 'L/R move cycle', 'B+dpad dodge immunity', 'grass concealment', 'loot', 'Surf mount', 'Dig shortcut'],
-    'not_yet_v1': ['30-team remote simulation', 'selection UI', 'five legendary lairs', 'closing field', 'full island sectors', 'building interiors', 'final balancing'],
+    'not_yet_v1': ['30-team remote simulation', 'five legendary lairs', 'closing field', 'full island sectors', 'building interiors', 'final balancing'],
 }
 (root / 'wildlands-v1-report.json').write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report, indent=2))
