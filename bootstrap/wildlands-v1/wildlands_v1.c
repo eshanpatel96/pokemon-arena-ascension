@@ -1044,6 +1044,10 @@ static void UpdateActorAnimation(u8 id)
                 2048);
             actor->drawnFrame = frame;
             actor->drawnDirection = direction;
+            if (id == WL_PLAYER && animation == ARENA_ANIM_WALK)
+                gWildlandsV2MotionAudit[4] = 1;
+            if (id == WL_PLAYER && actor->attackTimer)
+                gWildlandsV2MotionAudit[5] = 1;
         }
     }
 
