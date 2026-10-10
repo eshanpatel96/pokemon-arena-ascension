@@ -212,7 +212,6 @@ WildlandsLab_Text_Rules:
 
 mp=root/'data/maps/AscensionTeamLab/map.json'
 j=json.loads(mp.read_text())
-j['name']='WildlandsResearchLab'
 j['show_map_name']=False
 j['warp_events']=[]
 for i,bg in enumerate(j['bg_events']):
