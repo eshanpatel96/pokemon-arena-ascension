@@ -1099,10 +1099,12 @@ static void InitWildlands(void)
               MOVE_METEOR_MASH, MOVE_PSYCHIC, MOVE_SLAM, MOVE_PROTECT);
     PlaceActorNear(5, px + 6, py + 1, 6);
 
+    // Known-valid northern Route 119 field coordinate (the original map uses
+    // this walkable area for an overworld actor). Keep the legendary away from
+    // the deployment pocket so a failed placement can never cover the player.
     InitActor(WL_RAYQUAZA, SPECIES_RAYQUAZA, 3, TRUE, TRUE,
-              px, py,
+              28 + MAP_OFFSET, 14 + MAP_OFFSET,
               MOVE_DRAGON_CLAW, MOVE_EXTREME_SPEED, MOVE_FLY, MOVE_HYPER_BEAM);
-    PlaceActorNear(WL_RAYQUAZA, px, py - 16, 8);
 
     sPartnerMarkerSprite = CreateSprite(&sAllyTemplate, 120, 48, 0);
     if (sPartnerMarkerSprite < MAX_SPRITES)
