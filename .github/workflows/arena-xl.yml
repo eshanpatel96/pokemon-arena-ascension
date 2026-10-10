@@ -1,0 +1,124 @@
+name: Arena XL 16384x12288 stress build
+on:
+  push:
+    branches: [wildlands-arena-xl]
+    paths:
+      - '.github/workflows/arena-xl.yml'
+      - 'bootstrap/arena-xl/**'
+      - 'docs/ARENA-XL-STRESS.md'
+  pull_request:
+    branches: [wildlands-arena-xl]
+    paths:
+      - '.github/workflows/arena-xl.yml'
+      - 'bootstrap/arena-xl/**'
+      - 'docs/ARENA-XL-STRESS.md'
+  workflow_dispatch:
+concurrency:
+  group: arena-xl-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build-and-stress:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-ASSEMBLED-SOURCE
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-DEVELOPMENT-ROM-NOT-FINAL-BETA
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline-rom
+      - name: Native dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3-pil libmgba-dev
+      - name: Assemble exact baseline and apply Arena XL
+        run: |
+          echo '0812cedb0e1b9affae7d9705157ff392fad7f51211e4889f30a4e4927ae726c7  baseline/v11-1-assembled-source.tar.gz' | sha256sum -c
+          tar -xzf baseline/v11-1-assembled-source.tar.gz engine
+          mkdir -p delivery evidence
+          python3 bootstrap/v11-1/phase2.py engine | tee evidence/v11-1-phase2.txt
+          python3 bootstrap/v11-1/prepare_inputs.py engine baseline-rom/Pokemon-Arena-Ascension-V11-1-DEV.gba | tee evidence/preserved-inputs.txt
+          python3 bootstrap/arena-xl/apply.py engine | tee evidence/arena-xl-apply.txt
+          git rev-parse HEAD > evidence/source-commit.txt
+      - name: Generate native Arena assets and seamless XL floor
+        working-directory: engine
+        run: |
+          make -j2 -f make_tools.mk
+          make -j2 generated
+          ./tools/arena/dev.sh assets
+          python3 ../bootstrap/arena-xl/expand-stage-map.py .
+          python3 ../bootstrap/v11-1/deduplicate_art.py .
+          cp v11-1-art-dedup-proof.json ../evidence/
+      - name: Compile real GBA ROM
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Wildlands-Arena-XL 2>&1 | tee ../evidence/build.log
+          cp Pokemon-Wildlands-Arena-XL.gba ../delivery/
+          cp Pokemon-Wildlands-Arena-XL.elf Pokemon-Wildlands-Arena-XL.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-Wildlands-Arena-XL.elf > ../evidence/symbols.txt
+      - name: Manifest
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,re
+          p=Path('delivery/Pokemon-Wildlands-Arena-XL.gba'); b=p.read_bytes()
+          assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
+          manifest={
+            'name':'Pokemon Wildlands - Arena XL Stress',
+            'source_commit':os.environ['GITHUB_SHA'],
+            'rom_sha256':hashlib.sha256(b).hexdigest(),
+            'rom_bytes':len(b),
+            'world_pixels':[16384,12288],
+            'screen_pixels':[240,160],
+            'approx_screenfuls':(16384/240)*(12288/160),
+            'controller':'native realtime Arena TickPlayer/Move/Dash path',
+            'terrain':'repeating native Arena stage art for scale/camera stress',
+            'status':'XL coordinate/camera stress prototype, not full Battle Royale map'
+          }
+          Path('delivery/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          Path('delivery/README.txt').write_text(
+            'Arena XL stress prototype. Start NEW GAME, then hold L+R in Ascension City to enter practice. '
+            'This build uses the native Arena combat controller in a 16384x12288 scrolling world. '
+            'Scenery repeats intentionally; this build tests scale, camera and unchanged combat feel.\n')
+          Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          print(json.dumps(manifest,indent=2))
+          PY
+      - name: mGBA long-distance Arena stress
+        run: |
+          gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/v11-smoke.c -lmgba -o evidence/arena-xl-smoke
+          set -o pipefail
+          timeout 240 evidence/arena-xl-smoke delivery/Pokemon-Wildlands-Arena-XL.gba evidence/symbols.txt evidence/runtime bootstrap/arena-xl/smoke.commands - 2>&1 | tee evidence/smoke.log
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('evidence/runtime').glob('*.ppm'):
+              Image.open(p).save(p.with_suffix('.png')); p.unlink()
+          PY
+      - name: Upload ROM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARENA-XL-ROM
+          path: delivery/
+          if-no-files-found: ignore
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARENA-XL-EVIDENCE
+          path: evidence/
+          if-no-files-found: warn
