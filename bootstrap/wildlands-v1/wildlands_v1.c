@@ -173,7 +173,6 @@ static const struct SpriteTemplate sShotTemplate =
     .callback = SpriteCallbackDummy,
 };
 
-static const u8 sTextBoot[] = _("POKEMON WILDLANDS V1\nFIELD COMBAT TEST.$");
 static const u8 sTextHp[] = _("HP BOOST FOUND!$");
 static const u8 sTextAtk[] = _("ATTACK BOOST FOUND!$");
 static const u8 sTextDef[] = _("DEFENSE BOOST FOUND!$");
@@ -413,6 +412,16 @@ void WildlandsV1_PreOam(void)
 
     playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
     playerSprite = &gSprites[gPlayerAvatar.spriteId];
+
+    // Emerald's overworld palette allocator can reuse hardware OBJ banks after
+    // map setup/field effects. Restore the banks reserved by Wildlands before
+    // this frame's OAM commit; UpdatePaletteFade runs immediately afterward.
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+        if (sActors[i].active && sActors[i].art != NULL)
+            LoadPalette(sActors[i].art->palette,
+                        OBJ_PLTT_ID(WL_ACTOR_PAL_BASE + i), PLTT_SIZE_4BPP);
+    LoadPalette(sShotPalette, OBJ_PLTT_ID(WL_EFFECT_PAL), PLTT_SIZE_4BPP);
+
     playerX = playerObj->currentCoords.x * 16 + 8;
     playerY = playerObj->currentCoords.y * 16 + 8;
     mounted = TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
@@ -476,13 +485,14 @@ void WildlandsV1_PreOam(void)
         if (mounted)
         {
             gSprites[sPartnerMarkerSprite].coordOffsetEnabled = FALSE;
-            gSprites[sPartnerMarkerSprite].x = playerSprite->x;
-            gSprites[sPartnerMarkerSprite].y = playerSprite->y - 46;
+            gSprites[sPartnerMarkerSprite].x = playerSprite->x + 22;
+            gSprites[sPartnerMarkerSprite].y = playerSprite->y - 30;
         }
         else
         {
             gSprites[sPartnerMarkerSprite].coordOffsetEnabled = TRUE;
-            PositionMapSprite(sPartnerMarkerSprite, sActors[WL_PARTNER].x, sActors[WL_PARTNER].y, -46);
+            PositionMapSprite(sPartnerMarkerSprite,
+                              sActors[WL_PARTNER].x + 20, sActors[WL_PARTNER].y, -28);
         }
         gSprites[sPartnerMarkerSprite].invisible = FALSE;
     }
@@ -1110,7 +1120,6 @@ static void InitWildlands(void)
     InitLoot();
     sInitialized = TRUE;
     sFrames = 0;
-    ShowFieldMessage(sTextBoot);
 }
 
 void WildlandsV1_Tick(void)
