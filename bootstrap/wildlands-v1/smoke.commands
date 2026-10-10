@@ -10,6 +10,10 @@ expect sActors 14 2 6
 expect sActors 52 1 1
 expect sActors 66 2 9
 expect gWildlandsSurfTransitions 0 1 0
+expect gWildlandsSpawnAudit 0 1 1
+expect gWildlandsSpawnAudit 1 1 1
+expect gWildlandsSpawnAudit 2 1 1
+expect gWildlandsSpawnAudit 3 1 1
 frames 30 0
 snap 01-wildlands-pokemon-bodies
 press 16
