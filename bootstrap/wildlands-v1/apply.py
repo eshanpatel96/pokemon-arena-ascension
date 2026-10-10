@@ -94,6 +94,19 @@ new_party = '''#else
     SetMonMoveSlot(&gPlayerParty[1], MOVE_SURF, 3);
 '''
 s = s[:start] + new_party + s[end:]
+# V11.1 phase2 normally starts its 80-species starter catalog here. Wildlands
+# must not append that collection after the two-Pokemon BR squad is seeded.
+old_cb = '''void RealtimeArena_DemoFieldCallback(void)
+{
+    Ascension_V111StartRosterTask();
+}'''
+new_cb = '''void RealtimeArena_DemoFieldCallback(void)
+{
+    FieldCB_WarpExitFadeFromBlack();
+}'''
+if s.count(old_cb) != 1:
+    raise SystemExit('Wildlands field callback anchor drift')
+s = s.replace(old_cb, new_cb, 1)
 p.write_text(s)
 
 # Route 119 is the V1 Wildlands island slice. Keep the actual Emerald layout,
