@@ -44,6 +44,9 @@
 #define WL_Q 256
 #define WL_BODY_RADIUS 10
 #define WL_GRASS_HIDE_DISTANCE 56
+#define WL_MIN_TEAM_SPAWN_TILES 18
+#define WL_SPAWN_MIN_CONNECTED_TILES 36
+#define WL_SPAWN_MIN_REACH_TILES 8
 
 struct WildActor
 {
@@ -108,6 +111,7 @@ static EWRAM_DATA u8 sPartnerMarkerSprite = MAX_SPRITES;
 static EWRAM_DATA u16 sFrames = 0;
 static EWRAM_DATA u16 sWarmupTimer = 0;
 EWRAM_DATA u8 gWildlandsSurfTransitions = 0;
+EWRAM_DATA u8 gWildlandsSpawnAudit[4] = {0};
 
 static const u32 sShotTiles[8] =
 {
@@ -215,6 +219,97 @@ static bool8 IsGrass(u8 behavior)
     return MetatileBehavior_IsPokeGrass(behavior)
         || MetatileBehavior_IsTallGrass(behavior)
         || MetatileBehavior_IsLongGrass(behavior);
+}
+
+static bool8 SpawnLandTile(s16 x, s16 y)
+{
+    u8 behavior = MapGridGetMetatileBehaviorAt(x, y);
+    return MapGridGetCollisionAt(x, y) == 0 && !IsWater(behavior);
+}
+
+// Bounded flood-fill at deployment time. A legal spawn must have enough
+// connected dry land and must be able to reach meaningfully away from the
+// starting tile without requiring Surf/Fly/Dig. This rejects trees, tiny
+// ledges, shoreline pockets and small islands for every possible team comp.
+static bool8 SpawnAreaSafe(s16 startX, s16 startY)
+{
+    s16 qx[64];
+    s16 qy[64];
+    u8 head = 0;
+    u8 tail = 0;
+    u8 i;
+    u8 connected = 0;
+    u8 farthest = 0;
+
+    if (!SpawnLandTile(startX, startY))
+        return FALSE;
+
+    qx[tail] = startX;
+    qy[tail] = startY;
+    tail++;
+
+    while (head < tail && tail < ARRAY_COUNT(qx))
+    {
+        s16 x = qx[head];
+        s16 y = qy[head];
+        static const s8 dirs[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
+        u8 d;
+        u8 dist;
+        head++;
+        connected++;
+        dist = Abs32(x - startX) + Abs32(y - startY);
+        if (dist > farthest)
+            farthest = dist;
+
+        for (d = 0; d < 4; d++)
+        {
+            s16 nx = x + dirs[d][0];
+            s16 ny = y + dirs[d][1];
+            bool8 seen = FALSE;
+            if (!SpawnLandTile(nx, ny))
+                continue;
+            for (i = 0; i < tail; i++)
+            {
+                if (qx[i] == nx && qy[i] == ny)
+                {
+                    seen = TRUE;
+                    break;
+                }
+            }
+            if (!seen && tail < ARRAY_COUNT(qx))
+            {
+                qx[tail] = nx;
+                qy[tail] = ny;
+                tail++;
+            }
+        }
+    }
+
+    return connected >= WL_SPAWN_MIN_CONNECTED_TILES
+        && farthest >= WL_SPAWN_MIN_REACH_TILES;
+}
+
+static bool8 SpawnFarFromOtherTeams(u8 actorId, s16 x, s16 y, u8 minTiles)
+{
+    u32 i;
+    u8 seenTeams = 0;
+    struct WildActor *actor = &sActors[actorId];
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+    {
+        s32 tx;
+        s32 ty;
+        if (i == actorId || !sActors[i].active
+            || sActors[i].team == actor->team
+            || sActors[i].team >= 8
+            || (seenTeams & (1 << sActors[i].team)))
+            continue;
+        seenTeams |= 1 << sActors[i].team;
+        tx = sActors[i].x / 16;
+        ty = sActors[i].y / 16;
+        if (Dist(x, y, tx, ty) < minTiles)
+            return FALSE;
+    }
+    return TRUE;
 }
 
 static bool8 CanSwim(u16 species)
@@ -1028,16 +1123,17 @@ void WildlandsV1_Reset(void)
     sFrames = 0;
     sWarmupTimer = 0;
     gWildlandsSurfTransitions = 0;
+    memset(gWildlandsSpawnAudit, 0, sizeof(gWildlandsSpawnAudit));
 }
 
-static void PlaceActorNear(u8 id, s16 targetX, s16 targetY, u8 maxRadius)
+static bool8 PlaceActorSafe(u8 id, s16 targetX, s16 targetY, u8 maxRadius,
+                            bool8 enforceTeamSpacing)
 {
     s16 radius;
     s16 dx;
     s16 dy;
     s16 x;
     s16 y;
-    u8 behavior;
     struct WildActor *actor = &sActors[id];
 
     for (radius = 0; radius <= maxRadius; radius++)
@@ -1050,16 +1146,41 @@ static void PlaceActorNear(u8 id, s16 targetX, s16 targetY, u8 maxRadius)
                     continue;
                 x = targetX + dx;
                 y = targetY + dy;
-                behavior = MapGridGetMetatileBehaviorAt(x, y);
-                if (MapGridGetCollisionAt(x, y) == 0 && !IsWater(behavior))
-                {
-                    actor->x = x * 16 + 8;
-                    actor->y = y * 16 + 8;
-                    return;
-                }
+                if (!SpawnAreaSafe(x, y))
+                    continue;
+                if (enforceTeamSpacing
+                    && !SpawnFarFromOtherTeams(id, x, y, WL_MIN_TEAM_SPAWN_TILES))
+                    continue;
+                actor->x = x * 16 + 8;
+                actor->y = y * 16 + 8;
+                return TRUE;
             }
         }
     }
+    actor->active = FALSE;
+    return FALSE;
+}
+
+static bool8 TeamsRespectSpawnSpacing(void)
+{
+    static const u8 reps[] = {WL_PLAYER, 2, 4};
+    u32 a;
+    u32 b;
+    for (a = 0; a < ARRAY_COUNT(reps); a++)
+    {
+        if (!sActors[reps[a]].active)
+            return FALSE;
+        for (b = a + 1; b < ARRAY_COUNT(reps); b++)
+        {
+            if (!sActors[reps[b]].active)
+                return FALSE;
+            if (Dist(sActors[reps[a]].x / 16, sActors[reps[a]].y / 16,
+                     sActors[reps[b]].x / 16, sActors[reps[b]].y / 16)
+                < WL_MIN_TEAM_SPAWN_TILES)
+                return FALSE;
+        }
+    }
+    return TRUE;
 }
 
 static void InitWildlands(void)
@@ -1098,28 +1219,40 @@ static void InitWildlands(void)
     InitActor(WL_PLAYER, SPECIES_CHARIZARD, 0, FALSE, FALSE,
               px, py,
               MOVE_FLAMETHROWER, MOVE_SLASH, MOVE_WING_ATTACK, MOVE_DIG);
+    memset(gWildlandsSpawnAudit, 0, sizeof(gWildlandsSpawnAudit));
+    gWildlandsSpawnAudit[0] = SpawnAreaSafe(px, py);
+
     InitActor(WL_PARTNER, SPECIES_BLASTOISE, 0, TRUE, FALSE,
               px, py,
               MOVE_WATER_GUN, MOVE_BITE, MOVE_HYDRO_PUMP, MOVE_PROTECT);
-    PlaceActorNear(WL_PARTNER, px - 2, py + 1, 4);
+    gWildlandsSpawnAudit[1] = PlaceActorSafe(WL_PARTNER, px - 2, py + 1, 6, FALSE);
 
+    // V1 deliberately deploys enemy squads into separate Route 119 regions
+    // instead of around the player. These anchors come from original valid
+    // overworld positions and are still runtime-audited before acceptance.
     InitActor(2, SPECIES_SCEPTILE, 1, TRUE, FALSE,
-              px, py,
+              31 + MAP_OFFSET, 109 + MAP_OFFSET,
               MOVE_LEAF_BLADE, MOVE_GIGA_DRAIN, MOVE_QUICK_ATTACK, MOVE_AGILITY);
-    PlaceActorNear(2, px - 7, py - 3, 6);
+    gWildlandsSpawnAudit[1] &= PlaceActorSafe(2, 31 + MAP_OFFSET, 109 + MAP_OFFSET, 8, TRUE);
     InitActor(3, SPECIES_BLAZIKEN, 1, TRUE, FALSE,
-              px, py,
+              31 + MAP_OFFSET, 109 + MAP_OFFSET,
               MOVE_BLAZE_KICK, MOVE_FIRE_PUNCH, MOVE_MACH_PUNCH, MOVE_PROTECT);
-    PlaceActorNear(3, px - 6, py - 1, 6);
+    gWildlandsSpawnAudit[1] &= PlaceActorSafe(3,
+        sActors[2].x / 16 + 2, sActors[2].y / 16 + 1, 5, FALSE);
 
     InitActor(4, SPECIES_GARDEVOIR, 2, TRUE, FALSE,
-              px, py,
+              25 + MAP_OFFSET, 32 + MAP_OFFSET,
               MOVE_PSYCHIC, MOVE_SHOCK_WAVE, MOVE_DOUBLE_TEAM, MOVE_PROTECT);
-    PlaceActorNear(4, px + 7, py + 3, 6);
+    gWildlandsSpawnAudit[1] &= PlaceActorSafe(4, 25 + MAP_OFFSET, 32 + MAP_OFFSET, 8, TRUE);
     InitActor(5, SPECIES_METAGROSS, 2, TRUE, FALSE,
-              px, py,
+              25 + MAP_OFFSET, 32 + MAP_OFFSET,
               MOVE_METEOR_MASH, MOVE_PSYCHIC, MOVE_SLAM, MOVE_PROTECT);
-    PlaceActorNear(5, px + 6, py + 1, 6);
+    gWildlandsSpawnAudit[1] &= PlaceActorSafe(5,
+        sActors[4].x / 16 - 2, sActors[4].y / 16 + 1, 5, FALSE);
+
+    gWildlandsSpawnAudit[2] = sActors[2].active && sActors[3].active
+        && sActors[4].active && sActors[5].active;
+    gWildlandsSpawnAudit[3] = TeamsRespectSpawnSpacing();
 
     // Known-valid northern Route 119 field coordinate (the original map uses
     // this walkable area for an overworld actor). Keep the legendary away from
