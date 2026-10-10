@@ -7,7 +7,7 @@ d=json.loads(lp.read_text()); layouts={x['id']:x for x in d['layouts']}
 rooms=json.loads((root/'v11-room-manifest.json').read_text())
 sources=[
 ('LAYOUT_DESERT_RUINS',-1,5,'quarry'),
-('LAYOUT_MT_CHIMNEY',11,12,'highland'),
+('LAYOUT_SKY_PILLAR_OUTSIDE',4,1,'sky-terrace'),
 ('LAYOUT_PETALBURG_WOODS',15,9,'forest'),
 ('LAYOUT_MT_PYRE_SUMMIT',16,8,'crypt'),
 ('LAYOUT_TERRA_CAVE_END',4,4,'volcano'),
@@ -16,9 +16,9 @@ sources=[
 ('LAYOUT_SKY_PILLAR_TOP',4,1,'sky-pillar'),
 ('LAYOUT_NAVEL_ROCK_TOP',3,5,'champion'),
 ('LAYOUT_SHOAL_CAVE_LOW_TIDE_ICE_ROOM',0,5,'ice'),
-('LAYOUT_ANCIENT_TOMB',-1,5,'ancient-iron'),
-('LAYOUT_MT_CHIMNEY',14,18,'storm'),
-('LAYOUT_ISLAND_CAVE',-1,5,'crystal')]
+('LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_TOP',7,1,'iron-fortress'),
+('LAYOUT_NAVEL_ROCK_EXTERIOR',1,2,'storm-ridge'),
+('LAYOUT_MOSSDEEP_CITY_GYM',3,6,'prismatic-crystal')]
 assert len(rooms)==len(sources)==13
 report=[]
 for row,(sid,x0,y0,theme) in zip(rooms,sources):
