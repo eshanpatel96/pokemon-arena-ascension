@@ -49,8 +49,9 @@ jobs:
           echo '0812cedb0e1b9affae7d9705157ff392fad7f51211e4889f30a4e4927ae726c7  baseline/v11-1-assembled-source.tar.gz' | sha256sum -c
           tar -xzf baseline/v11-1-assembled-source.tar.gz engine
           mkdir -p delivery evidence
-          python3 bootstrap/wildlands-v1/apply.py engine | tee evidence/wildlands-apply.txt
+          python3 bootstrap/v11-1/phase2.py engine | tee evidence/v11-1-phase2.txt
           python3 bootstrap/v11-1/prepare_inputs.py engine baseline-rom/Pokemon-Arena-Ascension-V11-1-DEV.gba | tee evidence/preserved-inputs.txt
+          python3 bootstrap/wildlands-v1/apply.py engine | tee evidence/wildlands-apply.txt
           cp engine/wildlands-v1-report.json evidence/
           git rev-parse HEAD > evidence/source-commit.txt
       - name: Generate maps and Arena assets
