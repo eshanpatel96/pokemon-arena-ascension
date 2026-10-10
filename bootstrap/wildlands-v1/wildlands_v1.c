@@ -156,7 +156,7 @@ static const struct SpriteTemplate sShotTemplate =
     .callback = SpriteCallbackDummy,
 };
 
-static const u8 sTextBoot[] = _("POKEMON WILDLANDS V1\\nFIELD COMBAT TEST.$");
+static const u8 sTextBoot[] = _("POKEMON WILDLANDS V1\nFIELD COMBAT TEST.$");
 static const u8 sTextHp[] = _("HP BOOST FOUND!$");
 static const u8 sTextAtk[] = _("ATTACK BOOST FOUND!$");
 static const u8 sTextDef[] = _("DEFENSE BOOST FOUND!$");
