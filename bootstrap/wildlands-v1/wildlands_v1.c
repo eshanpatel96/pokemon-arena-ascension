@@ -2003,6 +2003,8 @@ void WildlandsV1_Tick(void)
     {
         sWarmupTimer--;
         TickPlayerController(FALSE);
+        if (gSaveBlock1Ptr->pos.x != sStartMapX || gSaveBlock1Ptr->pos.y != sStartMapY)
+            gWildlandsV2MotionAudit[6] = 1;
         if (sActors[WL_PARTNER].active
             && !TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
         {
