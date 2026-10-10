@@ -9,12 +9,13 @@ expect sActors 0 1 1
 expect sActors 14 2 6
 expect sActors 52 1 1
 expect sActors 66 2 9
-expect gPlayerAvatar 0 1 33
+expect gWildlandsSurfTransitions 0 1 0
 frames 30 0
 snap 01-wildlands-pokemon-bodies
 press 16
 frames 20 0
 press 4
 frames 60 0
+expect gWildlandsSurfTransitions 0 1 1
 expect gPlayerAvatar 0 1 40
 snap 02-wildlands-partner-surf
