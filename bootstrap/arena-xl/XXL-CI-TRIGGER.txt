@@ -1,0 +1,1 @@
+Trigger 32000x24000 Arena XXL native stress validation.
