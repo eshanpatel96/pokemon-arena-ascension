@@ -96,7 +96,7 @@ insert='''#define Q 256
 #define ARENA_XL_WORLD_H 24000
 #define ARENA_XL_VIEW_W 240
 #define ARENA_XL_VIEW_H 160
-EWRAM_DATA u32 gArenaXLTelemetry[8] = {0};
+EWRAM_DATA u32 gArenaXLTelemetry[10] = {0};
 static EWRAM_DATA s16 sArenaXLCameraX = 0;
 static EWRAM_DATA s16 sArenaXLCameraY = 0;
 static EWRAM_DATA s32 sArenaXLStartX = 0;
@@ -132,6 +132,10 @@ static void ArenaXL_UpdateCamera(void)
     gArenaXLTelemetry[5]=ARENA_XL_WORLD_H;
     gArenaXLTelemetry[6]=sArenaXLCameraX;
     gArenaXLTelemetry[7]=sArenaXLCameraY;
+    if(sArenaXLCameraX>=15000 && sArenaXLCameraY>=11000)
+        gArenaXLTelemetry[8]=1;
+    if(px>=15000 && py>=11000)
+        gArenaXLTelemetry[9]=1;
     if(Abs(sArena.bodies[0].x-sArenaXLStartX)>=768*Q
         ||Abs(sArena.bodies[0].y-sArenaXLStartY)>=768*Q)
         gArenaXLTelemetry[0]=1;
