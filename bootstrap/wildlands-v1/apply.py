@@ -17,8 +17,10 @@ def once(path, old, new):
 (root / 'include/wildlands_v1.h').write_bytes((here / 'wildlands_v1.h').read_bytes())
 (root / 'src/wildlands_v1.c').write_bytes((here / 'wildlands_v1.c').read_bytes())
 
-# Tick Wildlands after the native overworld frame. Ascension practice stays present
-# in the inherited engine but is never enabled by the Wildlands NEW GAME preset.
+# Run Wildlands gameplay before sprite animation, then apply Pokemon-body
+# positioning and human-avatar suppression immediately before BuildOamBuffer.
+# This avoids one-frame/late-frame trainer rendering and keeps field actors tied
+# to the live Emerald camera.
 p = root / 'src/overworld.c'
 s = p.read_text()
 marker = '#include "realtime_arena.h"'
@@ -26,10 +28,20 @@ if '#include "wildlands_v1.h"' not in s:
     if s.count(marker) != 1:
         raise SystemExit('overworld include anchor drift')
     s = s.replace(marker, marker + '\n#include "wildlands_v1.h"', 1)
-old = '    RealtimeArena_PracticeTick();\n#if ARENA_LAB'
-new = '    RealtimeArena_PracticeTick();\n    WildlandsV1_Tick();\n#if ARENA_LAB'
+old = '''    RunTasks();
+    AnimateSprites();
+    CameraUpdate();
+    UpdateCameraPanning();
+    BuildOamBuffer();'''
+new = '''    RunTasks();
+    WildlandsV1_Tick();
+    AnimateSprites();
+    CameraUpdate();
+    UpdateCameraPanning();
+    WildlandsV1_PreOam();
+    BuildOamBuffer();'''
 if s.count(old) != 1:
-    raise SystemExit('overworld tick anchor drift')
+    raise SystemExit('overworld render-order anchor drift')
 p.write_text(s.replace(old, new, 1))
 
 # Grass is concealment, never an encounter transition.
