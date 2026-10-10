@@ -181,6 +181,7 @@ static const struct WildLoadoutChoice sLoadoutChoices[WL_LOADOUT_COUNT] =
 static bool8 CanSwim(u16 species);
 static bool8 CanFly(u16 species);
 static bool8 CanBurrow(u16 species);
+static void TickContextAction(void);
 
 static const u32 sShotTiles[8] =
 {
@@ -1063,11 +1064,19 @@ void WildlandsV1_PreOam(void)
     s32 playerX;
     s32 playerY;
 
-    if (!sInitialized || !OnWildlandsMap() || gPlayerAvatar.spriteId >= MAX_SPRITES)
+    if (!OnWildlandsMap() || gPlayerAvatar.spriteId >= MAX_SPRITES)
         return;
 
     playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
     playerSprite = &gSprites[gPlayerAvatar.spriteId];
+
+    // Hide the trainer even while the pre-match loadout is open.
+    if (!sInitialized)
+    {
+        if (sLoadoutOpen || sLoadoutPending)
+            playerSprite->invisible = TRUE;
+        return;
+    }
 
     // Emerald's overworld palette allocator can reuse hardware OBJ banks after
     // map setup/field effects. Restore the banks reserved by Wildlands before
@@ -1730,6 +1739,11 @@ static void DestroyAll(void)
     sPartnerMarkerSprite = MAX_SPRITES;
     FreeSpriteTilesByTag(WL_ALLY_TILE_TAG);
     FreeSpriteTilesByTag(WL_SHOT_TILE_TAG);
+    if (sAnimScratch != NULL)
+    {
+        Free(sAnimScratch);
+        sAnimScratch = NULL;
+    }
     memset(sActors, 0, sizeof(sActors));
     memset(sShots, 0, sizeof(sShots));
     memset(sLoot, 0, sizeof(sLoot));
@@ -1854,18 +1868,24 @@ static void InitWildlands(void)
     LoadSpriteSheet(&sShotSheet);
     LoadSpriteSheet(&sAllySheet);
     LoadPalette(sShotPalette, OBJ_PLTT_ID(WL_EFFECT_PAL), PLTT_SIZE_4BPP);
+    if (sAnimScratch == NULL)
+        sAnimScratch = Alloc(2048);
+    if (sAnimScratch == NULL)
+        return;
 
-    // Seed every actor from the actual native player coordinates rather than
-    // assuming the requested warp coordinates survived Emerald's map setup.
-    InitActor(WL_PLAYER, SPECIES_CHARIZARD, 0, FALSE, FALSE,
+    // Seed the chosen V2 loadout into the world. The party and field actors
+    // now share exactly the species and four moves confirmed by the player.
+    InitActor(WL_PLAYER, sSelectedSpecies[0], 0, FALSE, FALSE,
               px, py,
-              MOVE_FLAMETHROWER, MOVE_SLASH, MOVE_WING_ATTACK, MOVE_DIG);
+              sSelectedMoves[0][0], sSelectedMoves[0][1],
+              sSelectedMoves[0][2], sSelectedMoves[0][3]);
     memset(gWildlandsSpawnAudit, 0, sizeof(gWildlandsSpawnAudit));
     gWildlandsSpawnAudit[0] = SpawnAreaSafe(px, py);
 
-    InitActor(WL_PARTNER, SPECIES_BLASTOISE, 0, TRUE, FALSE,
+    InitActor(WL_PARTNER, sSelectedSpecies[1], 0, TRUE, FALSE,
               px, py,
-              MOVE_WATER_GUN, MOVE_BITE, MOVE_HYDRO_PUMP, MOVE_PROTECT);
+              sSelectedMoves[1][0], sSelectedMoves[1][1],
+              sSelectedMoves[1][2], sSelectedMoves[1][3]);
     gWildlandsSpawnAudit[1] = PlaceActorSafe(WL_PARTNER, px - 2, py + 1, 6, FALSE);
 
     // V1 deliberately deploys enemy squads into separate Route 119 regions
@@ -1931,19 +1951,31 @@ void WildlandsV1_Tick(void)
             WildlandsV1_Reset();
         return;
     }
+
+    if (sLoadoutPending && !gPaletteFade.active && !sLoadoutOpen)
+        OpenLoadout();
+
+    if (!sLoadoutReady)
+        return;
+
     if (!sInitialized)
     {
         InitWildlands();
         return;
     }
+
     sFrames++;
-    if (ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked() || gPaletteFade.active)
+    if (ScriptContext_IsEnabled() || gPaletteFade.active)
         return;
+
+    for (i = 0; i < WL_MAX_ACTORS; i++)
+        if (sActors[i].active)
+            sActors[i].moving = FALSE;
 
     if (sWarmupTimer)
     {
         sWarmupTimer--;
-        TickContextAction();
+        TickPlayerController(FALSE);
         if (sActors[WL_PARTNER].active
             && !TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
         {
@@ -1958,8 +1990,7 @@ void WildlandsV1_Tick(void)
         return;
     }
 
-    TickPlayerInput();
-    TickContextAction();
+    TickPlayerController(TRUE);
     for (i = 0; i < WL_MAX_ACTORS; i++)
         if (sActors[i].active)
             TickActorAttack(i);
