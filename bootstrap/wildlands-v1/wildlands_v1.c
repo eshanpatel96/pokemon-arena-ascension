@@ -137,7 +137,9 @@ static EWRAM_DATA u16 sFrames = 0;
 static EWRAM_DATA u16 sWarmupTimer = 0;
 EWRAM_DATA u8 gWildlandsSurfTransitions = 0;
 EWRAM_DATA u8 gWildlandsSpawnAudit[4] = {0};
-EWRAM_DATA u8 gWildlandsV2MotionAudit[6] = {0};
+EWRAM_DATA u8 gWildlandsV2MotionAudit[8] = {0};
+static EWRAM_DATA s16 sStartMapX = 0;
+static EWRAM_DATA s16 sStartMapY = 0;
 EWRAM_DATA u8 gWildlandsV2LoadoutAudit[4] = {0};
 static EWRAM_DATA u16 sInputNewKeys = 0;
 static EWRAM_DATA u16 sInputHeldKeys = 0;
@@ -1677,10 +1679,17 @@ static bool8 TryTraversal(void)
     s16 x, y;
     u8 behavior;
 
-    // Wildlands owns traversal eligibility. Read the actual tile directly in
-    // front of the player rather than Emerald's Surf helper, which also encodes
-    // story-era elevation/HM assumptions that do not belong in a battle royale.
-    PlayerGetDestCoords(&x, &y);
+    // Wildlands V2 owns player coordinates, so context traversal must use the
+    // Arena body's facing direction rather than Emerald's stale tile-step dest.
+    {
+        static const s8 dirs[8][2] =
+        {
+            {0,1},{1,1},{1,0},{1,-1},
+            {0,-1},{-1,-1},{-1,0},{-1,1}
+        };
+        x = sActors[WL_PLAYER].x / 16 + dirs[sActors[WL_PLAYER].facing][0];
+        y = sActors[WL_PLAYER].y / 16 + dirs[sActors[WL_PLAYER].facing][1];
+    }
     behavior = MapGridGetMetatileBehaviorAt(x, y);
     if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
         && IsWater(behavior)
@@ -1839,6 +1848,8 @@ static void InitWildlands(void)
     playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
     px = playerObj->currentCoords.x;
     py = playerObj->currentCoords.y;
+    sStartMapX = gSaveBlock1Ptr->pos.x;
+    sStartMapY = gSaveBlock1Ptr->pos.y;
 
     // Never accept the native warp landing blindly. Emerald maps can contain
     // shoreline pockets, narrow ledges or other legal collision tiles that are
@@ -1942,8 +1953,8 @@ static void InitWildlands(void)
     InitLoot();
     sInitialized = TRUE;
     sFrames = 0;
-    // Brief BR deployment grace: movement and traversal work, combat does not.
-    sWarmupTimer = 360;
+    // Two-second BR deployment grace: movement works, combat does not.
+    sWarmupTimer = 120;
 }
 
 void WildlandsV1_Tick(void)
@@ -1995,6 +2006,8 @@ void WildlandsV1_Tick(void)
     }
 
     TickPlayerController(TRUE);
+    if (gSaveBlock1Ptr->pos.x != sStartMapX || gSaveBlock1Ptr->pos.y != sStartMapY)
+        gWildlandsV2MotionAudit[6] = 1;
     for (i = 0; i < WL_MAX_ACTORS; i++)
         if (sActors[i].active)
             TickActorAttack(i);
