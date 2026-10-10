@@ -947,20 +947,21 @@ static bool8 TryTraversal(void)
 {
     s16 x, y;
     u8 behavior;
+
+    // Wildlands owns traversal eligibility. Read the actual tile directly in
+    // front of the player rather than Emerald's Surf helper, which also encodes
+    // story-era elevation/HM assumptions that do not belong in a battle royale.
+    PlayerGetDestCoords(&x, &y);
+    behavior = MapGridGetMetatileBehaviorAt(x, y);
     if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
-        && IsPlayerFacingSurfableFishableWater()
+        && IsWater(behavior)
         && sActors[WL_PARTNER].active
         && (CanSwim(sActors[WL_PARTNER].species) || CanFly(sActors[WL_PARTNER].species)))
     {
-        // Wildlands traversal deliberately bypasses Emerald's HM/badge gate.
-        // The native surfing movement state is used only for collision/movement;
-        // the trainer and native surf blob are hidden by WildlandsV1_PreOam.
         SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_SURFING);
         gWildlandsSurfTransitions++;
         return TRUE;
     }
-    PlayerGetDestCoords(&x, &y);
-    behavior = MapGridGetMetatileBehaviorAt(x, y);
     if ((CanBurrow(sActors[WL_PLAYER].species) || CanBurrow(sActors[WL_PARTNER].species)
          || sActors[WL_PLAYER].moves[0] == MOVE_DIG || sActors[WL_PLAYER].moves[1] == MOVE_DIG
          || sActors[WL_PLAYER].moves[2] == MOVE_DIG || sActors[WL_PLAYER].moves[3] == MOVE_DIG)
