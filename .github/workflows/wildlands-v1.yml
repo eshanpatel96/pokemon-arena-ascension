@@ -1,0 +1,117 @@
+name: Pokemon Wildlands V1 vertical slice
+on:
+  push:
+    branches: [wildlands-v1]
+    paths:
+      - '.github/workflows/wildlands-v1.yml'
+      - 'bootstrap/wildlands-v1/**'
+      - 'docs/WILDLANDS-V1.md'
+  workflow_dispatch:
+concurrency:
+  group: wildlands-v1-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compile-and-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-ASSEMBLED-SOURCE
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-DEVELOPMENT-ROM-NOT-FINAL-BETA
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline-rom
+      - name: Native dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3-pil libmgba-dev
+      - name: Recover pinned V11.1 engine and apply Wildlands
+        run: |
+          echo '0812cedb0e1b9affae7d9705157ff392fad7f51211e4889f30a4e4927ae726c7  baseline/v11-1-assembled-source.tar.gz' | sha256sum -c
+          tar -xzf baseline/v11-1-assembled-source.tar.gz engine
+          mkdir -p delivery evidence
+          python3 bootstrap/wildlands-v1/apply.py engine | tee evidence/wildlands-apply.txt
+          python3 bootstrap/v11-1/prepare_inputs.py engine baseline-rom/Pokemon-Arena-Ascension-V11-1-DEV.gba | tee evidence/preserved-inputs.txt
+          cp engine/wildlands-v1-report.json evidence/
+          git rev-parse HEAD > evidence/source-commit.txt
+      - name: Generate maps and Arena assets
+        working-directory: engine
+        run: |
+          make -j2 -f make_tools.mk
+          make -j2 generated
+          for map in data/maps/Route119/map.json; do
+            dir=$(dirname "$map")
+            tools/mapjson/mapjson map emerald "$map" data/layouts/layouts.json "$dir"
+            test -s "$dir/events.inc"
+          done
+          ./tools/arena/dev.sh assets
+      - name: Compile GBA ROM
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Wildlands-V1 2>&1 | tee ../evidence/build.log
+          cp Pokemon-Wildlands-V1.gba ../delivery/
+          cp Pokemon-Wildlands-V1.elf Pokemon-Wildlands-V1.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-Wildlands-V1.elf > ../evidence/symbols.txt
+      - name: Manifest
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          p=Path('delivery/Pokemon-Wildlands-V1.gba'); b=p.read_bytes()
+          assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
+          manifest={
+            'name':'Pokemon Wildlands V1',
+            'source_commit':os.environ['GITHUB_SHA'],
+            'rom_sha256':hashlib.sha256(b).hexdigest(),
+            'rom_bytes':len(b),
+            'status':'V1 continuous-overworld vertical slice; not 30-team Battle Royale acceptance',
+            'map':'Route 119',
+            'local_field_actors':7,
+            'enemy_duos':2,
+            'legendary':'Rayquaza',
+            'core':'field combat, AI partner, loot, grass concealment, Surf, Dig shortcut, boss recruit'
+          }
+          Path('delivery/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          Path('delivery/README.txt').write_text('Pokemon Wildlands V1 vertical slice. Start NEW GAME. This build proves continuous Pokemon field combat on Route 119; it is not yet the 30-team full island.\n')
+          print(json.dumps(manifest,indent=2))
+          PY
+      - name: mGBA startup smoke and framebuffer
+        run: |
+          gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/v11-smoke.c -lmgba -o evidence/wildlands-smoke
+          set -o pipefail
+          timeout 180 evidence/wildlands-smoke delivery/Pokemon-Wildlands-V1.gba evidence/symbols.txt evidence/runtime bootstrap/wildlands-v1/smoke.commands - 2>&1 | tee evidence/smoke.log
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('evidence/runtime').glob('*.ppm'):
+              Image.open(p).save(p.with_suffix('.png')); p.unlink()
+          PY
+      - name: Upload ROM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WILDLANDS-V1-ROM
+          path: delivery/
+          if-no-files-found: ignore
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WILDLANDS-V1-EVIDENCE
+          path: evidence/
+          if-no-files-found: warn
