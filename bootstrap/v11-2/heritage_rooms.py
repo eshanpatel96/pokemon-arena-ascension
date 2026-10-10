@@ -45,6 +45,12 @@ for row,(sid,x0,y0,theme) in zip(rooms,sources):
     if other:
       accent=0x3000|other.most_common(1)[0][0]
       for x,y in [(6,7),(12,7),(6,13),(12,13),(7,16),(11,16)]:put(x,y,accent)
+    # Blank native overlays are not a playable platform; replace only known
+    # source void IDs with the same native metatile-floor, never foreign art.
+    if theme=='prismatic-crystal':
+      tiles=[floor if (t&0x3ff)==520 else t for t in tiles]
+    if theme=='iron-fortress':
+      tiles=[floor if (t&0x3ff)==571 else t for t in tiles]
     meta=json.loads((root/'data/maps'/row['name']/'map.json').read_text())
     occupied={(z['x'],z['y']) for z in meta['object_events']}
     for x,y in [(9,18),(9,4),(12,18),(9,5),(7,10),(11,10)]:
