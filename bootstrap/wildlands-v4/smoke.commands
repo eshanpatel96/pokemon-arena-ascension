@@ -1,0 +1,15 @@
+frames 300 0
+snap 00-wildlands-title
+press 8
+frames 120 0
+press 1
+frames 1100 0
+snap 01-wildlands-lab
+press 768
+frames 700 0
+expect gArenaXLTelemetry 16 4 4096
+expect gArenaXLTelemetry 20 4 3072
+expect gWildlandsPartnerTelemetry 0 4 1
+snap 02-wildlands-practice
+frames 360 16
+snap 03-partner-follow
