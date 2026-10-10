@@ -30,16 +30,18 @@ assert len(gen3_play)==109, len(gen3_play)
 later_evolutions={
     'PRIMEAPE':'ANNIHILAPE',
     'MAGNETON':'MAGNEZONE',
-    'RHYDON':'RHYPERIOR',
-    'ELECTABUZZ':'ELECTIVIRE',
     'MAGMAR':'MAGMORTAR',
     'NOSEPASS':'PROBOPASS',
+}
+legacy_final_exceptions={
+    'RHYDON':'RHYPERIOR',
+    'ELECTABUZZ':'ELECTIVIRE',
     'DUSCLOPS':'DUSKNOIR',
     'ROSELIA':'ROSERADE',
 }
 assert set(later_evolutions).issubset({x['species'] for x in gen3_play})
 play=[x for x in gen3_play if x['species'] not in later_evolutions]
-assert len(play)==101, len(play)
+assert len(play)==105, len(play)
 
 # Every selector entry must have enough legal native Arena actions to build a
 # real four-move loadout. ascension_studio_legal.inc is generated from the
@@ -68,7 +70,8 @@ out={
  'emerald_final_or_single_stage':len(gen3_endpoints),
  'emerald_selectable_after_bosses':len(gen3_play),
  'excluded_because_later_evolution':later_evolutions,
- 'strict_final_evolution_selectable_count':len(play),
+ 'curated_selectable_count':len(play),
+ 'legacy_final_exceptions':legacy_final_exceptions,
  'boss_only':bosses,
  'selectable_legendaries':play_legends,
  'minimum_legal_arena_moves_per_selectable_species':minimum,
