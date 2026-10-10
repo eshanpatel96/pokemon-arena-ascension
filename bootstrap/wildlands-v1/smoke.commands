@@ -5,6 +5,11 @@ press 1
 frames 550 0
 map 0 34
 expect gPlayerPartyCount 0 1 2
+expect sActors 0 1 1
+expect sActors 14 2 6
+expect sActors 52 1 1
+expect sActors 66 2 9
+expect gPlayerAvatar 0 1 33
 frames 30 0
 snap 01-wildlands-pokemon-bodies
 press 16
