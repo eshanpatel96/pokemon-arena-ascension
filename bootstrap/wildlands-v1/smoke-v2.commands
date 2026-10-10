@@ -30,9 +30,9 @@ expect gWildlandsV2LoadoutAudit 2 1 1
 expect gWildlandsV2LoadoutAudit 3 1 1
 expect gPlayerPartyCount 0 1 2
 expect sActors 0 1 1
-expect sActors 14 2 6
-expect sActors 52 1 1
-expect sActors 66 2 9
+expect sActors 32 2 6
+expect sActors 72 1 1
+expect sActors 104 2 9
 snap 01-v2-loadout-deployed
 frames 30 16
 expect gWildlandsV2MotionAudit 0 1 1
@@ -43,6 +43,7 @@ expect gWildlandsV2MotionAudit 6 1 1
 frames 1 18
 frames 12 16
 expect gWildlandsV2MotionAudit 2 1 1
+frames 140 0
 press 1
 frames 45 0
 expect gWildlandsV2MotionAudit 3 1 1
