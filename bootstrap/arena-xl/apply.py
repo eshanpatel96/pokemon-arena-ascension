@@ -153,15 +153,9 @@ s=s.replace(old,new,1)
 
 # Apply camera after all Arena systems have written their world-space sprite
 # coordinates but before OAM is committed.
-old='''    now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
-    gArenaRenderTelemetry[1]=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228-now;
-    now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
-    AnimateSprites();
+old='''    AnimateSprites();
     BuildOamBuffer();'''
-new='''    now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
-    gArenaRenderTelemetry[1]=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228-now;
-    now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
-    ArenaXL_UpdateCamera();
+new='''    ArenaXL_UpdateCamera();
     AnimateSprites();
     BuildOamBuffer();'''
 if s.count(old)!=1: raise SystemExit('frame OAM anchor drift')
