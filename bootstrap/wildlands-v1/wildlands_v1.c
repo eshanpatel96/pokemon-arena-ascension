@@ -289,6 +289,31 @@ static bool8 SpawnAreaSafe(s16 startX, s16 startY)
         && farthest >= WL_SPAWN_MIN_REACH_TILES;
 }
 
+static bool8 FindSafeSpawnNear(s16 startX, s16 startY, s16 *outX, s16 *outY, u8 maxRadius)
+{
+    s16 radius;
+    s16 dx;
+    s16 dy;
+    for (radius = 0; radius <= maxRadius; radius++)
+    {
+        for (dy = -radius; dy <= radius; dy++)
+        {
+            for (dx = -radius; dx <= radius; dx++)
+            {
+                if (radius && Abs32(dx) != radius && Abs32(dy) != radius)
+                    continue;
+                if (SpawnAreaSafe(startX + dx, startY + dy))
+                {
+                    *outX = startX + dx;
+                    *outY = startY + dy;
+                    return TRUE;
+                }
+            }
+        }
+    }
+    return FALSE;
+}
+
 static bool8 SpawnFarFromOtherTeams(u8 actorId, s16 x, s16 y, u8 minTiles)
 {
     u32 i;
@@ -1200,6 +1225,23 @@ static void InitWildlands(void)
     playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
     px = playerObj->currentCoords.x;
     py = playerObj->currentCoords.y;
+
+    // Never accept the native warp landing blindly. Emerald maps can contain
+    // shoreline pockets, narrow ledges or other legal collision tiles that are
+    // poor Battle Royale deployments. Before creating any actors, normalize the
+    // landing to the nearest certified connected-land spawn.
+    if (!SpawnAreaSafe(px, py))
+    {
+        s16 safeX;
+        s16 safeY;
+        if (FindSafeSpawnNear(px, py, &safeX, &safeY, 18))
+        {
+            SetWarpDestination(MAP_GROUP(MAP_ROUTE119), MAP_NUM(MAP_ROUTE119),
+                               WARP_ID_NONE, safeX - MAP_OFFSET, safeY - MAP_OFFSET);
+            WarpIntoMap();
+            return;
+        }
+    }
 
     memset(sActors, 0, sizeof(sActors));
     memset(sShots, 0, sizeof(sShots));
