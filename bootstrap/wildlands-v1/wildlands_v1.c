@@ -106,6 +106,7 @@ static EWRAM_DATA bool8 sInitialized = FALSE;
 static EWRAM_DATA bool8 sRayquazaRecruitable = FALSE;
 static EWRAM_DATA u8 sPartnerMarkerSprite = MAX_SPRITES;
 static EWRAM_DATA u16 sFrames = 0;
+static EWRAM_DATA u16 sWarmupTimer = 0;
 
 static const u32 sShotTiles[8] =
 {
@@ -1011,6 +1012,7 @@ void WildlandsV1_Reset(void)
     sInitialized = FALSE;
     sRayquazaRecruitable = FALSE;
     sFrames = 0;
+    sWarmupTimer = 0;
 }
 
 static void PlaceActorNear(u8 id, s16 targetX, s16 targetY, u8 maxRadius)
@@ -1122,6 +1124,8 @@ static void InitWildlands(void)
     InitLoot();
     sInitialized = TRUE;
     sFrames = 0;
+    // Brief BR deployment grace: movement and traversal work, combat does not.
+    sWarmupTimer = 360;
 }
 
 void WildlandsV1_Tick(void)
@@ -1141,6 +1145,19 @@ void WildlandsV1_Tick(void)
     sFrames++;
     if (ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked() || gPaletteFade.active)
         return;
+
+    if (sWarmupTimer)
+    {
+        sWarmupTimer--;
+        TickContextAction();
+        if (sActors[WL_PARTNER].active
+            && !TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
+            && Dist(sActors[WL_PARTNER].x, sActors[WL_PARTNER].y,
+                    sActors[WL_PLAYER].x, sActors[WL_PLAYER].y) > 36)
+            MoveActorToward(WL_PARTNER, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 2);
+        UpdateConcealment();
+        return;
+    }
 
     TickPlayerInput();
     TickContextAction();
