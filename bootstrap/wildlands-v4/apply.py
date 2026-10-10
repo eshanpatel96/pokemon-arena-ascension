@@ -297,7 +297,7 @@ block=f'''#if !ARENA_LAB
         {{MOVE_FLAMETHROWER, MOVE_WING_ATTACK, MOVE_SLASH, MOVE_PROTECT}},
         {{MOVE_WATER_GUN, MOVE_HYDRO_PUMP, MOVE_BITE, MOVE_PROTECT}}
     }};
-    u32 i, j, storageSlot;
+    u32 i, j;
 '''
 s=s[:start]+block+s[end:]
 
@@ -336,13 +336,14 @@ new='''    // Wildlands uses the native PC as the immersive team picker. Two are
         for (j = 0; j < MAX_MON_MOVES; j++)
             SetMonMoveSlot(&gPlayerParty[i], sDemoMoves[i][j], j);
     }
+    j = 0;
     for (i = 0; i < ARRAY_COUNT(sWildlandsRoster); i++)
     {
         u16 species=sWildlandsRoster[i];
         if(species==SPECIES_CHARIZARD || species==SPECIES_BLASTOISE) continue;
-        CreateBoxMonAt(storageSlot / IN_BOX_COUNT, storageSlot % IN_BOX_COUNT,
-                       species, 60, 20, TRUE, storageSlot * 2, OT_ID_PLAYER_ID, 0);
-        storageSlot++;
+        CreateBoxMonAt(j / IN_BOX_COUNT, j % IN_BOX_COUNT,
+                       species, 60, 20, TRUE, j * 2, OT_ID_PLAYER_ID, 0);
+        j++;
     }
     // Every Arena-supported TM is present exactly once and is reusable.
     // HMs are deliberately absent: traversal belongs to the species.
@@ -443,7 +444,8 @@ s=s.replace(old,new,1)
 # combat refactor.
 anchor='''static u16 MonMassSpeedFactor(u8 side)
 {'''
-partner=r'''static u8 Facing(s32 dx, s32 dy);\n#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+partner=r'''static u8 Facing(s32 dx, s32 dy);
+#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
 struct WildlandsPartnerActor
 {
     s32 x,y;
