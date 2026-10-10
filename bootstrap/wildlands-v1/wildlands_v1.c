@@ -798,13 +798,24 @@ static void TickAI(u8 id)
         return;
     if (id == WL_PARTNER && TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
         return;
-    target = FindNearestEnemy(id, actor->legendary ? 220 : 150);
-    if (id == WL_PARTNER && target < 0)
+    if (id == WL_PARTNER)
     {
-        if (Dist(actor->x, actor->y, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y) > 36)
-            MoveActorToward(id, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 2);
-        return;
+        distance = Dist(actor->x, actor->y, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y);
+        if (distance > 64)
+        {
+            MoveActorToward(id, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 3);
+            return;
+        }
+        target = FindNearestEnemy(id, 96);
+        if (target < 0)
+        {
+            if (distance > 36)
+                MoveActorToward(id, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 2);
+            return;
+        }
     }
+    else
+        target = FindNearestEnemy(id, actor->legendary ? 220 : 150);
     if (target < 0)
         return;
     profile = ArenaMoves_Get(actor->moves[actor->moveSlot]);
