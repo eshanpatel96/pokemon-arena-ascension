@@ -5,8 +5,8 @@ press 1
 frames 1100 0
 expect gArenaXLTelemetry 16 4 32000
 expect gArenaXLTelemetry 20 4 24000
-expect gArenaXLTelemetry 24 4 15880
-expect gArenaXLTelemetry 28 4 12240
+expect gArenaXLTelemetry 32 4 1
+expect gArenaXLTelemetry 36 4 1
 snap 01-arena-xxl-start
 frames 700 16
 expect gArenaXLTelemetry 0 4 1
