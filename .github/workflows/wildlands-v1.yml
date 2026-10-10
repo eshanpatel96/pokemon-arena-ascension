@@ -65,6 +65,8 @@ jobs:
             test -s "$dir/events.inc"
           done
           ./tools/arena/dev.sh assets
+          python3 ../bootstrap/v11-1/deduplicate_art.py .
+          cp v11-1-art-dedup-proof.json ../evidence/
       - name: Compile GBA ROM
         working-directory: engine
         run: |
