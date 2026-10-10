@@ -2,7 +2,7 @@ frames 300 0
 press 8
 frames 120 0
 press 1
-frames 700 0
+frames 550 0
 map 0 34
 expect gPlayerPartyCount 0 1 2
 frames 30 0
