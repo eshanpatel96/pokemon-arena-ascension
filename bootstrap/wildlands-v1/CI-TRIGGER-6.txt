@@ -1,0 +1,1 @@
+Retry after replacing seven permanent 2 KB decoded sprite buffers with one temporary heap scratch buffer.
