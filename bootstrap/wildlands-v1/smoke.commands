@@ -5,4 +5,12 @@ press 1
 frames 700 0
 map 0 34
 expect gPlayerPartyCount 0 1 2
-snap 01-wildlands-route119
+press 1
+frames 90 0
+snap 01-wildlands-pokemon-bodies
+press 16
+frames 20 0
+press 4
+frames 60 0
+expect gPlayerAvatar 0 1 40
+snap 02-wildlands-partner-surf
