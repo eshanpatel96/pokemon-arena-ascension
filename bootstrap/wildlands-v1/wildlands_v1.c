@@ -178,6 +178,10 @@ static const struct WildLoadoutChoice sLoadoutChoices[WL_LOADOUT_COUNT] =
     {SPECIES_MILOTIC, {MOVE_SURF, MOVE_HYDRO_PUMP, MOVE_ICY_WIND, MOVE_AURORA_BEAM, MOVE_RAIN_DANCE, MOVE_PROTECT}},
 };
 
+static bool8 CanSwim(u16 species);
+static bool8 CanFly(u16 species);
+static bool8 CanBurrow(u16 species);
+
 static const u32 sShotTiles[8] =
 {
     0x00022000, 0x00211200, 0x02111120, 0x21111112,
