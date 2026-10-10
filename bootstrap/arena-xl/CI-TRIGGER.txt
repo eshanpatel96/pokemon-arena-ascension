@@ -1,0 +1,1 @@
+Trigger Arena XL native build and mGBA stress test.
