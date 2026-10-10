@@ -39,6 +39,7 @@ expect gWildlandsV2MotionAudit 0 1 1
 expect gWildlandsV2MotionAudit 4 1 1
 frames 30 80
 expect gWildlandsV2MotionAudit 1 1 1
+expect gWildlandsV2MotionAudit 6 1 1
 frames 1 18
 frames 12 16
 expect gWildlandsV2MotionAudit 2 1 1
