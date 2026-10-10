@@ -5,8 +5,7 @@ press 1
 frames 700 0
 map 0 34
 expect gPlayerPartyCount 0 1 2
-press 1
-frames 90 0
+frames 30 0
 snap 01-wildlands-pokemon-bodies
 press 16
 frames 20 0
