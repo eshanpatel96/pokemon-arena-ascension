@@ -44,7 +44,10 @@ old_b = 'bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBe
 old = old_a if old_a in s else old_b
 if old not in s:
     raise SystemExit('wild encounter function anchor drift')
-s = s.replace(old, old + '\n    if (WildlandsV1_IsActive())\n        return FALSE;', 1)
+decls = old + '\n    u16 headerId;\n    struct Roamer *roamer;\n'
+if decls not in s:
+    raise SystemExit('wild encounter declaration anchor drift')
+s = s.replace(decls, decls + '\n    if (WildlandsV1_IsActive())\n        return FALSE;', 1)
 p.write_text(s)
 
 # Use the already save-safe NEW GAME hook from Ascension, but seed a Wildlands
