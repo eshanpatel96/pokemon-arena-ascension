@@ -1,0 +1,14 @@
+frames 300 0
+press 8
+frames 120 0
+press 1
+frames 700 0
+press 768
+frames 520 0
+expect gArenaXLTelemetry 16 4 16384
+expect gArenaXLTelemetry 20 4 12288
+snap 01-arena-xl-start
+frames 700 16
+expect gArenaXLTelemetry 0 4 1
+expect gArenaXLTelemetry 4 4 1
+snap 02-arena-xl-travel
