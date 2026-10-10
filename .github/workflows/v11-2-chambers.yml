@@ -1,0 +1,86 @@
+name: V11.2 heritage chamber experimental build
+on:
+  push:
+    branches: [v11-2-chambers-dev]
+    paths: ['.github/workflows/v11-2-chambers.yml','bootstrap/v11-2/**']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-INTERNAL-REFRESH-SOURCE
+          run-id: 37976567048
+          github-token: ${{ github.token }}
+          path: baseline
+      - name: Native toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential gcc-arm-none-eabi binutils-arm-none-eabi libpng-dev zlib1g-dev python3-pil libmgba-dev
+      - name: Preserve known native game, restore complete baseline and alter chamber art only
+        run: |
+          set -euo pipefail
+          echo 'e9010ae3e4f87ffaa388c23030d9bcd4368aaa42fe3959a8b6c075527f2897c8  baseline/v11-1-internal-refresh-source.tar.gz' | sha256sum -c
+          tar -xzf baseline/v11-1-internal-refresh-source.tar.gz engine
+          mkdir -p evidence delivery
+          sha256sum engine/src/title_screen.c engine/src/main_menu.c engine/src/save.c engine/src/load_save.c engine/src/new_game.c engine/src/realtime_arena.c engine/include/constants/flags.h engine/include/constants/vars.h > evidence/protected.sha256
+          for p in engine/data/maps/AscensionLeader{2..9}/scripts.inc engine/data/maps/AscensionSummit/scripts.inc; do sha256sum "$p"; done > evidence/scripts.sha256
+          python3 bootstrap/v11-2/heritage_rooms.py engine | tee evidence/rooms-static.log
+          sha256sum -c evidence/protected.sha256
+          sha256sum -c evidence/scripts.sha256
+          cp engine/v11-2-heritage-room-audit.json evidence/
+      - name: Compile actual native GBA
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Ascension-Arena-V11-2-HERITAGE-DEV 2>&1 | tee ../evidence/build.log
+          cp Pokemon-Ascension-Arena-V11-2-HERITAGE-DEV.gba ../delivery/
+          arm-none-eabi-nm -n Pokemon-Ascension-Arena-V11-2-HERITAGE-DEV.elf > ../evidence/symbols.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          p=Path('Pokemon-Ascension-Arena-V11-2-HERITAGE-DEV.gba');b=p.read_bytes()
+          assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
+          m={'status':'V11.2 HERITAGE DEV EXPERIMENT; NOT BETA','source_commit':os.environ['GITHUB_SHA'],'sha256':hashlib.sha256(b).hexdigest(),'baseline':'V11.1 internal refresh, not latest off-repo candidate','changes':'13 native location overworld chamber replacements. Combat, save and title source untouched.','important':'Do not replace the newer V11.1 Refresh Candidate with this older-baseline exploratory build.','emulator':'mGBA evidence separate; Delta untested'}
+          Path('../delivery/manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          Path('../delivery/README.txt').write_text('EXPERIMENTAL native chamber visual test. Not a replacement for latest off-repository Refresh Candidate. Protect your older ROM and Delta save states. Title/save/combat source unchanged.\n')
+          print(json.dumps(m,indent=2))
+          PY
+      - name: Real native mGBA frame captures (not a campaign pass)
+        continue-on-error: true
+        run: |
+          cp bootstrap/v11-visual-proof.c evidence/room-proof.c
+          sed -i 's/r8(sb+5)!=89/r8(sb+5)!=110/' evidence/room-proof.c
+          gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h evidence/room-proof.c -lmgba -o evidence/room-proof
+          timeout 240 evidence/room-proof delivery/Pokemon-Ascension-Arena-V11-2-HERITAGE-DEV.gba evidence/symbols.txt evidence/runtime > evidence/native-capture.log 2>&1
+      - name: Package assets and truthful evidence
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('evidence').rglob('*.ppm'):
+            Image.open(p).save(p.with_suffix('.png'));p.unlink()
+          PY
+          if [ -f delivery/Pokemon-Ascension-Arena-V11-2-HERITAGE-DEV.gba ]; then
+            sha256sum delivery/Pokemon-Ascension-Arena-V11-2-HERITAGE-DEV.gba > delivery/rom-sha256.txt
+            (cd delivery && zip -9 -q -r ../V11-2-HERITAGE-DEV.zip .)
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V11-2-HERITAGE-DEV-GBA-NOT-RELEASE
+          path: |
+            delivery/
+            V11-2-HERITAGE-DEV.zip
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: V11-2-HERITAGE-NATIVE-EVIDENCE
+          path: evidence/
+          if-no-files-found: ignore
