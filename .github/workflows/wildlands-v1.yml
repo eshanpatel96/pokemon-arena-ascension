@@ -6,6 +6,12 @@ on:
       - '.github/workflows/wildlands-v1.yml'
       - 'bootstrap/wildlands-v1/**'
       - 'docs/WILDLANDS-V1.md'
+  pull_request:
+    branches: [wildlands-v1]
+    paths:
+      - '.github/workflows/wildlands-v1.yml'
+      - 'bootstrap/wildlands-v1/**'
+      - 'docs/WILDLANDS-V1.md'
   workflow_dispatch:
 concurrency:
   group: wildlands-v1-${{ github.ref }}
