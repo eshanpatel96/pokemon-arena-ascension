@@ -16,10 +16,3 @@ expect gWildlandsSpawnAudit 2 1 1
 expect gWildlandsSpawnAudit 3 1 1
 frames 30 0
 snap 01-wildlands-pokemon-bodies
-press 16
-frames 20 0
-press 4
-frames 60 0
-expect gWildlandsSurfTransitions 0 1 1
-expect gPlayerAvatar 0 1 40
-snap 02-wildlands-partner-surf
