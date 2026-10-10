@@ -44,6 +44,42 @@ if s.count(old) != 1:
     raise SystemExit('overworld render-order anchor drift')
 p.write_text(s.replace(old, new, 1))
 
+# Wildlands owns A/Select/L/R. Feed a masked copy to Emerald's ordinary field
+# input so attacks, move cycling and context traversal cannot simultaneously
+# trigger NPC interaction, registered-item or HM field scripts.
+p = root / 'src/overworld.c'
+s = p.read_text()
+old = '''static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
+{
+    struct FieldInput inputStruct;
+
+    UpdatePlayerAvatarTransitionState();
+    FieldClearPlayerInput(&inputStruct);
+    FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);'''
+new = '''static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
+{
+    struct FieldInput inputStruct;
+    u16 fieldNewKeys = newKeys;
+    u16 fieldHeldKeys = heldKeys;
+
+    if (WildlandsV1_IsActive())
+    {
+        fieldNewKeys &= ~(A_BUTTON | SELECT_BUTTON | L_BUTTON | R_BUTTON);
+        fieldHeldKeys &= ~(A_BUTTON | SELECT_BUTTON | L_BUTTON | R_BUTTON);
+    }
+
+    UpdatePlayerAvatarTransitionState();
+    FieldClearPlayerInput(&inputStruct);
+    FieldGetPlayerInput(&inputStruct, fieldNewKeys, fieldHeldKeys);'''
+if s.count(old) != 1:
+    raise SystemExit('Wildlands field-input anchor drift')
+s = s.replace(old, new, 1)
+old = '            PlayerStep(inputStruct.dpadDirection, newKeys, heldKeys);'
+new = '            PlayerStep(inputStruct.dpadDirection, fieldNewKeys, fieldHeldKeys);'
+if s.count(old) != 1:
+    raise SystemExit('Wildlands PlayerStep anchor drift')
+p.write_text(s.replace(old, new, 1))
+
 # Grass is concealment, never an encounter transition.
 p = root / 'src/wild_encounter.c'
 s = p.read_text()
