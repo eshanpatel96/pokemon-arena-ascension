@@ -107,6 +107,7 @@ static EWRAM_DATA bool8 sRayquazaRecruitable = FALSE;
 static EWRAM_DATA u8 sPartnerMarkerSprite = MAX_SPRITES;
 static EWRAM_DATA u16 sFrames = 0;
 static EWRAM_DATA u16 sWarmupTimer = 0;
+EWRAM_DATA u8 gWildlandsSurfTransitions = 0;
 
 static const u32 sShotTiles[8] =
 {
@@ -955,6 +956,7 @@ static bool8 TryTraversal(void)
         // The native surfing movement state is used only for collision/movement;
         // the trainer and native surf blob are hidden by WildlandsV1_PreOam.
         SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_SURFING);
+        gWildlandsSurfTransitions++;
         return TRUE;
     }
     PlayerGetDestCoords(&x, &y);
@@ -1024,6 +1026,7 @@ void WildlandsV1_Reset(void)
     sRayquazaRecruitable = FALSE;
     sFrames = 0;
     sWarmupTimer = 0;
+    gWildlandsSurfTransitions = 0;
 }
 
 static void PlaceActorNear(u8 id, s16 targetX, s16 targetY, u8 maxRadius)
@@ -1066,6 +1069,11 @@ static void InitWildlands(void)
     struct ObjectEvent *playerObj;
     if (!OnWildlandsMap() || gPlayerAvatar.spriteId >= MAX_SPRITES)
         return;
+
+    // A Wildlands deployment always begins on foot. Do not inherit a stale
+    // Emerald avatar state from the native new-game/warp machinery.
+    SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_ON_FOOT);
+    gWildlandsSurfTransitions = 0;
 
     playerObj = &gObjectEvents[gPlayerAvatar.objectEventId];
     px = playerObj->currentCoords.x;
