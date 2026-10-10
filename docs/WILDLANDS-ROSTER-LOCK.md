@@ -5,10 +5,17 @@ This file is derived from the actual Arena animation catalog in `tools/arena/ros
 ## Source-of-truth counts
 
 - Arena/PMD animated species: **187**
-- Gen III final evolutions or single-stage species among those 187: **114**
+- Emerald endpoints or single-stage species among those 187: **114**
 - Boss-only legends: **5**
-- Selectable launch pool: **109**
+- Emerald-era selectable endpoints after bosses: **109**
+- Later-evolution forms removed by strict Wildlands rule: **8**
+- **Canonical selectable launch pool: 101**
+- Minimum legal Arena-adapted moves among the 101: **8**
 - Groudon Arena sprite: **absent**
+
+## Removed because they are not true final evolutions
+
+Primeape -> Annihilape; Magneton -> Magnezone; Rhydon -> Rhyperior; Electabuzz -> Electivire; Magmar -> Magmortar; Nosepass -> Probopass; Dusclops -> Dusknoir; Roselia -> Roserade.
 
 ## Boss-only legends
 
@@ -24,17 +31,31 @@ These cannot be selected in the Lab. They must be defeated in-world and may repl
 
 **Articuno, Zapdos, Raikou, Entei, Suicune, Regirock, Regice, Registeel**
 
-## Playable Gen I — 47
+## Playable Gen I — 42
 
-Lapras, Charizard, Blastoise, Dragonite, Vileplume, Alakazam, Tentacruel, Golem, Seaking, Gyarados, Articuno, Raichu, Zapdos, Gengar, Venusaur, Butterfree, Beedrill, Pidgeot, Arbok, Sandslash, Nidoqueen, Nidoking, Clefable, Ninetales, Venomoth, Dugtrio, Persian, Golduck, Primeape, Arcanine, Poliwrath, Machamp, Victreebel, Rapidash, Slowbro, Magneton, Dewgong, Cloyster, Kingler, Exeggutor, Marowak, Rhydon, Starmie, Jynx, Electabuzz, Magmar, Flareon.
+Venusaur, Charizard, Blastoise, Butterfree, Beedrill, Pidgeot, Arbok, Raichu, Sandslash, Nidoqueen, Nidoking, Clefable, Ninetales, Vileplume, Venomoth, Dugtrio, Persian, Golduck, Arcanine, Poliwrath, Alakazam, Machamp, Victreebel, Tentacruel, Golem, Rapidash, Slowbro, Dewgong, Cloyster, Gengar, Kingler, Exeggutor, Marowak, Seaking, Starmie, Jynx, Gyarados, Lapras, Flareon, Articuno, Zapdos, Dragonite.
 
 ## Playable Gen II — 9
 
-Scizor, Crobat, Bellossom, Azumarill, Raikou, Entei, Suicune, Kingdra, Skarmory.
+Crobat, Bellossom, Azumarill, Scizor, Skarmory, Kingdra, Raikou, Entei, Suicune.
 
-## Playable Gen III — 53
+## Playable Gen III — 50
 
-Blaziken, Sceptile, Mightyena, Kecleon, Swellow, Manectric, Breloom, Pelipper, Swampert, Linoone, Beautifly, Dustox, Ludicolo, Shiftry, Gardevoir, Slaking, Ninjask, Shedinja, Exploud, Hariyama, Nosepass, Delcatty, Sableye, Aggron, Plusle, Minun, Swalot, Sharpedo, Wailord, Crawdaunt, Salamence, Metagross, Regirock, Regice, Registeel, Solrock, Torkoal, Cacturne, Absol, Dusclops, Banette, Glalie, Walrein, Altaria, Flygon, Whiscash, Milotic, Camerupt, Claydol, Cradily, Armaldo, Roselia, Medicham.
+Sceptile, Blaziken, Swampert, Mightyena, Linoone, Beautifly, Dustox, Ludicolo, Shiftry, Swellow, Pelipper, Gardevoir, Breloom, Slaking, Ninjask, Shedinja, Exploud, Hariyama, Delcatty, Sableye, Aggron, Medicham, Manectric, Plusle, Minun, Swalot, Sharpedo, Wailord, Camerupt, Torkoal, Flygon, Cacturne, Altaria, Solrock, Whiscash, Crawdaunt, Claydol, Cradily, Armaldo, Milotic, Kecleon, Banette, Absol, Glalie, Walrein, Salamence, Metagross, Regirock, Regice, Registeel.
+
+## Single-stage audit
+
+The strict pool has 17 single-stage selectable Pokemon: Lapras, Kecleon, Sableye, Plusle, Minun, Articuno, Zapdos, Raikou, Entei, Suicune, Regirock, Regice, Registeel, Solrock, Torkoal, Absol, and Skarmory.
+
+None is cut merely for being single-stage. Their roles justify inclusion: tanks such as Skarmory/Torkoal, burst such as Absol, control such as Sableye/Kecleon/Solrock, and 2v2 support value for Plusle/Minun.
+
+Low raw-stat finals are kept only with a clear realtime role. Shedinja is a specialist because native Arena already handles Wonder Guard; Delcatty is support/control; Butterfree, Beedrill, Beautifly and Dustox lean on mobility/control rather than raw bulk.
+
+## Current realtime ability work
+
+Four of the 101 need Wildlands realtime ability support before the full V4 selector exposes them: Slaking (Truant), Ninjask (Speed Boost), Exploud (Soundproof), and Sharpedo (Rough Skin).
+
+Tentacruel, Gardevoir, Swalot and Dugtrio already have at least one Arena-supported ability and can use that supported ability until their alternate ability is adapted.
 
 ## Legendary presentation and power
 
