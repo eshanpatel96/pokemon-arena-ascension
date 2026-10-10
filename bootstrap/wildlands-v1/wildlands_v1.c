@@ -778,6 +778,14 @@ static void TickShots(void)
     }
 }
 
+static void PartnerFormationTarget(s32 *x, s32 *y)
+{
+    // Keep the AI teammate visually distinct from the player rather than
+    // stacking two 64x64 PMD bodies on the same collision anchor.
+    *x = sActors[WL_PLAYER].x - 40;
+    *y = sActors[WL_PLAYER].y + 24;
+}
+
 static void MoveActorToward(u8 id, s32 tx, s32 ty, s16 speed)
 {
     struct WildActor *actor = &sActors[id];
@@ -808,17 +816,20 @@ static void TickAI(u8 id)
         return;
     if (id == WL_PARTNER)
     {
+        s32 followX;
+        s32 followY;
+        PartnerFormationTarget(&followX, &followY);
         distance = Dist(actor->x, actor->y, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y);
-        if (distance > 64)
+        if (distance > 72)
         {
-            MoveActorToward(id, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 3);
+            MoveActorToward(id, followX, followY, 3);
             return;
         }
         target = FindNearestEnemy(id, 96);
         if (target < 0)
         {
-            if (distance > 36)
-                MoveActorToward(id, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 2);
+            if (Dist(actor->x, actor->y, followX, followY) > 18)
+                MoveActorToward(id, followX, followY, 2);
             return;
         }
     }
@@ -1151,10 +1162,15 @@ void WildlandsV1_Tick(void)
         sWarmupTimer--;
         TickContextAction();
         if (sActors[WL_PARTNER].active
-            && !TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING)
-            && Dist(sActors[WL_PARTNER].x, sActors[WL_PARTNER].y,
-                    sActors[WL_PLAYER].x, sActors[WL_PLAYER].y) > 36)
-            MoveActorToward(WL_PARTNER, sActors[WL_PLAYER].x, sActors[WL_PLAYER].y, 2);
+            && !TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
+        {
+            s32 followX;
+            s32 followY;
+            PartnerFormationTarget(&followX, &followY);
+            if (Dist(sActors[WL_PARTNER].x, sActors[WL_PARTNER].y,
+                     followX, followY) > 18)
+                MoveActorToward(WL_PARTNER, followX, followY, 2);
+        }
         UpdateConcealment();
         return;
     }
