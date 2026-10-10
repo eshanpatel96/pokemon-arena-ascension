@@ -1236,10 +1236,13 @@ static void InitWildlands(void)
         s16 safeY;
         if (FindSafeSpawnNear(px, py, &safeX, &safeY, 18))
         {
-            SetWarpDestination(MAP_GROUP(MAP_ROUTE119), MAP_NUM(MAP_ROUTE119),
-                               WARP_ID_NONE, safeX - MAP_OFFSET, safeY - MAP_OFFSET);
-            WarpIntoMap();
-            return;
+            // Correct the already-loaded field position directly. A second
+            // WarpIntoMap here can strand Emerald between field callbacks.
+            MoveObjectEventToMapCoords(playerObj, safeX, safeY);
+            gSaveBlock1Ptr->pos.x = safeX - MAP_OFFSET;
+            gSaveBlock1Ptr->pos.y = safeY - MAP_OFFSET;
+            px = safeX;
+            py = safeY;
         }
     }
 
