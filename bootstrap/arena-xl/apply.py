@@ -10,13 +10,13 @@ def patch(path, old, new):
         raise SystemExit(f"{path}: expected one anchor, got {s.count(old)}: {old[:90]!r}")
     p.write_text(s.replace(old,new,1))
 
-# 16,384 x 12,288 pixel native Arena world. Keep enough edge margin for 64x64 art.
+# 32,000 x 24,000 pixel native Arena world. Keep enough edge margin for 64x64 art.
 p=root/'include/arena_navigation.h'
 s=p.read_text()
 s=s.replace('#define ARENA_MIN_X 12','#define ARENA_MIN_X 32')
-s=s.replace('#define ARENA_MAX_X 228','#define ARENA_MAX_X 16352')
+s=s.replace('#define ARENA_MAX_X 228','#define ARENA_MAX_X 31968')
 s=s.replace('#define ARENA_MIN_Y 32','#define ARENA_MIN_Y 32')
-s=s.replace('#define ARENA_MAX_Y 143','#define ARENA_MAX_Y 12256')
+s=s.replace('#define ARENA_MAX_Y 143','#define ARENA_MAX_Y 23968')
 p.write_text(s)
 
 # Move the seven native destructible-cover rectangles to world center so the
@@ -35,13 +35,13 @@ old='''const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] =
 };'''
 new='''const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] =
 {
-    {8180, 6128, 8205, 6145},
-    {8132, 6098, 8153, 6115},
-    {8241, 6158, 8262, 6176},
-    {8096, 6149, 8114, 6165},
-    {8100, 6115, 8117, 6128},
-    {8273, 6105, 8285, 6121},
-    {8274, 6139, 8290, 6153}
+    {15988, 11984, 16013, 12001},
+    {15940, 11954, 15961, 11971},
+    {16049, 12014, 16070, 12032},
+    {15904, 12005, 15922, 12021},
+    {15908, 11971, 15925, 11984},
+    {16081, 11961, 16093, 11977},
+    {16082, 11995, 16098, 12009}
 };'''
 if old not in s: raise SystemExit('navigation obstacle anchor drift')
 p.write_text(s.replace(old,new,1))
@@ -92,8 +92,8 @@ s=s.replace(old,new,1)
 
 anchor='#define Q 256\n'
 insert='''#define Q 256
-#define ARENA_XL_WORLD_W 16384
-#define ARENA_XL_WORLD_H 12288
+#define ARENA_XL_WORLD_W 32000
+#define ARENA_XL_WORLD_H 24000
 #define ARENA_XL_VIEW_W 240
 #define ARENA_XL_VIEW_H 160
 EWRAM_DATA u32 gArenaXLTelemetry[8] = {0};
@@ -215,4 +215,4 @@ new='''    if(x<ARENA_MIN_X+18||x>ARENA_MAX_X-18||y<ARENA_MIN_Y+13||y>ARENA_MAX_
 if s.count(old)!=1: raise SystemExit('element deposit anchor drift')
 p.write_text(s.replace(old,new,1))
 
-print('Applied native Arena XL 16384x12288 camera/world stress patch')
+print('Applied native Arena XXL 32000x24000 camera/world stress patch')
