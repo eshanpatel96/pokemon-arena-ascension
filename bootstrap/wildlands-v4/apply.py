@@ -258,6 +258,8 @@ p.write_text(s)
 # ---------------------------------------------------------------------------
 p=root/'src/realtime_arena.c'
 s=p.read_text()
+if '#include "party_menu.h"' not in s:
+    s=s.replace('#include "pokemon_storage_system.h"\n','#include "pokemon_storage_system.h"\n#include "party_menu.h"\n',1)
 s=s.replace('#define ARENA_XL_WORLD_W 16384','#define ARENA_XL_WORLD_W 4096',1)
 s=s.replace('#define ARENA_XL_WORLD_H 12288','#define ARENA_XL_WORLD_H 3072',1)
 
@@ -295,6 +297,7 @@ block=f'''#if !ARENA_LAB
         {{MOVE_FLAMETHROWER, MOVE_WING_ATTACK, MOVE_SLASH, MOVE_PROTECT}},
         {{MOVE_WATER_GUN, MOVE_HYDRO_PUMP, MOVE_BITE, MOVE_PROTECT}}
     }};
+    u32 i, j, storageSlot;
 '''
 s=s[:start]+block+s[end:]
 
@@ -440,7 +443,7 @@ s=s.replace(old,new,1)
 # combat refactor.
 anchor='''static u16 MonMassSpeedFactor(u8 side)
 {'''
-partner=r'''#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+partner=r'''static u8 Facing(s32 dx, s32 dy);\n#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
 struct WildlandsPartnerActor
 {
     s32 x,y;
