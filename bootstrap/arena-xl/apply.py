@@ -48,6 +48,48 @@ p.write_text(s.replace(old,new,1))
 
 p=root/'src/realtime_arena.c'
 s=p.read_text()
+
+# XL stress builds launch one native real-time practice encounter immediately
+# after NEW GAME, avoiding any field-shortcut timing ambiguity.
+old='''static EWRAM_DATA u8 sPracticeRival = 0;'''
+new='''static EWRAM_DATA u8 sPracticeRival = 0;
+static EWRAM_DATA bool8 sArenaXLAutoLaunch = FALSE;'''
+if s.count(old)!=1: raise SystemExit('practice rival anchor drift')
+s=s.replace(old,new,1)
+
+old='''    if (!FlagGet(FLAG_ARENA_PRACTICE) || gPaletteFade.active
+        || ArePlayerFieldControlsLocked() || ScriptContext_IsEnabled()
+        || (JOY_HELD(L_BUTTON | R_BUTTON) != (L_BUTTON | R_BUTTON))
+        || !JOY_NEW(L_BUTTON | R_BUTTON)) return;'''
+new='''    {
+        bool8 autoLaunch=sArenaXLAutoLaunch;
+        if (!FlagGet(FLAG_ARENA_PRACTICE) || gPaletteFade.active
+            || ArePlayerFieldControlsLocked() || ScriptContext_IsEnabled()
+            || (!autoLaunch
+                && ((JOY_HELD(L_BUTTON | R_BUTTON) != (L_BUTTON | R_BUTTON))
+                    || !JOY_NEW(L_BUTTON | R_BUTTON)))) return;
+        sArenaXLAutoLaunch=FALSE;
+    }'''
+if s.count(old)!=1: raise SystemExit('practice input anchor drift')
+s=s.replace(old,new,1)
+
+old='''void RealtimeArena_DemoFieldCallback(void)
+{
+    Ascension_V111StartRosterTask();
+}'''
+new='''void RealtimeArena_DemoFieldCallback(void)
+{
+    FieldCB_WarpExitFadeFromBlack();
+    sArenaXLAutoLaunch=TRUE;
+}'''
+if s.count(old)!=1:
+    old='''void RealtimeArena_DemoFieldCallback(void)
+{
+    FieldCB_WarpExitFadeFromBlack();
+}'''
+    if s.count(old)!=1: raise SystemExit('demo callback anchor drift')
+s=s.replace(old,new,1)
+
 anchor='#define Q 256\n'
 insert='''#define Q 256
 #define ARENA_XL_WORLD_W 16384
