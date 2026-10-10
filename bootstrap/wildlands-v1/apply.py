@@ -108,7 +108,7 @@ old = '''    SetWarpDestination(MAP_GROUP(MAP_ASCENSION_CITY), MAP_NUM(MAP_ASCEN
     SetLastHealLocationWarp(HEAL_LOCATION_ASCENSION_CITY);
     VarSet(VAR_ASCENSION_CAREER_ACTIVE, 1);'''
 new = '''    SetWarpDestination(MAP_GROUP(MAP_ROUTE119), MAP_NUM(MAP_ROUTE119),
-                       WARP_ID_NONE, 19, 133);
+                       WARP_ID_NONE, 25, 76);
     WarpIntoMap();
     SetLastHealLocationWarp(HEAL_LOCATION_OLDALE_TOWN);
     VarSet(VAR_ASCENSION_CAREER_ACTIVE, 0);
