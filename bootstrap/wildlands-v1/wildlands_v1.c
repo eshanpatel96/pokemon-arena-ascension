@@ -39,6 +39,8 @@
 #define WL_SHOT_TILE_TAG 0xB280
 #define WL_SHOT_PAL_TAG 0xB281
 #define WL_ALLY_TILE_TAG 0xB282
+#define WL_ACTOR_PAL_BASE 8
+#define WL_EFFECT_PAL 15
 #define WL_Q 256
 #define WL_BODY_RADIUS 10
 #define WL_GRASS_HIDE_DISTANCE 56
@@ -146,10 +148,6 @@ static const struct SpriteSheet sShotSheet =
 {
     sShotTiles, sizeof(sShotTiles), WL_SHOT_TILE_TAG
 };
-static const struct SpritePalette sShotPal =
-{
-    sShotPalette, WL_SHOT_PAL_TAG
-};
 static const struct SpriteSheet sAllySheet =
 {
     sAllyTiles, sizeof(sAllyTiles), WL_ALLY_TILE_TAG
@@ -157,7 +155,7 @@ static const struct SpriteSheet sAllySheet =
 static const struct SpriteTemplate sAllyTemplate =
 {
     .tileTag = WL_ALLY_TILE_TAG,
-    .paletteTag = WL_SHOT_PAL_TAG,
+    .paletteTag = TAG_NONE,
     .oam = &sShotOam,
     .anims = gDummySpriteAnimTable,
     .images = NULL,
@@ -167,7 +165,7 @@ static const struct SpriteTemplate sAllyTemplate =
 static const struct SpriteTemplate sShotTemplate =
 {
     .tileTag = WL_SHOT_TILE_TAG,
-    .paletteTag = WL_SHOT_PAL_TAG,
+    .paletteTag = TAG_NONE,
     .oam = &sShotOam,
     .anims = gDummySpriteAnimTable,
     .images = NULL,
@@ -277,7 +275,6 @@ static void FreeActorArt(u8 id)
     if (sActors[id].spriteId < MAX_SPRITES && gSprites[sActors[id].spriteId].inUse)
         DestroySprite(&gSprites[sActors[id].spriteId]);
     FreeSpriteTilesByTag(WL_MON_TILE_TAG + id);
-    FreeSpritePaletteByTag(WL_MON_PAL_TAG + id);
     sActors[id].spriteId = MAX_SPRITES;
 }
 
@@ -285,7 +282,6 @@ static bool8 LoadActorArt(u8 id)
 {
     struct WildActor *actor = &sActors[id];
     struct SpriteSheet sheet;
-    struct SpritePalette pal;
     struct SpriteTemplate tmpl = sMonTemplate;
     u32 *frameTiles;
     u8 spriteId;
@@ -315,23 +311,21 @@ static bool8 LoadActorArt(u8 id)
     }
     Free(frameTiles);
 
-    pal.data = actor->art->palette;
-    pal.tag = WL_MON_PAL_TAG + id;
-    if (LoadSpritePalette(&pal) == 0xFF)
-    {
-        FreeSpriteTilesByTag(sheet.tag);
-        return FALSE;
-    }
+    // Reserve OBJ palette banks 8-14 for the seven local Pokemon. The ordinary
+    // overworld dynamic palette allocator can be exhausted even though those
+    // hardware palette banks are available; the Arena renderer uses the same
+    // direct-palette strategy for its battlers.
+    LoadPalette(actor->art->palette, OBJ_PLTT_ID(WL_ACTOR_PAL_BASE + id), PLTT_SIZE_4BPP);
     tmpl.tileTag = sheet.tag;
-    tmpl.paletteTag = pal.tag;
+    tmpl.paletteTag = TAG_NONE;
     spriteId = CreateSprite(&tmpl, 120, 80, 1);
     if (spriteId == MAX_SPRITES)
     {
         FreeSpriteTilesByTag(sheet.tag);
-        FreeSpritePaletteByTag(pal.tag);
         return FALSE;
     }
     actor->spriteId = spriteId;
+    gSprites[spriteId].oam.paletteNum = WL_ACTOR_PAL_BASE + id;
     gSprites[spriteId].coordOffsetEnabled = TRUE;
     return TRUE;
 }
@@ -634,7 +628,10 @@ static void SpawnShot(u8 owner, u16 move, s16 aimX, s16 aimY)
     if (sShots[i].spriteId == MAX_SPRITES)
         sShots[i].active = FALSE;
     else
+    {
+        gSprites[sShots[i].spriteId].oam.paletteNum = WL_EFFECT_PAL;
         gSprites[sShots[i].spriteId].coordOffsetEnabled = TRUE;
+    }
 }
 
 static void ResolveDirectAttack(u8 owner, u16 move, s16 aimX, s16 aimY)
@@ -992,7 +989,6 @@ static void DestroyAll(void)
     sPartnerMarkerSprite = MAX_SPRITES;
     FreeSpriteTilesByTag(WL_ALLY_TILE_TAG);
     FreeSpriteTilesByTag(WL_SHOT_TILE_TAG);
-    FreeSpritePaletteByTag(WL_SHOT_PAL_TAG);
     memset(sActors, 0, sizeof(sActors));
     memset(sShots, 0, sizeof(sShots));
     memset(sLoot, 0, sizeof(sLoot));
@@ -1062,8 +1058,8 @@ static void InitWildlands(void)
     sPartnerMarkerSprite = MAX_SPRITES;
 
     LoadSpriteSheet(&sShotSheet);
-    LoadSpritePalette(&sShotPal);
     LoadSpriteSheet(&sAllySheet);
+    LoadPalette(sShotPalette, OBJ_PLTT_ID(WL_EFFECT_PAL), PLTT_SIZE_4BPP);
 
     // Seed every actor from the actual native player coordinates rather than
     // assuming the requested warp coordinates survived Emerald's map setup.
@@ -1100,7 +1096,10 @@ static void InitWildlands(void)
 
     sPartnerMarkerSprite = CreateSprite(&sAllyTemplate, 120, 48, 0);
     if (sPartnerMarkerSprite < MAX_SPRITES)
+    {
+        gSprites[sPartnerMarkerSprite].oam.paletteNum = WL_EFFECT_PAL;
         gSprites[sPartnerMarkerSprite].coordOffsetEnabled = TRUE;
+    }
     if (sActors[WL_RAYQUAZA].active)
     {
         sActors[WL_RAYQUAZA].maxHp = sActors[WL_RAYQUAZA].maxHp * 2;
