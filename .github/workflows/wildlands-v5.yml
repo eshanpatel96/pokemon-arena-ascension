@@ -87,12 +87,14 @@ jobs:
           grep -q '"curated_selectable_count": 105' evidence/roster-audit.json
           grep -q '"groudon_arena_sprite": false' evidence/roster-audit.json
           if [ "$WORLD" = island ]; then
-            test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 98304
-            test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 49152
+            ROWS=$(python3 -c "import json;print(json.load(open('engine/data/wildlands_world/manifest.json'))['interiors']['total_rows'])")
+            test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq $((256*ROWS*2))
+            test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq $((256*ROWS))
             python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=97 and all(v['reachable_cells']>=30 and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct']);assert all(m['doors_reachable'].values()) and len(m['interiors']['rooms'])>=8,m['doors_reachable'];print('DOOR AUDIT PASS',len(m['doors_reachable']),'doors')"
           else
-          test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 3840
-          test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 1920
+          ROWS=$(python3 -c "import json;print(json.load(open('engine/data/wildlands_world/manifest.json'))['interiors']['total_rows'])")
+          test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq $((40*ROWS*2))
+          test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq $((40*ROWS))
           python3 - <<'PY'
           from pathlib import Path
           import json
@@ -102,6 +104,7 @@ jobs:
           assert m['sources']['route120']=='data/layouts/Route120/map.bin'
           assert m['sources']['fortree']=='data/layouts/FortreeCity/map.bin'
           assert m['roles']['bridge'].startswith('walkable')
+          assert len(m['interiors']['rooms'])==1 and len(m['interiors']['doors'])==1
           print('WORLD REPRESENTATION AUDIT PASS')
           PY
           fi
