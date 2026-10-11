@@ -107,6 +107,15 @@ static void snapshot(const char *name) {
             ai?rd32(ai):0,ai?rd32(ai+4):0,ai?rd32(ai+20):0,ai?rd32(ai+24):0,
             cap?rd8(cap):255,so?rd16(so):0,so?rd16(so+2):0,ft?rd32(ft):0);
     }
+    {
+        uint32_t ft=symbol("gArenaFrameTelemetry");
+        printf("PERF %s updates=%u missed=%u maxGap=%u scan=%u,%u,%u,%u,%u,%u peak=%u,%u,%u,%u,%u,%u\n",name,
+            ft?rd32(ft):0,ft?rd32(ft+4):0,ft?rd32(ft+8):0,
+            ft?rd16(ft+16):0,ft?rd16(ft+18):0,ft?rd16(ft+20):0,
+            ft?rd16(ft+22):0,ft?rd16(ft+24):0,ft?rd16(ft+26):0,
+            ft?rd16(ft+28):0,ft?rd16(ft+30):0,ft?rd16(ft+32):0,
+            ft?rd16(ft+34):0,ft?rd16(ft+36):0,ft?rd16(ft+38):0);
+    }
     fflush(stdout);
 }
 static void export_save(const char *name) {
