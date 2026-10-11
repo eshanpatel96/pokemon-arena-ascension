@@ -14,19 +14,7 @@ expect gWildlandsWorldAudit 20 4 2
 expect gWildlandsWorldAudit 28 4 1
 expect gWildlandsPartnerTelemetry 0 4 1
 snap 02-world-start
-# ---- Gate E closing zone (test clock x21 via harness poke; 0 in play) ----
 poke gWildlandsTestPeace 0 1 1
-dump zone0 gWildlandsZoneTelemetry 16
-poke gWildlandsZoneTestSpeed 0 2 20
-frames 300 0
-dump zoneA gWildlandsZoneTelemetry 16
-expectmin gWildlandsZoneTelemetry 0 4 1
-expectmin gWildlandsZoneTelemetry 56 4 1
-frames 360 0
-snap 10-zone-shrink
-dump zoneB gWildlandsZoneTelemetry 16
-expectmin gWildlandsZoneTelemetry 4 4 1
-poke gWildlandsZoneTestSpeed 0 2 0
 # ---- Gate G live map: START -> MAP (5th entry) ----
 frames 6 8
 frames 30 0
@@ -73,6 +61,18 @@ expect gWildlandsRoomTelemetry 8 4 0
 poke gWildlandsTestWarp 0 1 1
 frames 60 0
 
+# ---- Gate E closing zone (test clock x21 via harness poke; 0 in play) ----
+dump zone0 gWildlandsZoneTelemetry 16
+poke gWildlandsZoneTestSpeed 0 2 20
+frames 300 0
+dump zoneA gWildlandsZoneTelemetry 16
+expectmin gWildlandsZoneTelemetry 0 4 1
+expectmin gWildlandsZoneTelemetry 56 4 1
+frames 360 0
+snap 10-zone-shrink
+dump zoneB gWildlandsZoneTelemetry 16
+expectmin gWildlandsZoneTelemetry 4 4 1
+poke gWildlandsZoneTestSpeed 0 2 0
 poke gWildlandsTestPeace 0 1 0
 # Use 1-frame samples while Right is held: the existing snapshots were
 # taken only after frames() released the key, so zero heldKeys was expected.

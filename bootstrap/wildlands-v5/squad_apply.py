@@ -53,6 +53,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'EWRAM_DATA u8 gWildlandsTestWarp = 0;\n'
       'static void LootLastSpot(s16 *x, s16 *y);\n'
       'static void BrainDecide(struct ArenaBody *body, u8 seenMask);\nstatic bool8 BrainAllowsFire(void);\n'
+      'static void WildlandsBuildOam(void);\n'
       'static u8 BrainWingTarget(u8 picked);\nstatic bool8 BrainWingFollows(void);\nstatic void BrainInit(void);\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    BrainInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
@@ -161,7 +162,7 @@ patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer
       '    {u32 p0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,p1;\n'
       '    ArenaXL_UpdateCamera();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;\n'
       '    AnimateSprites();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[7]=p1-p0;p0=p1;\n'
-      '    BuildOamBuffer();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;\n'
+      '    WildlandsBuildOam();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;\n'
       '    {u32 n=0,k;for(k=0;k<MAX_SPRITES;k++)if(gSprites[k].inUse)n++;gWildlandsProfile[9]=n;}}')
 
 # Interiors: rooms clamp the camera onto themselves.

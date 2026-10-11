@@ -522,6 +522,34 @@ static void SquadDraw(struct SquadWing *w)
 #define WL_NOW() (gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228)
 static void ZoneSim(void);
 static void LootSim(void);
+
+// OAM only has 9-bit X / 8-bit Y: an actor ~100-250px off screen wraps
+// around and appears on the far side (the "enemy appears when it is not
+// near me" playtest report). Hide every world sprite well outside the view
+// for the OAM build only, then restore it, so no gameplay flag changes.
+static void WildlandsBuildOam(void)
+{
+    u32 hidden[2] = {0, 0}, i;
+    if (WildlandsWorld_Active())
+        for (i = 0; i < MAX_SPRITES; i++)
+        {
+            struct Sprite *s = &gSprites[i];
+            s32 sx, sy;
+            if (!s->inUse || s->invisible || !s->coordOffsetEnabled)
+                continue;
+            sx = s->x + s->x2 + gSpriteCoordOffsetX;
+            sy = s->y + s->y2 + gSpriteCoordOffsetY;
+            if (sx < -64 || sx > 304 || sy < -64 || sy > 224)
+            {
+                s->invisible = TRUE;
+                hidden[i >> 5] |= 1u << (i & 31);
+            }
+        }
+    BuildOamBuffer();
+    for (i = 0; i < MAX_SPRITES; i++)
+        if (hidden[i >> 5] & (1u << (i & 31)))
+            gSprites[i].invisible = FALSE;
+}
 // Doors: the player walks into a house / lair door (or back onto a room's
 // exit) and the duo moves together; the region swap itself happens in the
 // world renderer when the camera arrives.
