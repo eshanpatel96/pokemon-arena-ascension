@@ -325,6 +325,20 @@ patch(A, '                TickEnemy();\n',
       '                {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; TickEnemy();\n'
       '                 q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}\n')
 
+# Render spikes: a HUD change redrew the status panel AND the bottom line in
+# one frame (up to ~200 scanlines); spread them over two frames.
+patch(A, 'static EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n',
+      'static EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n'
+      'static EWRAM_DATA bool8 sWildlandsHudDrew = FALSE, sWildlandsHudDeferred = FALSE;\n')
+patch('src/arena_hud.inc', '    sHudCached=TRUE;\n', '    sHudCached=TRUE;\n    sWildlandsHudDrew=TRUE;\n')
+patch(A, '    DrawStatusHud();\n', '    sWildlandsHudDrew=FALSE;\n    DrawStatusHud();\n')
+patch(A, '    CaptureHud();\n    sArena.hudDirty = FALSE;\n',
+      '    if(!sWildlandsHudDrew||sArena.paused||!WildlandsWorld_Active()||sWildlandsHudDeferred)\n'
+      '    {CaptureHud();sArena.hudDirty = FALSE;sWildlandsHudDeferred=FALSE;}\n'
+      '    else {sArena.hudDirty = TRUE;sWildlandsHudDeferred=TRUE;}\n')
+# Enemy goal choice: the arena-corner fallback scan is meaningless on the island.
+patch(A, '        if(i==8&&best!=0x7FFFFFFF)break;\n', '        if(i==8&&(best!=0x7FFFFFFF||WildlandsWorld_Active()))break;\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',
