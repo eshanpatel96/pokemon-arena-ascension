@@ -1,0 +1,99 @@
+HOST ABI sizeof(mCore)=5480 savedataClone_offset=5408
+TEST FLASH BACKEND: fresh erased 131072-byte save attached; runtime save/export still must pass.
+CMD t=0.0s frame=0 frames 300 0
+CMD t=0.2s frame=300 snap 00-title
+STATE 00-title frame=300 pc=080008c8 callback2=080c4785 save_status=0 party=0 sb1=02025a28 map=0,0 pos=0,0 layout=0
+WORLD 00-title bgcnt=0700,0000,0000,0000 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+INPUT 00-title heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.3s frame=300 press 8
+CMD t=0.3s frame=337 frames 120 0
+CMD t=0.4s frame=457 press 1
+CMD t=0.4s frame=494 frames 1100 0
+CMD t=1.3s frame=1594 snap 01-lab
+STATE 01-lab frame=1594 pc=0000001c callback2=080a0085 save_status=0 party=2 sb1=02025a28 map=26,110 pos=6,10 layout=58
+WORLD 01-lab bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+INPUT 01-lab heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.3s frame=1594 press 768
+CMD t=1.4s frame=1631 frames 700 0
+CMD t=2.1s frame=2331 expect gWildlandsWorldAudit 0 4 1
+CHECK PASS gWildlandsWorldAudit
+CMD t=2.1s frame=2331 dump squad0 gWildlandsSquadTelemetry 16
+DUMP squad0 gWildlandsSquadTelemetry 3 5 5 0 0 0 0 176 52 0 0 0 0 3 2 0
+CMD t=2.1s frame=2331 snap 02-island-start
+STATE 02-island-start frame=2331 pc=080508f4 callback2=080543d1 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 02-island-start bgcnt=1f00,1e06,1d04,1c07 xl=1960,1608,1840,1528,1840,1528 audit=1,0,0,1,0,2,1,1 tele=3072,1,0,0,74,429,0,1024,3072,764,66,0,4,7,5,1
+INPUT 02-island-start heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=429 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=28 aiPaths=27 wall=0,0 capture=0 sendout=0/144 cbUpdates=160
+CMD t=2.1s frame=2331 poke gWildlandsTestPeace 0 1 1
+POKE gWildlandsTestPeace+0=1 ok
+CHECK PASS poke target exists
+CMD t=2.1s frame=2331 press 8
+CMD t=2.1s frame=2368 press 128
+CMD t=2.2s frame=2405 press 128
+CMD t=2.2s frame=2442 press 128
+CMD t=2.2s frame=2479 press 128
+CMD t=2.3s frame=2516 press 1
+CMD t=2.3s frame=2553 frames 20 0
+CMD t=2.3s frame=2573 snap 08-island-map
+STATE 08-island-map frame=2573 pc=080008c8 callback2=080543d1 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 08-island-map bgcnt=1f00,1e06,1d04,1c07 xl=1960,1624,1840,1544,1840,1544 audit=1,1,1,1,0,2,1,1 tele=3264,1,1,0,74,670,0,1088,3072,764,66,0,4,7,6,1
+INPUT 08-island-map heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=670 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=28 aiPaths=27 wall=0,0 capture=0 sendout=0/144 cbUpdates=276
+CMD t=2.3s frame=2573 dump map gWildlandsMapTelemetry 4
+DUMP map gWildlandsMapTelemetry 0 0 0 0
+CMD t=2.3s frame=2573 expectmin gWildlandsMapTelemetry 0 4 1
+CHECK FAIL gWildlandsMapTelemetry+0 >= 1 (got 0)
+CMD t=2.3s frame=2573 press 2
+CMD t=2.4s frame=2610 press 2
+CMD t=2.4s frame=2647 frames 60 0
+CMD t=2.5s frame=2707 poke gWildlandsTestPeace 0 1 0
+POKE gWildlandsTestPeace+0=0 ok
+CHECK PASS poke target exists
+CMD t=2.5s frame=2707 rate render-idle 300 0 0
+RATE render-idle emu_frames=300 arena_updates=115 missed_vblanks=185 pct=38 min=0
+PHASES render-idle s0=81 s1=14 s2=57 s3=33 s4=96 s5=359 p0=237 p1=240 p2=288 p3=103 p4=402 p5=833 maxGap=4
+CHECK PASS cadence render-idle
+CMD t=2.8s frame=3007 ratesym idle gWildlandsProfile 20 2 300 0 95
+SIMRATE idle emu_frames=300 steps=294 pct=98 min=95
+CHECK PASS sim cadence idle
+CMD t=3.2s frame=3307 frames 120 16
+CMD t=3.3s frame=3427 snap 03-east
+STATE 03-east frame=3427 pc=09cda0cc callback2=080543d1 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 03-east bgcnt=1f00,1e06,1d04,1c07 xl=2041,1563,1921,1483,1921,1483 audit=1,1,1,1,0,2,1,1 tele=5376,1,2,0,74,1478,0,1792,3072,764,157,0,3,7,5,1
+INPUT 03-east heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=1512 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=64 aiPaths=57 wall=70,28 capture=0 sendout=0/144 cbUpdates=629
+CMD t=3.3s frame=3427 dump loot gWildlandsLootTelemetry 12
+DUMP loot gWildlandsLootTelemetry 1 0 0 0 0 1 0 0 32 3 0 0
+CMD t=3.3s frame=3427 ratesym travel-east gWildlandsProfile 20 2 600 16 95
+SIMRATE travel-east emu_frames=600 steps=594 pct=99 min=95
+CHECK PASS sim cadence travel-east
+CMD t=4.0s frame=4027 snap 04-east-far
+STATE 04-east-far frame=4027 pc=080008c8 callback2=080543d1 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 04-east-far bgcnt=1f00,1e06,1d04,1c07 xl=2041,1563,1921,1483,1921,1483 audit=1,1,1,1,0,2,1,1 tele=5376,1,2,0,74,2072,0,1792,3072,764,214,0,3,7,5,1
+INPUT 04-east-far heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=2108 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=94 aiPaths=81 wall=664,28 capture=0 sendout=0/144 cbUpdates=892
+CMD t=4.0s frame=4027 ratesym travel-north gWildlandsProfile 20 2 600 64 95
+SIMRATE travel-north emu_frames=600 steps=315 pct=52 min=95
+CHECK FAIL sim cadence travel-north
+CMD t=4.6s frame=4627 snap 05-north
+STATE 05-north frame=4627 pc=080008c8 callback2=080a0085 save_status=0 party=2 sb1=02025a6c map=26,110 pos=6,5 layout=58
+WORLD 05-north bgcnt=1f08,1d41,1c42,1e43 xl=2041,1447,1921,1367,1921,1367 audit=1,1,1,1,0,2,1,1 tele=6816,1,2,0,74,2078,0,2272,3072,764,237,0,2,7,5,1
+INPUT 05-north heldRaw=0040 newRaw=0000 held=0040 new=0000 rtFrames=2421 rtSpeed=472 rtActive=0 rtPaused=0 aiDec=109 aiPaths=93 wall=902,28 capture=0 sendout=0/144 cbUpdates=1051
+CMD t=4.6s frame=4627 ratesym travel-west gWildlandsProfile 20 2 900 32 95
+SIMRATE travel-west emu_frames=900 steps=0 pct=0 min=95
+CHECK FAIL sim cadence travel-west
+CMD t=5.4s frame=5527 snap 06-west
+STATE 06-west frame=5527 pc=080008c8 callback2=080a0085 save_status=0 party=2 sb1=02025a6c map=26,110 pos=0,5 layout=58
+WORLD 06-west bgcnt=1f08,1d41,1c42,1e43 xl=2041,1447,1921,1367,1921,1367 audit=1,1,1,1,0,2,1,1 tele=6816,1,2,0,74,2078,0,2272,3072,764,237,0,2,7,5,1
+INPUT 06-west heldRaw=0020 newRaw=0000 held=0020 new=0000 rtFrames=2421 rtSpeed=472 rtActive=0 rtPaused=0 aiDec=109 aiPaths=93 wall=902,28 capture=0 sendout=0/144 cbUpdates=1051
+CMD t=5.4s frame=5527 ratesym travel-south gWildlandsProfile 20 2 900 128 95
+SIMRATE travel-south emu_frames=900 steps=0 pct=0 min=95
+CHECK FAIL sim cadence travel-south
+CMD t=6.2s frame=6427 snap 07-south
+STATE 07-south frame=6427 pc=080008cc callback2=080a0085 save_status=0 party=2 sb1=02025a6c map=26,110 pos=0,5 layout=58
+WORLD 07-south bgcnt=1f08,1d41,1c42,1e43 xl=2041,1447,1921,1367,1921,1367 audit=1,1,1,1,0,2,1,1 tele=6816,1,2,0,74,2078,0,2272,3072,764,237,0,2,7,5,1
+INPUT 07-south heldRaw=0080 newRaw=0000 held=0080 new=0000 rtFrames=2421 rtSpeed=472 rtActive=0 rtPaused=0 aiDec=109 aiPaths=93 wall=902,28 capture=0 sendout=0/144 cbUpdates=1051
+CMD t=6.2s frame=6427 dump world gWildlandsWorldTelemetry 16
+DUMP world gWildlandsWorldTelemetry 6816 1 2 0 74 2078 0 2272 3072 764 237 0 2 7 5 1
+CMD t=6.2s frame=6427 dump xl gArenaXLTelemetry 8
+DUMP xl gArenaXLTelemetry 0 0 2041 1447 4096 3072 1921 1367
+CMD t=6.2s frame=6427 dump profile gWildlandsProfile 6
+DUMP profile gWildlandsProfile 196614 196608 131072 1114116 3276824 68880759
+CMD t=6.2s frame=6427 dump nav gWildlandsWorldTelemetry 16
+DUMP nav gWildlandsWorldTelemetry 6816 1 2 0 74 2078 0 2272 3072 764 237 0 2 7 5 1
