@@ -12,6 +12,7 @@
 // a team is eliminated only when both members are down.
 
 #define SQUAD_ENEMY_WING_TAG (MON_TAG + 5)
+static void SquadKO(u8 target, u8 attacker);
 #define SQUAD_OWNER_WING 0x80
 
 struct SquadWing
@@ -604,6 +605,14 @@ static void SquadDoorSim(void)
             LootLastSpot(&nx, &ny);
         else if (k == 1)
         { nx = WL_PLAYER_START_X; ny = WL_PLAYER_START_Y; }
+        else if (k == 4 && SquadAlive(1))
+        {
+            // KO the active enemy lead through the normal elimination path.
+            u16 zero = 0;
+            gBattleMons[1].hp = 0;
+            SetMonData(SquadPartyMon(1), MON_DATA_HP, &zero);
+            SquadKO(1, 0);
+        }
         lead->x = nx * Q; lead->y = ny * Q;
         if (k == 1 && sSquadWings[0].active && sSquadWings[0].alive)
             SquadRegroup(&sSquadWings[0], lead);
@@ -629,6 +638,7 @@ static void SquadSimStep(void)
     if (sArena.paused || sArena.resultTimer)
         return;
     SquadDoorSim();
+    DirectorSim();
     for (i = 0; i < 2; i++)
         if (sSquadWings[i].active && sSquadWings[i].alive)
             SquadThink(&sSquadWings[i]);
@@ -664,7 +674,7 @@ static bool8 SquadPromote(u8 side)
     struct SquadWing *w = &sSquadWings[side];
     struct ArenaBody *body = &sArena.bodies[side];
     if (!w->active || !w->alive)
-        return FALSE;
+        return side == 1 ? DirectorAdvance() : FALSE;   // next duo takes the field
     gBattlerPartyIndexes[side] = w->partyIndex;
     gBattleMons[side] = gBattleMons[w->battler];
     body->x = w->x; body->y = w->y;
@@ -696,6 +706,7 @@ static void SquadKO(u8 target, u8 attacker)
     }
     if (SquadPromote(target))
         return;
+    DirRestorePartner();
     sArena.resultTimer = 12;
     sArena.lastAttacker = target ^ 1;
     sArena.lastTarget = target;

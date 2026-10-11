@@ -15,4 +15,5 @@
 #define WL_ENEMY_START_X 2216
 #define WL_ENEMY_START_Y 1408
 #define WL_NAV_POINT_COUNT 19
+#define WL_DIRECTOR_DUOS 4
 #endif

@@ -1111,3 +1111,8 @@ void Ascension_V11EnsureSafeEntry(void)
 }
 
 #include "ascension_v111_services.inc"
+
+void Wildlands_ArenaLoadout(struct Pokemon *mon)
+{
+    V111Loadout(mon, NULL);
+}

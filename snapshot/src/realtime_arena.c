@@ -495,6 +495,18 @@ static void LootLastSpot(s16 *x, s16 *y);
 static void BrainDecide(struct ArenaBody *body, u8 seenMask);
 static bool8 BrainAllowsFire(void);
 static void WildlandsBuildOam(void);
+static bool8 DirectorAdvance(void);
+static void DirectorInit(void);
+static void DirectorSim(void);
+static void DirectorDestroy(void);
+static void DirRestorePartner(void);
+static bool8 DirectorSoloActive(void);
+static bool8 DirectorPopupText(u8 *text, u8 *color);
+static u8 DirectorLeft(void);
+static bool8 DirectorRunning(void);
+static bool8 DirectorPopupActive(void);
+static void DirectorPauseLine(void);
+void Wildlands_ArenaLoadout(struct Pokemon *mon);
 static u8 BrainWingTarget(u8 picked);
 static bool8 BrainWingFollows(void);
 static void BrainInit(void);
@@ -1495,6 +1507,7 @@ static void CB2_ArenaInit(void)
     ZoneInit();
     LootInit();
     BrainInit();
+    DirectorInit();
     sWildlandsEncounterLive = WildlandsWorld_Active();
     sArena.cueSprite = CreateSprite(&sShotTemplate, 120, 32, 0);
     gSprites[sArena.cueSprite].oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG + 1);
@@ -2598,6 +2611,7 @@ static void DestroyShot(struct ArenaShot *shot)
 #include "arena_zone.inc"
 #include "arena_map.inc"
 #include "arena_brain.inc"
+#include "arena_director.inc"
 
 static void TickShots(void)
 {
@@ -3219,7 +3233,7 @@ static void ArenaExit(bool8 fainted)
         }
         gSprites[sArena.aimSprite].invisible=TRUE;
         gSprites[sArena.cueSprite].invisible=TRUE;
-        SquadDestroy();ZoneDestroy();LootDestroy();
+        DirectorDestroy();SquadDestroy();ZoneDestroy();LootDestroy();
         BuildOamBuffer();ArenaRender_Ready();
         gMain.callback1=sArena.savedCB1;
         RealtimeArena_ResumeBattle(TRUE);
@@ -3228,7 +3242,7 @@ static void ArenaExit(bool8 fainted)
     }
     SetVBlankCallback(NULL);
     ArenaFeedback_Destroy();
-    SquadDestroy();ZoneDestroy();LootDestroy();
+    DirectorDestroy();SquadDestroy();ZoneDestroy();LootDestroy();
     for (i = 0; i < 2; i++)
     {
         struct Sprite *sprite = &gSprites[sArena.bodies[i].sprite];
