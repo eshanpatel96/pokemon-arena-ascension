@@ -10,7 +10,7 @@ snap 01-lab
 press 768
 frames 700 0
 expect gWildlandsWorldAudit 0 4 1
-expect gWildlandsWorldAudit 20 4 1
+expect gWildlandsWorldAudit 20 4 2
 expect gWildlandsWorldAudit 28 4 1
 expect gWildlandsPartnerTelemetry 0 4 1
 snap 02-world-start
