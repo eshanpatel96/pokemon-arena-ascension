@@ -1,0 +1,43 @@
+{
+  "arena_animated_species": 187,
+  "emerald_final_or_single_stage": 114,
+  "emerald_selectable_after_bosses": 109,
+  "excluded_because_later_evolution": {
+    "PRIMEAPE": "ANNIHILAPE",
+    "MAGNETON": "MAGNEZONE",
+    "MAGMAR": "MAGMORTAR",
+    "NOSEPASS": "PROBOPASS"
+  },
+  "curated_selectable_count": 105,
+  "legacy_final_exceptions": {
+    "RHYDON": "RHYPERIOR",
+    "ELECTABUZZ": "ELECTIVIRE",
+    "DUSCLOPS": "DUSKNOIR",
+    "ROSELIA": "ROSERADE"
+  },
+  "boss_only": [
+    "MEWTWO",
+    "LUGIA",
+    "HO_OH",
+    "KYOGRE",
+    "RAYQUAZA"
+  ],
+  "selectable_legendaries": [
+    "ARTICUNO",
+    "ZAPDOS",
+    "RAIKOU",
+    "ENTEI",
+    "SUICUNE",
+    "REGIROCK",
+    "REGICE",
+    "REGISTEEL"
+  ],
+  "minimum_legal_arena_moves_per_selectable_species": 8,
+  "wildlands_ability_work_before_v4_full_selector": {
+    "SLAKING": "TRUANT",
+    "NINJASK": "SPEED_BOOST",
+    "EXPLOUD": "SOUNDPROOF",
+    "SHARPEDO": "ROUGH_SKIN"
+  },
+  "groudon_arena_sprite": false
+}
