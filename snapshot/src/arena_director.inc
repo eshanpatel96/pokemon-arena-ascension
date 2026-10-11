@@ -29,7 +29,7 @@ struct DirDuo
     u16 species[2];
     s16 x, y, gx, gy;
     u8 level, state, hp[2];     // hp in percent; 0 = fainted member
-    u8 legend, room, kills, pad;
+    u8 legend, room, kills, plan;  // AI: room = lair fight countdown, plan = legend slot + 1
 };
 
 struct DirState
@@ -38,6 +38,8 @@ struct DirState
     struct Pokemon savedPartner;
     u8 count, active, cursor, partnerSaved;
     u16 clock;
+    u16 bossCooldown, bossEvalStamp;
+    u8 activePlan, bossDoor;
 };
 
 static EWRAM_DATA struct DirState *sDir = NULL;
@@ -46,6 +48,13 @@ static EWRAM_DATA struct { u8 timer, color; u8 text[18]; } sDirPopup = {};
 // [4] legendaries joined [5] legendaries taken by AI [6] duos loaded
 // [7] sim fight ticks
 EWRAM_DATA u32 gWildlandsDirectorTelemetry[8] = {};
+// Boss runs by AI duos: [0] attempts [1] won (legend joined them) [2] lost
+// but escaped [3] wiped out [4] storm stage of the first attempt + 1
+// [5] aborted on the way [6] attempts by the on-screen duo [7] last score+1000
+EWRAM_DATA u16 gWildlandsBossTelemetry[8] = {};
+// TEST HOOK ONLY: harness adds this to every boss score and lifts the
+// first-phase gate so a short run can exercise boss runs; 0 in play.
+EWRAM_DATA u8 gWildlandsBossTestBias = 0;
 
 static const u16 sDirRoster[] = {
     SPECIES_CHARIZARD, SPECIES_BLASTOISE, SPECIES_VENUSAUR, SPECIES_SCEPTILE, SPECIES_BLAZIKEN,
@@ -89,6 +98,172 @@ static u32 DirPower(const struct DirDuo *d)
 static bool8 DirAlive(const struct DirDuo *d)
 {
     return (d->species[0] && d->hp[0]) || (d->species[1] && d->hp[1]);
+}
+
+// ---- Boss runs: when is a lair worth it? ---------------------------------
+// Type multiplier x10 of attack type `atk` against a defender's two types.
+static u32 DirTypeMult(u8 atk, u8 def1, u8 def2)
+{
+    u32 k, m = 10;
+    for (k = 0; TYPE_EFFECT_ATK_TYPE(k) != TYPE_ENDTABLE; k += 3)
+    {
+        if (TYPE_EFFECT_ATK_TYPE(k) != atk)
+            continue;
+        if (TYPE_EFFECT_DEF_TYPE(k) == def1)
+            m = m * TYPE_EFFECT_MULTIPLIER(k) / 10;
+        if (TYPE_EFFECT_DEF_TYPE(k) == def2 && def2 != def1)
+            m = m * TYPE_EFFECT_MULTIPLIER(k) / 10;
+    }
+    return m;
+}
+
+// Matchup bonus (-30..+80 per member, averaged): STAB types of the duo's
+// living members against the legendary's typing.
+static s32 DirMatchup(const struct DirDuo *d, const struct DirDuo *l)
+{
+    const struct SpeciesInfo *ls = &gSpeciesInfo[l->species[0]];
+    s32 total = 0, n = 0;
+    u32 m;
+    for (m = 0; m < 2; m++)
+    {
+        const struct SpeciesInfo *s;
+        u32 best;
+        if (!d->species[m] || !d->hp[m])
+            continue;
+        s = &gSpeciesInfo[d->species[m]];
+        best = max(DirTypeMult(s->types[0], ls->types[0], ls->types[1]),
+                   DirTypeMult(s->types[1], ls->types[0], ls->types[1]));
+        total += best >= 40 ? 80 : best >= 20 ? 50 : best >= 10 ? 0 : -30;
+        n++;
+    }
+    return n ? total / n : -100;
+}
+
+static void DirLairDoor(const struct DirDuo *l, s32 *x, s32 *y)
+{
+    *x = l->x; *y = l->y;
+    WildlandsWorld_OutdoorPos(x, y);
+}
+
+static u8 DirLeft(void);
+static void DirRandomGoal(struct DirDuo *d);
+static void DirPopup(const u8 *a, const u8 *b, u8 color);
+static void DirFeedOut(const struct DirDuo *d);
+
+// Utility of attacking legendary `l` now (>= 0 means go). Never in the first
+// storm phase, never into a lair the storm will cover, rarely when the duo is
+// hurt, more likely with a good type matchup, when nearby, and when the duo
+// is behind (lost a member: a comeback gamble). Late game only if strong.
+static s32 DirBossScore(const struct DirDuo *d, const struct DirDuo *l, s32 x, s32 y)
+{
+    s32 ox, oy, score, ratio, n = 0, hp = 0;
+    u32 m, j;
+    if (l->state != DIR_LAIR || !l->hp[0])
+        return -1000;
+    DirLairDoor(l, &ox, &oy);
+    if (sZone.active)
+    {
+        if (sZone.stage == 0 && sZone.phase != ZONE_SHRINKING && !gWildlandsBossTestBias)
+            return -1000;
+        if (ZoneOutside(ox, oy, 48))
+            return -1000;
+        if (sZone.phase != ZONE_EXPLORING)
+        {
+            s32 dx = ox - sZone.toX, dy = oy - sZone.toY, r = (sZone.toR >> 8) - 48;
+            if (r <= 0 || dx * dx + dy * dy > r * r)
+                return -1000;
+        }
+    }
+    ratio = (s32)(DirPower(d) * 100 / DirPower(l));
+    score = ratio - 70 + DirMatchup(d, l) / 2;
+    for (m = 0; m < 2; m++)
+        if (d->species[m] && d->hp[m]) { hp += d->hp[m]; n++; }
+    if (!n || hp / n < 60)
+        score -= 50;
+    if (n == 1 && d->species[1])
+        score += 20;
+    if (DirLeft() <= 5 && ratio < 110)
+        score -= 40;
+    score -= (s32)ArenaNav_Distance(x, y, ox, oy) / 25;
+    score += gWildlandsBossTestBias;
+    for (j = 1; j < WL_DIRECTOR_DUOS; j++)
+        if (&sDir->duo[j] != d && sDir->duo[j].state == DIR_SIM
+            && ArenaNav_Distance(sDir->duo[j].x, sDir->duo[j].y, ox, oy) < 200)
+        { score -= 30; break; }
+    return score;
+}
+
+// Best lair for duo d at (x,y): legend slot (index into duo[]) or DIR_NONE.
+static u8 DirBossPick(const struct DirDuo *d, s32 x, s32 y, s32 *bestScore)
+{
+    u32 j;
+    u8 pick = DIR_NONE;
+    s32 best = 0;
+    if (sDir->bossCooldown)
+        return DIR_NONE;
+    for (j = WL_DIRECTOR_DUOS; j < sDir->count; j++)
+    {
+        s32 sc = DirBossScore(d, &sDir->duo[j], x, y);
+        gWildlandsBossTelemetry[7] = (u16)(sc + 1000);
+        if (sc >= best) { best = sc; pick = j; }
+    }
+    *bestScore = best;
+    return pick;
+}
+
+static void DirBossStart(struct DirDuo *d)
+{
+    static const u8 sAttacked[] = _(" ATTACKED");
+    struct DirDuo *l = &sDir->duo[d->plan - 1];
+    d->room = 6;                       // ~6 sim ticks (about 6s) inside
+    sDir->bossCooldown = 1800;         // one lair fight at a time, 30s apart
+    gWildlandsBossTelemetry[0]++;
+    if (!gWildlandsBossTelemetry[4])
+        gWildlandsBossTelemetry[4] = (sZone.active ? sZone.stage : 0) + 1;
+    DirPopup(gSpeciesNames[l->species[0]], sAttacked, 6);
+}
+
+// The fight inside: power with the matchup folded in. A win hands the
+// legendary to the duo (it replaces the weaker member) with the same team
+// buff the player gets: full heal and a level boost. A loss chips the
+// legendary (the damage stays) and the duo either escapes hurt or is out.
+static void DirBossResolve(struct DirDuo *d)
+{
+    static const u8 sTook[] = _("FOES TOOK ");
+    struct DirDuo *l = &sDir->duo[d->plan - 1];
+    u32 pa = DirPower(d) * (u32)max(20, 100 + DirMatchup(d, l)) / 100, pb = DirPower(l);
+    d->plan = 0;
+    d->room = 0;
+    if (l->state != DIR_LAIR || !l->hp[0])
+        return;                        // the player got there first
+    if (DirRand() % (pa + pb) < pa)
+    {
+        u8 weak = (d->species[1] && (!d->hp[1] || d->hp[1] < d->hp[0])) ? 1 : 0;
+        d->species[weak] = l->species[0];
+        d->hp[0] = d->species[0] ? 100 : 0;
+        d->hp[1] = d->species[1] ? 100 : 0;
+        d->level = min(100, d->level + 2);
+        l->state = DIR_DEAD;
+        l->hp[0] = 0;
+        gWildlandsDirectorTelemetry[5]++;
+        gWildlandsBossTelemetry[1]++;
+        DirPopup(sTook, gSpeciesNames[l->species[0]], 6);
+        return;
+    }
+    l->hp[0] = l->hp[0] > 35 ? l->hp[0] - 25 : 10;
+    if (DirRand() & 1)
+    {
+        if (d->hp[0]) d->hp[0] = min(d->hp[0], 25);
+        if (d->hp[1]) d->hp[1] = min(d->hp[1], 25);
+        gWildlandsBossTelemetry[2]++;
+        DirRandomGoal(d);
+        return;
+    }
+    d->hp[0] = d->hp[1] = 0;
+    d->state = DIR_DEAD;
+    gWildlandsDirectorTelemetry[3]++;
+    gWildlandsBossTelemetry[3]++;
+    DirFeedOut(d);
 }
 
 static u8 DirLeft(void)
@@ -272,6 +447,8 @@ static u8 DirNearest(bool8 includeLegends)
         u32 dist;
         if (d->state != DIR_SIM && !(includeLegends && d->state == DIR_LAIR))
             continue;
+        if (!d->legend && d->room)
+            continue;   // inside a lair fighting its legendary
         dist = ArenaNav_Distance(px, py, d->x, d->y);
         if (dist < best) { best = dist; pick = i; }
     }
@@ -376,12 +553,41 @@ static void DirSimOne(u8 i)
             return;
         }
     }
+    // Boss run in progress: walk to the lair, fight inside, resolve.
+    if (d->plan)
+    {
+        struct DirDuo *l = &sDir->duo[d->plan - 1];
+        s32 ox, oy;
+        if (d->room)
+        {
+            if (!--d->room)
+                DirBossResolve(d);
+            return;
+        }
+        DirLairDoor(l, &ox, &oy);
+        if (DirBossScore(d, l, d->x, d->y) < -200)
+        {
+            d->plan = 0;              // storm turned or the legendary is gone
+            gWildlandsBossTelemetry[5]++;
+            DirRandomGoal(d);
+        }
+        else if (ArenaNav_Distance(d->x, d->y, ox, oy) <= 40)
+        {
+            d->x = ox; d->y = oy;
+            DirBossStart(d);
+            return;
+        }
+        else
+        {
+            d->gx = ox; d->gy = oy;
+        }
+    }
     // Skirmish with another simulated duo in range.
     for (j = 1; j < sDir->count; j++)
     {
         struct DirDuo *o = &sDir->duo[j];
         u32 pa, pb;
-        if (j == i || o->state != DIR_SIM || ArenaNav_Distance(d->x, d->y, o->x, o->y) > 140)
+        if (j == i || o->state != DIR_SIM || o->room || ArenaNav_Distance(d->x, d->y, o->x, o->y) > 140)
             continue;
         pa = DirPower(d); pb = DirPower(o);
         DirSimDamage(d, 3 + 14 * pb / (pa + pb));
@@ -391,55 +597,26 @@ static void DirSimOne(u8 i)
         if (!DirAlive(d)) { d->state = DIR_DEAD; o->kills++; gWildlandsDirectorTelemetry[3]++; DirFeedOut(d); }
         return;   // fighting duos hold position this tick
     }
-    // Lair raid: a duo that reaches a lair door fights its legendary.
-    for (j = WL_DIRECTOR_DUOS; j < sDir->count; j++)
-    {
-        struct DirDuo *l = &sDir->duo[j];
-        s32 ox = l->x, oy = l->y;
-        if (l->state != DIR_LAIR)
-            continue;
-        WildlandsWorld_OutdoorPos(&ox, &oy);
-        if (ArenaNav_Distance(d->x, d->y, ox, oy) > 40)
-            continue;
-        if (DirRand() % (DirPower(d) + DirPower(l)) < DirPower(d))
-        {
-            static const u8 sTook[] = _("FOES TOOK ");
-            u8 weak = (d->species[1] && (!d->hp[1] || d->hp[1] < d->hp[0])) ? 1 : 0;
-            d->species[weak] = l->species[0];
-            d->hp[weak] = 100;
-            l->state = DIR_DEAD;
-            gWildlandsDirectorTelemetry[5]++;
-            DirPopup(sTook, gSpeciesNames[l->species[0]], 6);
-        }
-        else
-        {
-            d->hp[0] = d->hp[1] = 0;
-            d->state = DIR_DEAD;
-            gWildlandsDirectorTelemetry[3]++;
-            DirFeedOut(d);
-        }
-        return;
-    }
     // Travel: ~40px per update toward the goal on legal ground.
     dx = d->gx - d->x; dy = d->gy - d->y;
     dist = max(Abs(dx), Abs(dy));
     if (dist < 24 || (sZone.active && ZoneOutside(d->gx, d->gy, 24) && !(DirRand() & 3)))
     {
-        // New goal: mostly inside the circle; sometimes a lair or the player.
+        // New goal: a lair when a boss run scores well (see DirBossScore),
+        // otherwise mostly inside the circle, sometimes toward the player.
         u32 r = DirRand() & 15;
+        s32 bossScore;
+        u8 lair = d->plan ? DIR_NONE : DirBossPick(d, d->x, d->y, &bossScore);
         DirRandomGoal(d);
-        if (r == 0)
+        if (lair != DIR_NONE)
         {
-            for (j = WL_DIRECTOR_DUOS; j < sDir->count; j++)
-                if (sDir->duo[j].state == DIR_LAIR)
-                {
-                    s32 ox = sDir->duo[j].x, oy = sDir->duo[j].y;
-                    WildlandsWorld_OutdoorPos(&ox, &oy);
-                    d->gx = ox; d->gy = oy;
-                    break;
-                }
+            s32 ox, oy;
+            DirLairDoor(&sDir->duo[lair], &ox, &oy);
+            d->plan = lair + 1;
+            d->gx = ox; d->gy = oy;
+            sDir->bossCooldown = max(sDir->bossCooldown, 600);   // others wait while it travels
         }
-        else if (r < 4)
+        else if (r < 3)
         {
             s32 px, py;
             DirPlayerPos(&px, &py);
@@ -451,6 +628,12 @@ static void DirSimOne(u8 i)
         s32 nx = d->x + dx * 40 / dist, ny = d->y + dy * 40 / dist;
         if (WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y, nx, ny, 6))
         { d->x = nx; d->y = ny; }
+        else if (d->plan)
+        {
+            d->plan = 0;                // no straight way to that lair: drop it
+            gWildlandsBossTelemetry[5]++;
+            DirRandomGoal(d);
+        }
         else
             DirRandomGoal(d);
     }
@@ -509,6 +692,77 @@ static void DirPolicy(void)
     }
 }
 
+// ---- Boss runs by the on-screen enemy duo ---------------------------------
+// The brain asks (when it sees nobody) whether a lair is worth it now; the
+// answer is the lair's outdoor door index or 0xFF. Re-scored every 2s.
+static u8 DirectorBossDoor(void)
+{
+    struct DirDuo tmp;
+    s32 x, y, score;
+    u8 lair;
+    u32 k;
+    if (!sDir || sDir->active == DIR_NONE || DirectorSoloActive())
+        return 0xFF;
+    if ((u16)(sDir->clock - sDir->bossEvalStamp) < 120 && sDir->bossEvalStamp)
+        return sDir->bossDoor;
+    sDir->bossEvalStamp = sDir->clock ? sDir->clock : 1;
+    sDir->bossDoor = 0xFF;
+    tmp = sDir->duo[sDir->active];
+    tmp.species[0] = gBattleMons[1].hp ? gBattleMons[1].species : tmp.species[0];
+    tmp.hp[0] = gBattleMons[1].maxHP ? (gBattleMons[1].hp * 100 + gBattleMons[1].maxHP - 1) / gBattleMons[1].maxHP : 0;
+    tmp.hp[1] = (sSquadWings[1].active && sSquadWings[1].alive && gBattleMons[3].maxHP)
+        ? (gBattleMons[3].hp * 100 + gBattleMons[3].maxHP - 1) / gBattleMons[3].maxHP : 0;
+    x = sArena.bodies[1].x / Q; y = sArena.bodies[1].y / Q;
+    if (WildlandsWorld_InRoom(x, y))
+        return 0xFF;
+    lair = DirBossPick(&tmp, x, y, &score);
+    if (lair == DIR_NONE || DirNearest(FALSE) == DIR_NONE)
+        return 0xFF;     // someone must be able to take the field meanwhile
+    DirLairDoor(&sDir->duo[lair], &x, &y);
+    for (k = 0; k < WildlandsWorld_DoorCount(); k++)
+    {
+        s16 ox, oy;
+        bool8 isLair;
+        WildlandsWorld_DoorInfo(k, &ox, &oy, &isLair);
+        if (ox == x && oy == y)
+        {
+            sDir->bossDoor = k;
+            sDir->activePlan = lair + 1;
+            break;
+        }
+    }
+    return sDir->bossDoor;
+}
+
+// The on-screen duo reached the lair door: it goes in to fight (simulated,
+// the player is elsewhere) and the nearest other duo takes the field. If the
+// player follows it in, the legendary is waiting there as usual.
+static void DirectorBossEnter(void)
+{
+    u8 a, next;
+    struct DirDuo *d;
+    if (!sDir || sDir->active == DIR_NONE || !sDir->activePlan)
+        return;
+    a = sDir->active;
+    DirStoreActive();
+    d = &sDir->duo[a];
+    if (d->state != DIR_SIM)
+        return;
+    d->plan = sDir->activePlan;
+    sDir->activePlan = 0;
+    sDir->bossEvalStamp = 0;
+    {
+        s32 ox, oy;
+        DirLairDoor(&sDir->duo[d->plan - 1], &ox, &oy);
+        d->x = d->gx = ox; d->y = d->gy = oy;
+    }
+    DirBossStart(d);
+    gWildlandsBossTelemetry[6]++;
+    next = DirNearest(FALSE);
+    if (next != DIR_NONE)
+        DirLoadActive(next);
+}
+
 static void DirectorSim(void)
 {
     if (!sDir || !WildlandsWorld_Active() || sArena.paused || sArena.resultTimer)
@@ -516,6 +770,8 @@ static void DirectorSim(void)
     if (sDirPopup.timer && !--sDirPopup.timer)
         sArena.hudDirty = TRUE;
     sDir->clock++;
+    if (sDir->bossCooldown)
+        sDir->bossCooldown--;
     if (sDir->count > 1)
     {
         sDir->cursor = sDir->cursor + 1 >= sDir->count ? 1 : sDir->cursor + 1;

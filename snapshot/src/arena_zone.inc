@@ -17,6 +17,8 @@
 #define ZONE_SHRINK (75 * ZONE_FPS)
 #define ZONE_STAGES 4
 #define ZONE_MARKERS 12
+#define ZONE_RAIN 12
+#define ZONE_RAIN_TAG 0xA7E1
 
 enum { ZONE_EXPLORING, ZONE_WARNING, ZONE_SHRINKING, ZONE_SUDDEN_DEATH };
 
@@ -27,6 +29,7 @@ struct ArenaZone
     u32 clock, phaseClock, seed;
     u32 frac[4];          // exposure accumulators, 1/65536 HP
     u8 phase, stage, active, markers[ZONE_MARKERS], hudSecond, outside;
+    u8 rain[ZONE_RAIN];
 };
 
 static EWRAM_DATA struct ArenaZone sZone = {};
@@ -92,6 +95,67 @@ static void ZonePickNext(void)
     }
 }
 
+// Storm rain: translucent streaks drawn only over the part of the screen the
+// storm covers, so the safe edge reads at a glance (no free BG layer is left
+// for fog; all four carry the HUD and the three terrain layers).
+// Rows of the 8x8 streak tile (4bpp): blue tail, white head.
+static const u32 sZoneRainTile[8] = {
+    0x06000000, 0x06000000, 0x00600000, 0x00600000,
+    0x00020000, 0x00020000, 0x00002000, 0x00002000,
+};
+EWRAM_DATA u8 gWildlandsRainVisible = 0;
+
+static void ZoneCreateRain(void)
+{
+    struct SpriteSheet sheet = {sZoneRainTile, sizeof(sZoneRainTile), ZONE_RAIN_TAG};
+    struct SpriteTemplate t = sShotTemplate;
+    u32 i;
+    t.tileTag = ZONE_RAIN_TAG;
+    if (GetSpriteTileStartByTag(ZONE_RAIN_TAG) == 0xFFFF)
+        LoadSpriteSheet(&sheet);
+    for (i = 0; i < ZONE_RAIN; i++)
+    {
+        sZone.rain[i] = CreateSprite(&t, 0, 0, 1);
+        if (sZone.rain[i] != MAX_SPRITES)
+        {
+            struct Sprite *r = &gSprites[sZone.rain[i]];
+            r->invisible = TRUE;
+            r->animPaused = TRUE;
+            r->oam.objMode = ST_OAM_OBJ_BLEND;
+            r->oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG);
+        }
+    }
+}
+
+static void ZoneDrawRain(void)
+{
+    u32 i, n = 0;
+    s32 camX = sArenaXLCameraX, camY = sArenaXLCameraY;
+    s32 r = sZone.r >> 8;
+    bool8 show = sZone.active && !sArena.paused && WildlandsWorld_Active()
+        && !WildlandsWorld_InRoom(camX + 120, camY + 80);
+    for (i = 0; i < ZONE_RAIN; i++)
+    {
+        struct Sprite *spr;
+        s32 sx, sy, wx, wy, dx, dy;
+        if (sZone.rain[i] == MAX_SPRITES)
+            continue;
+        spr = &gSprites[sZone.rain[i]];
+        // Each streak falls down-left at its own phase; positions come from
+        // the game clock, so nothing is stored per drop.
+        sy = (s32)((i * 53 + sArena.frame * (5 + (i & 1))) % 176) - 8;
+        sx = (s32)((i * 101 + 40 - (sArena.frame + i * 29) / 2) & 255) - 8;
+        wx = camX + sx; wy = camY + sy;
+        dx = wx - sZone.cx; dy = wy - sZone.cy;
+        if (!show || sx > 244 || (r > 0 && dx * dx + dy * dy <= r * r))
+        { spr->invisible = TRUE; continue; }
+        spr->x = wx; spr->y = wy;
+        spr->invisible = FALSE;
+        n++;
+    }
+    gWildlandsRainVisible = n;
+}
+
 static void ZoneCreateMarkers(void)
 {
     u32 i;
@@ -104,6 +168,7 @@ static void ZoneCreateMarkers(void)
             gSprites[sZone.markers[i]].invisible = TRUE;
         }
     }
+    ZoneCreateRain();
 }
 
 static void ZoneInit(void)
@@ -118,6 +183,7 @@ static void ZoneInit(void)
     memset(&sZone, 0, sizeof(sZone));
     memset(gWildlandsZoneTelemetry, 0, sizeof(gWildlandsZoneTelemetry));
     for (i = 0; i < ZONE_MARKERS; i++) sZone.markers[i] = MAX_SPRITES;
+    for (i = 0; i < ZONE_RAIN; i++) sZone.rain[i] = MAX_SPRITES;
     if (!WildlandsWorld_Active())
         return;
     // Same seed -> same circles: derive from the encounter, not the frame.
@@ -136,6 +202,10 @@ static void ZoneDestroy(void)
     for (i = 0; i < ZONE_MARKERS; i++)
         if (sZone.markers[i] != MAX_SPRITES)
         { DestroySprite(&gSprites[sZone.markers[i]]); sZone.markers[i] = MAX_SPRITES; }
+    for (i = 0; i < ZONE_RAIN; i++)
+        if (sZone.rain[i] != MAX_SPRITES)
+        { DestroySprite(&gSprites[sZone.rain[i]]); sZone.rain[i] = MAX_SPRITES; }
+    FreeSpriteTilesByTag(ZONE_RAIN_TAG);
 }
 
 // Squared distance from the circle edge test, pixels.
@@ -339,6 +409,7 @@ static void ZoneTick(void)
     if (!sZone.active)
         return;
     ZoneDrawMarkers();
+    ZoneDrawRain();
     if (WildlandsWorld_Active())
         ZoneTint();
     gWildlandsZoneTelemetry[0] = sZone.phase;

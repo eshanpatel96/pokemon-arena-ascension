@@ -480,6 +480,8 @@ static EWRAM_DATA u32 sZoneHudKeyShown = 0;
 static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
 static EWRAM_DATA u8 sWildlandsSimSteps = 1;
 static EWRAM_DATA u8 sWildlandsSceneryLit = 0;
+// [0] scanline CB2 started at (after VBlank) [1] max [2] one-VBlank loops [3] slower loops
+EWRAM_DATA u16 gWildlandsLoop[4] = {};
 static void LootInit(void);
 static void LootTick(void);
 static void LootDestroy(void);
@@ -503,6 +505,8 @@ static void WildlandsBuildOam(void);
 static bool8 DirectorAdvance(void);
 static void DirectorInit(void);
 static void DirectorSim(void);
+static u8 DirectorBossDoor(void);
+static void DirectorBossEnter(void);
 static void DirectorDestroy(void);
 static void DirRestorePartner(void);
 static bool8 DirectorSoloActive(void);
@@ -2775,6 +2779,7 @@ static void CB2_Arena(void)
     bool8 frozen = FALSE;
     u32 stamp=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,phaseStamp=stamp,now;
     u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;
+    {u16 ln=(REG_VCOUNT+68)%228; gWildlandsLoop[0]=ln; if(ln>gWildlandsLoop[1])gWildlandsLoop[1]=ln; gWildlandsLoop[gap>=2?3:2]++;}
     if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}
     gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;
     gArenaFrameTelemetry.updates++;
