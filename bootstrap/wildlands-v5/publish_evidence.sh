@@ -13,18 +13,24 @@ rm -rf "$WORK"; mkdir -p "$WORK"
 
 push_dir() { # branch srcdir subdir message
   local branch="$1" src="$2" sub="$3" msg="$4" dir="$WORK/$branch"
-  if git -C "$WORK" ls-remote --exit-code "$REPO_URL" "refs/heads/$branch" >/dev/null 2>&1 && git -C "$WORK" clone -q --depth 1 --branch "$branch" "$REPO_URL" "$dir" 2>/dev/null; then :; else
-    mkdir -p "$dir"; git -C "$dir" init -q; git -C "$dir" checkout -q --orphan "$branch"
-    git -C "$dir" remote add origin "$REPO_URL"
+  local G="git -c http.extraheader= -c http.https://github.com/.extraheader= -C $dir"
+  rm -rf "$dir"; mkdir -p "$dir"
+  $G init -q; $G remote add origin "$REPO_URL"
+  if out=$($G fetch -q --depth 1 origin "$branch" 2>&1); then
+    $G checkout -q -B "$branch" FETCH_HEAD
+  else
+    echo "::notice::fetch $branch: $(echo "$out" | head -2 | tr '\n' ' ' | sed 's/x-access-token:[^@]*@/***@/g')"
+    $G checkout -q --orphan "$branch"
   fi
   rm -rf "$dir/$sub"; mkdir -p "$dir/$sub"; cp -r "$src"/. "$dir/$sub/"
-  git -C "$dir" config user.name "wildlands-ci"; git -C "$dir" config user.email "ci@users.noreply.github.com"
-  git -C "$dir" add -A
-  if git -C "$dir" diff --cached --quiet; then echo "no change for $branch"; return 0; fi
-  git -C "$dir" commit -q -m "$msg"
+  $G config user.name "wildlands-ci"; $G config user.email "ci@users.noreply.github.com"
+  $G add -A
+  if $G diff --cached --quiet; then echo "no change for $branch"; return 0; fi
+  $G commit -q -m "$msg"
   for i in 1 2 3; do
-    git -C "$dir" push -q origin "$branch" && return 0
-    git -C "$dir" pull -q --rebase origin "$branch" || true
+    if out=$($G push -q origin "$branch" 2>&1); then return 0; fi
+    echo "::notice::push $branch attempt $i: $(echo "$out" | head -2 | tr '\n' ' ' | sed 's/x-access-token:[^@]*@/***@/g')"
+    $G fetch -q --depth 1 origin "$branch" && $G rebase -q FETCH_HEAD || true
   done
   echo "::warning::push to $branch failed"
 }
