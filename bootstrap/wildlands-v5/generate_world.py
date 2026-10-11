@@ -73,7 +73,7 @@ def nearest(x,y):
 # rather than a 16 px metatile center so the unchanged 10 px Arena body radius
 # fits between both native bridge edges.
 desired=[
- (5,16,True),(9,16,True),(15,16,True),(22,16,True),(28,16,True),(30,16,True),
+ (5,16,True),(9,16,True),(10,16,True),(15,16,True),(22,16,True),(28,16,True),(30,16,True),
  (30,8,False),(34,6,False),(30,25,False),(34,30,False),(30,38,False),(22,30,False),
  (15,30,False),(8,30,False),(5,25,False),(18,40,False),(28,42,False),(24,38,False)
 ]
@@ -93,7 +93,7 @@ for x,y,bridge_center in desired:
 # native Route 120 bridge. Their Y coordinate is deliberately on the 16 px
 # boundary between the two bridge metatile rows, so Arena's unchanged 10 px
 # body radius fits the native 32 px-wide bridge without touching its cliff edge.
-PLAYER=(5,16)
+PLAYER=(10,16)
 ENEMY=(30,16)
 PLAYER_Y_PX=PLAYER[1]*16
 ENEMY_Y_PX=ENEMY[1]*16
