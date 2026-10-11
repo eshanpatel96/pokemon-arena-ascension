@@ -24,6 +24,8 @@ struct SquadWing
     u8 sprite, shadow, marker, facing, moving, drawnFrame, drawnDirection;
     u8 animation, active, alive, battler, team, partyIndex, shotSlot, shotFacing;
     u8 target, flash, stuck;
+    u16 fallbackMove, stuckClock, regroups;
+    s32 lastX, lastY;
 };
 
 static EWRAM_DATA struct SquadWing sSquadWings[2] = {};
@@ -156,6 +158,19 @@ static void SquadSpawnWing(u8 team)
     w->target = team ? 0 : 1;
     w->cooldown = 45 + team * 15;
     w->alive = TRUE;
+    {
+        // Every wing can always fight: if none of its own moves is
+        // Arena-supported and damaging, it uses the first available basic
+        // attack (no PP) instead of standing idle.
+        static const u16 sFallback[] = {MOVE_TACKLE, MOVE_SCRATCH, MOVE_POUND, MOVE_QUICK_ATTACK,
+            MOVE_EMBER, MOVE_WATER_GUN, MOVE_GUST, MOVE_BITE, MOVE_STRUGGLE};
+        u32 k;
+        w->fallbackMove = MOVE_NONE;
+        for (k = 0; k < ARRAY_COUNT(sFallback) && !w->fallbackMove; k++)
+            if (ArenaMoves_Get(sFallback[k]) && gBattleMoves[sFallback[k]].power)
+                w->fallbackMove = sFallback[k];
+    }
+    w->lastX = w->x; w->lastY = w->y;
     SquadCreateSprites(w);
 }
 
@@ -204,11 +219,15 @@ static void SquadDestroy(void)
     SquadHideWing(&sSquadWings[1]);
 }
 
-// Nearest living, visible opponent of `team` (battler id) or 0xFF.
+#define SQUAD_SIGHT 220
+// Nearest living opponent of `team` that this wing can actually perceive:
+// within SQUAD_SIGHT px, not hidden in tall grass beyond 48px. The player's
+// partner weighs distance from the player too, so it defends its lead.
 static u8 SquadPickTarget(u8 team, s32 x, s32 y)
 {
     u8 best = 0xFF, cand[2];
     u32 i, bestD = 0xFFFF;
+    struct ArenaBody *lead = &sArena.bodies[team];
     cand[0] = team ^ 1;
     cand[1] = 2 + (team ^ 1);
     for (i = 0; i < 2; i++)
@@ -221,14 +240,28 @@ static u8 SquadPickTarget(u8 team, s32 x, s32 y)
         d = ArenaNav_Distance(x / Q, y / Q, tx / Q, ty / Q);
         if (WildlandsWorld_Active() && d > 48 && WildlandsWorld_IsConcealed(tx / Q, ty / Q))
             continue; // tall grass hides beyond close range
+        if (d > SQUAD_SIGHT)
+            continue;
+        if (team == 0 && SquadAlive(0))
+        {
+            u16 dl = ArenaNav_Distance(lead->x / Q, lead->y / Q, tx / Q, ty / Q);
+            if (dl < d) d = dl;
+        }
         if (d < bestD) { bestD = d; best = cand[i]; }
     }
     return best;
 }
 
-static u8 SquadChooseMove(u8 battler)
+#define SQUAD_FALLBACK_SLOT 4
+static u16 SquadMoveAt(struct SquadWing *w, u8 slot)
+{
+    return slot == SQUAD_FALLBACK_SLOT ? w->fallbackMove : gBattleMons[w->battler].moves[slot];
+}
+
+static u8 SquadChooseMove(struct SquadWing *w)
 {
     u32 i;
+    u8 battler = w->battler;
     u8 fallback = 0xFF;
     for (i = 0; i < MAX_MON_MOVES; i++)
     {
@@ -244,6 +277,8 @@ static u8 SquadChooseMove(u8 battler)
         if (fallback == 0xFF)
             fallback = i;
     }
+    if (fallback == 0xFF && w->fallbackMove)
+        return SQUAD_FALLBACK_SLOT;
     return fallback;
 }
 
@@ -276,11 +311,11 @@ static bool8 SquadSpawnShot(struct SquadWing *w, const struct ArenaMoveProfile *
 
 static void SquadFire(struct SquadWing *w)
 {
-    u16 move = gBattleMons[w->battler].moves[w->shotSlot];
+    u16 move = SquadMoveAt(w, w->shotSlot);
     const struct ArenaMoveProfile *p = ArenaMoves_Get(move);
     u8 pp;
     s32 tx, ty;
-    if (!p || !gBattleMons[w->battler].pp[w->shotSlot])
+    if (!p || (w->shotSlot != SQUAD_FALLBACK_SLOT && !gBattleMons[w->battler].pp[w->shotSlot]))
         return;
     if (p->kind == ARENA_MOVE_PROJECTILE && !ArenaMoves_Beam(move))
     {
@@ -298,9 +333,12 @@ static void SquadFire(struct SquadWing *w)
         else
             ArenaFeedback_Impact(w->team, w->x / Q, w->y / Q, 0, ARENA_FEEDBACK_MISS);
     }
-    pp = gBattleMons[w->battler].pp[w->shotSlot] - 1;
-    gBattleMons[w->battler].pp[w->shotSlot] = pp;
-    SetMonData(SquadPartyMon(w->battler), MON_DATA_PP1 + w->shotSlot, &pp);
+    if (w->shotSlot != SQUAD_FALLBACK_SLOT)
+    {
+        pp = gBattleMons[w->battler].pp[w->shotSlot] - 1;
+        gBattleMons[w->battler].pp[w->shotSlot] = pp;
+        SetMonData(SquadPartyMon(w->battler), MON_DATA_PP1 + w->shotSlot, &pp);
+    }
     w->cooldown = p->recovery + 10;
     gWildlandsSquadTelemetry[1 + w->team]++;
     PlaySE(p->kind == ARENA_MOVE_PROJECTILE ? SE_M_SWIFT : SE_M_SCRATCH);
@@ -333,6 +371,29 @@ static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
         w->y = ny;
 }
 
+// Leash: a wing that falls far behind its lead, or is stuck against
+// terrain while trying to follow, regroups beside the lead on legal ground.
+static void SquadRegroup(struct SquadWing *w, struct ArenaBody *lead)
+{
+    static const s8 ox[8] = {28, -28, 0, 0, 22, -22, 22, -22};
+    static const s8 oy[8] = {0, 0, 24, -24, 20, 20, -20, -20};
+    u32 k;
+    for (k = 0; k < 8; k++)
+    {
+        s32 nx = lead->x / Q + ox[k], ny = lead->y / Q + oy[k];
+        if (WildlandsWorld_Active() && !WildlandsWorld_CanStandSpecies(w->species, nx, ny, 6))
+            continue;
+        ArenaFeedback_Dust(w->x / Q, w->y / Q, TRUE);
+        w->x = nx * Q; w->y = ny * Q;
+        w->waypointX = nx; w->waypointY = ny;
+        w->stuckClock = 0;
+        w->regroups++;
+        if (w->team == 0) gWildlandsPartnerTelemetry[5] = w->regroups;
+        ArenaFeedback_Dust(nx, ny, TRUE);
+        return;
+    }
+}
+
 static void SquadThink(struct SquadWing *w)
 {
     if (gWildlandsTestPeace) { w->moving = FALSE; return; }
@@ -345,12 +406,21 @@ static void SquadThink(struct SquadWing *w)
     const struct ArenaMoveProfile *p = NULL;
     step = 300 * gStatStageRatios[spd][0] / gStatStageRatios[spd][1];
     if (w->cooldown && !w->shotTimer) w->cooldown--;
+    if (SquadAlive(w->team) && !w->shotTimer)
+    {
+        u16 ld = ArenaNav_Distance(w->x / Q, w->y / Q, lead->x / Q, lead->y / Q);
+        if (w->moving && w->x == w->lastX && w->y == w->lastY) w->stuckClock++;
+        else if (w->moving) w->stuckClock = 0;
+        w->lastX = w->x; w->lastY = w->y;
+        if (ld > 260 || (ld > 64 && w->stuckClock > 90))
+            SquadRegroup(w, lead);
+    }
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
         w->target = SquadPickTarget(w->team, w->x, w->y);
     gWildlandsSquadTelemetry[13 + w->team] = w->target;
     if (w->shotTimer)
     {
-        p = ArenaMoves_Get(gBattleMons[w->battler].moves[w->shotSlot]);
+        p = ArenaMoves_Get(SquadMoveAt(w, w->shotSlot));
         if (p && w->shotElapsed == p->windup)
             SquadFire(w);
         w->shotElapsed++;
@@ -363,9 +433,9 @@ static void SquadThink(struct SquadWing *w)
         if (ZoneSteer(w->x / Q, w->y / Q, &zx, &zy))
         { SquadMoveWing(w, zx * Q, zy * Q, 420); return; }
     }
-    slot = SquadChooseMove(w->battler);
+    slot = SquadChooseMove(w);
     if (slot != 0xFF)
-        p = ArenaMoves_Get(gBattleMons[w->battler].moves[slot]);
+        p = ArenaMoves_Get(SquadMoveAt(w, slot));
     if (w->target != 0xFF)
     {
         SquadPos(w->target, &tx, &ty);
@@ -423,7 +493,7 @@ static void SquadDraw(struct SquadWing *w)
     anim = &w->art->animations[animation];
     if (w->shotTimer)
     {
-        const struct ArenaMoveProfile *p = ArenaMoves_Get(gBattleMons[w->battler].moves[w->shotSlot]);
+        const struct ArenaMoveProfile *p = ArenaMoves_Get(SquadMoveAt(w, w->shotSlot));
         if (p && p->windup)
             tick = w->shotElapsed < p->windup ? w->shotElapsed * anim->hitTick / p->windup : anim->hitTick;
     }
@@ -590,22 +660,63 @@ static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaM
     return TRUE;
 }
 
-// The enemy lead fights the nearer visible member of the player duo.
+// Enemy lead perception: it only engages a member of the player duo it can
+// actually see (within SQUAD_SIGHT, clear line of sight, not hidden in tall
+// grass beyond 48px). Otherwise it roams, and pre-rotates with the storm via
+// ZoneSteerEnemy. Native code calls this right after refreshing `observed`.
+static EWRAM_DATA struct { u16 lost, roamClock; } sEnemySight = {};
+static bool8 SquadEnemySees(void)
+{
+    return !WildlandsWorld_Active() || sEnemySight.lost < 20;
+}
+
 static void SquadEnemyRetarget(struct ArenaBody *body)
 {
     struct SquadWing *w = &sSquadWings[0];
-    u16 dPlayer, dPartner;
-    if (!w->active || !w->alive)
+    u8 best = 0xFF, i;
+    u16 bestD = 0xFFFF;
+    if (!WildlandsWorld_Active())
         return;
-    if (WildlandsWorld_Active() && WildlandsWorld_IsConcealed(w->x / Q, w->y / Q)
-        && ArenaNav_Distance(body->x / Q, body->y / Q, w->x / Q, w->y / Q) > 48)
-        return;
-    dPlayer = ArenaNav_Distance(body->x / Q, body->y / Q, sArena.bodies[0].x / Q, sArena.bodies[0].y / Q);
-    dPartner = ArenaNav_Distance(body->x / Q, body->y / Q, w->x / Q, w->y / Q);
-    if (dPartner + 16 < dPlayer)
+    for (i = 0; i < 2; i++)
     {
-        sArena.observed.x = w->x / Q;
-        sArena.observed.y = w->y / Q;
-        gWildlandsSquadTelemetry[12]++;
+        s32 tx, ty;
+        u16 d;
+        u8 b = i ? 2 : 0;
+        if (!SquadAlive(b) || (b == 2 && !w->active))
+            continue;
+        SquadPos(b, &tx, &ty);
+        d = ArenaNav_Distance(body->x / Q, body->y / Q, tx / Q, ty / Q);
+        if (d > SQUAD_SIGHT)
+            continue;
+        if (d > 48 && WildlandsWorld_IsConcealed(tx / Q, ty / Q))
+            continue;
+        if (!WildlandsWorld_LineClear(body->x / Q, body->y / Q, tx / Q, ty / Q, 2))
+            continue;
+        if (d < bestD) { bestD = d; best = b; }
+    }
+    if (best != 0xFF)
+    {
+        s32 tx, ty;
+        SquadPos(best, &tx, &ty);
+        sArena.observed.x = tx / Q;
+        sArena.observed.y = ty / Q;
+        if (best == 2) gWildlandsSquadTelemetry[12]++;
+        sEnemySight.lost = 0;
+        return;
+    }
+    if (sEnemySight.lost < 0xFFFF) sEnemySight.lost++;
+    // Not seen: roam to a fresh legal point near where it is now.
+    if (!sEnemySight.roamClock-- || ArenaNav_Distance(body->x / Q, body->y / Q,
+            sArena.observed.x, sArena.observed.y) < 12)
+    {
+        u32 k;
+        sEnemySight.roamClock = 12;
+        for (k = 0; k < 6; k++)
+        {
+            s32 nx = body->x / Q + (s32)(Random() % 241) - 120;
+            s32 ny = body->y / Q + (s32)(Random() % 241) - 120;
+            if (WildlandsWorld_CanStandSide(1, nx, ny, 6))
+            { sArena.observed.x = nx; sArena.observed.y = ny; break; }
+        }
     }
 }

@@ -339,6 +339,8 @@ static void ZoneSteerEnemy(struct ArenaBody *body)
 static u32 ZoneHudKey(void)
 {
     u32 key = (u32)(sLoot.boost[0][0] * 7 + sLoot.boost[0][1] * 3 + sLoot.boost[0][2]) * 0x9E3779B1u;
+    key ^= (u32)(sLoot.popupTimer != 0) << 31;
+    key ^= (u32)(sLoot.boost[1][0] * 5 + sLoot.boost[1][1] * 11 + sLoot.boost[1][2] * 13) << 24;
     key ^= sZone.hudSecond;
     key ^= (u32)sZone.phase << 8;
     key ^= (u32)ZoneOutside(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, 0) << 11;
@@ -375,7 +377,14 @@ static void ZoneHudLine(void)
         *end++ = CHAR_COLON;
         ConvertIntToDecimalStringN(end, s % 60, STR_CONV_MODE_LEADING_ZEROS, 2);
     }
-    HudTinyWindow(2, 104, 10, text, out ? 6 : 4, 9);
+    if (LootPopupText(text))
+    {
+        // Pickup feedback takes the zone slot for ~2.5s, in highlight colour.
+        HudTinyWindow(2, 104, 10, text, sLoot.popupTeam ? 6 : 5, 11);
+        StringCopy(text, sZone.phase == ZONE_SUDDEN_DEATH ? sFinal : sSafe);
+    }
+    else
+        HudTinyWindow(2, 104, 10, text, out ? 6 : 4, 9);
     end = StringCopy(text, sAlly);
     *end++ = CHAR_SPACE;
     if (SquadAlive(2)) ConvertIntToDecimalStringN(end, gBattleMons[2].hp, STR_CONV_MODE_LEFT_ALIGN, 3);
@@ -387,4 +396,22 @@ static void ZoneHudLine(void)
     HudTinyWindow(2, 172, 10, text, 6, 6);
     LootHudText(text);
     HudTinyWindow(2, 204, 10, text, 5, 6);
+}
+
+// Pause screen: running team boost totals (yours and the enemy duo's).
+static void WildlandsPauseBoosts(void)
+{
+    static const u8 sMine[] = _("TEAM BOOSTS");
+    static const u8 sFoe[] = _("FOE BOOSTS");
+    u8 text[12];
+    if (!sLoot.live)
+        return;
+    HudTinyWindow(1, 120, 6, sMine, 5, 11);
+    text[0] = CHAR_A; text[1] = CHAR_PLUS; text[2] = CHAR_0 + sLoot.boost[0][0];
+    text[3] = CHAR_SPACE; text[4] = CHAR_D; text[5] = CHAR_PLUS; text[6] = CHAR_0 + sLoot.boost[0][1];
+    text[7] = CHAR_SPACE; text[8] = CHAR_S; text[9] = CHAR_PLUS; text[10] = CHAR_0 + sLoot.boost[0][2]; text[11] = EOS;
+    HudTinyWindow(1, 120, 14, text, 4, 11);
+    HudTinyWindow(1, 120, 26, sFoe, 6, 10);
+    text[2] = CHAR_0 + sLoot.boost[1][0]; text[6] = CHAR_0 + sLoot.boost[1][1]; text[10] = CHAR_0 + sLoot.boost[1][2];
+    HudTinyWindow(1, 120, 34, text, 4, 11);
 }

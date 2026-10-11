@@ -30,6 +30,7 @@ static EWRAM_DATA struct {
     u8 boost[2][3];
     u8 sprite[LOOT_SPRITES];
     u8 live;
+    u8 popupTimer, popupType, popupTeam;
 } sLoot = {};
 // [0] orbs collected [1..3] team0 atk/def/spd [4..6] team1 atk/def/spd
 // [7] capped refusals [8] spot count [9] last collector battler
@@ -113,6 +114,9 @@ static void LootApply(u8 team, u8 type, s32 x, s32 y)
     static const u8 sStats[3][2] = {{STAT_ATK, STAT_SPATK}, {STAT_DEF, STAT_SPDEF}, {STAT_SPEED, STAT_SPEED}};
     u32 m;
     sLoot.boost[team][type]++;
+    sLoot.popupTimer = 150;
+    sLoot.popupType = type;
+    sLoot.popupTeam = team;
     for (m = 0; m < 2; m++)
     {
         u8 b = team + m * 2;
@@ -138,6 +142,8 @@ static void LootSim(void)
     u32 i, b;
     if (!sLoot.live || sArena.paused || sArena.resultTimer)
         return;
+    if (sLoot.popupTimer && !--sLoot.popupTimer)
+        sArena.hudDirty = TRUE;
     for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < 32; i++)
     {
         const struct LootSpot *s = &sLootSpots[i];
@@ -196,6 +202,21 @@ static void LootTick(void)
     for (; n < LOOT_SPRITES; n++)
         if (sLoot.sprite[n] != MAX_SPRITES)
             gSprites[sLoot.sprite[n]].invisible = TRUE;
+}
+
+// Pickup popup for the bottom HUD line: "TEAM +1 ATK" / "FOES +1 SPD".
+static bool8 LootPopupText(u8 *text)
+{
+    static const u8 sWho[2][6] = {_("TEAM "), _("FOES ")};
+    static const u8 sStat[3][5] = {_(" ATK"), _(" DEF"), _(" SPD")};
+    u8 *end;
+    if (!sLoot.popupTimer)
+        return FALSE;
+    end = StringCopy(text, sWho[sLoot.popupTeam & 1]);
+    *end++ = CHAR_PLUS;
+    *end++ = CHAR_0 + min(sLoot.boost[sLoot.popupTeam & 1][sLoot.popupType], 9);
+    StringCopy(end, sStat[sLoot.popupType]);
+    return TRUE;
 }
 
 static void LootHudText(u8 *text)

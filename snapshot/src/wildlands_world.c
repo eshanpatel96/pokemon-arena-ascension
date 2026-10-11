@@ -34,12 +34,12 @@ static EWRAM_DATA s16 sLastTileY = 0x7FFF;
 static EWRAM_DATA u8 sLastChunkX = 0xFF;
 static EWRAM_DATA u8 sLastChunkY = 0xFF;
 
-#define WL_PENDING_TILES 72
-struct WildlandsPendingTile
-{
-    u16 slot, bottom, middle, top;
-};
-static EWRAM_DATA struct WildlandsPendingTile sPending[WL_PENDING_TILES] = {};
+// Streaming queue: world tile coordinates only (4 bytes/entry); the three
+// layer entries are resolved during VBlank. 192 entries cover up to three
+// newly exposed rows AND columns (render catch-up can move the camera >1
+// tile between draws), so no row is ever dropped.
+#define WL_PENDING_TILES 192
+static EWRAM_DATA u32 sPending[WL_PENDING_TILES] = {};
 static EWRAM_DATA u8 sPendingCount = 0;
 
 EWRAM_DATA u32 gWildlandsWorldTelemetry[16] = {};
@@ -146,20 +146,12 @@ static u16 PutWorldTileNow(s16 tx, s16 ty)
 
 static u16 QueueWorldTile(s16 tx, s16 ty)
 {
-    struct WildlandsPendingTile *p;
     if (sPendingCount >= WL_PENDING_TILES)
     {
         gWildlandsWorldTelemetry[12]++;
         return 0;
     }
-    p = &sPending[sPendingCount++];
-    p->slot = ((u16)ty & 31) * 32 + ((u16)tx & 31);
-    GetWorldTile(tx, ty, &p->bottom, &p->middle, &p->top);
-    if (p->top)
-    {
-        gWildlandsWorldTelemetry[7]++;
-        gWildlandsWorldAudit[7] = 1;
-    }
+    sPending[sPendingCount++] = (u16)tx | ((u32)(u16)ty << 16);
     return 3;
 }
 
@@ -258,7 +250,7 @@ void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
 
     if (sLastTileX == 0x7FFF)
         writes = RebuildWindow(tileX, tileY);
-    else if (Abs32(tileX - sLastTileX) > 1 || Abs32(tileY - sLastTileY) > 1)
+    else if (Abs32(tileX - sLastTileX) > 3 || Abs32(tileY - sLastTileY) > 3)
     {
         // Teleports/camera jumps are not part of normal continuous movement.
         // Rebuild immediately only for recovery; ordinary streaming is queued
@@ -268,32 +260,21 @@ void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
     }
     else
     {
-        sPendingCount = 0;
-        if (tileX > sLastTileX)
-        {
-            x = tileX + 30;
+        // Up to three newly exposed columns and rows per update. Queue is
+        // only cleared once VBlank has committed it (see WildlandsWorld_VBlank).
+        s16 c;
+        for (c = sLastTileX + 1; c <= tileX; c++)
             for (y = tileY - 1; y <= tileY + 30; y++)
-                writes += QueueWorldTile(x, y);
-        }
-        else if (tileX < sLastTileX)
-        {
-            x = tileX - 1;
+                writes += QueueWorldTile(c + 30, y);
+        for (c = sLastTileX - 1; c >= tileX; c--)
             for (y = tileY - 1; y <= tileY + 30; y++)
-                writes += QueueWorldTile(x, y);
-        }
-
-        if (tileY > sLastTileY)
-        {
-            y = tileY + 30;
+                writes += QueueWorldTile(c - 1, y);
+        for (c = sLastTileY + 1; c <= tileY; c++)
             for (x = tileX - 1; x <= tileX + 30; x++)
-                writes += QueueWorldTile(x, y);
-        }
-        else if (tileY < sLastTileY)
-        {
-            y = tileY - 1;
+                writes += QueueWorldTile(x, c + 30);
+        for (c = sLastTileY - 1; c >= tileY; c--)
             for (x = tileX - 1; x <= tileX + 30; x++)
-                writes += QueueWorldTile(x, y);
-        }
+                writes += QueueWorldTile(x, c - 1);
     }
 
     sLastTileX = tileX;
@@ -343,10 +324,14 @@ void WildlandsWorld_VBlank(void)
     bgTop = (volatile u16 *)BG_SCREEN_ADDR(29);
     for (i = 0; i < sPendingCount; i++)
     {
-        const struct WildlandsPendingTile *p = &sPending[i];
-        bgBottom[p->slot] = p->bottom;
-        bgMiddle[p->slot] = p->middle;
-        bgTop[p->slot] = p->top;
+        u16 bottom, middle, top;
+        s16 tx = (s16)(sPending[i] & 0xFFFF), ty = (s16)(sPending[i] >> 16);
+        u16 slot = ((u16)ty & 31) * 32 + ((u16)tx & 31);
+        GetWorldTile(tx, ty, &bottom, &middle, &top);
+        bgBottom[slot] = bottom;
+        bgMiddle[slot] = middle;
+        bgTop[slot] = top;
+        if (top) gWildlandsWorldAudit[7] = 1;
     }
     gWildlandsWorldTelemetry[0] += sPendingCount * 3;
     gWildlandsWorldAudit[2] = 1;
@@ -477,12 +462,13 @@ bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
     return TRUE;
 }
 
+// Deep water: only Water types (swimming) and Levitate hoverers cross it.
+// Flying types walk like everyone else (a flying Charizard visibly "walking"
+// on the sea read as a bug in playtest).
 static bool8 SideCanWater(u8 side)
 {
     return gBattleMons[side].types[0] == TYPE_WATER
         || gBattleMons[side].types[1] == TYPE_WATER
-        || gBattleMons[side].types[0] == TYPE_FLYING
-        || gBattleMons[side].types[1] == TYPE_FLYING
         || gBattleMons[side].ability == ABILITY_LEVITATE;
 }
 
@@ -490,8 +476,8 @@ static bool8 SpeciesCanWater(u16 species)
 {
     return gSpeciesInfo[species].types[0] == TYPE_WATER
         || gSpeciesInfo[species].types[1] == TYPE_WATER
-        || gSpeciesInfo[species].types[0] == TYPE_FLYING
-        || gSpeciesInfo[species].types[1] == TYPE_FLYING;
+        || gSpeciesInfo[species].abilities[0] == ABILITY_LEVITATE
+        || gSpeciesInfo[species].abilities[1] == ABILITY_LEVITATE;
 }
 
 #define WL_WORLD_BODY_RADIUS 6

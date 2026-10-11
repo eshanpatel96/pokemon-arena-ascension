@@ -462,6 +462,7 @@ static bool8 SquadPromote(u8 side);
 struct ArenaShot;
 static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaMoveProfile *p, s16 oldX, s16 oldY);
 static void SquadEnemyRetarget(struct ArenaBody *body);
+static bool8 SquadEnemySees(void);
 extern EWRAM_DATA u32 gWildlandsSquadTelemetry[16];
 static EWRAM_DATA u8 sSquadShotOwner[SHOTS_COUNT] = {};
 static void SquadSimStep(void);
@@ -478,6 +479,7 @@ static EWRAM_DATA u8 sWildlandsSimSteps = 1;
 static void LootInit(void);
 static void LootTick(void);
 static void LootDestroy(void);
+static void WildlandsPauseBoosts(void);
 static void MapDraw(void);
 EWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};
 EWRAM_DATA u16 gWildlandsProfile[12] = {};
@@ -1059,6 +1061,7 @@ static void DrawHud(void)
             static const u8 help[]=_("UP/DOWN: CHOOSE   A: OPEN");
             FillWindowPixelBuffer(1,PIXEL_FILL(9));
             PrintPopup(8,3,title,5);
+            WildlandsPauseBoosts();
             for(side=0;side<5;side++)
             {
                 if(side==sPauseChoice)WindowRect(1,7,17+side*10,4,7,5);
@@ -2134,7 +2137,7 @@ static void TickEnemy(void)
                 else BeginShot(1,body->x,body->y-Q);
                 sArena.aiState=AI_RECOVER;return;
             }
-            if (!body->cooldown && ArenaMovePP(1,body->moveSlot)
+            if (!body->cooldown && ArenaMovePP(1,body->moveSlot) && SquadEnemySees()
                 && distance < p->range && distance > 8
                 && ArenaNav_LineClear(body->x/Q,body->y/Q,sArena.observed.x,sArena.observed.y,2))
             {
