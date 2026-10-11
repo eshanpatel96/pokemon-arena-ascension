@@ -27,6 +27,12 @@ Base: wildlands-v5 at c00d296, run 38181288381 (island 107/0, slice 46/0).
 ## Map
 13. Polish toward overworld immersion: cleaner edges and transitions, fewer blocky single-tile rocks, natural decor, fewer stray islets, landmark placement review.
 
+## Status effects
+16. Full real-time status pass for all four battlers (player, partner, enemy lead and wing): burn and poison tick damage, paralysis slows and briefly stalls, sleep and freeze last a few seconds (fire thaws), confusion makes aim drift. Status icons on the HP panels and in the TEAM page; a status-cure pickup; the AI avoids attacking into Protect and targets statused foes.
+
+## Lab setup
+17. A coach NPC in the Team Lab replaces the PC, bag and MOVE EDITOR sign for setup: pick your duo from the roster, set each one's moves (legal Arena moves only), see a short controls card, then start the match. No START menu or bag needed in the Lab.
+
 ## Features
 14. Shiny Pokémon (rarity to decide).
 15. End-of-match summary; spectate after elimination.
