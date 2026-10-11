@@ -38,6 +38,7 @@ static EWRAM_DATA struct WildlandsPendingTile sPending[WL_PENDING_TILES] = {};
 static EWRAM_DATA u8 sPendingCount = 0;
 
 EWRAM_DATA u32 gWildlandsWorldTelemetry[16] = {};
+EWRAM_DATA u32 gWildlandsWorldAudit[8] = {};
 
 static s32 Abs32(s32 n) { return n < 0 ? -n : n; }
 
@@ -147,7 +148,10 @@ static u16 QueueWorldTile(s16 tx, s16 ty)
     p->slot = ((u16)ty & 31) * 32 + ((u16)tx & 31);
     GetWorldTile(tx, ty, &p->bottom, &p->middle, &p->top);
     if (p->top)
+    {
         gWildlandsWorldTelemetry[7]++;
+        gWildlandsWorldAudit[7] = 1;
+    }
     return 3;
 }
 
@@ -200,11 +204,13 @@ void WildlandsWorld_LoadGraphics(void)
 void WildlandsWorld_Init(void)
 {
     memset(gWildlandsWorldTelemetry, 0, sizeof(gWildlandsWorldTelemetry));
+    memset(gWildlandsWorldAudit, 0, sizeof(gWildlandsWorldAudit));
     sActive = VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE);
     sLastTileX = sLastTileY = 0x7FFF;
     sLastChunkX = sLastChunkY = 0xFF;
     sPendingCount = 0;
     gWildlandsWorldTelemetry[15] = sActive;
+    gWildlandsWorldAudit[0] = sActive;
 }
 
 void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
@@ -273,7 +279,10 @@ void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
     chunkX = cameraX >> 8;
     chunkY = cameraY >> 8;
     if (sLastChunkX != 0xFF && (chunkX != sLastChunkX || chunkY != sLastChunkY))
+    {
         gWildlandsWorldTelemetry[2]++;
+        gWildlandsWorldAudit[1] = 1;
+    }
     sLastChunkX = chunkX;
     sLastChunkY = chunkY;
     gWildlandsWorldTelemetry[13] = chunkX;
@@ -311,6 +320,7 @@ void WildlandsWorld_VBlank(void)
         bgTop[p->slot] = p->top;
     }
     gWildlandsWorldTelemetry[0] += sPendingCount * 3;
+    gWildlandsWorldAudit[2] = 1;
     if (sPendingCount > gWildlandsWorldTelemetry[8])
         gWildlandsWorldTelemetry[8] = sPendingCount;
     sPendingCount = 0;
@@ -323,9 +333,21 @@ void WildlandsWorld_TickBody(u8 side, s16 x, s16 y)
         return;
     terrain = WildlandsWorld_TerrainAt(x, y);
     if (side == 0 && (terrain & WL_TERRAIN_CONCEAL))
+    {
         gWildlandsWorldTelemetry[5]++;
+        gWildlandsWorldAudit[3] = 1;
+    }
     if (side == 0 && (terrain & WL_TERRAIN_DEEP_WATER))
+    {
         gWildlandsWorldTelemetry[6]++;
+        gWildlandsWorldAudit[4] = 1;
+    }
+}
+
+void WildlandsWorld_RecordProjectileBlock(void)
+{
+    if (sActive)
+        gWildlandsWorldAudit[6] = 1;
 }
 
 static bool8 IsBridgeBehavior(u8 behavior)
@@ -556,6 +578,7 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     {
         next->x = goalX;
         next->y = goalY;
+        gWildlandsWorldAudit[5] = 1;
         return TRUE;
     }
 
@@ -601,6 +624,7 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
         gWildlandsWorldTelemetry[11]++;
         return FALSE;
     }
+    gWildlandsWorldAudit[5] = 1;
     return TRUE;
 }
 
