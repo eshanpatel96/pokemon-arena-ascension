@@ -385,6 +385,19 @@ patch(A, '            VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCE
       '                if(GetMonData(&gPlayerParty[k],MON_DATA_SPECIES))SetMonData(&gPlayerParty[k],MON_DATA_HP,&zero);\n'
       '        }\n')
 
+# Out of PP must never drop a Wildlands match into the classic turn-based
+# battle (playtest: "kicked out after I won", then every battle was classic
+# because the saved party had no PP left). In the world, an actor with no PP
+# uses Struggle, eligibility ignores PP, and the arena never exits for PP.
+patch(A, '    if(FirstMove(side,TRUE)==ARENA_NO_MOVE)return FALSE;\n',
+      '    if(FirstMove(side,!WildlandsWorld_Active())==ARENA_NO_MOVE)return FALSE;\n')
+patch(A, '            && (FirstMove(0,TRUE)==ARENA_NO_MOVE || FirstMove(1,TRUE)==ARENA_NO_MOVE))\n',
+      '            && !WildlandsWorld_Active()\n'
+      '            && (FirstMove(0,TRUE)==ARENA_NO_MOVE || FirstMove(1,TRUE)==ARENA_NO_MOVE))\n')
+
+patch(A, '                sArena.bodies[i].moveSlot=FirstMove(i,TRUE);\n',
+      '                {u8 m=FirstMove(i,TRUE); sArena.bodies[i].moveSlot=(m==ARENA_NO_MOVE&&WildlandsWorld_Active())?ARENA_STRUGGLE_SLOT:m;}\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',

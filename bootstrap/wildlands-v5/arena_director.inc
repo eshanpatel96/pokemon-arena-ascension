@@ -396,9 +396,36 @@ static void DirStoreActive(void)
     sDir->active = DIR_NONE;
 }
 
+// A duo taking the field never pops into view: if its record sits on screen,
+// it enters from a legal spot just beyond the camera instead.
+static void DirOffscreenEntry(struct DirDuo *d)
+{
+    s32 cx = sArenaXLCameraX, cy = sArenaXLCameraY, px, py;
+    u32 k;
+    if (d->legend || WildlandsWorld_InRoom(d->x, d->y) || !gWildlandsDirectorTelemetry[6])
+        return;   // (the opening practice duo starts where the match placed it)
+    if (d->x < cx - 40 || d->x > cx + 280 || d->y < cy - 40 || d->y > cy + 200)
+        return;
+    DirPlayerPos(&px, &py);
+    for (k = 0; k < 48; k++)
+    {
+        s16 x, y;
+        u32 dist;
+        WildlandsWorld_NavPoint(DirRand() % WildlandsWorld_NavPointCount(), &x, &y);
+        if (x >= cx - 40 && x <= cx + 280 && y >= cy - 40 && y <= cy + 200)
+            continue;
+        dist = ArenaNav_Distance(px, py, x, y);
+        if (dist < 200 || dist > 420 || (sZone.active && ZoneOutside(x, y, 24)))
+            continue;
+        d->x = x; d->y = y;
+        return;
+    }
+}
+
 static void DirLoadActive(u8 index)
 {
     struct DirDuo *d = &sDir->duo[index];
+    DirOffscreenEntry(d);
     struct ArenaBody *body = &sArena.bodies[1];
     u8 lead = (d->species[0] && d->hp[0]) ? 0 : 1;
     u8 other = lead ^ 1;
@@ -1017,6 +1044,10 @@ static void DirectorDestroy(void)
         DirRestorePartner();
         Free(sDir);
         sDir = NULL;
+        // Back to the Lab ready to play: a won match restores HP, PP and
+        // status (a lost one whites out to the Lab, which heals too).
+        if (gBattleMons[0].hp)
+            HealPlayerParty();
     }
 }
 
