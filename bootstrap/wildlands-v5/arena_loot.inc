@@ -75,7 +75,7 @@ static void LootLoadGraphics(void)
     u32 tiles[LOOT_TYPES * 32 + 8] = {0};
     // Extra tile for the storm rain streak (arena_zone.inc): blue tail, white head.
     static const u32 sRainStreak[8] = {
-        0x66000000, 0x06600000, 0x06600000, 0x00660000,
+        0x77000000, 0x07700000, 0x07700000, 0x00770000,
         0x00226000, 0x00022000, 0x00022000, 0x00002200,
     };
     struct SpriteSheet sheet = {tiles, sizeof(tiles), LOOT_TAG};
