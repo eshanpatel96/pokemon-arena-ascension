@@ -1,0 +1,104 @@
+{
+  "world": "island",
+  "format": "ROM-resident 16x16 Emerald metatile entries (General+Fortree)",
+  "world_metatiles": [
+    256,
+    192
+  ],
+  "world_pixels": [
+    4096,
+    3072
+  ],
+  "source_plan": "docs/art/wildlands-map-concept-v3.png -> island_plan.py (semantic only)",
+  "land_metatiles": 22360,
+  "reachable_metatiles": 22277,
+  "reachable_pct": 99.63,
+  "lairs": {
+    "lugia": {
+      "box": [
+        17,
+        34,
+        14,
+        12
+      ],
+      "approaches": [
+        "N",
+        "S",
+        "E"
+      ],
+      "reachable": true
+    },
+    "rayquaza": {
+      "box": [
+        113,
+        18,
+        14,
+        12
+      ],
+      "approaches": [
+        "E",
+        "S",
+        "W"
+      ],
+      "reachable": true
+    },
+    "mewtwo": {
+      "box": [
+        208,
+        34,
+        16,
+        12
+      ],
+      "approaches": [
+        "N",
+        "S",
+        "W"
+      ],
+      "reachable": true
+    },
+    "kyogre": {
+      "box": [
+        33,
+        162,
+        14,
+        12
+      ],
+      "approaches": [
+        "N",
+        "W",
+        "E"
+      ],
+      "reachable": true
+    },
+    "hooh": {
+      "box": [
+        208,
+        162,
+        16,
+        12
+      ],
+      "approaches": [
+        "W",
+        "N"
+      ],
+      "reachable": true
+    }
+  },
+  "bridge_fallbacks": 0,
+  "nav_anchors": 336,
+  "loot_spots": 32,
+  "player_start": [
+    122,
+    100
+  ],
+  "enemy_start": [
+    134,
+    100
+  ],
+  "not_claimed": [
+    "landmark prefabs",
+    "region secondary tilesets",
+    "enterable buildings",
+    "destructible cover"
+  ]
+}

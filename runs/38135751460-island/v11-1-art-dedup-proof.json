@@ -1,0 +1,108 @@
+{
+  "identical_raw_bytes_removed": 652800,
+  "runtime_change": "Direct ROM pointer aliases only; no decompression or new RAM",
+  "stages": [
+    {
+      "stage": 0,
+      "bytes": 38400,
+      "sha256": "fe4819cc8ca1bbc8d41d54c90dd12038db14c603a3ae5922a01d82ed97fe8b83",
+      "flood_offset": 0
+    },
+    {
+      "stage": 1,
+      "bytes": 38400,
+      "sha256": "247e8b7309da3199ea85687a58739271f22c2f1e05aa9be3495286d8c8364f4e",
+      "flood_offset": 76800
+    },
+    {
+      "stage": 2,
+      "bytes": 38400,
+      "sha256": "765f1a025390120acf1671fa30bc502c0477b3916b75e7c4d3306e2d293fa58a",
+      "flood_offset": 153600
+    },
+    {
+      "stage": 3,
+      "bytes": 38400,
+      "sha256": "7b66704442b312f0a905e027c6407dfdcafc5e947ec683bce280e16fd4617ebf",
+      "flood_offset": 230400
+    },
+    {
+      "stage": 4,
+      "bytes": 38400,
+      "sha256": "a22b1d179d13a6e35be845c6be02ec1cfc0bb05296066e8dc787d15eabab274c",
+      "flood_offset": 307200
+    },
+    {
+      "stage": 5,
+      "bytes": 38400,
+      "sha256": "a1ec4831779a5363deed2677b2784aa00182fd2c1977fc8ebca1ae922f7e5384",
+      "flood_offset": 384000
+    },
+    {
+      "stage": 6,
+      "bytes": 38400,
+      "sha256": "d26881ebe0cf91ab53107b42537b4c0caadde95e054b0830e745116b7cb2d432",
+      "flood_offset": 460800
+    },
+    {
+      "stage": 7,
+      "bytes": 38400,
+      "sha256": "4cdd5ca30a860d5cf05e194867692deb211e5b2c7103c3a5036dfc20f0df0808",
+      "flood_offset": 537600
+    },
+    {
+      "stage": 8,
+      "bytes": 38400,
+      "sha256": "7e6c830699f4326e6f17fde6b5c2245f0ce5d1304ef45122846c261bd93ff900",
+      "flood_offset": 614400
+    },
+    {
+      "stage": 9,
+      "bytes": 38400,
+      "sha256": "c5a59fc5975817d2252e5d0157c04c029c30e99855141a299970f3dcb42092e5",
+      "flood_offset": 691200
+    },
+    {
+      "stage": 10,
+      "bytes": 38400,
+      "sha256": "337a31ee037cea6ead62eca06d1a0b7b1cd5cea15ef2f05d3051f3536650274d",
+      "flood_offset": 768000
+    },
+    {
+      "stage": 11,
+      "bytes": 38400,
+      "sha256": "3b30b8a91a3f42f56546a2e5086c044a5cef4265cb1ea70754ad696da1947f65",
+      "flood_offset": 844800
+    },
+    {
+      "stage": 12,
+      "bytes": 38400,
+      "sha256": "ddc9ef708fb34ba4bf5c64ac998fef4e0ace5cd40b14a55c67d184810cf1c6d4",
+      "flood_offset": 921600
+    },
+    {
+      "stage": 13,
+      "bytes": 38400,
+      "sha256": "c71a42f1e6c2437ab40b9f3ce46d56a9b282a09f780609142865a6226d3a26c6",
+      "flood_offset": 998400
+    },
+    {
+      "stage": 14,
+      "bytes": 38400,
+      "sha256": "e1e45cb55298d4db3d83645a63ead4a457f520af68a8b3f09207e23d89a0f92e",
+      "flood_offset": 1075200
+    },
+    {
+      "stage": 15,
+      "bytes": 38400,
+      "sha256": "2f2150874087baffeea6e4f4c66941dd2cc0750cbfa6eabbc77d87fb471a3d5e",
+      "flood_offset": 1152000
+    },
+    {
+      "stage": 16,
+      "bytes": 38400,
+      "sha256": "adc557031174f11d6e51beeb79c5c5b76de395c7c34ca4e2b8db397f7c715849",
+      "flood_offset": 1228800
+    }
+  ]
+}
