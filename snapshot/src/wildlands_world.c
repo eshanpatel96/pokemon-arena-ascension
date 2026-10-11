@@ -1160,6 +1160,8 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
             s = NavNodeNear(speciesMode, mover, x, y, TRUE, 2);
         if (t == 0xFFFF)
             t = NavNodeNear(speciesMode, mover, goalX, goalY, FALSE, 3);
+        if (t == 0xFFFF)
+            t = NavNodeNear(speciesMode, mover, goalX, goalY, FALSE, 6);   // goals on prefabs (doors)
         // The island graph covers all walkable land. When neither ring finds a
         // node, the 2.5k-anchor linear scan below would cost several frames, so
         // report no route and let the caller steer straight.
