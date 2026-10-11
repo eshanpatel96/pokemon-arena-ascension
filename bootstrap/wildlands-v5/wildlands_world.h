@@ -16,6 +16,7 @@ void WildlandsWorld_LoadGraphics(void);
 void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY);
 void WildlandsWorld_VBlank(void);
 void WildlandsWorld_TickBody(u8 side, s16 x, s16 y);
+void WildlandsWorld_RecordProjectileBlock(void);
 void WildlandsWorld_RestorePalettes(void);
 
 u8 WildlandsWorld_TerrainAt(s16 x, s16 y);
@@ -33,5 +34,6 @@ u8 WildlandsWorld_NextWaypointSide(u8 side, s16 x, s16 y, s16 goalX, s16 goalY, 
 u8 WildlandsWorld_NextWaypointSpecies(u16 species, s16 x, s16 y, s16 goalX, s16 goalY, struct ArenaPoint *next);
 
 extern EWRAM_DATA u32 gWildlandsWorldTelemetry[16];
+extern EWRAM_DATA u32 gWildlandsWorldAudit[8];
 
 #endif
