@@ -320,7 +320,10 @@ static void SquadFire(struct SquadWing *w)
     if (p->kind == ARENA_MOVE_PROJECTILE && !ArenaMoves_Beam(move))
     {
         if (!SquadSpawnShot(w, p, w->aimX - w->x, w->aimY - w->y))
+        {
+            gWildlandsPartnerTelemetry[7] += 0x10000;   // diag: spawn failures
             return;
+        }
     }
     else if (w->target != 0xFF && SquadAlive(w->target))
     {
@@ -435,7 +438,11 @@ static void SquadThink(struct SquadWing *w)
     {
         s32 zx, zy;
         if (ZoneSteer(w->x / Q, w->y / Q, &zx, &zy))
-        { SquadMoveWing(w, zx * Q, zy * Q, 420); return; }
+        {
+            if (!w->team) gWildlandsPartnerTelemetry[7]++;   // diag: storm-steer frames (partner)
+            SquadMoveWing(w, zx * Q, zy * Q, 420);
+            return;
+        }
     }
     slot = SquadChooseMove(w);
     if (slot != 0xFF)
@@ -450,6 +457,7 @@ static void SquadThink(struct SquadWing *w)
         && (!WildlandsWorld_Active() || WildlandsWorld_LineClear(w->x / Q, w->y / Q, tx / Q, ty / Q, 2))
         && !(gBattleMons[w->battler].status1 & (STATUS1_SLEEP | STATUS1_FREEZE)))
     {
+        gWildlandsPartnerTelemetry[6] += w->team ? 0x10000 : 1;   // diag: fire attempts
         w->shotSlot = slot;
         w->aimX = tx; w->aimY = ty;
         w->shotFacing = Facing(tx - w->x, ty - w->y);
