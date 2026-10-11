@@ -819,7 +819,7 @@ static bool8 SupportedBattler(u8 side)
         || gStatuses3[side] || gBattleMons[side].hp == 0)
         return FALSE;
     gArenaCompatibilityReason=ARENA_COMPAT_MOVES|(side<<8);
-    if(FirstMove(side,TRUE)==ARENA_NO_MOVE)return FALSE;
+    if(FirstMove(side,!WildlandsWorld_Active())==ARENA_NO_MOVE)return FALSE;
     gArenaCompatibilityReason=ARENA_COMPAT_ABILITY|(side<<8);
     switch (gBattleMons[side].ability)
     {
@@ -2853,6 +2853,7 @@ static void CB2_Arena(void)
             && !PsychicBusy(0) && !PsychicBusy(1)
             && !sArena.bodies[0].shotTimer && !sArena.bodies[1].shotTimer
             && !sArena.bodies[0].actionLife && !sArena.bodies[1].actionLife
+            && !WildlandsWorld_Active()
             && (FirstMove(0,TRUE)==ARENA_NO_MOVE || FirstMove(1,TRUE)==ARENA_NO_MOVE))
         {
             bool8 flying=FALSE;
@@ -2876,7 +2877,7 @@ static void CB2_Arena(void)
         for(i=0;i<2;i++)
             if(!sArena.bodies[i].shotTimer && !sArena.bodies[i].actionLife
                 && !ArenaMovePP(i,sArena.bodies[i].moveSlot))
-                sArena.bodies[i].moveSlot=FirstMove(i,TRUE);
+                {u8 m=FirstMove(i,TRUE); sArena.bodies[i].moveSlot=(m==ARENA_NO_MOVE&&WildlandsWorld_Active())?ARENA_STRUGGLE_SLOT:m;}
         gRealtimeArenaTelemetry.frames++;
         if (sArena.resultTimer)
         {
