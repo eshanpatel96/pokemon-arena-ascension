@@ -12,15 +12,16 @@ A5. Water: Flying types (and Levitate) fly over water; Water types swim; swimmer
 A6. Loot never dead at the cap: cap raised to +3, a capped pickup turns into a team heal; plus a PP-restore pickup.
 A7. Rest regen: a duo that stands still and does not attack for 3s heals slowly (not in the storm).
 A8. Random player spawn per match on legal ground away from lairs and other duos.
+A8b. Dynamic storm: the first circle is offset to a random side each match (on top of V5's random later circles, lair hot zones and the 2:30 opening).
 A10. Roster movesets: every roster Pokémon starts with Arena-supported moves only (same loadout rule as the AI duos); the coach and move editor offer only supported moves (playtest: Zapdos had moves it could not use).
-A9. Enemy AI: no backing into walls to stand and shoot (firing spots need an exit; strafe while firing). Partner AI: tighter follow, smarter target choice, out of the storm, never stuck.
+A9. Enemy AI (playtest: backs into a wall and stands there shooting; runs sometimes, camps other times): no backing into walls to stand and shoot (firing spots need an exit; strafe while firing). Partner AI: tighter follow, smarter target choice, out of the storm, never stuck.
 
 ## B. Duo control and information
-B1. R swaps you into your partner (short cooldown); the AI takes the other.
+B1. SELECT swaps you into your partner (short cooldown); the AI takes the other. L/R keep cycling moves and L+R keeps the ball throw; SELECT's old party/bag shortcut goes away with the Lab coach (C2).
 B2. Bigger partner HP panel (name, HP).
 B3. TEAM page in pause: both members, moves and PP, buffs vs cap, legendary partner, kills and pickups, foe buffs.
 B4. LOG page in pause: last ~12 events with match time.
-B5. Storm on the map: danger zone shaded, phase and timer, arrow to the safe edge, lair status.
+B5. Storm on the map: everything outside the current circle shaded red, the next (closer) circle outlined, phase and timer, arrow to the safe edge, lair status.
 
 ## C. Systems
 C1. Status effects in real time for all four battlers (burn and poison tick, paralysis slows and stalls, sleep and freeze timed with fire thaw, confusion aim drift), status icons, status-cure pickup.
