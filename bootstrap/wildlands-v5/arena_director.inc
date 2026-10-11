@@ -638,6 +638,17 @@ static void DirSimOne(u8 i)
                 return;
             }
         }
+        // Squeezed off the graph (slides can leave a duo in a corner): hop
+        // onto the nearest node; this is off screen and the node is legal.
+        {
+            s16 nx = d->x, ny = d->y;
+            if (WildlandsWorld_SnapToNav(&nx, &ny) && (nx != d->x || ny != d->y))
+            {
+                d->x = nx; d->y = ny;
+                gWildlandsBossTelemetry[14]++;
+                return;
+            }
+        }
         d->plan = 0;
         gWildlandsBossTelemetry[5]++;
         DirRandomGoal(d);

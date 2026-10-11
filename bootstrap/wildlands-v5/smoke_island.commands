@@ -267,6 +267,9 @@ frames 30 0
 snap 29-storm-rain
 dump zoneRain gWildlandsZoneTelemetry 16
 dumph rainA gWildlandsRainVisible 0 1
+dumph rainDiagA gWildlandsRainDiag 0 4
+dumph rainSprite gSprites 2584 34
+dumph oamAll gMain 56 512
 expectmin gWildlandsRainVisible 0 1 4
 # ---- Storm tint: run the storm fast until the player is outside it ----
 poke gWildlandsTestPeace 0 1 1

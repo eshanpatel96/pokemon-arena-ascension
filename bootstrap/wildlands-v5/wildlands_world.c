@@ -1237,6 +1237,22 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     return TRUE;
 }
 
+// Nearest nav-graph node to (x,y) regardless of line of sight (off-screen
+// simulation snaps onto the graph; the node is legal ground by construction).
+bool8 WildlandsWorld_SnapToNav(s16 *x, s16 *y)
+{
+#if WL_NAV_GRAPH
+    u16 n = NavNodeNear(TRUE, SPECIES_NONE, *x, *y, FALSE, 3);
+    if (n == 0xFFFF)
+        return FALSE;
+    *x = sNavPoints[n].x;
+    *y = sNavPoints[n].y;
+    return TRUE;
+#else
+    return FALSE;
+#endif
+}
+
 u8 WildlandsWorld_NextWaypointSide(u8 side, s16 x, s16 y,
     s16 goalX, s16 goalY, struct ArenaPoint *next)
 {
