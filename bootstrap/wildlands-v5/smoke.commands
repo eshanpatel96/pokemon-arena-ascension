@@ -73,7 +73,8 @@ frames 360 0
 snap 10-zone-shrink
 dump zoneB gWildlandsZoneTelemetry 16
 expectmin gWildlandsZoneTelemetry 4 4 1
-poke gWildlandsZoneTestSpeed 0 2 0
+poke gWildlandsZoneTestSpeed 0 2 65534
+frames 4 0
 # Movement/cadence checks run with the AI held so the practice duo is
 # still alive for the combat gates below.
 # Use 1-frame samples while Right is held: the existing snapshots were
@@ -114,7 +115,7 @@ dump world gWildlandsWorldTelemetry 16
 dump audit gWildlandsWorldAudit 8
 snap 07-after-cadence
 dump profile1 gWildlandsProfile 6
-poke gWildlandsTestPeace 0 1 0
+poke gWildlandsZoneTestSpeed 0 2 0
 poke gWildlandsTestPeace 0 1 0
 # ---- Gate D true duo combat (squad wings are battlers 2 and 3) ----
 dump squad0 gWildlandsSquadTelemetry 16
