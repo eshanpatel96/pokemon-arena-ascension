@@ -12,6 +12,7 @@ here = Path(__file__).resolve().parent
 shutil.copy(here / 'arena_squad.inc', root / 'src/arena_squad.inc')
 shutil.copy(here / 'arena_zone.inc', root / 'src/arena_zone.inc')
 shutil.copy(here / 'arena_loot.inc', root / 'src/arena_loot.inc')
+shutil.copy(here / 'arena_map.inc', root / 'src/arena_map.inc')
 
 
 def patch(path, old, new, count=1):
@@ -38,7 +39,8 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);\n'
       'static EWRAM_DATA u32 sZoneHudKeyShown = 0;\n'
       'static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;\n'
-      'static void LootInit(void);\nstatic void LootTick(void);\nstatic void LootDestroy(void);\n')
+      'static void LootInit(void);\nstatic void LootTick(void);\nstatic void LootDestroy(void);\n'
+      'static void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')
@@ -60,7 +62,7 @@ patch(A, '        if(!hp)\n        {\n            // Let a committed beam finish
 patch(A, '        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;}\n',
       '        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;SquadEnemyRetarget(body);}\n')
 # Module body: after DestroyShot (needs shots, Fire helpers, SpecialInvulnerable).
-patch(A, 'static void TickShots(void)\n{', '#include "arena_squad.inc"\n#include "arena_loot.inc"\n#include "arena_zone.inc"\n\nstatic void TickShots(void)\n{')
+patch(A, 'static void TickShots(void)\n{', '#include "arena_squad.inc"\n#include "arena_loot.inc"\n#include "arena_zone.inc"\n#include "arena_map.inc"\n\nstatic void TickShots(void)\n{')
 # Enemy lead rotates toward the safe circle when exposed or pre-rotating.
 patch(A, '    dx = sArena.waypoint.x * Q - body->x;\n', '    ZoneSteerEnemy(body);\n    dx = sArena.waypoint.x * Q - body->x;\n')
 # Bottom HUD: zone countdown and squad HP replace the capture-ball help.
@@ -69,6 +71,20 @@ patch(C, '        && sCapture.hudMove==move && sCapture.hudPP==pp)return;',
       '        && sCapture.hudMove==move && sCapture.hudPP==pp && sZoneHudKeyShown==ZoneHudKey())return;')
 patch(C, '            HudTinyWindow(2,81,10,text,4,5);\n        }\n        PutWindowTilemap(2);',
       '            HudTinyWindow(2,81,10,text,4,5);\n        }\n        ZoneHudLine();sZoneHudKeyShown=ZoneHudKey();\n        PutWindowTilemap(2);')
+
+# Live map: fifth pause page (POKEMON/BAG/MOVES/RESUME/MAP).
+patch(A, 'static const u8 labels[4][18]={_("POKEMON"),_("BAG"),_("MOVES"),_("RESUME")};',
+      'static const u8 labels[5][18]={_("POKEMON"),_("BAG"),_("MOVES"),_("RESUME"),_("MAP")};')
+patch(A, '            for(side=0;side<4;side++)\n            {\n                if(side==sPauseChoice)WindowRect(1,7,18+side*11,4,7,5);\n                PrintPopup(18,16+side*11,labels[side],side==sPauseChoice?5:4);',
+      '            for(side=0;side<5;side++)\n            {\n                if(side==sPauseChoice)WindowRect(1,7,17+side*10,4,7,5);\n                PrintPopup(18,15+side*10,labels[side],side==sPauseChoice?5:4);')
+patch(A, '        else if(sPausePage)\n        {\n            FillWindowPixelBuffer(1, PIXEL_FILL(9));',
+      '        else if(sPausePage==4)MapDraw();\n        else if(sPausePage)\n        {\n            FillWindowPixelBuffer(1, PIXEL_FILL(9));')
+patch(A, '{sPauseChoice=(sPauseChoice+(JOY_NEW(DPAD_DOWN)?1:3))%4;sArena.hudDirty=TRUE;}',
+      '{sPauseChoice=(sPauseChoice+(JOY_NEW(DPAD_DOWN)?1:4))%5;sArena.hudDirty=TRUE;}')
+patch(A, '                if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sArena.hudDirty=TRUE;}',
+      '                if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sArena.hudDirty=TRUE;}\n                if(sPauseChoice==4){sPausePage=4;sArena.hudDirty=TRUE;}')
+patch(A, '        else if(JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;',
+      '        else if(sPausePage<3 && JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;')
 
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',

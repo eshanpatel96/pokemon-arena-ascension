@@ -78,3 +78,19 @@ expectmin gWildlandsZoneTelemetry 56 4 1
 rate late-idle 300 0 90
 dump frame2 gArenaFrameTelemetry 10
 dump profile2 gWildlandsProfile 4
+# ---- Gate G live map: START -> MAP (5th entry) ----
+press 8
+press 128
+press 128
+press 128
+press 128
+snap 11-pause-menu
+press 1
+frames 20 0
+snap 12-live-map
+dump map gWildlandsMapTelemetry 4
+expectmin gWildlandsMapTelemetry 0 4 1
+press 2
+press 2
+frames 60 0
+snap 13-resumed

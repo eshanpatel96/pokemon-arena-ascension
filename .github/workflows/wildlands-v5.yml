@@ -8,6 +8,7 @@ on:
       - 'bootstrap/wildlands-v4/**'
       - 'bootstrap/arena-xl/**'
       - 'docs/WILDLANDS-V5*'
+      - 'docs/art/**'
   workflow_dispatch:
 concurrency:
   group: wildlands-v5-world-${{ github.ref }}
@@ -58,6 +59,7 @@ jobs:
           python3 bootstrap/wildlands-v5/apply.py engine | tee evidence/v5-world-apply.txt
           python3 bootstrap/wildlands-v5/squad_apply.py engine | tee evidence/v5-squad-apply.txt
           python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
+          python3 bootstrap/wildlands-v5/title.py engine | tee evidence/title.txt
           git rev-parse HEAD > evidence/source-commit.txt
           cp engine/data/wildlands_world/manifest.json evidence/world-manifest.json
           cp engine/include/wildlands_world_data.h evidence/
@@ -142,14 +144,19 @@ jobs:
       - name: mGBA world gameplay smoke
         run: |
           gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/wildlands-v5/wl_smoke.c -lmgba -o evidence/wildlands-v5-smoke
+          set +e
           set -o pipefail
           timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime bootstrap/wildlands-v5/smoke.commands - 2>&1 | tee evidence/smoke.log
-          python3 - <<'PY'
+          rc=$?
+          python3 - <<'PY2'
           from pathlib import Path
           from PIL import Image
           for p in Path('evidence/runtime').glob('*.ppm'):
               Image.open(p).save(p.with_suffix('.png')); p.unlink()
-          PY
+          PY2
+          grep -c "CHECK FAIL" evidence/smoke.log | xargs -I{} echo "::notice::smoke failed checks: {}"
+          grep "CHECK FAIL" evidence/smoke.log | head -10 | sed 's/^/::notice::/'
+          exit $rc
 
       - name: Recovery package
         if: always()
