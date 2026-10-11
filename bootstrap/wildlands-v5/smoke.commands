@@ -1,3 +1,4 @@
+# V5 movement diagnostic: pure RIGHT input must move the native Arena body.
 frames 300 0
 snap 00-title
 press 8
