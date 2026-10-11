@@ -34,7 +34,18 @@ u16 WildlandsWorld_ClipRay(s16 x, s16 y, s16 dx, s16 dy, u16 distance, u8 radius
 u8 WildlandsWorld_NextWaypointSide(u8 side, s16 x, s16 y, s16 goalX, s16 goalY, struct ArenaPoint *next);
 u8 WildlandsWorld_NextWaypointSpecies(u16 species, s16 x, s16 y, s16 goalX, s16 goalY, struct ArenaPoint *next);
 
+bool8 WildlandsWorld_InRoom(s16 x, s16 y);
+void WildlandsWorld_OutdoorPos(s32 *x, s32 *y);
+bool8 WildlandsWorld_PollDoor(s16 x, s16 y, bool8 facingUp, bool8 facingDown, s16 *outX, s16 *outY);
+void WildlandsWorld_ClampCamera(s32 px, s32 py, s32 *camX, s32 *camY);
+s8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy);
+bool8 WildlandsWorld_RoomExitPos(s16 x, s16 y, s16 *ex, s16 *ey);
+u8 WildlandsWorld_RoomCount(void);
+u8 WildlandsWorld_DoorCount(void);
+void WildlandsWorld_DoorInfo(u8 i, s16 *x, s16 *y, bool8 *lair);
+
 extern EWRAM_DATA u32 gWildlandsWorldTelemetry[16];
+extern EWRAM_DATA u32 gWildlandsRoomTelemetry[8];
 extern EWRAM_DATA u32 gWildlandsWorldAudit[8];
 
 #endif

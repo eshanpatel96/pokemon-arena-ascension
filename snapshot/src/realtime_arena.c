@@ -401,6 +401,7 @@ static void ArenaXL_UpdateCamera(void)
     s32 camX=Clamp(px-ARENA_XL_VIEW_W/2,0,ARENA_XL_WORLD_W-ARENA_XL_VIEW_W);
     s32 camY=Clamp(py-ARENA_XL_VIEW_H/2,0,ARENA_XL_WORLD_H-ARENA_XL_VIEW_H);
     u32 i;
+    if(WildlandsWorld_Active())WildlandsWorld_ClampCamera(px,py,&camX,&camY);
     sArenaXLCameraX=camX;sArenaXLCameraY=camY;
     gSpriteCoordOffsetX=-sArenaXLCameraX;
     gSpriteCoordOffsetY=-sArenaXLCameraY;
@@ -486,6 +487,10 @@ EWRAM_DATA u16 gWildlandsProfile[12] = {};
 // TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking
 // map/zone UI; always 0 in normal play.
 EWRAM_DATA u8 gWildlandsTestPeace = 0;
+// TEST HOOK ONLY: 1 = back to start, 2 = onto the current room exit,
+// 3 = onto the last pickup, 10+n = outside door n facing it; 0 in play.
+EWRAM_DATA u8 gWildlandsTestWarp = 0;
+static void LootLastSpot(s16 *x, s16 *y);
 struct WildlandsPartnerActor
 {
     s32 x,y;
@@ -1596,14 +1601,30 @@ static void MoveDelta(u8 side, s32 dx, s32 dy)
         && CoverCanStep(x/Q,body->y/Q)
         && (over || Abs(x - other->x) >= 22 * Q || Abs(body->y - other->y) >= 22 * Q
             || Abs(x - other->x) > Abs(body->x - other->x))) body->x = x;
-    else if (dx) gArenaAiTelemetry.wallBlocks[side]++;
+    else if (dx)
+    {
+        gArenaAiTelemetry.wallBlocks[side]++;
+        if (WildlandsWorld_Active() && !dy && !ghost)
+        {
+            s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, dx > 0 ? 1 : -1, 0);
+            if (n) body->y += n * Q;
+        }
+    }
     if ((ghost || (WildlandsWorld_Active()
             ? WildlandsWorld_BodyLineClear(side,body->x/Q,body->y/Q,body->x/Q,y/Q,ARENA_BODY_RADIUS)
             : ArenaNav_LineClear(body->x/Q,body->y/Q,body->x/Q,y/Q,ARENA_BODY_RADIUS)))
         && CoverCanStep(body->x/Q,y/Q)
         && (over || Abs(body->x - other->x) >= 22 * Q || Abs(y - other->y) >= 22 * Q
             || Abs(y - other->y) > Abs(body->y - other->y))) body->y = y;
-    else if (dy) gArenaAiTelemetry.wallBlocks[side]++;
+    else if (dy)
+    {
+        gArenaAiTelemetry.wallBlocks[side]++;
+        if (WildlandsWorld_Active() && !dx && !ghost)
+        {
+            s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, 0, dy > 0 ? 1 : -1);
+            if (n) body->x += n * Q;
+        }
+    }
     if (ghost) PhaseWrap(side, dx, dy);
 }
 

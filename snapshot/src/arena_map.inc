@@ -24,6 +24,7 @@
 #define MAPC_ZONE 7
 #define MAPC_NEXT 4
 #define MAPC_LOOT 12
+#define MAPC_HOUSE 8
 
 static const u16 sMapColors[3] = {RGB(6, 12, 24), RGB(4, 14, 7), RGB(22, 20, 12)};
 
@@ -38,7 +39,7 @@ static void MapPlot(s32 wx, s32 wy, u32 size, u8 color)
     s32 mx = (wx - WL_SLICE_BASE_X * 16) / (s32)s;
     s32 my = (wy - WL_SLICE_BASE_Y * 16) / (s32)s;
     if (mx < 0 || my < 0 || mx >= (s32)((WL_SLICE_W + MapScale() - 1) / MapScale())
-        || my >= (s32)((WL_SLICE_H + MapScale() - 1) / MapScale()))
+        || my >= (s32)((WL_OUTDOOR_H + MapScale() - 1) / MapScale()))
         return;
     WindowRect(1, MAP_X0 + mx - size / 2, MAP_Y0 + my - size / 2, size, size, color);
 }
@@ -60,6 +61,8 @@ static void MapDraw(void)
     static const u8 sKeyZone[] = _("ZONE");
     static const u8 sKeyNext[] = _("NEXT");
     static const u8 sKeyLoot[] = _("LOOT");
+    static const u8 sKeyLair[] = _("LAIR");
+    static const u8 sKeyHouse[] = _("HOUSE");
     static const u8 sHelp[] = _("B: BACK");
     u32 scale = MapScale(), x, i;
     u32 w = WL_MINIMAP_W, h = WL_MINIMAP_H;
@@ -81,15 +84,30 @@ static void MapDraw(void)
         if (sZone.phase == ZONE_WARNING || sZone.phase == ZONE_SHRINKING)
             MapCircle(sZone.toX, sZone.toY, sZone.toR >> 8, MAPC_NEXT, TRUE);
     }
-    for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < 32; i++)
-        if (!(sLoot.collected & (1u << i)))
+    for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX; i++)
+        if (!LootTaken(i) && !WildlandsWorld_InRoom(sLootSpots[i].x, sLootSpots[i].y))
             MapPlot(sLootSpots[i].x, sLootSpots[i].y, 1, MAPC_LOOT);
+    // Doors: houses as grey dots, legendary lairs as white rings.
+    for (i = 0; i < WildlandsWorld_DoorCount(); i++)
+    {
+        s16 dx, dy;
+        bool8 lair;
+        WildlandsWorld_DoorInfo(i, &dx, &dy, &lair);
+        if (lair)
+        {
+            MapPlot(dx, dy, 5, MAPC_PLAYER);
+            MapPlot(dx, dy, 3, MAPC_GROUND);
+        }
+        else
+            MapPlot(dx, dy, 2, MAPC_HOUSE);
+    }
     for (i = 0; i < 4; i++)
     {
         s32 ax, ay;
         if (!SquadAlive(i))
             continue;
         SquadPos(i, &ax, &ay);
+        { s32 ox = ax / Q, oy = ay / Q; WildlandsWorld_OutdoorPos(&ox, &oy); ax = ox * Q; ay = oy * Q; }
         if ((i & 1) && WildlandsWorld_IsConcealed(ax / Q, ay / Q)
             && ArenaNav_Distance(ax / Q, ay / Q, sArena.bodies[0].x / Q, sArena.bodies[0].y / Q) > 48)
             continue; // the map does not reveal hidden enemies
@@ -105,6 +123,9 @@ static void MapDraw(void)
     WindowRect(1, x + 36, 30, 1, 1, MAPC_NEXT); WindowRect(1, x + 38, 30, 1, 1, MAPC_NEXT);
     HudTinyWindow(1, x + 42, 28, sKeyNext, 4, 4);
     WindowRect(1, x + 37, 37, 1, 1, MAPC_LOOT); HudTinyWindow(1, x + 42, 36, sKeyLoot, 4, 4);
+    WindowRect(1, x, 44, 5, 5, MAPC_PLAYER); WindowRect(1, x + 1, 45, 3, 3, MAPC_GROUND);
+    HudTinyWindow(1, x + 8, 44, sKeyLair, 4, 4);
+    WindowRect(1, x + 37, 45, 2, 2, MAPC_HOUSE); HudTinyWindow(1, x + 42, 44, sKeyHouse, 5, 4);
     HudTinyWindow(1, x, 60, sHelp, 7, 8);
     PutWindowTilemap(1);
     CopyWindowToVram(1, COPYWIN_FULL);

@@ -16,6 +16,10 @@
 #define LOOT_ATK 0
 #define LOOT_DEF 1
 #define LOOT_SPD 2
+#define LOOT_HEAL 3   // house supplies: both members recover 40% max HP
+#define LOOT_CACHE 4  // lair cache: +1 ATK, DEF and SPD at once (caps apply)
+#define LOOT_TYPES 5
+#define LOOT_MAX 64
 #define LOOT_CAP 2
 #define LOOT_TAG 0xA7C0
 #define LOOT_SPRITES 4
@@ -26,7 +30,7 @@ static const struct LootSpot sLootSpots[] = {
 };
 
 static EWRAM_DATA struct {
-    u32 collected;
+    u32 collected[2];
     u8 boost[2][3];
     u8 sprite[LOOT_SPRITES];
     u8 live;
@@ -35,7 +39,19 @@ static EWRAM_DATA struct {
 // [0] orbs collected [1..3] team0 atk/def/spd [4..6] team1 atk/def/spd
 // [7] capped refusals [8] spot count [9] last collector battler
 // [10] contested frames resolved [11] duplicate-collect attempts (must be 0)
-EWRAM_DATA u32 gWildlandsLootTelemetry[12] = {};
+// [12] heals collected [13] lair caches collected
+EWRAM_DATA u32 gWildlandsLootTelemetry[14] = {};
+
+static void LootLastSpot(s16 *x, s16 *y)
+{
+    *x = sLootSpots[ARRAY_COUNT(sLootSpots) - 1].x;
+    *y = sLootSpots[ARRAY_COUNT(sLootSpots) - 1].y;
+}
+
+static bool8 LootTaken(u32 i)
+{
+    return (sLoot.collected[i >> 5] >> (i & 31)) & 1;
+}
 
 static const struct OamData sLootOam = {.shape = SPRITE_SHAPE(16x16), .size = SPRITE_SIZE(16x16), .priority = 1};
 static const struct SpriteTemplate sLootTemplate = {
@@ -48,16 +64,18 @@ static const u16 sLootPalette[16] = {
     RGB(31, 8, 6), RGB(20, 2, 2),     // ATK red
     RGB(8, 16, 31), RGB(2, 6, 20),    // DEF blue
     RGB(31, 27, 4), RGB(20, 14, 0),   // SPD gold
+    RGB(8, 28, 10), RGB(2, 14, 4),    // HEAL green
+    RGB(26, 10, 31), RGB(14, 2, 20),  // CACHE violet
 };
 
 static void LootLoadGraphics(void)
 {
-    u32 tiles[3 * 32] = {0};
+    u32 tiles[LOOT_TYPES * 32] = {0};
     struct SpriteSheet sheet = {tiles, sizeof(tiles), LOOT_TAG};
     struct SpritePalette pal = {sLootPalette, LOOT_TAG};
     u32 t, x, y;
     // Code-native 16x16 gem per type: outline, body, shade, highlight.
-    for (t = 0; t < 3; t++)
+    for (t = 0; t < LOOT_TYPES; t++)
         for (y = 0; y < 16; y++)
             for (x = 0; x < 16; x++)
             {
@@ -68,6 +86,9 @@ static void LootLoadGraphics(void)
                 if (d <= 13 && dx + dy > 4) c = 4 + t * 2;
                 if (d > 13 && d <= 16) c = 2;
                 if (d <= 5 && dx < 0 && dy < 0) c = 1;
+                // Supplies read as a cross, caches as a gem with a bright core.
+                if (t == LOOT_HEAL && d <= 13 && (Abs(dx) <= 3 || Abs(dy) <= 3)) c = 1;
+                if (t == LOOT_CACHE && d <= 4) c = 1;
                 if (c)
                 {
                     u32 tile = t * 4 + (y / 8) * 2 + x / 8;
@@ -109,30 +130,74 @@ static void LootDestroy(void)
     FreeSpritePaletteByTag(LOOT_TAG);
 }
 
-static void LootApply(u8 team, u8 type, s32 x, s32 y)
+static const u8 sLootStats[3][2] = {{STAT_ATK, STAT_SPATK}, {STAT_DEF, STAT_SPDEF}, {STAT_SPEED, STAT_SPEED}};
+
+static void LootStat(u8 team, u8 type)
 {
-    static const u8 sStats[3][2] = {{STAT_ATK, STAT_SPATK}, {STAT_DEF, STAT_SPDEF}, {STAT_SPEED, STAT_SPEED}};
-    u32 m;
+    u32 m, k;
     sLoot.boost[team][type]++;
-    sLoot.popupTimer = 150;
-    sLoot.popupType = type;
-    sLoot.popupTeam = team;
     for (m = 0; m < 2; m++)
     {
         u8 b = team + m * 2;
-        u32 k;
         for (k = 0; k < (type == LOOT_SPD ? 1u : 2u); k++)
-            if (gBattleMons[b].statStages[sStats[type][k]] < MAX_STAT_STAGE)
-                gBattleMons[b].statStages[sStats[type][k]]++;
+            if (gBattleMons[b].statStages[sLootStats[type][k]] < MAX_STAT_STAGE)
+                gBattleMons[b].statStages[sLootStats[type][k]]++;
+    }
+    gWildlandsLootTelemetry[1 + team * 3 + type] = sLoot.boost[team][type];
+}
+
+static bool8 LootUseless(u8 team, u8 type)
+{
+    if (type < 3)
+        return sLoot.boost[team][type] >= LOOT_CAP;
+    if (type == LOOT_CACHE)
+        return sLoot.boost[team][0] >= LOOT_CAP && sLoot.boost[team][1] >= LOOT_CAP
+            && sLoot.boost[team][2] >= LOOT_CAP;
+    return FALSE;
+}
+
+static void LootApply(u8 team, u8 type, s32 x, s32 y)
+{
+    u32 m, t;
+    sLoot.popupTimer = 150;
+    sLoot.popupType = type;
+    sLoot.popupTeam = team;
+    if (type == LOOT_HEAL)
+    {
+        gWildlandsLootTelemetry[12]++;
+        for (m = 0; m < 2; m++)
+        {
+            u8 b = team + m * 2;
+            u16 hp;
+            if (!SquadAlive(b))
+                continue;
+            hp = min(gBattleMons[b].maxHP, gBattleMons[b].hp + gBattleMons[b].maxHP * 2 / 5);
+            gBattleMons[b].hp = hp;
+            SetMonData(SquadPartyMon(b), MON_DATA_HP, &hp);
+        }
+    }
+    else if (type == LOOT_CACHE)
+    {
+        gWildlandsLootTelemetry[13]++;
+        for (t = 0; t < 3; t++)
+            if (sLoot.boost[team][t] < LOOT_CAP)
+                LootStat(team, t);
+    }
+    else
+        LootStat(team, type);
+    for (m = 0; m < 2; m++)
+    {
+        u8 b = team + m * 2;
         if (SquadAlive(b))
         {
             s32 bx, by;
             SquadPos(b, &bx, &by);
-            ArenaFeedback_Impact(b & 1, bx / Q, by / Q, sStats[type][0] | 256, ARENA_FEEDBACK_STAT);
+            ArenaFeedback_Impact(b & 1, bx / Q, by / Q,
+                (type == LOOT_HEAL ? STAT_DEF : type == LOOT_CACHE ? STAT_ATK : sLootStats[type][0]) | 256,
+                ARENA_FEEDBACK_STAT);
         }
     }
-    gWildlandsLootTelemetry[1 + team * 3 + type] = sLoot.boost[team][type];
-    PlaySE(SE_SUCCESS);
+    PlaySE(type >= LOOT_HEAL ? SE_EXP_MAX : SE_SUCCESS);
     sArena.hudDirty = TRUE;
 }
 
@@ -144,12 +209,12 @@ static void LootSim(void)
         return;
     if (sLoot.popupTimer && !--sLoot.popupTimer)
         sArena.hudDirty = TRUE;
-    for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < 32; i++)
+    for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX; i++)
     {
         const struct LootSpot *s = &sLootSpots[i];
         u8 winner = 0xFF, contenders = 0;
         u32 best = 0xFFFF;
-        if (sLoot.collected & (1u << i))
+        if (LootTaken(i))
             continue;
         for (b = 0; b < 4; b++)
         {
@@ -167,10 +232,10 @@ static void LootSim(void)
         if (winner == 0xFF)
             continue;
         if (contenders > 1) gWildlandsLootTelemetry[10]++;
-        if (sLoot.boost[winner & 1][s->type] >= LOOT_CAP)
+        if (LootUseless(winner & 1, s->type))
         { gWildlandsLootTelemetry[7]++; continue; }
-        if (sLoot.collected & (1u << i)) gWildlandsLootTelemetry[11]++;
-        sLoot.collected |= 1u << i;   // atomic: removed before any effect
+        if (LootTaken(i)) gWildlandsLootTelemetry[11]++;
+        sLoot.collected[i >> 5] |= 1u << (i & 31);   // atomic: removed before any effect
         gWildlandsLootTelemetry[0]++;
         gWildlandsLootTelemetry[9] = winner;
         LootApply(winner & 1, s->type, s->x, s->y);
@@ -183,10 +248,10 @@ static void LootTick(void)
     u32 i, n = 0;
     if (!sLoot.live)
         return;
-    for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < 32 && n < LOOT_SPRITES; i++)
+    for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX && n < LOOT_SPRITES; i++)
     {
         const struct LootSpot *s = &sLootSpots[i];
-        if (sLoot.collected & (1u << i))
+        if (LootTaken(i))
             continue;
         if (sLoot.sprite[n] != MAX_SPRITES
             && s->x > sArenaXLCameraX - 8 && s->x < sArenaXLCameraX + 248
@@ -209,10 +274,14 @@ static bool8 LootPopupText(u8 *text)
 {
     static const u8 sWho[2][6] = {_("TEAM "), _("FOES ")};
     static const u8 sStat[3][5] = {_(" ATK"), _(" DEF"), _(" SPD")};
+    static const u8 sHeal[] = _("HEALED");
+    static const u8 sCache[] = _("CACHE +1 ALL");
     u8 *end;
     if (!sLoot.popupTimer)
         return FALSE;
     end = StringCopy(text, sWho[sLoot.popupTeam & 1]);
+    if (sLoot.popupType == LOOT_HEAL) { StringCopy(end, sHeal); return TRUE; }
+    if (sLoot.popupType == LOOT_CACHE) { StringCopy(end, sCache); return TRUE; }
     *end++ = CHAR_PLUS;
     *end++ = CHAR_0 + min(sLoot.boost[sLoot.popupTeam & 1][sLoot.popupType], 9);
     StringCopy(end, sStat[sLoot.popupType]);

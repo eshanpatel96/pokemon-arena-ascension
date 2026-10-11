@@ -7,7 +7,8 @@
 #define WL_SLICE_BASE_X 108
 #define WL_SLICE_BASE_Y 72
 #define WL_SLICE_W 40
-#define WL_SLICE_H 48
+#define WL_SLICE_H 66
+#define WL_OUTDOOR_H 48
 #define WL_VOID_ENTRY 0x10A1
 #define WL_PLAYER_START_X 1896
 #define WL_PLAYER_START_Y 1408

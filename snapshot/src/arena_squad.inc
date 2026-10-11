@@ -518,6 +518,41 @@ static void SquadDraw(struct SquadWing *w)
 #define WL_NOW() (gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228)
 static void ZoneSim(void);
 static void LootSim(void);
+// Doors: the player walks into a house / lair door (or back onto a room's
+// exit) and the duo moves together; the region swap itself happens in the
+// world renderer when the camera arrives.
+static void SquadDoorSim(void)
+{
+    struct ArenaBody *lead = &sArena.bodies[0];
+    s16 nx, ny;
+    if (!WildlandsWorld_Active() || sArena.resultTimer || !SquadAlive(0))
+        return;
+    if (gWildlandsTestWarp)
+    {
+        u8 k = gWildlandsTestWarp;
+        bool8 lair;
+        gWildlandsTestWarp = 0;
+        nx = lead->x / Q; ny = lead->y / Q;
+        if (k >= 10 && k - 10 < WildlandsWorld_DoorCount())
+        { WildlandsWorld_DoorInfo(k - 10, &nx, &ny, &lair); lead->facing = FACE_UP; }
+        else if (k == 2 && WildlandsWorld_RoomExitPos(nx, ny, &nx, &ny))
+            lead->facing = FACE_DOWN;
+        else if (k == 3)
+            LootLastSpot(&nx, &ny);
+        else if (k == 1)
+        { nx = WL_PLAYER_START_X; ny = WL_PLAYER_START_Y; }
+        lead->x = nx * Q; lead->y = ny * Q;
+    }
+    if (!WildlandsWorld_PollDoor(lead->x / Q, lead->y / Q, lead->facing == FACE_UP,
+            lead->facing == FACE_DOWN, &nx, &ny))
+        return;
+    lead->x = nx * Q;
+    lead->y = ny * Q;
+    lead->facing = WildlandsWorld_InRoom(nx, ny) ? FACE_UP : FACE_DOWN;
+    if (sSquadWings[0].active && sSquadWings[0].alive)
+        SquadRegroup(&sSquadWings[0], lead);
+    PlaySE(SE_DOOR);
+}
 // One fixed 60Hz simulation step for the Wildlands layer: storm clock and
 // exposure, pickups and wing AI. CB2_Arena runs it once per sim step, so a
 // render that misses a VBlank still advances game time correctly.
@@ -528,6 +563,7 @@ static void SquadSimStep(void)
     LootSim();
     if (sArena.paused || sArena.resultTimer)
         return;
+    SquadDoorSim();
     for (i = 0; i < 2; i++)
         if (sSquadWings[i].active && sSquadWings[i].alive)
             SquadThink(&sSquadWings[i]);
