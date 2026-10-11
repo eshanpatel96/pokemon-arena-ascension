@@ -30,6 +30,8 @@ struct DirDuo
     s16 x, y, gx, gy;
     u8 level, state, hp[2];     // hp in percent; 0 = fainted member
     u8 legend, room, kills, plan;  // AI: room = lair fight countdown, plan = legend slot + 1
+    u16 planBest;                  // boss run: closest distance to the door so far
+    u8 planStall, pad2;            // ticks without getting closer
 };
 
 struct DirState
@@ -586,14 +588,26 @@ static void DirSimOne(u8 i)
             gWildlandsBossTelemetry[5]++;
             DirRandomGoal(d);
         }
-        else if (ArenaNav_Distance(d->x, d->y, ox, oy) <= 40)
+        else if (ArenaNav_Distance(d->x, d->y, ox, oy) <= 40
+                 || (ArenaNav_Distance(d->x, d->y, ox, oy) <= 160
+                     && !WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y, ox, oy, 6))
+                 || (d->planStall >= 8 && d->planBest <= 480))
         {
             d->x = ox; d->y = oy;
             DirBossStart(d);
             return;
         }
+        else if (d->planStall >= 8)
+        {
+            d->plan = 0;              // no progress and still far: give up
+            gWildlandsBossTelemetry[5]++;
+            DirRandomGoal(d);
+        }
         else
         {
+            u16 now = ArenaNav_Distance(d->x, d->y, ox, oy);
+            if (!d->planBest || now + 8 < d->planBest) { d->planBest = now; d->planStall = 0; }
+            else d->planStall++;
             d->gx = ox; d->gy = oy;
         }
     }
@@ -667,6 +681,7 @@ static void DirSimOne(u8 i)
             s32 ox, oy;
             DirLairDoor(&sDir->duo[lair], &ox, &oy);
             d->plan = lair + 1;
+            d->planBest = 0; d->planStall = 0;
             d->gx = ox; d->gy = oy;
             sDir->bossCooldown = max(sDir->bossCooldown, 600);   // others wait while it travels
             gWildlandsBossTelemetry[12]++;
@@ -722,6 +737,7 @@ static void DirSimOne(u8 i)
                 s32 ox, oy;
                 DirLairDoor(&sDir->duo[lair], &ox, &oy);
                 d->plan = lair + 1;
+                d->planBest = 0; d->planStall = 0;
                 d->gx = ox; d->gy = oy;
                 sDir->bossCooldown = max(sDir->bossCooldown, 600);
                 gWildlandsBossTelemetry[12]++;
@@ -845,6 +861,7 @@ static void DirectorBossEnter(void)
     if (d->state != DIR_SIM)
         return;
     d->plan = sDir->activePlan;
+    d->planBest = 0; d->planStall = 0;
     sDir->activePlan = 0;
     sDir->bossEvalStamp = 0;
     {
