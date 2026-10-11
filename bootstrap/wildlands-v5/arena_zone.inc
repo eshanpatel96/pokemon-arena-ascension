@@ -224,7 +224,12 @@ static void ZoneDrawMarkers(void)
     u32 i, n = 0, a;
     s32 r = sZone.r >> 8;
     bool8 blink = sZone.phase == ZONE_WARNING && (sZone.clock & 16);
-    for (a = 0; a < 32 && n < ZONE_MARKERS; a++)
+    // Indoors the storm edge is not on screen (the room is drawn alone).
+    if (WildlandsWorld_InRoom(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q))
+        a = 32;
+    else
+        a = 0;
+    for (; a < 32 && n < ZONE_MARKERS; a++)
     {
         s32 x = sZone.cx + Cos(a * 8, r);
         s32 y = sZone.cy + Sin(a * 8, r);

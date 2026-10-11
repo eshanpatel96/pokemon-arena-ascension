@@ -549,6 +549,12 @@ void WildlandsWorld_ClampCamera(s32 px, s32 py, s32 *camX, s32 *camY)
     else *camY = py - 80 < ry ? ry : py - 80 > ry + rh - 160 ? ry + rh - 160 : py - 80;
 }
 
+void WildlandsWorld_DoorArrival(u8 door, s16 *x, s16 *y)
+{
+    *x = sWlRooms[sWlDoors[door].room].arriveX;
+    *y = sWlRooms[sWlDoors[door].room].arriveY;
+}
+
 bool8 WildlandsWorld_RoomExitPos(s16 x, s16 y, s16 *ex, s16 *ey)
 {
     s8 room = sActive ? RoomAt(x, y) : -1;

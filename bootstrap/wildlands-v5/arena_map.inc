@@ -62,7 +62,7 @@ static void MapDraw(void)
     static const u8 sKeyNext[] = _("NEXT");
     static const u8 sKeyLoot[] = _("LOOT");
     static const u8 sKeyLair[] = _("LAIR");
-    static const u8 sKeyHouse[] = _("HOUSE");
+    static const u8 sKeyHouse[] = _("HOME");
     static const u8 sHelp[] = _("B: BACK");
     u32 scale = MapScale(), x, i;
     u32 w = WL_MINIMAP_W, h = WL_MINIMAP_H;
@@ -125,7 +125,7 @@ static void MapDraw(void)
     WindowRect(1, x + 37, 37, 1, 1, MAPC_LOOT); HudTinyWindow(1, x + 42, 36, sKeyLoot, 4, 4);
     WindowRect(1, x, 44, 5, 5, MAPC_PLAYER); WindowRect(1, x + 1, 45, 3, 3, MAPC_GROUND);
     HudTinyWindow(1, x + 8, 44, sKeyLair, 4, 4);
-    WindowRect(1, x + 37, 45, 2, 2, MAPC_HOUSE); HudTinyWindow(1, x + 42, 44, sKeyHouse, 5, 4);
+    WindowRect(1, x + 37, 45, 2, 2, MAPC_HOUSE); HudTinyWindow(1, x + 42, 44, sKeyHouse, 4, 4);
     HudTinyWindow(1, x, 60, sHelp, 7, 8);
     PutWindowTilemap(1);
     CopyWindowToVram(1, COPYWIN_FULL);

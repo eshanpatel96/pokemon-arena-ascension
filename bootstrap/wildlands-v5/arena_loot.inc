@@ -55,12 +55,14 @@ static bool8 LootTaken(u32 i)
 
 static const struct OamData sLootOam = {.shape = SPRITE_SHAPE(16x16), .size = SPRITE_SIZE(16x16), .priority = 1};
 static const struct SpriteTemplate sLootTemplate = {
-    .tileTag = LOOT_TAG, .paletteTag = LOOT_TAG, .oam = &sLootOam,
+    .tileTag = LOOT_TAG, .paletteTag = SHOT_TAG, .oam = &sLootOam,
     .anims = gDummySpriteAnimTable, .images = NULL, .affineAnims = gDummySpriteAffineAnimTable,
     .callback = SpriteCallbackDummy,
 };
-static const u16 sLootPalette[16] = {
-    RGB(0, 0, 0), RGB(31, 31, 31), RGB(4, 4, 6),
+// Loot shares the player shot palette (OBJ palettes are all spoken for):
+// entries 2 (white) and 3 (dark) are the shot palette's own; 5..14 are free
+// and carry the five gem colours (body, shade).
+static const u16 sLootColors[10] = {
     RGB(31, 8, 6), RGB(20, 2, 2),     // ATK red
     RGB(8, 16, 31), RGB(2, 6, 20),    // DEF blue
     RGB(31, 27, 4), RGB(20, 14, 0),   // SPD gold
@@ -72,7 +74,6 @@ static void LootLoadGraphics(void)
 {
     u32 tiles[LOOT_TYPES * 32] = {0};
     struct SpriteSheet sheet = {tiles, sizeof(tiles), LOOT_TAG};
-    struct SpritePalette pal = {sLootPalette, LOOT_TAG};
     u32 t, x, y;
     // Code-native 16x16 gem per type: outline, body, shade, highlight.
     for (t = 0; t < LOOT_TYPES; t++)
@@ -82,13 +83,13 @@ static void LootLoadGraphics(void)
                 s32 dx = (s32)x * 2 - 15, dy = (s32)y * 2 - 15;
                 u32 d = Abs(dx) + Abs(dy);
                 u32 c = 0;
-                if (d <= 13) c = 3 + t * 2;
-                if (d <= 13 && dx + dy > 4) c = 4 + t * 2;
-                if (d > 13 && d <= 16) c = 2;
-                if (d <= 5 && dx < 0 && dy < 0) c = 1;
+                if (d <= 13) c = 5 + t * 2;
+                if (d <= 13 && dx + dy > 4) c = 6 + t * 2;
+                if (d > 13 && d <= 16) c = 3;
+                if (d <= 5 && dx < 0 && dy < 0) c = 2;
                 // Supplies read as a cross, caches as a gem with a bright core.
-                if (t == LOOT_HEAL && d <= 13 && (Abs(dx) <= 3 || Abs(dy) <= 3)) c = 1;
-                if (t == LOOT_CACHE && d <= 4) c = 1;
+                if (t == LOOT_HEAL && d <= 13 && (Abs(dx) <= 3 || Abs(dy) <= 3)) c = 2;
+                if (t == LOOT_CACHE && d <= 4) c = 2;
                 if (c)
                 {
                     u32 tile = t * 4 + (y / 8) * 2 + x / 8;
@@ -96,7 +97,8 @@ static void LootLoadGraphics(void)
                 }
             }
     LoadSpriteSheet(&sheet);
-    LoadSpritePalette(&pal);
+    if (IndexOfSpritePaletteTag(SHOT_TAG) != 0xFF)
+        LoadPalette(sLootColors, OBJ_PLTT_ID(IndexOfSpritePaletteTag(SHOT_TAG)) + 5, sizeof(sLootColors));
 }
 
 static void LootInit(void)
@@ -127,7 +129,6 @@ static void LootDestroy(void)
         if (sLoot.sprite[i] != MAX_SPRITES)
         { DestroySprite(&gSprites[sLoot.sprite[i]]); sLoot.sprite[i] = MAX_SPRITES; }
     FreeSpriteTilesByTag(LOOT_TAG);
-    FreeSpritePaletteByTag(LOOT_TAG);
 }
 
 static const u8 sLootStats[3][2] = {{STAT_ATK, STAT_SPATK}, {STAT_DEF, STAT_SPDEF}, {STAT_SPEED, STAT_SPEED}};
@@ -205,10 +206,18 @@ static void LootApply(u8 team, u8 type, s32 x, s32 y)
 static void LootSim(void)
 {
     u32 i, b;
+    if (sLoot.live && !sArena.paused && !sArena.resultTimer && sLoot.popupTimer && !--sLoot.popupTimer)
+        sArena.hudDirty = TRUE;
+    {
+    s32 ax[4], ay[4];
+    bool8 alive[4];
     if (!sLoot.live || sArena.paused || sArena.resultTimer)
         return;
-    if (sLoot.popupTimer && !--sLoot.popupTimer)
-        sArena.hudDirty = TRUE;
+    for (b = 0; b < 4; b++)
+    {
+        alive[b] = SquadAlive(b);
+        if (alive[b]) { SquadPos(b, &ax[b], &ay[b]); ax[b] /= Q; ay[b] /= Q; }
+    }
     for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX; i++)
     {
         const struct LootSpot *s = &sLootSpots[i];
@@ -218,12 +227,10 @@ static void LootSim(void)
             continue;
         for (b = 0; b < 4; b++)
         {
-            s32 x, y;
             u16 d;
-            if (!SquadAlive(b))
+            if (!alive[b] || Abs(ax[b] - s->x) > 12 || Abs(ay[b] - s->y) > 12)
                 continue;
-            SquadPos(b, &x, &y);
-            d = ArenaNav_Distance(x / Q, y / Q, s->x, s->y);
+            d = ArenaNav_Distance(ax[b], ay[b], s->x, s->y);
             if (d > 12)
                 continue;
             contenders++;
@@ -239,6 +246,7 @@ static void LootSim(void)
         gWildlandsLootTelemetry[0]++;
         gWildlandsLootTelemetry[9] = winner;
         LootApply(winner & 1, s->type, s->x, s->y);
+    }
     }
 }
 

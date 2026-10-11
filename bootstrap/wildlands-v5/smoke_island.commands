@@ -97,3 +97,4 @@ dump nav gWildlandsWorldTelemetry 16
 # Streaming queue never dropped a tile (visual corruption while moving).
 dump roomsEnd gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 28 4 0
+dump brain gWildlandsBrainTelemetry 8

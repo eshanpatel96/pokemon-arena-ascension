@@ -27,46 +27,6 @@ snap 10-zone-shrink
 dump zoneB gWildlandsZoneTelemetry 16
 expectmin gWildlandsZoneTelemetry 4 4 1
 poke gWildlandsZoneTestSpeed 0 2 0
-poke gWildlandsTestPeace 0 1 0
-# Use 1-frame samples while Right is held: the existing snapshots were
-# taken only after frames() released the key, so zero heldKeys was expected.
-frames 1 16
-snap 02a-first-right-frame
-frames 29 16
-snap 02a-move-30
-frames 60 16
-snap 02b-move-90
-frames 90 16
-snap 02c-move-180
-expect gWildlandsWorldAudit 4 4 1
-expect gWildlandsWorldAudit 8 4 1
-expect gWildlandsWorldAudit 20 4 2
-snap 03-crossing-fire
-frames 14 18
-frames 45 16
-snap 04-after-dodge
-frames 80 128
-snap 05-water-probe
-frames 120 64
-snap 06-grass-probe
-
-# ---- Gate B cadence (wl_smoke): Arena updates per emulated frame ----
-# Render cadence is informational (min 0); the gate is simulation steps per
-# emulated frame (fixed-timestep catch-up keeps game time real-time).
-rate render-idle 300 0 0
-ratesym idle gWildlandsProfile 20 2 300 0 95
-ratesym right gWildlandsProfile 20 2 300 16 95
-ratesym down gWildlandsProfile 20 2 240 128 95
-ratesym left gWildlandsProfile 20 2 300 32 95
-ratesym up gWildlandsProfile 20 2 240 64 95
-ratesym attack gWildlandsProfile 20 2 180 1 95
-dump frame gArenaFrameTelemetry 10
-dump render gArenaRenderTelemetry 4
-dump world gWildlandsWorldTelemetry 16
-dump audit gWildlandsWorldAudit 8
-snap 07-after-cadence
-dump profile1 gWildlandsProfile 6
-poke gWildlandsTestPeace 0 1 1
 # ---- Gate G live map: START -> MAP (5th entry) ----
 frames 6 8
 frames 30 0
@@ -114,10 +74,57 @@ poke gWildlandsTestWarp 0 1 1
 frames 60 0
 
 poke gWildlandsTestPeace 0 1 0
+# Use 1-frame samples while Right is held: the existing snapshots were
+# taken only after frames() released the key, so zero heldKeys was expected.
+frames 1 16
+snap 02a-first-right-frame
+frames 29 16
+snap 02a-move-30
+frames 60 16
+snap 02b-move-90
+frames 90 16
+snap 02c-move-180
+expect gWildlandsWorldAudit 4 4 1
+expect gWildlandsWorldAudit 8 4 1
+expect gWildlandsWorldAudit 20 4 2
+snap 03-crossing-fire
+frames 14 18
+frames 45 16
+snap 04-after-dodge
+frames 80 128
+snap 05-water-probe
+frames 120 64
+snap 06-grass-probe
+
+# ---- Gate B cadence (wl_smoke): Arena updates per emulated frame ----
+# Render cadence is informational (min 0); the gate is simulation steps per
+# emulated frame (fixed-timestep catch-up keeps game time real-time).
+rate render-idle 300 0 0
+ratesym idle gWildlandsProfile 20 2 300 0 95
+ratesym right gWildlandsProfile 20 2 300 16 95
+ratesym down gWildlandsProfile 20 2 240 128 95
+ratesym left gWildlandsProfile 20 2 300 32 95
+ratesym up gWildlandsProfile 20 2 240 64 95
+ratesym attack gWildlandsProfile 20 2 180 1 95
+dump frame gArenaFrameTelemetry 10
+dump render gArenaRenderTelemetry 4
+dump world gWildlandsWorldTelemetry 16
+dump audit gWildlandsWorldAudit 8
+snap 07-after-cadence
+dump profile1 gWildlandsProfile 6
+poke gWildlandsTestPeace 0 1 0
 # ---- Gate D true duo combat (squad wings are battlers 2 and 3) ----
 dump squad0 gWildlandsSquadTelemetry 16
 expect gWildlandsSquadTelemetry 0 4 3
 frames 240 16
+# ---- Enemy duo brain: fights when even, retreats when losing ----
+dump brain0 gWildlandsBrainTelemetry 8
+expectmin gWildlandsBrainTelemetry 8 4 1
+poke gBattleMons 128 2 4
+frames 240 0
+snap 08a-enemy-retreat
+dump brain1 gWildlandsBrainTelemetry 8
+expectmin gWildlandsBrainTelemetry 12 4 1
 frames 900 0
 snap 08-duo-fight
 dump squad1 gWildlandsSquadTelemetry 16

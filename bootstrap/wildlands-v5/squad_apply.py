@@ -13,6 +13,7 @@ shutil.copy(here / 'arena_squad.inc', root / 'src/arena_squad.inc')
 shutil.copy(here / 'arena_zone.inc', root / 'src/arena_zone.inc')
 shutil.copy(here / 'arena_loot.inc', root / 'src/arena_loot.inc')
 shutil.copy(here / 'arena_map.inc', root / 'src/arena_map.inc')
+shutil.copy(here / 'arena_brain.inc', root / 'src/arena_brain.inc')
 
 
 def patch(path, old, new, count=1):
@@ -50,9 +51,11 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       '// TEST HOOK ONLY: 1 = back to start, 2 = onto the current room exit,\n'
       '// 3 = onto the last pickup, 10+n = outside door n facing it; 0 in play.\n'
       'EWRAM_DATA u8 gWildlandsTestWarp = 0;\n'
-      'static void LootLastSpot(s16 *x, s16 *y);\n')
+      'static void LootLastSpot(s16 *x, s16 *y);\n'
+      'static void BrainDecide(struct ArenaBody *body, u8 seenMask);\nstatic bool8 BrainAllowsFire(void);\n'
+      'static u8 BrainWingTarget(u8 picked);\nstatic bool8 BrainWingFollows(void);\nstatic void BrainInit(void);\n')
 # The follower actor is superseded by real squad wings.
-patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
+patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    BrainInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')
 patch(A, 'WildlandsPartner_Destroy();', 'SquadDestroy();ZoneDestroy();LootDestroy();', count=2)
 # A new encounter (not a menu round trip) starts squad/zone/loot fresh.
@@ -71,8 +74,10 @@ patch(A, '        if(!hp)\n        {\n            // Let a committed beam finish
 # Enemy lead targets the nearer visible member of the player duo.
 patch(A, '        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;}\n',
       '        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;SquadEnemyRetarget(body);}\n')
+# The duo brain also runs while the player hides in grass or smoke.
+patch(A, '        else gArenaCoverTelemetry[5]++;\n        if(sDecoys[0].life', '        else {gArenaCoverTelemetry[5]++;SquadEnemyRetarget(body);}\n        if(sDecoys[0].life')
 # Module body: after DestroyShot (needs shots, Fire helpers, SpecialInvulnerable).
-patch(A, 'static void TickShots(void)\n{', '#include "arena_squad.inc"\n#include "arena_loot.inc"\n#include "arena_zone.inc"\n#include "arena_map.inc"\n\nstatic void TickShots(void)\n{')
+patch(A, 'static void TickShots(void)\n{', '#include "arena_squad.inc"\n#include "arena_loot.inc"\n#include "arena_zone.inc"\n#include "arena_map.inc"\n#include "arena_brain.inc"\n\nstatic void TickShots(void)\n{')
 # Enemy lead rotates toward the safe circle when exposed or pre-rotating.
 patch(A, '    dx = sArena.waypoint.x * Q - body->x;\n', '    ZoneSteerEnemy(body);\n    dx = sArena.waypoint.x * Q - body->x;\n')
 # Bottom HUD: zone countdown and squad HP replace the capture-ball help.
@@ -164,12 +169,13 @@ patch(A, '''    u32 i;
     sArenaXLCameraX=camX;sArenaXLCameraY=camY;''', '''    u32 i;
     if(WildlandsWorld_Active())WildlandsWorld_ClampCamera(px,py,&camX,&camY);
     sArenaXLCameraX=camX;sArenaXLCameraY=camY;''')
-# Corner assist: a blocked straight move slides 1px toward a one-tile opening.
+# Corner assist (player only; AI routes around): a blocked straight move
+# slides 1px toward a one-tile opening.
 patch(A, '''    else if (dx) gArenaAiTelemetry.wallBlocks[side]++;
 ''', '''    else if (dx)
     {
         gArenaAiTelemetry.wallBlocks[side]++;
-        if (WildlandsWorld_Active() && !dy && !ghost)
+        if (WildlandsWorld_Active() && !side && !dy && !ghost)
         {
             s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, dx > 0 ? 1 : -1, 0);
             if (n) body->y += n * Q;
@@ -180,7 +186,7 @@ patch(A, '''    else if (dy) gArenaAiTelemetry.wallBlocks[side]++;
 ''', '''    else if (dy)
     {
         gArenaAiTelemetry.wallBlocks[side]++;
-        if (WildlandsWorld_Active() && !dx && !ghost)
+        if (WildlandsWorld_Active() && !side && !dx && !ghost)
         {
             s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, 0, dy > 0 ? 1 : -1);
             if (n) body->x += n * Q;

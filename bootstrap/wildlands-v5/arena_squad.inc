@@ -416,7 +416,11 @@ static void SquadThink(struct SquadWing *w)
             SquadRegroup(w, lead);
     }
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
+    {
         w->target = SquadPickTarget(w->team, w->x, w->y);
+        if (w->team && w->target != 0xFF)
+            w->target = BrainWingTarget(w->target);   // enemy duo focuses fire
+    }
     gWildlandsSquadTelemetry[13 + w->team] = w->target;
     if (w->shotTimer)
     {
@@ -458,7 +462,7 @@ static void SquadThink(struct SquadWing *w)
         w->moving = FALSE;
         return;
     }
-    if (w->target != 0xFF && dist < 220)
+    if (w->target != 0xFF && dist < 220 && !(w->team && BrainWingFollows()))
     {
         // Engage: close to ~2/3 of range, never closer than 24px.
         u16 want = p ? max(24, (p->kind == ARENA_MOVE_PROJECTILE ? p->range : 26) * 2 / 3) : 40;
@@ -703,14 +707,13 @@ static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaM
 static EWRAM_DATA struct { u16 lost, roamClock; } sEnemySight = {};
 static bool8 SquadEnemySees(void)
 {
-    return !WildlandsWorld_Active() || sEnemySight.lost < 20;
+    return !WildlandsWorld_Active() || (sEnemySight.lost < 20 && BrainAllowsFire());
 }
 
 static void SquadEnemyRetarget(struct ArenaBody *body)
 {
     struct SquadWing *w = &sSquadWings[0];
-    u8 best = 0xFF, i;
-    u16 bestD = 0xFFFF;
+    u8 i, mask = 0;
     if (!WildlandsWorld_Active())
         return;
     for (i = 0; i < 2; i++)
@@ -728,31 +731,15 @@ static void SquadEnemyRetarget(struct ArenaBody *body)
             continue;
         if (!WildlandsWorld_LineClear(body->x / Q, body->y / Q, tx / Q, ty / Q, 2))
             continue;
-        if (d < bestD) { bestD = d; best = b; }
+        mask |= 1 << i;
     }
-    if (best != 0xFF)
+    if (mask)
     {
-        s32 tx, ty;
-        SquadPos(best, &tx, &ty);
-        sArena.observed.x = tx / Q;
-        sArena.observed.y = ty / Q;
-        if (best == 2) gWildlandsSquadTelemetry[12]++;
+        if (mask & 2) gWildlandsSquadTelemetry[12]++;
         sEnemySight.lost = 0;
-        return;
     }
-    if (sEnemySight.lost < 0xFFFF) sEnemySight.lost++;
-    // Not seen: roam to a fresh legal point near where it is now.
-    if (!sEnemySight.roamClock-- || ArenaNav_Distance(body->x / Q, body->y / Q,
-            sArena.observed.x, sArena.observed.y) < 12)
-    {
-        u32 k;
-        sEnemySight.roamClock = 12;
-        for (k = 0; k < 6; k++)
-        {
-            s32 nx = body->x / Q + (s32)(Random() % 241) - 120;
-            s32 ny = body->y / Q + (s32)(Random() % 241) - 120;
-            if (WildlandsWorld_CanStandSide(1, nx, ny, 6))
-            { sArena.observed.x = nx; sArena.observed.y = ny; break; }
-        }
-    }
+    else if (sEnemySight.lost < 0xFFFF)
+        sEnemySight.lost++;
+    // The duo brain turns what it can see into a goal (sArena.observed).
+    BrainDecide(body, mask);
 }
