@@ -261,7 +261,7 @@ frames 30 0
 poke gWildlandsTestWarp 0 1 2
 frames 40 0
 poke gWildlandsZoneTestSpeed 0 2 400
-frames 33 0
+frames 46 0
 poke gWildlandsZoneTestSpeed 0 2 65535
 frames 30 0
 snap 29-storm-rain
