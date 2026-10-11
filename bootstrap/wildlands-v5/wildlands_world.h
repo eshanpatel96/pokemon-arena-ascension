@@ -14,6 +14,8 @@ bool8 WildlandsWorld_Active(void);
 void WildlandsWorld_Init(void);
 void WildlandsWorld_LoadGraphics(void);
 void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY);
+void WildlandsWorld_VBlank(void);
+void WildlandsWorld_TickBody(u8 side, s16 x, s16 y);
 void WildlandsWorld_RestorePalettes(void);
 
 u8 WildlandsWorld_TerrainAt(s16 x, s16 y);
