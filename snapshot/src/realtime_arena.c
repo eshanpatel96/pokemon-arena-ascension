@@ -2731,7 +2731,7 @@ static void CB2_Arena(void)
         DrawStage();
         sArena.hudDirty = TRUE;
     }
-    if(!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();
+    if(!WildlandsWorld_Active()&&!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();
     if(sArena.paused)
     {
         u16 keys=gMain.newKeys&DPAD_ANY;
