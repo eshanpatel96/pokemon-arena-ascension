@@ -45,6 +45,26 @@ static void DrawStatusHud(void)
         && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species
         && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level
         && sHudWingKey==WildlandsHudWingKey())return;
+    if(sHudCached && sHudLastMax[0]==gBattleMons[0].maxHP && sHudLastMax[1]==gBattleMons[1].maxHP
+        && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species
+        && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level
+        && sHudWingKey==WildlandsHudWingKey())
+    {
+        for(side=0;side<2;side++)
+        {
+            const struct BattlePokemon *mon=&gBattleMons[side];
+            u32 bar=side?129:8,fill=mon->maxHP?mon->hp*102/mon->maxHP:0;
+            u8 color=mon->hp*5<=mon->maxHP?6:mon->hp*2<=mon->maxHP?7:5;
+            if(sHudLastHp[side]==mon->hp)continue;
+            if(mon->hp&&!fill)fill=1;
+            HudRect(side?126:5,15,109,7,1);
+            HudRect(bar,13,102,8,12);HudRect(bar,13,fill,1,4);HudRect(bar,14,fill,7,color);
+            ConvertIntToDecimalStringN(text,mon->hp,STR_CONV_MODE_LEFT_ALIGN,3);
+            HudTiny(bar+46,16,text,9,3);HudTiny(bar+45,15,text,4,3);
+            sHudLastHp[side]=mon->hp;
+        }
+        return;
+    }
     // One small authored background; preserve the terrain through alpha corners.
     FillWindowPixelBuffer(0,0);
     CpuFastCopy(sHudPanelTiles,gWindows[0].tileData,30*2*32);
