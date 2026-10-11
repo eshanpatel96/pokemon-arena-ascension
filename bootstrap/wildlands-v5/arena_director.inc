@@ -630,9 +630,24 @@ static void DirSimOne(u8 i)
         { d->x = nx; d->y = ny; }
         else if (d->plan)
         {
-            d->plan = 0;                // no straight way to that lair: drop it
-            gWildlandsBossTelemetry[5]++;
-            DirRandomGoal(d);
+            // No straight way: follow the island nav graph toward the lair;
+            // drop the plan only if even that has no step.
+            struct ArenaPoint wp;
+            u16 sp = d->species[d->hp[0] ? 0 : 1];
+            bool8 moved = FALSE;
+            if (WildlandsWorld_NextWaypointSpecies(sp, d->x, d->y, d->gx, d->gy, &wp))
+            {
+                s32 wx = wp.x - d->x, wy = wp.y - d->y, wd = max(Abs(wx), Abs(wy));
+                if (wd > 40) { wx = wx * 40 / wd; wy = wy * 40 / wd; }
+                if (wd && WildlandsWorld_SpeciesLineClear(sp, d->x, d->y, d->x + wx, d->y + wy, 6))
+                { d->x += wx; d->y += wy; moved = TRUE; }
+            }
+            if (!moved)
+            {
+                d->plan = 0;
+                gWildlandsBossTelemetry[5]++;
+                DirRandomGoal(d);
+            }
         }
         else
             DirRandomGoal(d);

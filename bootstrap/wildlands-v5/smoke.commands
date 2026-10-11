@@ -143,6 +143,9 @@ expect gWildlandsSquadTelemetry 0 4 3
 frames 240 16
 # ---- Enemy duo brain: fights when even, retreats when losing ----
 dump brain0 gWildlandsBrainTelemetry 8
+# step back out of melee range first: a cornered duo turns and fights by design
+poke gWildlandsTestWarp 0 1 1
+frames 10 0
 poke gBattleMons 128 2 4
 frames 120 0
 snap 08a-enemy-retreat

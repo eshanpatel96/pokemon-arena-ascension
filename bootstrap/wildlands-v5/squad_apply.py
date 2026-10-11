@@ -281,14 +281,19 @@ patch('src/arena_moves.c', 'const struct ArenaMoveProfile *ArenaMoves_Get(u16 mo
       '            return &sProfiles[i];\n'
       '        }\n    return 0;\n}\n')
 
-# Loop timing: where in the frame CB2 starts (VBlank interrupt + main-loop
-# overhead before it) and how often a render took one vs several VBlanks.
-patch(A, '    u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;\n',
-      '    u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;\n'
-      '    {u16 ln=(REG_VCOUNT+68)%228; gWildlandsLoop[0]=ln; if(ln>gWildlandsLoop[1])gWildlandsLoop[1]=ln; gWildlandsLoop[gap>=2?3:2]++;}\n')
+# Locked 30 fps world render: every rendered frame advances exactly two fixed
+# 60 Hz steps, so motion is evenly paced (no 1-2-1 judder) and game time stays
+# real. Button presses that land on the skipped VBlank carry to the next one.
+patch(A, '    if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}\n',
+      '    if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}\n'
+      '    if(WildlandsWorld_Active()&&gap<2){sWildlandsHeldNew|=gMain.newKeys;return;}\n'
+      '    gMain.newKeys|=sWildlandsHeldNew;sWildlandsHeldNew=0;\n'
+      '    {u16 ln=(REG_VCOUNT+68)%228; if(ln>gWildlandsLoop[3])gWildlandsLoop[3]=ln; gWildlandsLoop[gap>=3?2:gap>=2?1:0]++;}\n')
 patch(A, 'static EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n',
       'static EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n'
-      '// [0] scanline CB2 started at (after VBlank) [1] max [2] one-VBlank loops [3] slower loops\n'
+      'static EWRAM_DATA u16 sWildlandsHeldNew = 0;\n'
+      '// renders after [0] one VBlank [1] two (the locked pace) [2] three or more (a hitch)\n'
+      '// [3] latest scanline a render started at\n'
       'EWRAM_DATA u16 gWildlandsLoop[4] = {};\n')
 
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).

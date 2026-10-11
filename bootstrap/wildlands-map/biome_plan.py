@@ -176,7 +176,9 @@ def texture_fields(g, des, rng):
         b = des[y * W + x]
         base = g[y * W + x]
         if b in (FALLARBOR, LAVARIDGE) and base == STONE:
-            cl, w, h = (GRASS, rng.randint(3, 5), rng.randint(2, 4)) if rng.random() < 0.55 else (ROCK, 2, 2)
+            # Small grass fields here autotiled into rings with a stone hole;
+            # tree pairs and outcrops read cleanly on the stone.
+            cl, w, h = (TREE, 2, 2) if rng.random() < 0.35 else (ROCK, 2, 2)
         elif b == MAUVILLE and base == SAND:
             cl, w, h = (ROCK, rng.choice((2, 3)), 2) if rng.random() < 0.7 else (GRASS, 3, 2)
         else:
