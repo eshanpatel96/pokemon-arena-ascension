@@ -54,10 +54,20 @@ s=s.replace('#include "realtime_arena.h"\n',
 ''',1)
 s=s.replace('''void ArenaTerrain_Init(void)
 {
-    u32 i;''',
+    u32 i;
+    struct SpritePalette pal={sPalette,TAG};
+    struct SpriteSheet pieces={sBiomePieces[gArenaBiome],sizeof(sPieces),TAG+ARENA_OBSTACLES};
+    struct SpriteSheet blast={sBlast,2048,TAG+ARENA_OBSTACLES+1};
+    struct SpriteSheet crater={sCrater,1024,TAG+ARENA_OBSTACLES+2};
+    struct SpriteTemplate template=sTemplate;''',
 '''void ArenaTerrain_Init(void)
 {
     u32 i;
+    struct SpritePalette pal={sPalette,TAG};
+    struct SpriteSheet pieces={sBiomePieces[gArenaBiome],sizeof(sPieces),TAG+ARENA_OBSTACLES};
+    struct SpriteSheet blast={sBlast,2048,TAG+ARENA_OBSTACLES+1};
+    struct SpriteSheet crater={sCrater,1024,TAG+ARENA_OBSTACLES+2};
+    struct SpriteTemplate template=sTemplate;
     if(WildlandsWorld_Active())
     {
         for(i=0;i<ARENA_OBSTACLES;i++)sPropSprite[i]=MAX_SPRITES;
