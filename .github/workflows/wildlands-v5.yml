@@ -57,6 +57,19 @@ jobs:
           python3 bootstrap/v11-1/phase2.py engine | tee evidence/v11-1-phase2.txt
           python3 bootstrap/v11-1/prepare_inputs.py engine baseline-rom/Pokemon-Arena-Ascension-V11-1-DEV.gba | tee evidence/preserved-inputs.txt
 
+      - name: Sprite layout survey (read-only)
+        continue-on-error: true
+        run: |
+          {
+            ls -la engine/.arena-dev/pmd | head -40
+            echo ----
+            find engine/.arena-dev -maxdepth 3 | head -120
+            echo ----
+            head -c 4000 engine/.arena-dev/pmd/sprites.inc
+            echo; echo ----
+            grep -n -i "zapdos" -r engine/.arena-dev | head -40
+          } > evidence/pmd-layout.txt 2>&1
+
       - name: Apply Arena World foundation
         run: |
           set -o pipefail
