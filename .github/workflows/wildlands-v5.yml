@@ -90,7 +90,7 @@ jobs:
             ROWS=$(python3 -c "import json;print(json.load(open('engine/data/wildlands_world/manifest.json'))['interiors']['total_rows'])")
             test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq $((256*ROWS*2))
             test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq $((256*ROWS))
-            python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=97 and all(v['reachable_cells']>=30 and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct']);assert all(m['doors_reachable'].values()) and len(m['interiors']['rooms'])>=8,m['doors_reachable'];print('DOOR AUDIT PASS',len(m['doors_reachable']),'doors')"
+            python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=97 and all(v['reachable_cells']>=30 and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct']);assert all(m['doors_reachable'].values()) and len(m['interiors']['rooms'])>=8,m['doors_reachable'];print('DOOR AUDIT PASS',len(m['doors_reachable']),'doors');assert m['invisible_walls_left']==0 and m['belt_ok'],m['invisible_walls_left'];print('COVER AUDIT PASS no invisible walls, cleared',m['invisible_walls_cleared'])"
           else
           ROWS=$(python3 -c "import json;print(json.load(open('engine/data/wildlands_world/manifest.json'))['interiors']['total_rows'])")
           test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq $((40*ROWS*2))
@@ -138,16 +138,16 @@ jobs:
             'rom_bytes':len(b),
             'world':world,
             'world_coordinate_space_pixels':[4096,3072],
-            'terrain_source':'native Emerald General+Fortree metatiles; collision/material from metatile data, never a floor bitmap',
+            'terrain_source':'native Emerald metatiles: General primary + streamed Fortree/Mauville/Fallarbor/Lavaridge/Slateport secondaries per biome (island); collision/material from metatile data, never a floor bitmap; no invisible walls (audited)',
             'controller':'native realtime Arena movement/dodge/attack/cooldown/hit path; fixed-timestep catch-up keeps game time real-time',
             'true_2v2':'yes (first slice): player+AI partner vs enemy lead+wing; all four attack, take damage, KO; lead KO promotes the living wing',
-            'closing_zone':'world-coordinate circle, 60/30/60s proposed tuning, time-based exposure damage to all actors',
+            'closing_zone':'world-coordinate circle, 90s explore / 45s warning / 75s shrink per phase, violet tint and edge markers, time-based exposure damage to all actors',
             'loot':'collect-once team ATK/DEF/SPD stages, cap +2',
             'live_map':'START -> MAP',
             'move_editor':'lab MOVE EDITOR sign (native relearner UI, Arena-supported legal moves)',
             'title':'approved Charizard/Blastoise/Rayquaza concept at native 240x160',
-            'thirty_duo_simulation':False,
-            'legendary_boss_battles':False,
+            'thirty_duo_simulation':True,
+            'legendary_boss_battles':True,
             'shiny_palettes':'audited feasible; not implemented',
             'memory':mem,
             'verification':'mGBA automated runtime only; iPhone Delta requires owner playtest'

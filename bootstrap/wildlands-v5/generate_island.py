@@ -274,6 +274,39 @@ for i, c in enumerate(plan):
         fixed += 1
 terrain = build_terrain(world)
 
+# No invisible walls: a metatile whose art is ordinary ground (walkable in
+# most of the island) but carries a collision bit is a wall the player cannot
+# see wherever it touches the same ground art. Clear the collision on those
+# cells, flooding through same-art neighbours, so every blocked cell reads as
+# blocked (tree, rock, cliff edge, building, prop) and open ground is open.
+from collections import Counter as _Cnt, deque as _dq
+def _art(i):
+    return (world[i] & 0x3FF, secmap[i] if (world[i] & 0x3FF) >= 512 else 0)
+_tot = _Cnt(_art(i) for i in range(W * H))
+_sol = _Cnt(_art(i) for i in range(W * H) if terrain[i] & SOLID)
+_floorlike = {k for k in _sol if _sol[k] < _tot[k] * 0.5}
+def _n4(i):
+    x, y = i % W, i // W
+    if x + 1 < W: yield i + 1
+    if x: yield i - 1
+    if y + 1 < H: yield i + W
+    if y: yield i - W
+_q = _dq(i for i in range(W * H) if terrain[i] & SOLID and (world[i] >> 10) & 3 and _art(i) in _floorlike
+         and i not in fixed_cells and any(not terrain[j] & SOLID and _art(j) == _art(i) for j in _n4(i)))
+invisible_walls_cleared = 0
+while _q:
+    i = _q.popleft()
+    if not ((world[i] >> 10) & 3) or i in fixed_cells:
+        continue
+    world[i] &= ~0x0C00
+    invisible_walls_cleared += 1
+    for j in _n4(i):
+        if (world[j] >> 10) & 3 and _art(j) == _art(i):
+            _q.append(j)
+terrain = build_terrain(world)
+invisible_walls_left = sum(1 for i in range(W * H) if terrain[i] & SOLID and _art(i) in _floorlike and i not in fixed_cells
+                           and any(not terrain[j] & SOLID and _art(j) == _art(i) for j in _n4(i)))
+
 # Connectivity audit over the real collision data.
 from collections import deque
 start = None
@@ -571,7 +604,7 @@ manifest = {
                   'reachable': lair_reach[k] > 0, 'reachable_cells': lair_reach[k],
                   'prefab': stamped.get(k, [None])[-1] if k in stamped else None}
               for k, v in boxes.items()},
-    'bridge_fallbacks': fixed, 'pond_puddle_fixes': puddle_fix, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
+    'bridge_fallbacks': fixed, 'pond_puddle_fixes': puddle_fix, 'invisible_walls_cleared': invisible_walls_cleared, 'invisible_walls_left': invisible_walls_left, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
     'player_start': P, 'enemy_start': E,
     'interiors': rooms_manifest, 'doors_reachable': door_audit,
     'biomes': {bp.BIOME_NAMES[k]: sum(1 for v in core if v == k) for k in bp.BIOME_NAMES},
