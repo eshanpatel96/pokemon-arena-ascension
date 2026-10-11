@@ -39,6 +39,7 @@ void WildlandsWorld_OutdoorPos(s32 *x, s32 *y);
 bool8 WildlandsWorld_PollDoor(s16 x, s16 y, bool8 facingUp, bool8 facingDown, s16 *outX, s16 *outY);
 void WildlandsWorld_ClampCamera(s32 px, s32 py, s32 *camX, s32 *camY);
 s8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy);
+void WildlandsWorld_DoorArrival(u8 door, s16 *x, s16 *y);
 bool8 WildlandsWorld_RoomExitPos(s16 x, s16 y, s16 *ex, s16 *ey);
 u8 WildlandsWorld_RoomCount(void);
 u8 WildlandsWorld_DoorCount(void);

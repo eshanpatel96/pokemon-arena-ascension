@@ -491,6 +491,11 @@ EWRAM_DATA u8 gWildlandsTestPeace = 0;
 // 3 = onto the last pickup, 10+n = outside door n facing it; 0 in play.
 EWRAM_DATA u8 gWildlandsTestWarp = 0;
 static void LootLastSpot(s16 *x, s16 *y);
+static void BrainDecide(struct ArenaBody *body, u8 seenMask);
+static bool8 BrainAllowsFire(void);
+static u8 BrainWingTarget(u8 picked);
+static bool8 BrainWingFollows(void);
+static void BrainInit(void);
 struct WildlandsPartnerActor
 {
     s32 x,y;
@@ -1487,6 +1492,7 @@ static void CB2_ArenaInit(void)
     SquadInit();
     ZoneInit();
     LootInit();
+    BrainInit();
     sWildlandsEncounterLive = WildlandsWorld_Active();
     sArena.cueSprite = CreateSprite(&sShotTemplate, 120, 32, 0);
     gSprites[sArena.cueSprite].oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG + 1);
@@ -1604,7 +1610,7 @@ static void MoveDelta(u8 side, s32 dx, s32 dy)
     else if (dx)
     {
         gArenaAiTelemetry.wallBlocks[side]++;
-        if (WildlandsWorld_Active() && !dy && !ghost)
+        if (WildlandsWorld_Active() && !side && !dy && !ghost)
         {
             s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, dx > 0 ? 1 : -1, 0);
             if (n) body->y += n * Q;
@@ -1619,7 +1625,7 @@ static void MoveDelta(u8 side, s32 dx, s32 dy)
     else if (dy)
     {
         gArenaAiTelemetry.wallBlocks[side]++;
-        if (WildlandsWorld_Active() && !dx && !ghost)
+        if (WildlandsWorld_Active() && !side && !dx && !ghost)
         {
             s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, 0, dy > 0 ? 1 : -1);
             if (n) body->x += n * Q;
@@ -2138,7 +2144,7 @@ static void TickEnemy(void)
                 && ArenaNav_Distance(body->x/Q,body->y/Q,
                     sArena.bodies[0].x/Q,sArena.bodies[0].y/Q)>48))
         {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;SquadEnemyRetarget(body);}
-        else gArenaCoverTelemetry[5]++;
+        else {gArenaCoverTelemetry[5]++;SquadEnemyRetarget(body);}
         if(sDecoys[0].life && sDecoys[0].age>=24 && !SmokeBlocks(body->x/Q,body->y/Q,sDecoys[0].x,sDecoys[0].y))
         {
             sArena.observed.x=sDecoys[0].x;
@@ -2589,6 +2595,7 @@ static void DestroyShot(struct ArenaShot *shot)
 #include "arena_loot.inc"
 #include "arena_zone.inc"
 #include "arena_map.inc"
+#include "arena_brain.inc"
 
 static void TickShots(void)
 {
