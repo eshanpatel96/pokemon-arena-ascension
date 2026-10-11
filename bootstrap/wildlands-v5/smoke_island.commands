@@ -11,6 +11,21 @@ frames 700 0
 expect gWildlandsWorldAudit 0 4 1
 dump squad0 gWildlandsSquadTelemetry 16
 snap 02-island-start
+poke gWildlandsTestPeace 0 1 1
+press 8
+press 128
+press 128
+press 128
+press 128
+press 1
+frames 20 0
+snap 08-island-map
+dump map gWildlandsMapTelemetry 4
+expectmin gWildlandsMapTelemetry 0 4 1
+press 2
+press 2
+frames 60 0
+poke gWildlandsTestPeace 0 1 0
 rate render-idle 300 0 0
 ratesym idle gWildlandsProfile 20 2 300 0 95
 frames 120 16
@@ -27,16 +42,4 @@ snap 07-south
 dump world gWildlandsWorldTelemetry 16
 dump xl gArenaXLTelemetry 8
 dump profile gWildlandsProfile 6
-press 8
-press 128
-press 128
-press 128
-press 128
-press 1
-frames 20 0
-snap 08-island-map
-dump map gWildlandsMapTelemetry 4
-expectmin gWildlandsMapTelemetry 0 4 1
-press 2
-press 2
-frames 60 0
+dump nav gWildlandsWorldTelemetry 16

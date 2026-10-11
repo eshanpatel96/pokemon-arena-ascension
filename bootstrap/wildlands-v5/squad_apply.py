@@ -42,7 +42,10 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;\n'
       'static void LootInit(void);\nstatic void LootTick(void);\nstatic void LootDestroy(void);\n'
       'static void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n'
-      'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n')
+      'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n'
+      '// TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking\n'
+      '// map/zone UI; always 0 in normal play.\n'
+      'EWRAM_DATA u8 gWildlandsTestPeace = 0;\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')
@@ -120,6 +123,13 @@ patch(A, '''                        PlaySE(SE_M_MORNING_SUN);
 # must not raise the capture-aim prompt over the Wildlands HUD.
 patch(A, '    if(!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();',
       '    if(!WildlandsWorld_Active()&&!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();')
+
+# A failed route leaves the waypoint on the body; never re-search every frame.
+patch(A, '        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4) AiRoute();',
+      '        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4 && !(sArena.frame & 7)) AiRoute();')
+
+patch(A, 'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.bodies[1];\n    s32 dx, dy, len;\n    body->moving = FALSE;\n',
+      'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.bodies[1];\n    s32 dx, dy, len;\n    body->moving = FALSE;\n    if (gWildlandsTestPeace) return;\n')
 
 # Profiling: camera/stream, sprite animation, OAM build (scanlines).
 patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer();',

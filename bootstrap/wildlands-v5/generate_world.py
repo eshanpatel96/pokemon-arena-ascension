@@ -118,6 +118,7 @@ nav_inc='\n'.join(
     for x,y in nav_pixels
 )+'\n'
 (root/'include/wildlands_world_nav.inc').write_text(nav_inc)
+(root/'include/wildlands_nav_graph.inc').write_text('#define WL_NAV_GRAPH 0\n')
 
 # Team-upgrade pickups: legal dry ground (not water, not solid, not concealed),
 # spread >= 6 metatiles apart, types cycling ATK/DEF/SPD. Spot 0 sits on the

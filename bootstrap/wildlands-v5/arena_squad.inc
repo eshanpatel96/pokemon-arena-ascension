@@ -199,6 +199,7 @@ static void SquadInit(void)
 
 static void SquadDestroy(void)
 {
+    WildlandsWorld_ReleaseNav();
     SquadHideWing(&sSquadWings[0]);
     SquadHideWing(&sSquadWings[1]);
 }
@@ -334,6 +335,8 @@ static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
 
 static void SquadThink(struct SquadWing *w)
 {
+    if (gWildlandsTestPeace) { w->moving = FALSE; return; }
+    {
     struct ArenaBody *lead = &sArena.bodies[w->team];
     s32 tx, ty, goalX, goalY, step;
     u8 spd = gBattleMons[w->battler].statStages[STAT_SPEED];
@@ -402,6 +405,7 @@ static void SquadThink(struct SquadWing *w)
     else
     { goalX = w->x; goalY = w->y; }
     SquadMoveWing(w, goalX, goalY, step);
+    }
 }
 
 static void SquadDraw(struct SquadWing *w)

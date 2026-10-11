@@ -130,12 +130,82 @@ def nearest_reach(x, y):
 P = nearest_reach(W // 2 - 6, H // 2 + 4)
 E = nearest_reach(W // 2 + 6, H // 2 + 4)
 
-# Navigation anchors: reachable lattice every 8 metatiles (bounded scan at runtime).
-nav = []
-for y in range(4, H, 8):
-    for x in range(4, W, 8):
-        if (x, y) in seen:
-            nav.append((x * 16 + 8, y * 16 + 8))
+# Navigation graph: lattice nodes every 8 metatiles on reachable ground whose
+# 6px field footprint is clear; edges to the 8 lattice neighbours only where
+# the straight segment passes the SAME land traversal test the runtime uses
+# (footprint square + centre footing, water blocked unless bridge). All-pairs
+# next hop is precomputed (Dijkstra, 10/14 costs) as a neighbour slot per pair.
+STEP = int(__import__("os").environ.get("WL_NAV_STEP", "4"))
+FOOT = 6
+BRIDGE_F = 16
+def solid_px(x, y):
+    mx, my = x >> 4, y >> 4
+    if not (0 <= mx < W and 0 <= my < H): return True
+    return bool(terrain[my * W + mx] & SOLID)
+def foot_clear(x, y, r=FOOT):
+    for my in range((y - r) >> 4, ((y + r) >> 4) + 1):
+        for mx in range((x - r) >> 4, ((x + r) >> 4) + 1):
+            if not (0 <= mx < W and 0 <= my < H) or terrain[my * W + mx] & SOLID:
+                return False
+    return True
+def footing(x, y):
+    f = terrain[(y >> 4) * W + (x >> 4)]
+    return not (f & DEEP) or bool(f & BRIDGE_F)
+def land_line(x1, y1, x2, y2):
+    dx, dy = x2 - x1, y2 - y1
+    steps = max(abs(dx), abs(dy)) // 8 + 1
+    for i in range(steps + 1):
+        x = x1 + dx * i // steps; y = y1 + dy * i // steps
+        if not foot_clear(x, y) or not footing(x, y):
+            return False
+    return True
+nodes = {}
+for gy in range(4, H, STEP):
+    for gx in range(4, W, STEP):
+        best = None
+        for r in range(0, 4):
+            for dy in range(-r, r + 1):
+                for dx in range(-r, r + 1):
+                    x, y = gx + dx, gy + dy
+                    if best is None and (x, y) in seen and foot_clear(x * 16 + 8, y * 16 + 8) and footing(x * 16 + 8, y * 16 + 8):
+                        best = (x * 16 + 8, y * 16 + 8)
+        if best:
+            nodes[(gx, gy)] = best
+keys = sorted(nodes)
+index = {k: i for i, k in enumerate(keys)}
+nav = [nodes[k] for k in keys]
+N = len(nav)
+DIRS = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
+nbr = [[0xFFFF] * 8 for _ in range(N)]
+for k, i in index.items():
+    for d, (dx, dy) in enumerate(DIRS):
+        j = index.get((k[0] + dx * STEP, k[1] + dy * STEP))
+        if j is not None and land_line(*nav[i], *nav[j]):
+            nbr[i][d] = j
+edges = sum(1 for i in range(N) for d in range(8) if nbr[i][d] != 0xFFFF)
+GW, GH = (W + STEP - 1) // STEP, (H + STEP - 1) // STEP
+grid = [0xFFFF] * (GW * GH)
+for k, i in index.items():
+    grid[(k[1] // STEP) * GW + k[0] // STEP] = i
+masks = [sum(1 << d for d in range(8) if nbr[i][d] != 0xFFFF) for i in range(N)]
+from collections import deque as _dq
+comp_seen = set(); giant = 0
+for s0 in range(N):
+    if s0 in comp_seen: continue
+    comp = {s0}; qq = _dq([s0])
+    while qq:
+        u = qq.popleft()
+        for v in nbr[u]:
+            if v != 0xFFFF and v not in comp: comp.add(v); qq.append(v)
+    comp_seen |= comp; giant = max(giant, len(comp))
+comp_ok = round(100 * giant / max(1, N), 1)
+(root / 'include/wildlands_nav_graph.inc').write_text(
+    f'#define WL_NAV_GRAPH 1\n#define WL_NAV_NODES {N}\n#define WL_NAV_STEP {STEP}\n'
+    f'#define WL_NAV_GRID_W {GW}\n#define WL_NAV_GRID_H {GH}\n'
+    'static const u8 sNavEdges[WL_NAV_NODES] = {' + ','.join(map(str, masks)) + '};\n'
+    'static const u16 sNavGrid[WL_NAV_GRID_W * WL_NAV_GRID_H] = {' + ','.join(map(str, grid)) + '};\n'
+    'static const u16 sNavCell[WL_NAV_NODES] = {' + ','.join(str((k[1] // STEP) * GW + k[0] // STEP) for k in keys) + '};\n')
+
 
 # Loot: 32 reachable, non-concealed spots spread over the island, plus one on
 # the player's spawn approach for the runtime pickup test.
@@ -187,7 +257,7 @@ manifest = {
                   'reachable': lair_reach[k] > 0, 'reachable_cells': lair_reach[k],
                   'prefab': stamped.get(k, [None])[-1] if k in stamped else None}
               for k, v in boxes.items()},
-    'bridge_fallbacks': fixed, 'nav_anchors': len(nav), 'loot_spots': len(loot),
+    'bridge_fallbacks': fixed, 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
     'player_start': P, 'enemy_start': E,
     'not_claimed': ['landmark prefabs', 'region secondary tilesets', 'enterable buildings', 'destructible cover'],
 }
