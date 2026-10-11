@@ -158,7 +158,16 @@ static void DirRandomGoal(struct DirDuo *d)
 static void DirMakeMon(struct Pokemon *mon, u16 species, u8 level, u8 hpPct, bool8 legend)
 {
     u16 hp, maxHp;
-    CreateMon(mon, species, level, USE_RANDOM_IVS, FALSE, 0, OT_ID_PLAYER_ID, 0);
+    u32 exp;
+    // Created at level 1 then raised: CreateMon at the real level replays the
+    // whole level-up learnset through encrypted Get/Set calls (~9 frames per
+    // mon on hardware timing, a visible hitch whenever a new duo swaps in).
+    // The arena loadout replaces the moves anyway.
+    CreateMon(mon, species, 1, USE_RANDOM_IVS, FALSE, 0, OT_ID_PLAYER_ID, 0);
+    exp = gExperienceTables[gSpeciesInfo[species].growthRate][level];
+    SetMonData(mon, MON_DATA_EXP, &exp);
+    SetMonData(mon, MON_DATA_LEVEL, &level);
+    CalculateMonStats(mon);
     Wildlands_ArenaLoadout(mon);
     maxHp = GetMonData(mon, MON_DATA_MAX_HP);
     if (legend)
