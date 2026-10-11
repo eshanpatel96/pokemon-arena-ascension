@@ -82,6 +82,20 @@ static void snapshot(const char *name) {
            symbol("gSaveFileStatus")?rd16(symbol("gSaveFileStatus")):999,
            symbol("gPlayerPartyCount")?rd8(symbol("gPlayerPartyCount")):999,
            sb,sb?rd8(sb+4):0,sb?rd8(sb+5):0,sb?rd16(sb):0,sb?rd16(sb+2):0,sb?rd16(sb+0x32):0);
+    {
+        uint32_t xl=symbol("gArenaXLTelemetry"), wa=symbol("gWildlandsWorldAudit"), wt=symbol("gWildlandsWorldTelemetry");
+        printf("WORLD %s bgcnt=%04x,%04x,%04x,%04x xl=%u,%u,%u,%u,%u,%u audit=%u,%u,%u,%u,%u,%u,%u,%u tele=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",name,
+            rd16(0x04000008),rd16(0x0400000a),rd16(0x0400000c),rd16(0x0400000e),
+            xl?rd32(xl+8):0,xl?rd32(xl+12):0,xl?rd32(xl+24):0,xl?rd32(xl+28):0,
+            symbol("sArenaXLCameraX")?(unsigned)(int16_t)rd16(symbol("sArenaXLCameraX")):0,
+            symbol("sArenaXLCameraY")?(unsigned)(int16_t)rd16(symbol("sArenaXLCameraY")):0,
+            wa?rd32(wa):0,wa?rd32(wa+4):0,wa?rd32(wa+8):0,wa?rd32(wa+12):0,
+            wa?rd32(wa+16):0,wa?rd32(wa+20):0,wa?rd32(wa+24):0,wa?rd32(wa+28):0,
+            wt?rd32(wt):0,wt?rd32(wt+4):0,wt?rd32(wt+8):0,wt?rd32(wt+12):0,
+            wt?rd32(wt+16):0,wt?rd32(wt+20):0,wt?rd32(wt+24):0,wt?rd32(wt+28):0,
+            wt?rd32(wt+32):0,wt?rd32(wt+36):0,wt?rd32(wt+40):0,wt?rd32(wt+44):0,
+            wt?rd32(wt+48):0,wt?rd32(wt+52):0,wt?rd32(wt+56):0,wt?rd32(wt+60):0);
+    }
     fflush(stdout);
 }
 static void export_save(const char *name) {
