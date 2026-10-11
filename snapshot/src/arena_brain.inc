@@ -3,7 +3,8 @@
 //
 //   FIGHT    a player member is visible and the fight is winnable: focus the
 //            weaker / better-matched target with both members.
-//   RETREAT  the duo is losing (HP, numbers and type matchup): break away to
+//   RETREAT  the lead is hurt and the duo is behind (HP, numbers, type
+//            matchup): break away to
 //            a legal point far from the threat, preferring tall grass and the
 //            safe circle; the wing covers with fire but does not chase.
 //   LOOT     nothing visible: walk to the nearest useful pickup (supplies when
@@ -277,7 +278,10 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
 
     if (seenMask)
     {
-        bool8 losing = adv < 70 || (BrainHpPct(1) < 35 && adv < 115);
+        // Disengage on damage, not on paper: a fresh duo fights even an
+        // overlevelled team; it breaks off when hurt (and then goes for
+        // supplies), sooner when the matchup is bad.
+        bool8 losing = (BrainHpPct(1) < 35 && adv < 140) || (adv < 60 && BrainHpPct(1) < 60);
         u16 inMode = sArena.frame - sBrain.modeStart;
         u16 sinceRetreat = sArena.frame - sBrain.retreatEnd;
         bool8 cornered = FALSE;
