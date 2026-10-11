@@ -364,6 +364,27 @@ patch('src/arena_hud.inc', '    // One small authored background; preserve the t
       '    }\n'
       '    // One small authored background; preserve the terrain through alpha corners.\n')
 
+# Match end stays in Wildlands: a lost match whites out to the Team Lab (not
+# Ascension City), with no money penalty, and skips the native "Use next
+# POKEMON?" prompt (the duo is out; the match is over).
+patch('src/overworld.c',
+      '    SetMoney(&gSaveBlock1Ptr->money, GetMoney(&gSaveBlock1Ptr->money) / 2);\n    HealPlayerParty();\n    Overworld_ResetStateAfterWhiteOut();\n    SetWarpDestinationToLastHealLocation();\n',
+      '    if (!(VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE)))\n'
+      '        SetMoney(&gSaveBlock1Ptr->money, GetMoney(&gSaveBlock1Ptr->money) / 2);\n'
+      '    HealPlayerParty();\n    Overworld_ResetStateAfterWhiteOut();\n'
+      '    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE))\n'
+      '        SetWarpDestination(MAP_GROUP(MAP_ASCENSION_TEAM_LAB), MAP_NUM(MAP_ASCENSION_TEAM_LAB), WARP_ID_NONE, 6, 10);\n'
+      '    else\n'
+      '        SetWarpDestinationToLastHealLocation();\n')
+patch(A, '            VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCENSION_MASTERS_BEST)+1));\n        }\n',
+      '            VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCENSION_MASTERS_BEST)+1));\n        }\n'
+      '        if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1 && FlagGet(FLAG_ARENA_PRACTICE) && gBattleMons[0].hp==0)\n'
+      '        {\n'
+      '            u16 zero=0; u32 k;\n'
+      '            for(k=0;k<PARTY_SIZE;k++)\n'
+      '                if(GetMonData(&gPlayerParty[k],MON_DATA_SPECIES))SetMonData(&gPlayerParty[k],MON_DATA_HP,&zero);\n'
+      '        }\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',

@@ -671,6 +671,36 @@ static void SquadDoorSim(void)
 // One fixed 60Hz simulation step for the Wildlands layer: storm clock and
 // exposure, pickups and wing AI. CB2_Arena runs it once per sim step, so a
 // render that misses a VBlank still advances game time correctly.
+// Battle-royale PP: native PP is sized for turn-based battles (Flamethrower
+// 15) and runs dry in a 30-duo match. Every move of every living battler
+// regains 1 PP each 2 seconds of game time, up to its real maximum (PP Ups
+// included). Spending is unchanged, so spamming still empties a move.
+static void SquadPPRegen(void)
+{
+    u32 b, k;
+    for (b = 0; b < 4; b++)
+    {
+        struct Pokemon *mon;
+        if (!SquadAlive(b))
+            continue;
+        mon = SquadPartyMon(b);
+        for (k = 0; k < MAX_MON_MOVES; k++)
+        {
+            u16 move = gBattleMons[b].moves[k];
+            u8 pp, max;
+            if (!move)
+                continue;
+            max = CalculatePPWithBonus(move, gBattleMons[b].ppBonuses, k);
+            if (gBattleMons[b].pp[k] >= max)
+                continue;
+            pp = gBattleMons[b].pp[k] + 1;
+            gBattleMons[b].pp[k] = pp;
+            SetMonData(mon, MON_DATA_PP1 + k, &pp);
+        }
+    }
+    sArena.hudDirty = TRUE;
+}
+
 static void SquadSimStep(void)
 {
     u32 i;
@@ -678,6 +708,8 @@ static void SquadSimStep(void)
     LootSim();
     if (sArena.paused || sArena.resultTimer)
         return;
+    if (WildlandsWorld_Active() && !(sArena.frame % 120))
+        SquadPPRegen();
     SquadDoorSim();
     DirectorSim();
     for (i = 0; i < 2; i++)

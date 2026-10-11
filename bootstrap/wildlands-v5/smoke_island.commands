@@ -279,3 +279,16 @@ snap 30-storm-outside
 dumph rain gWildlandsRainVisible 0 1
 dumph rainDiag gWildlandsRainDiag 0 4
 dump zoneEnd gWildlandsZoneTelemetry 16
+# ---- A lost match returns to the Team Lab (never Ascension City) ----
+frames 300 0
+press 1
+press 1
+press 1
+press 1
+press 1
+press 1
+press 1
+press 1
+frames 600 0
+snap 31-after-loss
+map 26 110
