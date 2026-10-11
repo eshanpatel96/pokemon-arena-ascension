@@ -35,3 +35,16 @@ frames 80 128
 snap 05-water-probe
 frames 120 64
 snap 06-grass-probe
+
+# ---- Gate B cadence (wl_smoke): Arena updates per emulated frame ----
+rate idle 300 0 90
+rate right 300 16 90
+rate down 240 128 90
+rate left 300 32 90
+rate up 240 64 90
+rate attack 180 1 90
+dump frame gArenaFrameTelemetry 10
+dump render gArenaRenderTelemetry 4
+dump world gWildlandsWorldTelemetry 16
+dump audit gWildlandsWorldAudit 8
+snap 07-after-cadence

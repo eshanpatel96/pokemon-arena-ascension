@@ -105,6 +105,13 @@ void_entry=route[14*40+15]
 assert deep_water(void_entry)
 
 (out/'slice.bin').write_bytes(struct.pack('<%dH'%len(world),*world))
+# Precomputed per-metatile terrain flags (ROM). Same semantics as the former
+# runtime MetatileBehavior_* chain; see terrain_flags.py.
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from terrain_flags import build_table
+terrain=build_table(root,world,primary_attr,secondary_attr)
+(out/'terrain.bin').write_bytes(terrain)
+assert len(terrain)==W*H
 
 nav_inc='\n'.join(
     f'    {{{x}, {y}}},'

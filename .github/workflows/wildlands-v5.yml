@@ -8,7 +8,6 @@ on:
       - 'bootstrap/wildlands-v4/**'
       - 'bootstrap/arena-xl/**'
       - 'docs/WILDLANDS-V5*'
-      - 'bootstrap/v11-smoke.c'
   workflow_dispatch:
 concurrency:
   group: wildlands-v5-world-${{ github.ref }}
@@ -77,6 +76,7 @@ jobs:
           grep -q '"curated_selectable_count": 105' evidence/roster-audit.json
           grep -q '"groudon_arena_sprite": false' evidence/roster-audit.json
           test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 3840
+          test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 1920
           python3 - <<'PY'
           from pathlib import Path
           import json
@@ -140,7 +140,7 @@ jobs:
 
       - name: mGBA world gameplay smoke
         run: |
-          gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/v11-smoke.c -lmgba -o evidence/wildlands-v5-smoke
+          gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/wildlands-v5/wl_smoke.c -lmgba -o evidence/wildlands-v5-smoke
           set -o pipefail
           timeout 300 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime bootstrap/wildlands-v5/smoke.commands - 2>&1 | tee evidence/smoke.log
           python3 - <<'PY'
