@@ -53,7 +53,9 @@ EWRAM_DATA u32 gWildlandsDirectorTelemetry[8] = {};
 // [5] aborted on the way [6] attempts by the on-screen duo [7] last score+1000
 // [8] lair evaluations [9] blocked by cooldown [10] best score seen + 1000
 // [11] last gate that ruled a lair out (1 legend gone 2 storm 3 next circle 4 opening phase)
-EWRAM_DATA u16 gWildlandsBossTelemetry[12] = {};
+// [12] plans started [13] planned duo died on the way [14] nav detour steps
+// [15] planned-duo sim ticks
+EWRAM_DATA u16 gWildlandsBossTelemetry[16] = {};
 // TEST HOOK ONLY: harness adds this to every boss score and lifts the
 // first-phase gate so a short run can exercise boss runs; 0 in play.
 EWRAM_DATA u8 gWildlandsBossTestBias = 0;
@@ -559,6 +561,7 @@ static void DirSimOne(u8 i)
         if (!DirAlive(d))
         {
             d->state = DIR_DEAD;
+            if (d->plan) gWildlandsBossTelemetry[13]++;
             gWildlandsDirectorTelemetry[3]++;
             DirFeedOut(d);
             return;
@@ -569,6 +572,7 @@ static void DirSimOne(u8 i)
     {
         struct DirDuo *l = &sDir->duo[d->plan - 1];
         s32 ox, oy;
+        gWildlandsBossTelemetry[15]++;
         if (d->room)
         {
             if (!--d->room)
@@ -605,7 +609,7 @@ static void DirSimOne(u8 i)
         DirSimDamage(o, 3 + 14 * pa / (pa + pb));
         gWildlandsDirectorTelemetry[7]++;
         if (!DirAlive(o)) { o->state = DIR_DEAD; d->kills++; gWildlandsDirectorTelemetry[3]++; DirFeedOut(o); }
-        if (!DirAlive(d)) { d->state = DIR_DEAD; o->kills++; gWildlandsDirectorTelemetry[3]++; DirFeedOut(d); }
+        if (!DirAlive(d)) { if (d->plan) gWildlandsBossTelemetry[13]++; d->state = DIR_DEAD; o->kills++; gWildlandsDirectorTelemetry[3]++; DirFeedOut(d); }
         return;   // fighting duos hold position this tick
     }
     // Travel: ~40px per update toward the goal on legal ground.
@@ -626,6 +630,7 @@ static void DirSimOne(u8 i)
             d->plan = lair + 1;
             d->gx = ox; d->gy = oy;
             sDir->bossCooldown = max(sDir->bossCooldown, 600);   // others wait while it travels
+            gWildlandsBossTelemetry[12]++;
         }
         else if (r < 3)
         {
@@ -651,7 +656,7 @@ static void DirSimOne(u8 i)
                 s32 wx = wp.x - d->x, wy = wp.y - d->y, wd = max(Abs(wx), Abs(wy));
                 if (wd > 40) { wx = wx * 40 / wd; wy = wy * 40 / wd; }
                 if (wd && WildlandsWorld_SpeciesLineClear(sp, d->x, d->y, d->x + wx, d->y + wy, 6))
-                { d->x += wx; d->y += wy; moved = TRUE; }
+                { d->x += wx; d->y += wy; moved = TRUE; gWildlandsBossTelemetry[14]++; }
             }
             if (!moved)
             {
@@ -680,6 +685,7 @@ static void DirSimOne(u8 i)
                 d->plan = lair + 1;
                 d->gx = ox; d->gy = oy;
                 sDir->bossCooldown = max(sDir->bossCooldown, 600);
+                gWildlandsBossTelemetry[12]++;
             }
         }
     }
