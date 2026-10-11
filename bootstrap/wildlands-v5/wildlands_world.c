@@ -519,8 +519,12 @@ static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, 
         if (SolidCircle(fx >> 8, fy >> 8, radius))
             return FALSE;
         terrain = WildlandsWorld_TerrainAt(fx >> 8, fy >> 8);
+        // Water is a footing/traversal rule, not a solid body-radius wall.
+        // A land Pokemon may stand at a shoreline or on a one-metatile-wide
+        // bridge even if its collision circle visually overlaps nearby water.
+        // Solid scenery still uses the full collision circle above.
         if (!waterAllowed && (terrain & WL_TERRAIN_DEEP_WATER)
-            && WaterCircle(fx >> 8, fy >> 8, radius))
+            && !(terrain & WL_TERRAIN_BRIDGE))
         {
             gWildlandsWorldTelemetry[4]++;
             return FALSE;
