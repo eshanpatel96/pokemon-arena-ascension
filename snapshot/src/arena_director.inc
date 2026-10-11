@@ -51,7 +51,8 @@ EWRAM_DATA u32 gWildlandsDirectorTelemetry[8] = {};
 // Boss runs by AI duos: [0] attempts [1] won (legend joined them) [2] lost
 // but escaped [3] wiped out [4] storm stage of the first attempt + 1
 // [5] aborted on the way [6] attempts by the on-screen duo [7] last score+1000
-EWRAM_DATA u16 gWildlandsBossTelemetry[8] = {};
+// [8] lair evaluations [9] blocked by cooldown [10] best score seen + 1000
+EWRAM_DATA u16 gWildlandsBossTelemetry[12] = {};
 // TEST HOOK ONLY: harness adds this to every boss score and lifts the
 // first-phase gate so a short run can exercise boss runs; 0 in play.
 EWRAM_DATA u8 gWildlandsBossTestBias = 0;
@@ -199,12 +200,18 @@ static u8 DirBossPick(const struct DirDuo *d, s32 x, s32 y, s32 *bestScore)
     u32 j;
     u8 pick = DIR_NONE;
     s32 best = 0;
+    gWildlandsBossTelemetry[8]++;
     if (sDir->bossCooldown)
+    {
+        gWildlandsBossTelemetry[9]++;
         return DIR_NONE;
+    }
     for (j = WL_DIRECTOR_DUOS; j < sDir->count; j++)
     {
         s32 sc = DirBossScore(d, &sDir->duo[j], x, y);
         gWildlandsBossTelemetry[7] = (u16)(sc + 1000);
+        if (sc + 1000 > (s32)gWildlandsBossTelemetry[10])
+            gWildlandsBossTelemetry[10] = (u16)(sc + 1000);
         if (sc >= best) { best = sc; pick = j; }
     }
     *bestScore = best;
