@@ -40,6 +40,17 @@ frames 90 0
 snap 09-lair-mewtwo
 dump rooms gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 8 4 4
+# ---- Director + legendary: Mewtwo is the active enemy in its lair; beat it
+# (harness KO through the normal elimination path) and it joins as partner.
+dump director0 gWildlandsDirectorTelemetry 8
+expectmin gWildlandsDirectorTelemetry 0 4 20
+expect gBattleMons 88 2 150
+poke gWildlandsTestWarp 0 1 4
+frames 40 0
+snap 09a-mewtwo-joined
+dump director1 gWildlandsDirectorTelemetry 8
+expectmin gWildlandsDirectorTelemetry 16 4 1
+expect gBattleMons 176 2 150
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 expect gWildlandsRoomTelemetry 8 4 0
@@ -116,3 +127,4 @@ dump nav gWildlandsWorldTelemetry 16
 dump roomsEnd gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 28 4 0
 dump brain gWildlandsBrainTelemetry 8
+dump directorEnd gWildlandsDirectorTelemetry 8

@@ -282,8 +282,8 @@ static bool8 LootPopupText(u8 *text)
 {
     static const u8 sWho[2][6] = {_("TEAM "), _("FOES ")};
     static const u8 sStat[3][5] = {_(" ATK"), _(" DEF"), _(" SPD")};
-    static const u8 sHeal[] = _("HEALED");
-    static const u8 sCache[] = _("CACHE +1 ALL");
+    static const u8 sHeal[] = _("HEALED 40%");
+    static const u8 sCache[] = _("+1 ATK DEF SPD");
     u8 *end;
     if (!sLoot.popupTimer)
         return FALSE;

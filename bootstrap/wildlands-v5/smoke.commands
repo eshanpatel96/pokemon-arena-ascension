@@ -14,6 +14,8 @@ expect gWildlandsWorldAudit 20 4 2
 expect gWildlandsWorldAudit 28 4 1
 expect gWildlandsPartnerTelemetry 0 4 1
 snap 02-world-start
+dump director0 gWildlandsDirectorTelemetry 8
+expectmin gWildlandsDirectorTelemetry 0 4 2
 poke gWildlandsTestPeace 0 1 1
 poke gWildlandsZoneTestSpeed 0 2 65535
 # ---- Gate G live map: START -> MAP (5th entry) ----
@@ -169,3 +171,4 @@ expect gWildlandsLootTelemetry 44 4 0
 # Streaming queue never dropped a tile (visual corruption while moving).
 dump roomsEnd gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 28 4 0
+dump directorEnd gWildlandsDirectorTelemetry 8

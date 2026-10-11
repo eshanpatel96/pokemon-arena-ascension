@@ -211,6 +211,39 @@ t = p.read_text()
 if 'Wildlands_ArenaLoadout' not in t:
     p.write_text(t + '\nvoid Wildlands_ArenaLoadout(struct Pokemon *mon)\n{\n    V111Loadout(mon, NULL);\n}\n')
 
+# HUD: thin partner / enemy-wing HP bars under the two main bars.
+H = 'src/arena_hud.inc'
+patch(H, '&& sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level)return;',
+      '&& sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level\n'
+      '        && sHudWingKey==WildlandsHudWingKey())return;')
+patch(H, 'static EWRAM_DATA u8 sHudLastLevel[2]={};',
+      'static EWRAM_DATA u8 sHudLastLevel[2]={};\nstatic EWRAM_DATA u32 sHudWingKey=0;\nstatic u32 WildlandsHudWingKey(void);\nstatic void WildlandsHudWingBars(void);')
+patch(H, '    sHudCached=TRUE;\n}', '    WildlandsHudWingBars();\n    sHudWingKey=WildlandsHudWingKey();\n    sHudCached=TRUE;\n}')
+
+# Playtest "pixels go crazy when moving": several move effects (warp/toss
+# shake, flame clash tremor, toss landing) wrote BG1 scroll registers every
+# render, which in Wildlands is the streamed MIDDLE terrain layer. On frames
+# where the effect code ran after the camera, BG1 snapped to 0,0 while BG2/BG3
+# stayed on the camera, so the ground layer jumped every other frame. In
+# Wildlands these writes are dropped (the camera owns all three layers).
+patch(A, '#include "wildlands_world_data.h"\n',
+      '#include "wildlands_world_data.h"\n'
+      '#define WL_BG1(reg, value) do { if (!WildlandsWorld_Active()) SetGpuReg(reg, value); } while (0)\n')
+for inc in ('src/arena_warp_toss.inc', 'src/arena_toss.inc', 'src/arena_flame_clash.inc'):
+    p = root / inc
+    t = p.read_text()
+    n = t.count('SetGpuReg(REG_OFFSET_BG1HOFS,') + t.count('SetGpuReg(REG_OFFSET_BG1VOFS,')
+    if not n:
+        raise SystemExit(f'{inc}: BG1 scroll writes not found')
+    t = t.replace('SetGpuReg(REG_OFFSET_BG1HOFS,', 'WL_BG1(REG_OFFSET_BG1HOFS,').replace('SetGpuReg(REG_OFFSET_BG1VOFS,', 'WL_BG1(REG_OFFSET_BG1VOFS,')
+    p.write_text(t)
+    print(inc, n, 'BG1 scroll writes guarded')
+for src in sorted((root / 'src').glob('arena_*')):
+    t = src.read_text(errors='ignore')
+    for reg in ('BG2HOFS', 'BG2VOFS', 'BG3HOFS', 'BG3VOFS'):
+        if 'REG_OFFSET_' + reg in t:
+            print('WARNING other terrain scroll writer:', src.name, reg)
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',

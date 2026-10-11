@@ -31,17 +31,13 @@ out.mkdir(parents=True, exist_ok=True)
 
 plan, boxes = build(repo / 'docs/art/wildlands-map-concept-v3.png')
 pair, model = train(root, 'fortree', 'gTileset_Fortree')
-cls = [PATH if c == BRIDGE else GRASS if c == LAIR else c for c in plan]
-rng = random.Random(3)
-world = []
-for y in range(H):
-    for x in range(W):
-        e, _ = model.pick(cls[y * W + x], cls, x, y, W, H, rng)
-        world.append((e if e is not None else 1) & 0x0FFF)
+# Crossings are natural land necks (grass fords) rather than a path tile
+# painted over water: shores get real edge art and nobody needs to fly.
+cls = [GRASS if c in (BRIDGE, LAIR) else c for c in plan]
 
 # Legendary lairs: authentic native-scale Route 119/120 + Fortree structures
 # stamped into the reserved pockets (same General+Fortree tileset pair).
-# (layout, x, y, w, h) crops; all are scenery/cover, none enterable.
+# (layout, x, y, w, h) crops.
 PREFABS = {
     'mewtwo':   ('Route119', 0, 22, 16, 14),   # Weather Institute -> Research Facility
     'kyogre':   ('Route120', 12, 12, 18, 16),  # cave mound in bridged pond basin -> Abyssal Basin
@@ -49,18 +45,52 @@ PREFABS = {
     'hooh':     ('Route120', 1, 48, 16, 16),   # Ancient Tomb boulder ring -> Ember Temple (stone)
     'lugia':    ('FortreeCity', 8, 0, 28, 8),  # treetop lookouts + rope bridges + ladders -> Tempest Shrine
 }
+LAYOUTS = json.load(open(root / 'data/layouts/layouts.json'))['layouts']
 stamped = {}
+in_prefab = set()
 for name, (layout, sx, sy, sw, sh) in PREFABS.items():
-    L = json.load(open(root / 'data/layouts/layouts.json'))['layouts']
-    lay = next(l for l in L if l and l['name'] == layout + '_Layout')
-    src = words(root / lay['blockdata_filepath'])
     bx, by, bw, bh = boxes[name][:4]
-    ox = max(1, min(W - sw - 1, bx + bw // 2 - sw // 2))
-    oy = max(1, min(H - sh - 1, by + bh // 2 - sh // 2))
+    cx0 = max(2, min(W - sw - 2, bx + bw // 2 - sw // 2))
+    cy0 = max(2, min(H - sh - 4, by + bh // 2 - sh // 2))
+    # Sit the whole structure, a one-cell ring and the two rows its ladders
+    # and doors open onto, on land (playtest: Fortree ladders ended in the sea).
+    best = None
+    for dy in range(-8, 9):
+        for dx in range(-12, 13):
+            ox, oy = cx0 + dx, cy0 + dy
+            if not (2 <= ox and ox + sw + 2 <= W and 2 <= oy and oy + sh + 4 <= H):
+                continue
+            wet = sum(1 for yy in range(oy - 1, oy + sh + 3) for xx in range(ox - 1, ox + sw + 1)
+                      if plan[yy * W + xx] in (OCEAN, WATER))
+            score = wet * 100 + abs(dx) + abs(dy)
+            if best is None or score < best[0]:
+                best = (score, ox, oy)
+    _, ox, oy = best
+    for yy in range(oy - 1, oy + sh + 3):
+        for xx in range(ox - 1, ox + sw + 1):
+            cls[yy * W + xx] = GRASS
+    stamped[name] = (ox, oy, sw, sh, layout)
+
+rng = random.Random(3)
+world = []
+for y in range(H):
+    for x in range(W):
+        e, _ = model.pick(cls[y * W + x], cls, x, y, W, H, rng)
+        world.append((e if e is not None else 1) & 0x0FFF)
+# Seam repair: swap tiles whose neighbour pairs never occur in real Emerald
+# maps for same-class tiles that do (fixes stray pixels at class borders).
+from autotile import repair, violations
+seam_before = violations(model, world, W, H)
+world, _repair_log = repair(model, world, cls, W, H, sweeps=4)
+seam_after = violations(model, world, W, H)
+for name, (layout, sx, sy, sw, sh) in PREFABS.items():
+    lay = next(l for l in LAYOUTS if l and l['name'] == layout + '_Layout')
+    src = words(root / lay['blockdata_filepath'])
+    ox, oy = stamped[name][:2]
     for yy in range(sh):
         for xx in range(sw):
             world[(oy + yy) * W + ox + xx] = src[(sy + yy) * lay['width'] + sx + xx] & 0x0FFF
-    stamped[name] = (ox, oy, sw, sh, layout)
+            in_prefab.add((oy + yy) * W + ox + xx)
 
 # Wilderness houses: an authentic Route 119 house (General+Fortree), stamped
 # whole onto open grass away from lairs; each door leads to its own interior.
@@ -114,15 +144,11 @@ def walkable(x, y):
 # tile for a planned bridge/path cell over water is not, fall back to a plain
 # native path metatile so routes never depend on Surf.
 path_tile = model.t0[PATH].most_common(1)[0][0] & 0x0FFF
+grass_tile = model.t0[GRASS].most_common(1)[0][0] & 0x0FFF
 fixed = 0
-in_prefab = set()
-for ox, oy, sw, sh, _l in stamped.values():
-    for yy in range(oy, oy + sh):
-        for xx in range(ox, ox + sw):
-            in_prefab.add(yy * W + xx)
 for i, c in enumerate(plan):
     if c in (BRIDGE, PATH) and i not in in_prefab and not walkable(i % W, i // W):
-        world[i] = path_tile
+        world[i] = grass_tile if c == BRIDGE else path_tile
         fixed += 1
 terrain = build_table(root, world, primary_attr, secondary_attr)
 
@@ -306,7 +332,7 @@ ROOMS = {
     'mewtwo':  dict(layout='Route119_WeatherInstitute_1F', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='MEWTWO'),
     'lugia':   dict(layout='NavelRock_Bottom', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='LUGIA'),
     'hooh':    dict(layout='NavelRock_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='HO_OH'),
-    'kyogre':  dict(layout='MarineCave_End', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='KYOGRE'),
+    'kyogre':  dict(layout='SeafloorCavern_Room9', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='KYOGRE'),
     'rayquaza': dict(layout='SkyPillar_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='RAYQUAZA'),
 }
 for i in range(len(houses)):
@@ -357,7 +383,7 @@ manifest = {
                   'reachable': lair_reach[k] > 0, 'reachable_cells': lair_reach[k],
                   'prefab': stamped.get(k, [None])[-1] if k in stamped else None}
               for k, v in boxes.items()},
-    'bridge_fallbacks': fixed, 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
+    'bridge_fallbacks': fixed, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
     'player_start': P, 'enemy_start': E,
     'interiors': rooms_manifest, 'doors_reachable': door_audit, 'wild_houses': houses,
     'not_claimed': ['destructible cover', 'legendary boss encounters'],

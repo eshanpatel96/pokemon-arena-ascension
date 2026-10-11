@@ -289,6 +289,75 @@ def open_rock(g):
     return out
 
 
+def despeckle(g, sweeps=3, keep=(BRIDGE, LAIR, OCEAN)):
+    """Playtest 'weird pixels': a cell with fewer than two same-class
+    4-neighbours becomes the dominant class around it."""
+    for _ in range(sweeps):
+        out = g[:]
+        changed = 0
+        for y in range(1, H - 1):
+            for x in range(1, W - 1):
+                c = g[y * W + x]
+                if c in keep:
+                    continue
+                same = sum(1 for xx, yy in nbrs4(x, y) if g[yy * W + xx] == c)
+                if same >= 2:
+                    continue
+                v = Counter(g[(y + dy) * W + x + dx] for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                            if (dx or dy) and g[(y + dy) * W + x + dx] not in (c, LAIR))
+                if v:
+                    out[y * W + x] = v.most_common(1)[0][0]; changed += 1
+        g = out
+        if not changed:
+            break
+    return g
+
+
+def min_blocks(g, classes, sweeps=3):
+    """Every cell of these classes belongs to a 2x2 block of its class, so
+    Emerald's two-metatile trees, shores and paths never get cut in half."""
+    for _ in range(sweeps):
+        out = g[:]
+        changed = 0
+        for y in range(H):
+            for x in range(W):
+                c = g[y * W + x]
+                if c not in classes:
+                    continue
+                ok = False
+                for oy in (0, -1):
+                    for ox in (0, -1):
+                        x0, y0 = x + ox, y + oy
+                        if 0 <= x0 < W - 1 and 0 <= y0 < H - 1 and all(
+                                g[(y0 + j) * W + x0 + i] == c for j in (0, 1) for i in (0, 1)):
+                            ok = True
+                if ok:
+                    continue
+                v = Counter(g[yy * W + xx] for xx, yy in nbrs4(x, y) if g[yy * W + xx] != c)
+                if v:
+                    out[y * W + x] = v.most_common(1)[0][0]; changed += 1
+        g = out
+        if not changed:
+            break
+    return g
+
+
+def widen_crossings(g):
+    """Carved links are one cell wide; make every crossing two wide so the
+    shoreline art has room and a Pokemon never threads a needle."""
+    out = g[:]
+    for y in range(H - 1):
+        for x in range(W - 1):
+            c = g[y * W + x]
+            if c not in (BRIDGE, PATH):
+                continue
+            for xx, yy in ((x + 1, y), (x, y + 1)):
+                t = g[yy * W + xx]
+                if t in (WATER, TREE, ROCK):
+                    out[yy * W + xx] = BRIDGE if t == WATER else PATH
+    return out
+
+
 def build(concept_path, seed=7):
     rng = random.Random(seed)
     g = plan_from_concept(concept_path)
@@ -304,10 +373,15 @@ def build(concept_path, seed=7):
     g = open_rock(g)
     g = thicken_water(g)
     g = banks(g)
+    g = despeckle(g)
+    g = min_blocks(g, {WATER, PATH, SAND, TREE, ROCK})
+    g = despeckle(g, sweeps=1)
     g, boxes = reserve_lairs(g)
     g, boxes = lair_approaches(g, boxes)
     g = connect_land(g, rng)
+    g = widen_crossings(g)
     g = groves(g, rng)
     g = sprinkle_tall(g, rng)
     g = connect_land(g, rng)
+    g = widen_crossings(g)
     return g, boxes

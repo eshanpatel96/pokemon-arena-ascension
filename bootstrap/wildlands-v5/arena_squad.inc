@@ -88,6 +88,31 @@ static bool8 SquadAlive(u8 battler)
     return sSquadWings[battler - 2].active && sSquadWings[battler - 2].alive;
 }
 
+// HUD helpers (arena_hud.inc): 2px partner / enemy-wing bars at y=22.
+static u32 WildlandsHudWingKey(void)
+{
+    u32 a = SquadAlive(2) ? gBattleMons[2].hp + 1 : 0, b = SquadAlive(3) ? gBattleMons[3].hp + 1 : 0;
+    return a | (b << 16);
+}
+
+static void WildlandsHudWingBars(void)
+{
+    u32 k;
+    if (!WildlandsWorld_Active())
+        return;
+    for (k = 0; k < 2; k++)
+    {
+        u8 b = 2 + k;
+        u32 bar = k ? 129 : 8;
+        HudRect(bar, 22, 102, 2, 12);
+        if (SquadAlive(b) && gBattleMons[b].maxHP)
+        {
+            u32 fill = gBattleMons[b].hp * 102 / gBattleMons[b].maxHP;
+            HudRect(bar, 22, fill ? fill : 1, 2, gBattleMons[b].hp * 5 <= gBattleMons[b].maxHP ? 6 : k ? 7 : 5);
+        }
+    }
+}
+
 static void SquadPos(u8 battler, s32 *x, s32 *y)
 {
     if (battler < 2) { *x = sArena.bodies[battler].x; *y = sArena.bodies[battler].y; }
@@ -432,10 +457,14 @@ static void SquadThink(struct SquadWing *w)
     if (SquadAlive(w->team) && !w->shotTimer)
     {
         u16 ld = ArenaNav_Distance(w->x / Q, w->y / Q, lead->x / Q, lead->y / Q);
+        bool8 offscreen = Abs(w->x / Q - (sArenaXLCameraX + 120)) > 136 || Abs(w->y / Q - (sArenaXLCameraY + 80)) > 96;
         if (w->moving && w->x == w->lastX && w->y == w->lastY) w->stuckClock++;
         else if (w->moving) w->stuckClock = 0;
         w->lastX = w->x; w->lastY = w->y;
-        if (ld > 260 || (ld > 64 && w->stuckClock > 90) || w->stuckClock > 180)
+        // Regroup is a last resort and never happens in view: a wing walks
+        // (and catches up faster than its lead) unless it is far behind or
+        // pinned for 2.5s while off screen.
+        if (ld > 480 || (offscreen && (ld > 300 || (ld > 64 && w->stuckClock > 150))))
             SquadRegroup(w, lead);
     }
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
@@ -506,7 +535,10 @@ static void SquadThink(struct SquadWing *w)
         // Formation on the living lead of this team.
         goalX = lead->x + (w->team ? -30 : 30) * Q;
         goalY = lead->y + 22 * Q;
-        if (max(Abs(goalX - w->x), Abs(goalY - w->y)) > 120 * Q) step = 520;
+        {
+            s32 far = max(Abs(goalX - w->x), Abs(goalY - w->y)) / Q;
+            if (far > 40) step = far > 120 ? 640 : 520;   // jog to catch up
+        }
     }
     else
     { goalX = w->x; goalY = w->y; }
