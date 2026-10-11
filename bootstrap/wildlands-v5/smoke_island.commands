@@ -218,7 +218,7 @@ frames 4 0
 poke gWildlandsZoneTestSpeed 0 2 65535
 poke gWildlandsBossTestBias 0 1 120
 frames 5400 0
-dumph boss gWildlandsBossTelemetry 0 12
+dumph boss gWildlandsBossTelemetry 0 16
 dump bossDirector gWildlandsDirectorTelemetry 8
 expectmin gWildlandsBossTelemetry 0 2 1
 poke gWildlandsBossTestBias 0 1 0
