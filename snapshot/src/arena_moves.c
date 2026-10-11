@@ -115,11 +115,22 @@ u8 ArenaMoves_Beam(u16 move)
     return 0;
 }
 
+#if defined(ARENA_MOVES_HOST) && !defined(EWRAM_DATA)
+#define EWRAM_DATA
+#endif
+static EWRAM_DATA u16 sProfileMemoMove[8] = {0};
+static EWRAM_DATA u8 sProfileMemoIdx[8] = {0};
 const struct ArenaMoveProfile *ArenaMoves_Get(u16 move)
 {
-    unsigned i;
+    unsigned i, slot = move & 7;
+    if (sProfileMemoIdx[slot] && sProfileMemoMove[slot] == move)
+        return &sProfiles[sProfileMemoIdx[slot] - 1];
     for (i = 0; i < sizeof(sProfiles)/sizeof(sProfiles[0]); i++)
-        if (sProfiles[i].move == move) return &sProfiles[i];
+        if (sProfiles[i].move == move)
+        {
+            if (i < 255) { sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = i + 1; }
+            return &sProfiles[i];
+        }
     return 0;
 }
 

@@ -213,6 +213,10 @@ static void LootSim(void)
     bool8 alive[4];
     if (!sLoot.live || sArena.paused || sArena.resultTimer)
         return;
+    // Pickup scan every other step (pickup radius 12px, actors move <= 6px
+    // per step): halves the cost of 64 spots x 4 actors.
+    if (sArena.frame & 1)
+        return;
     for (b = 0; b < 4; b++)
     {
         alive[b] = SquadAlive(b);

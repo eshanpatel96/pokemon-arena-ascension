@@ -479,6 +479,7 @@ static bool8 ZoneOutside(s32 x, s32 y, s32 margin);
 static EWRAM_DATA u32 sZoneHudKeyShown = 0;
 static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
 static EWRAM_DATA u8 sWildlandsSimSteps = 1;
+static EWRAM_DATA u8 sWildlandsSceneryLit = 0;
 static void LootInit(void);
 static void LootTick(void);
 static void LootDestroy(void);
@@ -3114,7 +3115,12 @@ static void CB2_Arena(void)
                 warmth=max(warmth,b->actionAge<8?4:b->actionLife<10?1:2);
         }
         // Brief warm light on the scenery only, never the HUD or HP palettes.
-        BlendPalette(16,240,sArena.paused?0:warmth,RGB(31,16,4));
+        {
+            u8 lit = sArena.paused ? 0 : warmth;
+            if (lit || sWildlandsSceneryLit)
+                BlendPalette(16,240,lit,RGB(31,16,4));
+            sWildlandsSceneryLit = lit;
+        }
     }
     now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
     gArenaFrameTelemetry.scanlines[3]=now-phaseStamp;phaseStamp=now;
