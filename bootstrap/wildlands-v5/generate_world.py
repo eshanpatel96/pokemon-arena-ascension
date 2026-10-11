@@ -69,16 +69,25 @@ def nearest(x,y):
     raise SystemExit(f'no walkable nav point near {(x,y)}')
 
 # Navigation anchors follow the bridge/path/open areas. Runtime pathing still
-# checks line-of-sight/collision, so these are guides, not teleport nodes.
+# checks collision/water. Bridge anchors use the exact 32 px lane centerline
+# rather than a 16 px metatile center so the unchanged 10 px Arena body radius
+# fits between both native bridge edges.
 desired=[
- (5,15),(9,15),(15,15),(22,15),(28,15),(33,15),
- (30,8),(34,6),(30,25),(34,30),(30,38),(22,30),
- (15,30),(8,30),(5,25),(18,40),(28,42),(24,38)
+ (5,16,True),(9,16,True),(15,16,True),(22,16,True),(28,16,True),(30,16,True),
+ (30,8,False),(34,6,False),(30,25,False),(34,30,False),(30,38,False),(22,30,False),
+ (15,30,False),(8,30,False),(5,25,False),(18,40,False),(28,42,False),(24,38,False)
 ]
-nav=[]
-for p in desired:
-    q=nearest(*p)
-    if q not in nav: nav.append(q)
+nav_pixels=[]
+for x,y,bridge_center in desired:
+    q=nearest(x,y)
+    if bridge_center:
+        px=(BASE_X+q[0])*16+8
+        py=(BASE_Y+16)*16
+    else:
+        px=(BASE_X+q[0])*16+8
+        py=(BASE_Y+q[1])*16+8
+    if (px,py) not in nav_pixels:
+        nav_pixels.append((px,py))
 
 # Important validation positions: player/enemy are on opposite sides of the
 # native Route 120 bridge. Their Y coordinate is deliberately on the 16 px
@@ -98,8 +107,8 @@ assert deep_water(void_entry)
 (out/'slice.bin').write_bytes(struct.pack('<%dH'%len(world),*world))
 
 nav_inc='\n'.join(
-    f'    {{{(BASE_X+x)*16+8}, {(BASE_Y+y)*16+8}}},'
-    for x,y in nav
+    f'    {{{x}, {y}}},'
+    for x,y in nav_pixels
 )+'\n'
 (root/'include/wildlands_world_nav.inc').write_text(nav_inc)
 
@@ -118,7 +127,7 @@ header=f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define WL_PLAYER_START_Y {BASE_Y*16+PLAYER_Y_PX}
 #define WL_ENEMY_START_X {(BASE_X+ENEMY[0])*16+8}
 #define WL_ENEMY_START_Y {BASE_Y*16+ENEMY_Y_PX}
-#define WL_NAV_POINT_COUNT {len(nav)}
+#define WL_NAV_POINT_COUNT {len(nav_pixels)}
 #endif
 '''
 (root/'include/wildlands_world_data.h').write_text(header)
@@ -143,7 +152,7 @@ manifest={
    'puddles_shallow':'walkable wet terrain',
    'fortree_structure':'cover/scenery only in validation build; not enterable'
  },
- 'nav_points_local':nav,
+ 'nav_points_world_pixels':nav_pixels,
  'player_start_local':PLAYER,
  'enemy_start_local':ENEMY,
  'void_entry':void_entry
