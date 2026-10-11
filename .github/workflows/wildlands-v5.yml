@@ -57,19 +57,6 @@ jobs:
           python3 bootstrap/v11-1/phase2.py engine | tee evidence/v11-1-phase2.txt
           python3 bootstrap/v11-1/prepare_inputs.py engine baseline-rom/Pokemon-Arena-Ascension-V11-1-DEV.gba | tee evidence/preserved-inputs.txt
 
-      - name: Sprite layout survey (read-only)
-        continue-on-error: true
-        run: |
-          {
-            ls -la engine/.arena-dev/pmd | head -40
-            echo ----
-            find engine/.arena-dev -maxdepth 3 | head -120
-            echo ----
-            head -c 4000 engine/.arena-dev/pmd/sprites.inc
-            echo; echo ----
-            grep -n -i "zapdos" -r engine/.arena-dev | head -40
-          } > evidence/pmd-layout.txt 2>&1
-
       - name: Apply Arena World foundation
         run: |
           set -o pipefail
@@ -130,6 +117,10 @@ jobs:
           cp Pokemon-Wildlands-V5-World-Validation.gba ../delivery/
           cp Pokemon-Wildlands-V5-World-Validation.elf Pokemon-Wildlands-V5-World-Validation.map ../evidence/
           arm-none-eabi-nm -n Pokemon-Wildlands-V5-World-Validation.elf > ../evidence/symbols.txt
+
+      - name: Sprite size survey (read-only)
+        continue-on-error: true
+        run: python3 bootstrap/wildlands-v5/sprite_survey.py engine > evidence/sprite-survey.txt 2>&1
 
       - name: Build manifest and memory report
         run: |
