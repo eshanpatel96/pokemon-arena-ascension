@@ -484,6 +484,9 @@ static EWRAM_DATA u16 sWildlandsHeldNew = 0;
 // renders after [0] one VBlank [1] two (the locked pace) [2] three or more (a hitch)
 // [3] latest scanline a render started at
 EWRAM_DATA u16 gWildlandsLoop[4] = {};
+// maxima (scanlines): [0] simulation steps [1] render [2] world VBlank streaming
+// [3] whole callback [4] renders over 400 scanlines [5] last sim length
+EWRAM_DATA u16 gWildlandsSpike[6] = {};
 static void LootInit(void);
 static void LootTick(void);
 static void LootDestroy(void);
@@ -973,7 +976,7 @@ bool8 RealtimeArena_TryStart(void)
 
 static void VBlank_Arena(void)
 {
-    WildlandsWorld_VBlank();
+    {u16 v0=REG_VCOUNT,d; WildlandsWorld_VBlank(); d=(u16)(REG_VCOUNT-v0); if(d<228&&d>gWildlandsSpike[2])gWildlandsSpike[2]=d;}
     LoadOam();
     ArenaRender_Flush();
     ProcessSpriteCopyRequests();
@@ -2964,6 +2967,7 @@ static void CB2_Arena(void)
         gMain.newKeys = savedNewKeys;
         }
     }
+    {u16 t=(u16)(gMain.vblankCounter1*228+(REG_VCOUNT+68)%228-stamp); gWildlandsSpike[5]=t; if(t>gWildlandsSpike[0])gWildlandsSpike[0]=t;}
     CaptureTick();
     if(!sArena.active)return;
     frozen |= CaptureLocked();
@@ -3200,6 +3204,8 @@ static void CB2_Arena(void)
     now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
     gArenaFrameTelemetry.scanlines[4]=now-phaseStamp;
     gArenaFrameTelemetry.scanlines[5]=now-stamp;
+    {u16 t=(u16)(now-stamp); if(t>gWildlandsSpike[3])gWildlandsSpike[3]=t; if(t>400)gWildlandsSpike[4]++;
+     if(t>gWildlandsSpike[5]&&(u16)(t-gWildlandsSpike[5])>gWildlandsSpike[1])gWildlandsSpike[1]=t-gWildlandsSpike[5];}
     for(i=0;i<6;i++)if(gArenaFrameTelemetry.scanlines[i]>gArenaFrameTelemetry.peak[i])
         gArenaFrameTelemetry.peak[i]=gArenaFrameTelemetry.scanlines[i];
 }
