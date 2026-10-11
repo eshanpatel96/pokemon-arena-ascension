@@ -1,0 +1,37 @@
+{
+  "name": "Pokemon Wildlands V5 (slice)",
+  "source_commit": "0146ab2dbf96b93fce53215416fd29d42b497beb",
+  "rom_sha256": "ecc11e40d01bcee0be80354caba7d928bb283eeee6831adac55be13f387fff12",
+  "rom_bytes": 33554432,
+  "world": "slice",
+  "world_coordinate_space_pixels": [
+    4096,
+    3072
+  ],
+  "terrain_source": "native Emerald metatiles: General primary + streamed Fortree/Mauville/Fallarbor/Lavaridge/Slateport secondaries per biome (island); collision/material from metatile data, never a floor bitmap; no invisible walls (audited)",
+  "controller": "native realtime Arena movement/dodge/attack/cooldown/hit path; fixed-timestep catch-up keeps game time real-time",
+  "true_2v2": "yes (first slice): player+AI partner vs enemy lead+wing; all four attack, take damage, KO; lead KO promotes the living wing",
+  "closing_zone": "world-coordinate circle, 90s explore / 45s warning / 75s shrink per phase, violet tint and edge markers, time-based exposure damage to all actors",
+  "loot": "collect-once team ATK/DEF/SPD stages, cap +2",
+  "live_map": "START -> MAP",
+  "move_editor": "lab MOVE EDITOR sign (native relearner UI, Arena-supported legal moves)",
+  "title": "approved Charizard/Blastoise/Rayquaza concept at native 240x160",
+  "thirty_duo_simulation": true,
+  "legendary_boss_battles": true,
+  "shiny_palettes": "audited feasible; not implemented",
+  "memory": {
+    "EWRAM": {
+      "used_bytes": 261856,
+      "usage_percent": 99.89
+    },
+    "IWRAM": {
+      "used_bytes": 30892,
+      "usage_percent": 94.27
+    },
+    "ROM": {
+      "used_bytes": 32874138,
+      "usage_percent": 97.97
+    }
+  },
+  "verification": "mGBA automated runtime only; iPhone Delta requires owner playtest"
+}
