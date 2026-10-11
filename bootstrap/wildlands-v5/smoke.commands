@@ -91,6 +91,27 @@ frames 6 2
 frames 30 0
 frames 60 0
 snap 13-resumed
+# ---- Interiors: door -> house (tileset pair swap) -> supplies -> exit ----
+poke gWildlandsTestWarp 0 1 10
+frames 90 0
+snap 14-house-interior
+dump rooms gWildlandsRoomTelemetry 8
+expectmin gWildlandsRoomTelemetry 0 4 1
+expect gWildlandsRoomTelemetry 8 4 1
+expectmin gWildlandsRoomTelemetry 12 4 1
+poke gWildlandsTestWarp 0 1 3
+frames 40 0
+snap 14a-house-supplies
+dump loot2 gWildlandsLootTelemetry 14
+expectmin gWildlandsLootTelemetry 48 4 1
+poke gWildlandsTestWarp 0 1 2
+frames 90 0
+snap 15-back-outside
+dump rooms2 gWildlandsRoomTelemetry 8
+expectmin gWildlandsRoomTelemetry 4 4 1
+expect gWildlandsRoomTelemetry 8 4 0
+poke gWildlandsTestWarp 0 1 1
+frames 60 0
 
 poke gWildlandsTestPeace 0 1 0
 # ---- Gate D true duo combat (squad wings are battlers 2 and 3) ----
@@ -109,6 +130,9 @@ snap 09-duo-fight-attacking
 dump squad2 gWildlandsSquadTelemetry 16
 dump profile gWildlandsProfile 4
 # ---- Gate F pickups: spot 0 lies on the bridge lane walked above ----
-dump loot gWildlandsLootTelemetry 12
+dump loot gWildlandsLootTelemetry 14
 expectmin gWildlandsLootTelemetry 0 4 1
 expect gWildlandsLootTelemetry 44 4 0
+# Streaming queue never dropped a tile (visual corruption while moving).
+dump roomsEnd gWildlandsRoomTelemetry 8
+expect gWildlandsRoomTelemetry 28 4 0

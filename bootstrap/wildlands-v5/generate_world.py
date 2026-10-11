@@ -147,6 +147,19 @@ for gy in range(3,H-2,7):
         loot.append(((BASE_X+cand[0])*16+8,(BASE_Y+cand[1])*16+8,types[len(loot)%3]))
         if len(loot)>=12: break
     if len(loot)>=12: break
+# Enterable interior: the stamped Fortree building's native door leads to a
+# real Fortree house interior (Building+GenericBuilding pair) with supplies.
+from interiors import build as build_rooms
+DOOR=(DX+(22-SX), DY+(11-SY))
+assert (fortree[11*40+22]&0x3ff) in (0x21,0x41,0x61,0x1cd,0x1db,0xa7,0x235,0x2ca), hex(fortree[11*40+22])
+world,terrain,TOTAL_H,rooms_src,room_loot,rooms_manifest=build_rooms(
+    root,world,terrain,W,H,(BASE_X,BASE_Y),('General','Fortree'),
+    [dict(cell=DOOR,room='house',kind='door')],
+    {'house':dict(layout='FortreeCity_House1',loot=[3])})
+loot=loot+room_loot
+(root/'include/wildlands_rooms.inc').write_text(rooms_src)
+(out/'slice.bin').write_bytes(struct.pack('<%dH'%len(world),*world))
+(out/'terrain.bin').write_bytes(terrain)
 (root/'include/wildlands_loot.inc').write_text(''.join(f'    {{{x}, {y}, {t}}},\n' for x,y,t in loot))
 
 header=f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
@@ -158,7 +171,8 @@ header=f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define WL_SLICE_BASE_X {BASE_X}
 #define WL_SLICE_BASE_Y {BASE_Y}
 #define WL_SLICE_W {W}
-#define WL_SLICE_H {H}
+#define WL_SLICE_H {TOTAL_H}
+#define WL_OUTDOOR_H {H}
 #define WL_VOID_ENTRY 0x{void_entry:04X}
 #define WL_PLAYER_START_X {(BASE_X+PLAYER[0])*16+8}
 #define WL_PLAYER_START_Y {BASE_Y*16+PLAYER_Y_PX}
@@ -187,8 +201,9 @@ manifest={
    'tall_long_grass':'concealment; walkable',
    'deep_water':'blocks ordinary land bodies; Water/Flying traversal allowed',
    'puddles_shallow':'walkable wet terrain',
-   'fortree_structure':'cover/scenery only in validation build; not enterable'
+   'fortree_structure':'cover; its native door enters a Fortree house interior'
  },
+ 'interiors':rooms_manifest,
  'nav_points_world_pixels':nav_pixels,
  'player_start_local':PLAYER,
  'enemy_start_local':ENEMY,

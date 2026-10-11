@@ -121,7 +121,7 @@ static void ZoneInit(void)
     // Same seed -> same circles: derive from the encounter, not the frame.
     sZone.seed = gBattleMons[1].personality ^ (gBattleMons[0].personality << 1) ^ 0x57494C44;
     sZone.cx = (WL_SLICE_BASE_X + WL_SLICE_W / 2) * 16;
-    sZone.cy = (WL_SLICE_BASE_Y + WL_SLICE_H / 2) * 16;
+    sZone.cy = (WL_SLICE_BASE_Y + WL_OUTDOOR_H / 2) * 16;
     sZone.r = sZoneRadii[0] << 8;
     sZone.toX = sZone.cx; sZone.toY = sZone.cy; sZone.toR = sZone.r;
     sZone.active = TRUE;
@@ -139,9 +139,11 @@ static void ZoneDestroy(void)
 // Squared distance from the circle edge test, pixels.
 static bool8 ZoneOutside(s32 x, s32 y, s32 margin)
 {
-    s32 dx = x - sZone.cx, dy = y - sZone.cy, r = (sZone.r >> 8) - margin;
+    s32 dx, dy, r = (sZone.r >> 8) - margin;
     if (!sZone.active)
         return FALSE;
+    WildlandsWorld_OutdoorPos(&x, &y);   // inside a house = at its door
+    dx = x - sZone.cx; dy = y - sZone.cy;
     if (r <= 0)
         return TRUE;
     return dx * dx + dy * dy > r * r;

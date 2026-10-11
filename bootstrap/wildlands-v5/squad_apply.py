@@ -46,7 +46,11 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n'
       '// TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking\n'
       '// map/zone UI; always 0 in normal play.\n'
-      'EWRAM_DATA u8 gWildlandsTestPeace = 0;\n')
+      'EWRAM_DATA u8 gWildlandsTestPeace = 0;\n'
+      '// TEST HOOK ONLY: 1 = back to start, 2 = onto the current room exit,\n'
+      '// 3 = onto the last pickup, 10+n = outside door n facing it; 0 in play.\n'
+      'EWRAM_DATA u8 gWildlandsTestWarp = 0;\n'
+      'static void LootLastSpot(s16 *x, s16 *y);\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')
@@ -154,6 +158,38 @@ patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer
       '    AnimateSprites();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[7]=p1-p0;p0=p1;\n'
       '    BuildOamBuffer();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;\n'
       '    {u32 n=0,k;for(k=0;k<MAX_SPRITES;k++)if(gSprites[k].inUse)n++;gWildlandsProfile[9]=n;}}')
+
+# Interiors: rooms clamp the camera onto themselves.
+patch(A, '''    u32 i;
+    sArenaXLCameraX=camX;sArenaXLCameraY=camY;''', '''    u32 i;
+    if(WildlandsWorld_Active())WildlandsWorld_ClampCamera(px,py,&camX,&camY);
+    sArenaXLCameraX=camX;sArenaXLCameraY=camY;''')
+# Corner assist: a blocked straight move slides 1px toward a one-tile opening.
+patch(A, '''    else if (dx) gArenaAiTelemetry.wallBlocks[side]++;
+''', '''    else if (dx)
+    {
+        gArenaAiTelemetry.wallBlocks[side]++;
+        if (WildlandsWorld_Active() && !dy && !ghost)
+        {
+            s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, dx > 0 ? 1 : -1, 0);
+            if (n) body->y += n * Q;
+        }
+    }
+''')
+patch(A, '''    else if (dy) gArenaAiTelemetry.wallBlocks[side]++;
+''', '''    else if (dy)
+    {
+        gArenaAiTelemetry.wallBlocks[side]++;
+        if (WildlandsWorld_Active() && !dx && !ghost)
+        {
+            s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, 0, dy > 0 ? 1 : -1);
+            if (n) body->x += n * Q;
+        }
+    }
+''')
+# The world now extends below the island (room strip).
+patch('include/arena_navigation.h', '#define ARENA_MAX_Y 3040\n',
+      '#include "wildlands_world_data.h"\n#ifdef WL_ARENA_MAX_Y\n#define ARENA_MAX_Y WL_ARENA_MAX_Y\n#else\n#define ARENA_MAX_Y 3040\n#endif\n')
 
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',

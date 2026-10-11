@@ -33,12 +33,54 @@ frames 30 0
 frames 6 2
 frames 30 0
 frames 60 0
+# ---- Interiors: lairs and a house, each with its own native tileset pair ----
+poke gWildlandsTestWarp 0 1 10
+frames 90 0
+snap 09-lair-mewtwo
+dump rooms gWildlandsRoomTelemetry 8
+expect gWildlandsRoomTelemetry 8 4 4
+poke gWildlandsTestWarp 0 1 2
+frames 90 0
+expect gWildlandsRoomTelemetry 8 4 0
+poke gWildlandsTestWarp 0 1 20
+frames 90 0
+snap 10-lair-rayquaza
+expect gWildlandsRoomTelemetry 8 4 8
+poke gWildlandsTestWarp 0 1 2
+frames 90 0
+poke gWildlandsTestWarp 0 1 15
+frames 90 0
+snap 11-lair-lugia
+expect gWildlandsRoomTelemetry 8 4 5
+poke gWildlandsTestWarp 0 1 2
+frames 90 0
+poke gWildlandsTestWarp 0 1 11
+frames 90 0
+snap 12-lair-hooh
+poke gWildlandsTestWarp 0 1 2
+frames 90 0
+poke gWildlandsTestWarp 0 1 19
+frames 90 0
+snap 13-lair-kyogre
+poke gWildlandsTestWarp 0 1 2
+frames 90 0
+poke gWildlandsTestWarp 0 1 16
+frames 90 0
+snap 14-house
+poke gWildlandsTestWarp 0 1 2
+frames 90 0
+snap 15-house-door-outside
+dump rooms2 gWildlandsRoomTelemetry 8
+expectmin gWildlandsRoomTelemetry 4 4 6
+expect gWildlandsRoomTelemetry 8 4 0
+poke gWildlandsTestWarp 0 1 1
+frames 60 0
 poke gWildlandsTestPeace 0 1 0
 rate render-idle 300 0 0
 ratesym idle gWildlandsProfile 20 2 300 0 95
 frames 120 16
 snap 03-east
-dump loot gWildlandsLootTelemetry 12
+dump loot gWildlandsLootTelemetry 14
 ratesym travel-east gWildlandsProfile 20 2 600 16 95
 snap 04-east-far
 ratesym travel-north gWildlandsProfile 20 2 600 64 95
@@ -52,3 +94,6 @@ dump world gWildlandsWorldTelemetry 16
 dump xl gArenaXLTelemetry 8
 dump profile gWildlandsProfile 6
 dump nav gWildlandsWorldTelemetry 16
+# Streaming queue never dropped a tile (visual corruption while moving).
+dump roomsEnd gWildlandsRoomTelemetry 8
+expect gWildlandsRoomTelemetry 28 4 0

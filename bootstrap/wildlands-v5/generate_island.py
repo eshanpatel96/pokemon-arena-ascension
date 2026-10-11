@@ -47,7 +47,7 @@ PREFABS = {
     'kyogre':   ('Route120', 12, 12, 18, 16),  # cave mound in bridged pond basin -> Abyssal Basin
     'rayquaza': ('Route119', 14, 18, 18, 20),  # waterfall gorge, log bridges, stairs -> Sky Highlands
     'hooh':     ('Route120', 1, 48, 16, 16),   # Ancient Tomb boulder ring -> Ember Temple (stone)
-    'lugia':    ('FortreeCity', 6, 0, 30, 6),  # treetop lookouts + rope bridges -> Tempest Shrine
+    'lugia':    ('FortreeCity', 8, 0, 28, 8),  # treetop lookouts + rope bridges + ladders -> Tempest Shrine
 }
 stamped = {}
 for name, (layout, sx, sy, sw, sh) in PREFABS.items():
@@ -61,6 +61,41 @@ for name, (layout, sx, sy, sw, sh) in PREFABS.items():
         for xx in range(sw):
             world[(oy + yy) * W + ox + xx] = src[(sy + yy) * lay['width'] + sx + xx] & 0x0FFF
     stamped[name] = (ox, oy, sw, sh, layout)
+
+# Wilderness houses: an authentic Route 119 house (General+Fortree), stamped
+# whole onto open grass away from lairs; each door leads to its own interior.
+_l119 = next(l for l in json.load(open(root / 'data/layouts/layouts.json'))['layouts']
+             if l and l['name'] == 'Route119_Layout')
+_b119 = words(root / _l119['blockdata_filepath'])
+HOUSE = [[_b119[(106 + yy) * _l119['width'] + 32 + xx] & 0x0FFF for xx in range(4)] for yy in range(4)]
+HOUSE_DOOR = (1, 3)
+houses = []
+for tx, ty in ((70, 100), (150, 150), (196, 96), (120, 40)):
+    best = None
+    for r in range(0, 40):
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if best or max(abs(dx), abs(dy)) != r:
+                    continue
+                x0, y0 = tx + dx, ty + dy
+                if not (2 <= x0 < W - 8 and 2 <= y0 < H - 9):
+                    continue
+                if any(cls[(y0 - 1 + yy) * W + x0 - 1 + xx] not in (GRASS,) for yy in range(7) for xx in range(6)):
+                    continue
+                if any(abs(x0 - bx - bw // 2) < bw // 2 + 14 and abs(y0 - by - bh // 2) < bh // 2 + 14
+                       for (bx, by, bw, bh, *_r) in boxes.values()):
+                    continue
+                if any(abs(x0 - hx) + abs(y0 - hy) < 40 for hx, hy in houses):
+                    continue
+                best = (x0, y0)
+    if best and len(houses) < 3:
+        houses.append(best)
+        for yy in range(4):
+            for xx in range(4):
+                world[(best[1] + yy) * W + best[0] + xx] = HOUSE[yy][xx]
+        for xx in range(-1, 5):
+            world[(best[1] + 4) * W + best[0] + xx] = model.t0[GRASS].most_common(1)[0][0] & 0x0FFF
+        stamped['house%d' % len(houses)] = (best[0], best[1], 4, 5, 'Route119')
 
 primary_attr = words(root / 'data/tilesets/primary/general/metatile_attributes.bin')
 secondary_attr = words(root / 'data/tilesets/secondary/fortree/metatile_attributes.bin')
@@ -222,12 +257,72 @@ for (x, y) in cells:
     if all(abs(px - lx) + abs(py - ly) > 300 for lx, ly, _ in loot):
         loot.append((px, py, len(loot) % 3))
 
+# ---- Enterable interiors -------------------------------------------------
+# Doors come from the prefabs' own native warp events, plus a cliff cave
+# mouth (Emerald's open secret-base cave metatile) where a lair has no door.
+CAVE_CLOSED, CAVE_OPEN = 0x1B0, 0x1B1
+doors = []
+def door_at(name, cx, cy, room, kind='door'):
+    ox, oy = stamped[name][:2]
+    doors.append(dict(cell=(ox + cx, oy + cy), room=room, kind=kind))
+door_at('mewtwo', 6, 10, 'mewtwo')                 # Weather Institute door
+door_at('hooh', 6, 7, 'hooh')                      # Ancient Tomb door
+door_at('lugia', 2, 3, 'treehouse1')
+door_at('lugia', 9, 3, 'treehouse2')
+door_at('lugia', 17, 3, 'treehouse3')
+door_at('lugia', 24, 2, 'lugia')                   # far treehouse -> Tempest Shrine
+for i in range(len(houses)):
+    door_at('house%d' % (i + 1), *HOUSE_DOOR, 'house%d' % (i + 1))
+def cave_mouth(name, room):
+    ox, oy, sw, sh = stamped[name][:4]
+    ccx, ccy = ox + sw // 2, oy + sh // 2
+    cand = []
+    for yy in range(oy, oy + sh):
+        for xx in range(ox, ox + sw):
+            i = yy * W + xx
+            if not (terrain[i] & SOLID) or (xx, yy + 1) not in seen:
+                continue
+            native = (world[i] & 0x3FF) == CAVE_CLOSED
+            wall = all(terrain[(yy + dy) * W + xx + dx] & SOLID for dx, dy in ((-1, 0), (1, 0), (0, -1)))
+            if native or wall:
+                cand.append((0 if native else 1, abs(xx - ccx) + abs(yy - ccy), xx, yy))
+    assert cand, f'no cave mouth site for {name}'
+    _, _, xx, yy = min(cand)
+    world[yy * W + xx] = CAVE_OPEN | 0x0400
+    doors.append(dict(cell=(xx, yy), room=room, kind='cave'))
+cave_mouth('kyogre', 'kyogre')
+cave_mouth('rayquaza', 'rayquaza')
+terrain = build_table(root, world, primary_attr, secondary_attr)
+door_audit = {}
+for d in doors:
+    x, y = d['cell']
+    door_audit['%s@%d,%d' % (d['room'], x, y)] = d['kind'] == 'water' or (x, y + 1) in seen
+from interiors import build as build_rooms
+LOOT_HEAL, LOOT_CACHE = 3, 4
+ROOMS = {
+    'treehouse1': dict(layout='FortreeCity_House1', loot=[LOOT_HEAL]),
+    'treehouse2': dict(layout='FortreeCity_House2', loot=[LOOT_HEAL]),
+    'treehouse3': dict(layout='FortreeCity_House1', loot=[LOOT_HEAL]),
+    'mewtwo':  dict(layout='Route119_WeatherInstitute_1F', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
+    'lugia':   dict(layout='NavelRock_Bottom', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
+    'hooh':    dict(layout='NavelRock_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
+    'kyogre':  dict(layout='MarineCave_End', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
+    'rayquaza': dict(layout='SkyPillar_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
+}
+for i in range(len(houses)):
+    ROOMS['house%d' % (i + 1)] = dict(layout='House1', loot=[LOOT_HEAL])
+outdoor_terrain = terrain
+world, terrain, TOTAL_H, rooms_src, room_loot, rooms_manifest = build_rooms(
+    root, world, terrain, W, H, (0, 0), ('General', 'Fortree'), doors, ROOMS)
+loot = loot[:64 - len(room_loot)] + room_loot
+(root / 'include/wildlands_rooms.inc').write_text(rooms_src)
+(root / 'include/wildlands_loot.inc').write_text(''.join(f'    {{{x}, {y}, {t}}},\n' for x, y, t in loot))
+
 (out / 'slice.bin').write_bytes(struct.pack('<%dH' % len(world), *world))
 from minimap import emit as _emit_minimap
-_emit_minimap(terrain, W, H, root / 'include/wildlands_minimap.inc')
+_emit_minimap(outdoor_terrain, W, H, root / 'include/wildlands_minimap.inc')
 (out / 'terrain.bin').write_bytes(terrain)
 (root / 'include/wildlands_world_nav.inc').write_text(''.join(f'    {{{x}, {y}}},\n' for x, y in nav))
-(root / 'include/wildlands_loot.inc').write_text(''.join(f'    {{{x}, {y}, {t}}},\n' for x, y, t in loot))
 void_entry = model.t0[OCEAN].most_common(1)[0][0] & 0x0FFF
 (root / 'include/wildlands_world_data.h').write_text(f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define GUARD_WILDLANDS_WORLD_DATA_H
@@ -238,7 +333,9 @@ void_entry = model.t0[OCEAN].most_common(1)[0][0] & 0x0FFF
 #define WL_SLICE_BASE_X 0
 #define WL_SLICE_BASE_Y 0
 #define WL_SLICE_W {W}
-#define WL_SLICE_H {H}
+#define WL_SLICE_H {TOTAL_H}
+#define WL_OUTDOOR_H {H}
+#define WL_ARENA_MAX_Y {TOTAL_H * 16 - 32}
 #define WL_VOID_ENTRY 0x{void_entry:04X}
 #define WL_PLAYER_START_X {P[0] * 16 + 8}
 #define WL_PLAYER_START_Y {P[1] * 16 + 8}
@@ -261,7 +358,8 @@ manifest = {
               for k, v in boxes.items()},
     'bridge_fallbacks': fixed, 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
     'player_start': P, 'enemy_start': E,
-    'not_claimed': ['landmark prefabs', 'region secondary tilesets', 'enterable buildings', 'destructible cover'],
+    'interiors': rooms_manifest, 'doors_reachable': door_audit, 'wild_houses': houses,
+    'not_claimed': ['destructible cover', 'legendary boss encounters'],
 }
 (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 print(json.dumps(manifest, indent=2))

@@ -89,7 +89,7 @@ jobs:
           if [ "$WORLD" = island ]; then
             test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 98304
             test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 49152
-            python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=97 and all(v['reachable_cells']>=30 and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct'])"
+            python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=97 and all(v['reachable_cells']>=30 and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct']);assert all(m['doors_reachable'].values()) and len(m['interiors']['rooms'])>=8,m['doors_reachable'];print('DOOR AUDIT PASS',len(m['doors_reachable']),'doors')"
           else
           test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 3840
           test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 1920
@@ -156,7 +156,7 @@ jobs:
             'In match: D-pad move, A attack, B+direction dodge, L/R cycle moves, START -> MAP. '
             'Your AI partner fights with you; a lead that faints is replaced by its living partner. '
             'The storm closes after 60s; stay inside the circle. Glowing orbs: team ATK/DEF/SPD. '
-            + ('This build is the full 4096x3072 island prototype with five landmark lairs (scenery, no boss fights yet). ' if world=='island' else 'This build is the 640x768 Route 120 validation slice. ')
+            + ('This build is the full 4096x3072 island prototype with five enterable legendary lairs and enterable houses with supplies (no boss fights yet). ' if world=='island' else 'This build is the 640x768 Route 120 validation slice. ')
             + 'Automated mGBA tests only; please report how it feels on Delta.\n')
           Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           print(json.dumps(manifest,indent=2))
