@@ -259,5 +259,6 @@ poke gWildlandsZoneTestSpeed 0 2 400
 frames 300 0
 snap 30-storm-outside
 dumph rain gWildlandsRainVisible 0 1
+dumph rainDiag gWildlandsRainDiag 0 4
 expectmin gWildlandsRainVisible 0 1 4
 dump zoneEnd gWildlandsZoneTelemetry 16
