@@ -81,9 +81,13 @@ for p in desired:
     if q not in nav: nav.append(q)
 
 # Important validation positions: player/enemy are on opposite sides of the
-# native bridge; tall grass and water are one short movement away.
+# native Route 120 bridge. Their Y coordinate is deliberately on the 16 px
+# boundary between the two bridge metatile rows, so Arena's unchanged 10 px
+# body radius fits the native 32 px-wide bridge without touching its cliff edge.
 PLAYER=(5,16)
 ENEMY=(30,16)
+PLAYER_Y_PX=PLAYER[1]*16
+ENEMY_Y_PX=ENEMY[1]*16
 assert walkable(*PLAYER) and walkable(*ENEMY)
 
 # Use a native Route120 water metatile outside the validation slice. Runtime
@@ -111,9 +115,9 @@ header=f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define WL_SLICE_H {H}
 #define WL_VOID_ENTRY 0x{void_entry:04X}
 #define WL_PLAYER_START_X {(BASE_X+PLAYER[0])*16+8}
-#define WL_PLAYER_START_Y {(BASE_Y+PLAYER[1])*16+8}
+#define WL_PLAYER_START_Y {BASE_Y*16+PLAYER_Y_PX}
 #define WL_ENEMY_START_X {(BASE_X+ENEMY[0])*16+8}
-#define WL_ENEMY_START_Y {(BASE_Y+ENEMY[1])*16+8}
+#define WL_ENEMY_START_Y {BASE_Y*16+ENEMY_Y_PX}
 #define WL_NAV_POINT_COUNT {len(nav)}
 #endif
 '''
