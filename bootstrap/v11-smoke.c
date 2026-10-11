@@ -96,6 +96,16 @@ static void snapshot(const char *name) {
             wt?rd32(wt+32):0,wt?rd32(wt+36):0,wt?rd32(wt+40):0,wt?rd32(wt+44):0,
             wt?rd32(wt+48):0,wt?rd32(wt+52):0,wt?rd32(wt+56):0,wt?rd32(wt+60):0);
     }
+    {
+        uint32_t rt=symbol("gRealtimeArenaTelemetry"), ai=symbol("gArenaAiTelemetry"), cap=symbol("sCapture");
+        printf("INPUT %s heldRaw=%04x newRaw=%04x held=%04x new=%04x rtSpeed=%u rtActive=%u rtPaused=%u aiDec=%u aiPaths=%u wall=%u,%u capture=%u\n",
+            name,
+            main?rd16(main+0x28):0,main?rd16(main+0x2a):0,
+            main?rd16(main+0x2c):0,main?rd16(main+0x2e):0,
+            rt?rd16(rt+52):0,rt?rd8(rt+56):0,rt?rd8(rt+57):0,
+            ai?rd32(ai):0,ai?rd32(ai+4):0,ai?rd32(ai+20):0,ai?rd32(ai+24):0,
+            cap?rd8(cap):255);
+    }
     fflush(stdout);
 }
 static void export_save(const char *name) {
