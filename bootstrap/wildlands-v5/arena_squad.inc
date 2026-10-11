@@ -435,9 +435,18 @@ static void SquadThink(struct SquadWing *w)
         w->moving = FALSE;
         return;
     }
+    if (w->target != 0xFF)
     {
+        SquadPos(w->target, &tx, &ty);
+        dist = ArenaNav_Distance(w->x / Q, w->y / Q, tx / Q, ty / Q);
+    }
+    {
+        // The storm wins over a fight only when this wing is already taking
+        // storm damage or nothing is in reach; pre-rotation and edge margins
+        // otherwise wait until the skirmish ends.
         s32 zx, zy;
-        if (ZoneSteer(w->x / Q, w->y / Q, &zx, &zy))
+        bool8 engaged = w->target != 0xFF && dist < 160;
+        if ((!engaged || ZoneOutside(w->x / Q, w->y / Q, 0)) && ZoneSteer(w->x / Q, w->y / Q, &zx, &zy))
         {
             if (!w->team) gWildlandsPartnerTelemetry[7]++;   // diag: storm-steer frames (partner)
             SquadMoveWing(w, zx * Q, zy * Q, 420);
@@ -447,11 +456,6 @@ static void SquadThink(struct SquadWing *w)
     slot = SquadChooseMove(w);
     if (slot != 0xFF)
         p = ArenaMoves_Get(SquadMoveAt(w, slot));
-    if (w->target != 0xFF)
-    {
-        SquadPos(w->target, &tx, &ty);
-        dist = ArenaNav_Distance(w->x / Q, w->y / Q, tx / Q, ty / Q);
-    }
     if (p && w->target != 0xFF && !w->cooldown
         && dist < (p->kind == ARENA_MOVE_PROJECTILE ? p->range : 30) && dist > 6
         && (!WildlandsWorld_Active() || WildlandsWorld_LineClear(w->x / Q, w->y / Q, tx / Q, ty / Q, 2))
