@@ -131,6 +131,8 @@ patch(A, '        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.
 patch(A, 'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.bodies[1];\n    s32 dx, dy, len;\n    body->moving = FALSE;\n',
       'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.bodies[1];\n    s32 dx, dy, len;\n    body->moving = FALSE;\n    if (gWildlandsTestPeace) return;\n')
 
+patch(C, '    bool8 notice=sCapture.notice!=0;', '    bool8 notice=sCapture.notice!=0 && !WildlandsWorld_Active();')
+
 # Profiling: camera/stream, sprite animation, OAM build (scanlines).
 patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer();',
       '    {u32 p0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,p1;\n'
