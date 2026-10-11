@@ -464,6 +464,18 @@ static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaM
 static void SquadEnemyRetarget(struct ArenaBody *body);
 extern EWRAM_DATA u32 gWildlandsSquadTelemetry[16];
 static EWRAM_DATA u8 sSquadShotOwner[SHOTS_COUNT] = {};
+static void ZoneInit(void);
+static void ZoneTick(void);
+static void ZoneDestroy(void);
+static void ZoneSteerEnemy(struct ArenaBody *body);
+static void ZoneHudLine(void);
+static u32 ZoneHudKey(void);
+static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);
+static EWRAM_DATA u32 sZoneHudKeyShown = 0;
+static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
+static void LootInit(void);
+static void LootTick(void);
+static void LootDestroy(void);
 struct WildlandsPartnerActor
 {
     s32 x,y;
@@ -852,6 +864,7 @@ void RealtimeArena_ResetBattle(void)
     GuardReset();
     DecoyReset();
     sEnvironmentInitialized=FALSE;
+    sWildlandsEncounterLive=FALSE;
     memset(&sArena, 0, sizeof(sArena));
     gRealtimeArenaTelemetry.active = FALSE;
     gRealtimeArenaRestoringFaint = FALSE;
@@ -1455,6 +1468,9 @@ static void CB2_ArenaInit(void)
         body->drawnFrame = body->drawnDirection = 255;
     }
     SquadInit();
+    ZoneInit();
+    LootInit();
+    sWildlandsEncounterLive = WildlandsWorld_Active();
     sArena.cueSprite = CreateSprite(&sShotTemplate, 120, 32, 0);
     gSprites[sArena.cueSprite].oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG + 1);
     gSprites[sArena.cueSprite].invisible = TRUE;
@@ -2124,6 +2140,7 @@ static void TickEnemy(void)
     }
     if (ArenaNav_Distance(body->x/Q,body->y/Q,sArena.waypoint.x,sArena.waypoint.y) < 3
         && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4) AiRoute();
+    ZoneSteerEnemy(body);
     dx = sArena.waypoint.x * Q - body->x;
     dy = sArena.waypoint.y * Q - body->y;
     len = max(Abs(dx), Abs(dy)) + min(Abs(dx), Abs(dy)) / 2;
@@ -2535,6 +2552,8 @@ static void DestroyShot(struct ArenaShot *shot)
 }
 
 #include "arena_squad.inc"
+#include "arena_loot.inc"
+#include "arena_zone.inc"
 
 static void TickShots(void)
 {
@@ -3138,7 +3157,7 @@ static void ArenaExit(bool8 fainted)
         }
         gSprites[sArena.aimSprite].invisible=TRUE;
         gSprites[sArena.cueSprite].invisible=TRUE;
-        SquadDestroy();
+        SquadDestroy();ZoneDestroy();LootDestroy();
         BuildOamBuffer();ArenaRender_Ready();
         gMain.callback1=sArena.savedCB1;
         RealtimeArena_ResumeBattle(TRUE);
@@ -3147,7 +3166,7 @@ static void ArenaExit(bool8 fainted)
     }
     SetVBlankCallback(NULL);
     ArenaFeedback_Destroy();
-    SquadDestroy();
+    SquadDestroy();ZoneDestroy();LootDestroy();
     for (i = 0; i < 2; i++)
     {
         struct Sprite *sprite = &gSprites[sArena.bodies[i].sprite];

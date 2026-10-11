@@ -91,15 +91,34 @@ static void SquadPos(u8 battler, s32 *x, s32 *y)
     else { *x = sSquadWings[battler - 2].x; *y = sSquadWings[battler - 2].y; }
 }
 
-static void SquadSpawnWing(u8 team)
+static void SquadCreateSprites(struct SquadWing *w)
 {
-    struct SquadWing *w = &sSquadWings[team];
-    struct Pokemon *mon;
     struct SpriteTemplate t = sMonTemplate;
     struct SpriteSheet sheet;
     struct SpritePalette pal;
     struct Sprite *spr;
-    u8 *buffer = (u8 *)gDecompressionBuffer + team * 2048;
+    u8 *buffer = (u8 *)gDecompressionBuffer + w->team * 2048;
+    ArenaSprites_Decode(&w->art->animations[ARENA_ANIM_IDLE], FACE_DOWN, 0, (u32 *)buffer);
+    sheet.data = buffer; sheet.size = 2048; sheet.tag = w->tag;
+    LoadSpriteSheet(&sheet);
+    pal.data = w->art->palette; pal.tag = w->tag;
+    LoadSpritePalette(&pal);
+    t.tileTag = w->tag; t.paletteTag = w->tag;
+    w->sprite = CreateSprite(&t, w->x / Q, w->y / Q, 1);
+    w->shadow = CreateSprite(&sShadowTemplate, w->x / Q, w->y / Q + 8, 9);
+    w->marker = CreateSprite(&sShotTemplate, w->x / Q, w->y / Q - 27, 0);
+    spr = &gSprites[w->sprite];
+    spr->affineAnimPaused = TRUE; spr->affineAnimBeginning = FALSE;
+    SetOamMatrix(spr->oam.matrixNum, 256 * 256 / 230, 0, 0, 256 * 256 / 230);
+    gSprites[w->marker].oam.paletteNum = IndexOfSpritePaletteTag(w->team ? SHOT_TAG + 1 : SHOT_TAG);
+    w->drawnFrame = w->drawnDirection = 255;
+    w->active = TRUE;
+}
+
+static void SquadSpawnWing(u8 team)
+{
+    struct SquadWing *w = &sSquadWings[team];
+    struct Pokemon *mon;
     memset(w, 0, sizeof(*w));
     w->team = team;
     w->battler = 2 + team;
@@ -128,29 +147,16 @@ static void SquadSpawnWing(u8 team)
         return;
     SquadFillBattleMon(w->battler, mon);
     gBattlerPartyIndexes[w->battler] = 1;
-    ArenaSprites_Decode(&w->art->animations[ARENA_ANIM_IDLE], FACE_DOWN, 0, (u32 *)buffer);
-    sheet.data = buffer; sheet.size = 2048; sheet.tag = w->tag;
-    LoadSpriteSheet(&sheet);
-    pal.data = w->art->palette; pal.tag = w->tag;
-    LoadSpritePalette(&pal);
-    t.tileTag = w->tag; t.paletteTag = w->tag;
     w->x = sArena.bodies[team].x + (team ? -24 : 24) * Q;
     w->y = sArena.bodies[team].y + 20 * Q;
     if (WildlandsWorld_Active() && !WildlandsWorld_CanStandSpecies(w->species, w->x / Q, w->y / Q, 6))
     { w->x = sArena.bodies[team].x; w->y = sArena.bodies[team].y; }
     w->waypointX = w->x / Q; w->waypointY = w->y / Q;
     w->facing = team ? FACE_LEFT : FACE_RIGHT;
-    w->sprite = CreateSprite(&t, w->x / Q, w->y / Q, 1);
-    w->shadow = CreateSprite(&sShadowTemplate, w->x / Q, w->y / Q + 8, 9);
-    w->marker = CreateSprite(&sShotTemplate, w->x / Q, w->y / Q - 27, 0);
-    spr = &gSprites[w->sprite];
-    spr->affineAnimPaused = TRUE; spr->affineAnimBeginning = FALSE;
-    SetOamMatrix(spr->oam.matrixNum, 256 * 256 / 230, 0, 0, 256 * 256 / 230);
-    gSprites[w->marker].oam.paletteNum = IndexOfSpritePaletteTag(team ? SHOT_TAG + 1 : SHOT_TAG);
-    w->drawnFrame = w->drawnDirection = 255;
     w->target = team ? 0 : 1;
     w->cooldown = 45 + team * 15;
-    w->active = w->alive = TRUE;
+    w->alive = TRUE;
+    SquadCreateSprites(w);
 }
 
 static void SquadHideWing(struct SquadWing *w)
@@ -168,8 +174,17 @@ static void SquadHideWing(struct SquadWing *w)
 
 static void SquadInit(void)
 {
-    memset(gWildlandsSquadTelemetry, 0, sizeof(gWildlandsSquadTelemetry));
+    u32 i;
     memset(sSquadShotOwner, 0, sizeof(sSquadShotOwner));
+    if (sWildlandsEncounterLive)
+    {
+        // Re-entry after a native menu: same wings, same HP, same places.
+        for (i = 0; i < 2; i++)
+            if (sSquadWings[i].alive && sSquadWings[i].art)
+                SquadCreateSprites(&sSquadWings[i]);
+        return;
+    }
+    memset(gWildlandsSquadTelemetry, 0, sizeof(gWildlandsSquadTelemetry));
     memset(sSquadWings, 0, sizeof(sSquadWings));
     memset(gWildlandsPartnerTelemetry, 0, sizeof(gWildlandsPartnerTelemetry));
     if (!WildlandsWorld_Active() || VarGet(VAR_ASCENSION_CAREER_ACTIVE) != 1)
@@ -293,7 +308,7 @@ static void SquadFire(struct SquadWing *w)
 static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
 {
     s32 dx, dy, d, nx, ny;
-    if (WildlandsWorld_Active() && !((sArena.frame + w->team * 4) & 7))
+    if (WildlandsWorld_Active() && !((sArena.frame + w->team * 8) & 15))
     {
         struct ArenaPoint wp;
         if (WildlandsWorld_NextWaypointSpecies(w->species, w->x / Q, w->y / Q, goalX / Q, goalY / Q, &wp))
@@ -320,10 +335,12 @@ static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
 static void SquadThink(struct SquadWing *w)
 {
     struct ArenaBody *lead = &sArena.bodies[w->team];
-    s32 tx, ty, goalX, goalY, step = 300;
+    s32 tx, ty, goalX, goalY, step;
+    u8 spd = gBattleMons[w->battler].statStages[STAT_SPEED];
     u16 dist = 0xFFFF;
     u8 slot;
     const struct ArenaMoveProfile *p = NULL;
+    step = 300 * gStatStageRatios[spd][0] / gStatStageRatios[spd][1];
     if (w->cooldown && !w->shotTimer) w->cooldown--;
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
         w->target = SquadPickTarget(w->team, w->x, w->y);
@@ -337,6 +354,11 @@ static void SquadThink(struct SquadWing *w)
         w->shotTimer--;
         w->moving = FALSE;
         return;
+    }
+    {
+        s32 zx, zy;
+        if (ZoneSteer(w->x / Q, w->y / Q, &zx, &zy))
+        { SquadMoveWing(w, zx * Q, zy * Q, 420); return; }
     }
     slot = SquadChooseMove(w->battler);
     if (slot != 0xFF)
@@ -419,9 +441,15 @@ static void SquadDraw(struct SquadWing *w)
         BlendPalette(OBJ_PLTT_ID(IndexOfSpritePaletteTag(w->tag)), 16, 0, RGB_WHITE);
 }
 
+EWRAM_DATA u16 gWildlandsProfile[8] = {};
+#define WL_NOW() (gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228)
 static void SquadTick(void)
 {
-    u32 i;
+    u32 i, t0 = WL_NOW(), t1;
+    ZoneTick();
+    t1 = WL_NOW(); gWildlandsProfile[0] = t1 - t0; t0 = t1;
+    LootTick();
+    t1 = WL_NOW(); gWildlandsProfile[1] = t1 - t0; t0 = t1;
     for (i = 0; i < 2; i++)
     {
         struct SquadWing *w = &sSquadWings[i];
@@ -429,7 +457,9 @@ static void SquadTick(void)
             continue;
         if (!sArena.paused && !sArena.resultTimer)
             SquadThink(w);
+        t1 = WL_NOW(); gWildlandsProfile[2 + i * 2] = t1 - t0; t0 = t1;
         SquadDraw(w);
+        t1 = WL_NOW(); gWildlandsProfile[3 + i * 2] = t1 - t0; t0 = t1;
         gWildlandsSquadTelemetry[7 + i] = gBattleMons[w->battler].hp;
     }
     if (sSquadWings[0].active)
