@@ -415,7 +415,7 @@ static void SquadThink(struct SquadWing *w)
         if (w->moving && w->x == w->lastX && w->y == w->lastY) w->stuckClock++;
         else if (w->moving) w->stuckClock = 0;
         w->lastX = w->x; w->lastY = w->y;
-        if (ld > 260 || (ld > 64 && w->stuckClock > 90))
+        if (ld > 260 || (ld > 64 && w->stuckClock > 90) || w->stuckClock > 180)
             SquadRegroup(w, lead);
     }
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
