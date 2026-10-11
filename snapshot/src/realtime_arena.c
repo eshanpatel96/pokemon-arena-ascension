@@ -474,6 +474,7 @@ static u32 ZoneHudKey(void);
 static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);
 static EWRAM_DATA u32 sZoneHudKeyShown = 0;
 static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
+static EWRAM_DATA u8 sWildlandsSimSteps = 1;
 static void LootInit(void);
 static void LootTick(void);
 static void LootDestroy(void);
@@ -2791,6 +2792,7 @@ static void CB2_Arena(void)
         {
         u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 3 ? 3 : gap >= 2 ? 2 : 1) : 1;
         u16 savedNewKeys = gMain.newKeys;
+        sWildlandsSimSteps = simSteps;
         gWildlandsProfile[10] += simSteps; gWildlandsProfile[11]++;
         for (simStep = 0; simStep < simSteps; simStep++)
         {
@@ -2952,7 +2954,7 @@ static void CB2_Arena(void)
                 gArenaSpriteTelemetry.uploads[i]++;
             }
             if (!sArena.paused && !sArena.resultTimer && !frozen)
-                body->animClock += animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q;
+                body->animClock += (animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q) * sWildlandsSimSteps;
             if (RollBallVisible(i))
             {
                 // Curled into a ball: its own frames stand in for the pose.
