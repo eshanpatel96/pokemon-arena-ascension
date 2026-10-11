@@ -127,30 +127,37 @@ jobs:
           mem={}
           for name,used,total,pct in re.findall(r'^\s*(EWRAM|IWRAM|ROM):\s+(\d+) B\s+(\d+) (?:KB|MB)\s+([\d.]+)%',log,re.M):
               mem[name]={'used_bytes':int(used),'usage_percent':float(pct)}
+          world=os.environ.get('WORLD','slice')
           manifest={
-            'name':'Pokemon Wildlands V5 World Validation',
+            'name':'Pokemon Wildlands V5 ('+world+')',
             'source_commit':os.environ['GITHUB_SHA'],
             'rom_sha256':hashlib.sha256(b).hexdigest(),
             'rom_bytes':len(b),
+            'world':world,
             'world_coordinate_space_pixels':[4096,3072],
-            'validation_slice_pixels':[640,768],
-            'terrain_source':'native Route120 + Fortree metatile data; no floor bitmap',
-            'controller':'native realtime Arena movement/dodge/attack/cooldown/hit path',
-            'rendering':'three streamed 4bpp Emerald metatile BG layers + native Arena OBJ actors',
-            'true_2v2':False,
-            'partner':'terrain-routing highlighted follower; non-damaging validation actor',
+            'terrain_source':'native Emerald General+Fortree metatiles; collision/material from metatile data, never a floor bitmap',
+            'controller':'native realtime Arena movement/dodge/attack/cooldown/hit path; fixed-timestep catch-up keeps game time real-time',
+            'true_2v2':'yes (first slice): player+AI partner vs enemy lead+wing; all four attack, take damage, KO; lead KO promotes the living wing',
+            'closing_zone':'world-coordinate circle, 60/30/60s proposed tuning, time-based exposure damage to all actors',
+            'loot':'collect-once team ATK/DEF/SPD stages, cap +2',
+            'live_map':'START -> MAP',
+            'move_editor':'lab MOVE EDITOR sign (native relearner UI, Arena-supported legal moves)',
+            'title':'approved Charizard/Blastoise/Rayquaza concept at native 240x160',
             'thirty_duo_simulation':False,
-            'structures':{'fortree_outpost':'cover/scenery only; not enterable in this validation'},
-            'cosmetic_only':['Emerald tileset animations are static in this validation','Seismic Toss world sky cut uses blackout instead of the space backdrop','legacy destructible Arena prop sprites/fragments are disabled in world mode'],
+            'legendary_boss_battles':False,
+            'shiny_palettes':'audited feasible; not implemented',
             'memory':mem,
-            'verification':'mGBA automated runtime only; iPhone Delta requires user playtest'
+            'verification':'mGBA automated runtime only; iPhone Delta requires owner playtest'
           }
           Path('delivery/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           Path('delivery/README.txt').write_text(
-            'Wildlands V5 World Validation. NEW GAME -> Lab; L+R launches the validation encounter. '
-            'The battlefield is a streamed native Emerald Route120/Fortree metatile world inside the Arena runtime. '
-            'This is a world-engine validation slice, NOT the full island and NOT true 2v2 yet. '
-            'mGBA verification is automated; Delta/iPhone remains a separate user test.\n')
+            'Pokemon Wildlands V5 ('+world+'). NEW GAME -> Research Lab. PC: pick a TWO-Pokemon squad. '
+            'MOVE EDITOR sign: change moves (no TMs/HMs). Assistant or L+R: deploy. '
+            'In match: D-pad move, A attack, B+direction dodge, L/R cycle moves, START -> MAP. '
+            'Your AI partner fights with you; a lead that faints is replaced by its living partner. '
+            'The storm closes after 60s; stay inside the circle. Glowing orbs: team ATK/DEF/SPD. '
+            + ('This build is the full 4096x3072 island prototype with five landmark lairs (scenery, no boss fights yet). ' if world=='island' else 'This build is the 640x768 Route 120 validation slice. ')
+            + 'Automated mGBA tests only; please report how it feels on Delta.\n')
           Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           print(json.dumps(manifest,indent=2))
           PY
