@@ -480,7 +480,9 @@ static EWRAM_DATA u32 sZoneHudKeyShown = 0;
 static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
 static EWRAM_DATA u8 sWildlandsSimSteps = 1;
 static EWRAM_DATA u8 sWildlandsSceneryLit = 0;
-// [0] scanline CB2 started at (after VBlank) [1] max [2] one-VBlank loops [3] slower loops
+static EWRAM_DATA u16 sWildlandsHeldNew = 0;
+// renders after [0] one VBlank [1] two (the locked pace) [2] three or more (a hitch)
+// [3] latest scanline a render started at
 EWRAM_DATA u16 gWildlandsLoop[4] = {};
 static void LootInit(void);
 static void LootTick(void);
@@ -2779,8 +2781,10 @@ static void CB2_Arena(void)
     bool8 frozen = FALSE;
     u32 stamp=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,phaseStamp=stamp,now;
     u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;
-    {u16 ln=(REG_VCOUNT+68)%228; gWildlandsLoop[0]=ln; if(ln>gWildlandsLoop[1])gWildlandsLoop[1]=ln; gWildlandsLoop[gap>=2?3:2]++;}
     if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}
+    if(WildlandsWorld_Active()&&gap<2){sWildlandsHeldNew|=gMain.newKeys;return;}
+    gMain.newKeys|=sWildlandsHeldNew;sWildlandsHeldNew=0;
+    {u16 ln=(REG_VCOUNT+68)%228; if(ln>gWildlandsLoop[3])gWildlandsLoop[3]=ln; gWildlandsLoop[gap>=3?2:gap>=2?1:0]++;}
     gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;
     gArenaFrameTelemetry.updates++;
     if(gap>gArenaFrameTelemetry.maxGap)gArenaFrameTelemetry.maxGap=gap;

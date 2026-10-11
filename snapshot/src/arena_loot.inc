@@ -209,7 +209,7 @@ static void LootSim(void)
     if (sLoot.live && !sArena.paused && !sArena.resultTimer && sLoot.popupTimer && !--sLoot.popupTimer)
         sArena.hudDirty = TRUE;
     {
-    s32 ax[4], ay[4];
+    s32 ax[4], ay[4], x0 = 0x7FFF, x1 = -0x7FFF, y0 = 0x7FFF, y1 = -0x7FFF;
     bool8 alive[4];
     if (!sLoot.live || sArena.paused || sArena.resultTimer)
         return;
@@ -220,14 +220,22 @@ static void LootSim(void)
     for (b = 0; b < 4; b++)
     {
         alive[b] = SquadAlive(b);
-        if (alive[b]) { SquadPos(b, &ax[b], &ay[b]); ax[b] /= Q; ay[b] /= Q; }
+        if (alive[b])
+        {
+            SquadPos(b, &ax[b], &ay[b]); ax[b] /= Q; ay[b] /= Q;
+            if (ax[b] < x0) x0 = ax[b];
+            if (ax[b] > x1) x1 = ax[b];
+            if (ay[b] < y0) y0 = ay[b];
+            if (ay[b] > y1) y1 = ay[b];
+        }
     }
+    x0 -= 12; x1 += 12; y0 -= 12; y1 += 12;
     for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX; i++)
     {
         const struct LootSpot *s = &sLootSpots[i];
         u8 winner = 0xFF, contenders = 0;
         u32 best = 0xFFFF;
-        if (LootTaken(i))
+        if (s->x < x0 || s->x > x1 || s->y < y0 || s->y > y1 || LootTaken(i))
             continue;
         for (b = 0; b < 4; b++)
         {
@@ -263,7 +271,8 @@ static void LootTick(void)
     for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX && n < LOOT_SPRITES; i++)
     {
         const struct LootSpot *s = &sLootSpots[i];
-        if (LootTaken(i))
+        if (s->x <= sArenaXLCameraX - 8 || s->x >= sArenaXLCameraX + 248
+            || s->y <= sArenaXLCameraY - 8 || s->y >= sArenaXLCameraY + 168 || LootTaken(i))
             continue;
         if (sLoot.sprite[n] != MAX_SPRITES
             && s->x > sArenaXLCameraX - 8 && s->x < sArenaXLCameraX + 248
