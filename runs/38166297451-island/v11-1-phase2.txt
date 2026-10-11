@@ -1,0 +1,158 @@
+{
+  "milestone": "V11.1 second gameplay pass, not full feature acceptance",
+  "native_save_work": "unchanged; expanded validation deferred by user",
+  "boss_courts": [
+    {
+      "map": "AscensionBronzeBoss",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 274,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader2",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 294,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader3",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 270,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader4",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 294,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader5",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 276,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader6",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 270,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader7",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 276,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader8",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 280,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionLeader9",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 223,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionElite1",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 294,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionElite2",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 294,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionElite3",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 276,
+      "every_staging_step": "pass"
+    },
+    {
+      "map": "AscensionElite4",
+      "court_tiles": [
+        7,
+        5
+      ],
+      "actor_separation_pixels": 64,
+      "reachable_tiles": 280,
+      "every_staging_step": "pass"
+    }
+  ],
+  "additional_campus_floor_tiles": 149,
+  "intact_native_planters": [
+    [
+      23,
+      43
+    ]
+  ],
+  "preserved_door_routes": [
+    "MAP_ASCENSION_TOWER_1",
+    "MAP_ASCENSION_TOWER_2",
+    "MAP_ASCENSION_TOWER_3",
+    "MAP_ASCENSION_ITEM_SHOP",
+    "MAP_ASCENSION_TEAM_LAB",
+    "MAP_ASCENSION_STYLE_HOUSE",
+    "MAP_ASCENSION_MOVE_STUDIO",
+    "MAP_ASCENSION_TOWER_4"
+  ],
+  "starter_catalog": "80 species; batches of two per frame; deduplicated against current party and PC; legacy initial team retained",
+  "enemy_move_policy": "retain legal supported preferred moves, replace illegal slots using species legal native profiles; no enemy membership changes",
+  "new_move_profiles": 0,
+  "EV_reset": "native six-stat reset after confirmation",
+  "remaining": "Full legal move profiles/Box chooser, nature service, interactive hazards, remaining architecture, full campaign and Delta playtest"
+}
