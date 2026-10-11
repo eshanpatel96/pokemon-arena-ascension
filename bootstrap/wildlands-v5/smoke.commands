@@ -1,0 +1,26 @@
+frames 300 0
+snap 00-title
+press 8
+frames 120 0
+press 1
+frames 1100 0
+snap 01-lab
+press 768
+frames 700 0
+expect gWildlandsWorldAudit 0 4 1
+expect gWildlandsWorldAudit 20 4 1
+expect gWildlandsWorldAudit 28 4 1
+expect gWildlandsPartnerTelemetry 0 4 1
+snap 02-world-start
+frames 180 17
+expect gWildlandsWorldAudit 4 4 1
+expect gWildlandsWorldAudit 8 4 1
+expect gWildlandsWorldAudit 20 4 1
+snap 03-crossing-fire
+frames 14 18
+frames 45 16
+snap 04-after-dodge
+frames 80 128
+snap 05-water-probe
+frames 120 64
+snap 06-grass-probe
