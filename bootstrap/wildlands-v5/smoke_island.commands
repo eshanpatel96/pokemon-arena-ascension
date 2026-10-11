@@ -213,6 +213,8 @@ prof walk-east 180 16
 prof walk-north 180 64
 dump hitchProf gWildlandsHitch 6
 # ---- AI boss runs: score-driven lair fights (test bias lifts the first-phase gate) ----
+poke gWildlandsZoneTestSpeed 0 2 65534
+frames 4 0
 poke gWildlandsZoneTestSpeed 0 2 65535
 poke gWildlandsBossTestBias 0 1 120
 frames 5400 0

@@ -52,6 +52,7 @@ EWRAM_DATA u32 gWildlandsDirectorTelemetry[8] = {};
 // but escaped [3] wiped out [4] storm stage of the first attempt + 1
 // [5] aborted on the way [6] attempts by the on-screen duo [7] last score+1000
 // [8] lair evaluations [9] blocked by cooldown [10] best score seen + 1000
+// [11] last gate that ruled a lair out (1 legend gone 2 storm 3 next circle 4 opening phase)
 EWRAM_DATA u16 gWildlandsBossTelemetry[12] = {};
 // TEST HOOK ONLY: harness adds this to every boss score and lifts the
 // first-phase gate so a short run can exercise boss runs; 0 in play.
@@ -160,19 +161,22 @@ static s32 DirBossScore(const struct DirDuo *d, const struct DirDuo *l, s32 x, s
     s32 ox, oy, score, ratio, n = 0, hp = 0;
     u32 m, j;
     if (l->state != DIR_LAIR || !l->hp[0])
-        return -1000;
+    { gWildlandsBossTelemetry[11] = 1; return -1000; }
     DirLairDoor(l, &ox, &oy);
     if (sZone.active)
     {
         if (sZone.stage == 0 && sZone.phase != ZONE_SHRINKING && !gWildlandsBossTestBias)
-            return -1000;
+        { gWildlandsBossTelemetry[11] = 4; return -1000; }
         if (ZoneOutside(ox, oy, 48))
-            return -1000;
-        if (sZone.phase != ZONE_EXPLORING)
+        { gWildlandsBossTelemetry[11] = 2; return -1000; }
+        // Warning/shrinking: the lair must sit in the NEXT circle unless the
+        // warning still leaves 30s to fight and get out.
+        if (sZone.phase == ZONE_SHRINKING || sZone.phase == ZONE_SUDDEN_DEATH
+            || (sZone.phase == ZONE_WARNING && ZoneSecondsLeft() < 30))
         {
             s32 dx = ox - sZone.toX, dy = oy - sZone.toY, r = (sZone.toR >> 8) - 48;
             if (r <= 0 || dx * dx + dy * dy > r * r)
-                return -1000;
+            { gWildlandsBossTelemetry[11] = 3; return -1000; }
         }
     }
     ratio = (s32)(DirPower(d) * 100 / DirPower(l));
