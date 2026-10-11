@@ -164,8 +164,16 @@ poke gWildlandsSpike 4 2 0
 poke gWildlandsSpike 6 2 0
 poke gWildlandsSpike 8 2 0
 poke gWildlandsSpike 10 2 0
+poke gWildlandsSpikeSim 0 2 0
+poke gWildlandsSpikeSim 2 2 0
+poke gArenaRenderTelemetry 8 2 0
+poke gArenaRenderTelemetry 10 2 0
+poke gArenaRenderTelemetry 12 2 0
+poke gArenaRenderTelemetry 14 2 0
 rate render-idle 300 0 0
 dumph spikeIdle gWildlandsSpike 0 6
+dumph spikeSimIdle gWildlandsSpikeSim 0 2
+dumph renderPeakIdle gArenaRenderTelemetry 8 4
 dump frameIdle gArenaFrameTelemetry 10
 dump renderIdle gArenaRenderTelemetry 4
 dump profIdle gWildlandsProfile 6
@@ -200,8 +208,16 @@ poke gWildlandsSpike 4 2 0
 poke gWildlandsSpike 6 2 0
 poke gWildlandsSpike 8 2 0
 poke gWildlandsSpike 10 2 0
+poke gWildlandsSpikeSim 0 2 0
+poke gWildlandsSpikeSim 2 2 0
+poke gArenaRenderTelemetry 8 2 0
+poke gArenaRenderTelemetry 10 2 0
+poke gArenaRenderTelemetry 12 2 0
+poke gArenaRenderTelemetry 14 2 0
 rate render-walk 300 16 0
 dumph spikeWalk gWildlandsSpike 0 6
+dumph spikeSimWalk gWildlandsSpikeSim 0 2
+dumph renderPeakWalk gArenaRenderTelemetry 8 4
 dumph loopWalk gWildlandsLoop 0 4
 snap 04-east-far
 ratesym travel-north gWildlandsProfile 20 2 600 64 95

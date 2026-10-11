@@ -313,6 +313,18 @@ patch(A, 'static void VBlank_Arena(void)\n{\n    WildlandsWorld_VBlank();\n',
       'static void VBlank_Arena(void)\n{\n'
       '    {u16 v0=REG_VCOUNT,d; WildlandsWorld_VBlank(); d=(u16)(REG_VCOUNT-v0); if(d<228&&d>gWildlandsSpike[2])gWildlandsSpike[2]=d;}\n')
 
+# Spike attribution inside a step: squad/director simulation vs enemy AI.
+patch(A, 'EWRAM_DATA u16 gWildlandsSpike[6] = {};\n',
+      'EWRAM_DATA u16 gWildlandsSpike[6] = {};\n'
+      '// maxima (scanlines): [0] SquadSimStep (zone, loot, doors, director, wings) [1] TickEnemy\n'
+      'EWRAM_DATA u16 gWildlandsSpikeSim[2] = {};\n')
+patch(A, '        SquadSimStep();\n',
+      '        {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; SquadSimStep();\n'
+      '         q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[0])gWildlandsSpikeSim[0]=q1-q0;}\n')
+patch(A, '                TickEnemy();\n',
+      '                {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; TickEnemy();\n'
+      '                 q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',
