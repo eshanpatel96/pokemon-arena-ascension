@@ -169,7 +169,7 @@ static s32 DirBossScore(const struct DirDuo *d, const struct DirDuo *l, s32 x, s
     DirLairDoor(l, &ox, &oy);
     if (sZone.active)
     {
-        if (sZone.stage == 0 && sZone.phase != ZONE_SHRINKING && !gWildlandsBossTestBias)
+        if (sZone.stage == 0 && sZone.phase == ZONE_EXPLORING && !gWildlandsBossTestBias)
         { gWildlandsBossTelemetry[11] = 4; return -1000; }
         if (ZoneOutside(ox, oy, 48))
         { gWildlandsBossTelemetry[11] = 2; return -1000; }
@@ -797,6 +797,27 @@ static void DirPolicy(void)
             gWildlandsDirectorTelemetry[2]++;
         }
     }
+}
+
+// A random lair door whose legendary is still home (storm hot zones).
+static bool8 DirectorLairAnchor(s32 *x, s32 *y)
+{
+    u32 j, n = 0, pick;
+    if (!sDir)
+        return FALSE;
+    for (j = WL_DIRECTOR_DUOS; j < sDir->count; j++)
+        if (sDir->duo[j].state == DIR_LAIR && sDir->duo[j].hp[0])
+            n++;
+    if (!n)
+        return FALSE;
+    pick = DirRand() % n;
+    for (j = WL_DIRECTOR_DUOS; j < sDir->count; j++)
+        if (sDir->duo[j].state == DIR_LAIR && sDir->duo[j].hp[0] && !pick--)
+        {
+            DirLairDoor(&sDir->duo[j], x, y);
+            return TRUE;
+        }
+    return FALSE;
 }
 
 // ---- Boss runs by the on-screen enemy duo ---------------------------------

@@ -515,6 +515,7 @@ static void DirectorInit(void);
 static void DirectorSim(void);
 static u8 DirectorBossDoor(void);
 static void DirectorBossEnter(void);
+static bool8 DirectorLairAnchor(s32 *x, s32 *y);
 static void DirectorDestroy(void);
 static void DirRestorePartner(void);
 static bool8 DirectorSoloActive(void);
