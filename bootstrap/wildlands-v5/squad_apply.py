@@ -250,6 +250,36 @@ for src in sorted((root / 'src').glob('arena_*')):
         if 'REG_OFFSET_' + reg in t:
             print('WARNING other terrain scroll writer:', src.name, reg)
 
+# ---- Frame rate (render cost) --------------------------------------------
+# The scenery warm-light pass re-blended all 240 BG colours every rendered
+# frame even at strength 0 (a pure copy). Blend only while lit, plus once to
+# restore. Every other writer (LoadPalette, ZoneTint) keeps both buffers equal.
+patch(A, '        BlendPalette(16,240,sArena.paused?0:warmth,RGB(31,16,4));\n',
+      '        {\n'
+      '            u8 lit = sArena.paused ? 0 : warmth;\n'
+      '            if (lit || sWildlandsSceneryLit)\n'
+      '                BlendPalette(16,240,lit,RGB(31,16,4));\n'
+      '            sWildlandsSceneryLit = lit;\n'
+      '        }\n')
+patch(A, 'static EWRAM_DATA u8 sWildlandsSimSteps = 1;\n',
+      'static EWRAM_DATA u8 sWildlandsSimSteps = 1;\nstatic EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n')
+# Move profile lookup: ~20 linear scans of the 89-entry table per frame.
+patch('src/arena_moves.c', 'const struct ArenaMoveProfile *ArenaMoves_Get(u16 move)\n{\n    unsigned i;\n'
+      '    for (i = 0; i < sizeof(sProfiles)/sizeof(sProfiles[0]); i++)\n'
+      '        if (sProfiles[i].move == move) return &sProfiles[i];\n    return 0;\n}\n',
+      '#if defined(ARENA_MOVES_HOST) && !defined(EWRAM_DATA)\n#define EWRAM_DATA\n#endif\n'
+      'static EWRAM_DATA u16 sProfileMemoMove[8] = {0};\n'
+      'static EWRAM_DATA u8 sProfileMemoIdx[8] = {0};\n'
+      'const struct ArenaMoveProfile *ArenaMoves_Get(u16 move)\n{\n    unsigned i, slot = move & 7;\n'
+      '    if (sProfileMemoIdx[slot] && sProfileMemoMove[slot] == move)\n'
+      '        return &sProfiles[sProfileMemoIdx[slot] - 1];\n'
+      '    for (i = 0; i < sizeof(sProfiles)/sizeof(sProfiles[0]); i++)\n'
+      '        if (sProfiles[i].move == move)\n'
+      '        {\n'
+      '            if (i < 255) { sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = i + 1; }\n'
+      '            return &sProfiles[i];\n'
+      '        }\n    return 0;\n}\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',

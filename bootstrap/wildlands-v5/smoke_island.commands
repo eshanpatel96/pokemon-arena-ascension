@@ -159,6 +159,9 @@ frames 60 0
 poke gWildlandsZoneTestSpeed 0 2 0
 poke gWildlandsTestPeace 0 1 0
 rate render-idle 300 0 0
+dump frameIdle gArenaFrameTelemetry 10
+dump renderIdle gArenaRenderTelemetry 4
+dump profIdle gWildlandsProfile 6
 ratesym idle gWildlandsProfile 20 2 300 0 95
 prof idle-fight 120 0
 frames 120 16
@@ -181,6 +184,9 @@ frames 1 16
 snap 03a-consec-7
 dump loot gWildlandsLootTelemetry 14
 ratesym travel-east gWildlandsProfile 20 2 600 16 95
+dump frameTravel gArenaFrameTelemetry 10
+dump renderTravel gArenaRenderTelemetry 4
+rate render-walk 300 16 0
 snap 04-east-far
 ratesym travel-north gWildlandsProfile 20 2 600 64 95
 snap 05-north
