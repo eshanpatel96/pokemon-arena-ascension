@@ -15,7 +15,7 @@
 #define ZONE_WARN (30 * ZONE_FPS)
 #define ZONE_SHRINK (60 * ZONE_FPS)
 #define ZONE_STAGES 4
-#define ZONE_MARKERS 8
+#define ZONE_MARKERS 6
 
 enum { ZONE_EXPLORING, ZONE_WARNING, ZONE_SHRINKING, ZONE_SUDDEN_DEATH };
 
@@ -215,10 +215,10 @@ static void ZoneDrawMarkers(void)
     u32 i, n = 0, a;
     s32 r = sZone.r >> 8;
     bool8 blink = sZone.phase == ZONE_WARNING && (sZone.clock & 16);
-    for (a = 0; a < 64 && n < ZONE_MARKERS; a++)
+    for (a = 0; a < 32 && n < ZONE_MARKERS; a++)
     {
-        s32 x = sZone.cx + Cos(a * 4, r);
-        s32 y = sZone.cy + Sin(a * 4, r);
+        s32 x = sZone.cx + Cos(a * 8, r);
+        s32 y = sZone.cy + Sin(a * 8, r);
         if (x < sArenaXLCameraX - 8 || x > sArenaXLCameraX + 248
             || y < sArenaXLCameraY - 8 || y > sArenaXLCameraY + 168)
             continue;
@@ -235,7 +235,8 @@ static void ZoneDrawMarkers(void)
             gSprites[sZone.markers[i]].invisible = TRUE;
 }
 
-static void ZoneTick(void)
+// Simulation step (runs once per fixed 60Hz step, possibly twice per render).
+static void ZoneSim(void)
 {
     if (!sZone.active)
         return;
@@ -274,6 +275,13 @@ static void ZoneTick(void)
         if (ZoneSecondsLeft() != sZone.hudSecond)
         { sZone.hudSecond = ZoneSecondsLeft(); sArena.hudDirty = TRUE; }
     }
+}
+
+// Render step: markers + telemetry once per drawn frame.
+static void ZoneTick(void)
+{
+    if (!sZone.active)
+        return;
     ZoneDrawMarkers();
     gWildlandsZoneTelemetry[0] = sZone.phase;
     gWildlandsZoneTelemetry[1] = sZone.stage;

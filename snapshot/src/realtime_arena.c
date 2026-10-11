@@ -464,6 +464,7 @@ static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaM
 static void SquadEnemyRetarget(struct ArenaBody *body);
 extern EWRAM_DATA u32 gWildlandsSquadTelemetry[16];
 static EWRAM_DATA u8 sSquadShotOwner[SHOTS_COUNT] = {};
+static void SquadSimStep(void);
 static void ZoneInit(void);
 static void ZoneTick(void);
 static void ZoneDestroy(void);
@@ -2783,7 +2784,15 @@ static void CB2_Arena(void)
             for(i=0;i<SHOTS_COUNT;i++)if(sArena.shots[i].life)flying=TRUE;
             if(!flying){ArenaExit(FALSE);return;}
         }
+        {
+        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 3 ? 3 : gap >= 2 ? 2 : 1) : 1;
+        u16 savedNewKeys = gMain.newKeys;
+        gWildlandsProfile[10] += simSteps; gWildlandsProfile[11]++;
+        for (simStep = 0; simStep < simSteps; simStep++)
+        {
+        if (simStep) { if (sArena.resultTimer || !sArena.active) break; gMain.newKeys = 0; }
         sArena.frame++;
+        SquadSimStep();
         for(i=0;i<2;i++)
             if(!sArena.bodies[i].shotTimer && !sArena.bodies[i].actionLife
                 && !ArenaMovePP(i,sArena.bodies[i].moveSlot))
@@ -2880,6 +2889,9 @@ static void CB2_Arena(void)
                     }
                 }
             }
+        }
+        }
+        gMain.newKeys = savedNewKeys;
         }
     }
     CaptureTick();
