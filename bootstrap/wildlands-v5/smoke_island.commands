@@ -45,7 +45,8 @@ ratesym travel-north gWildlandsProfile 20 2 600 64 95
 snap 05-north
 ratesym travel-west gWildlandsProfile 20 2 900 32 95
 snap 06-west
-ratesym travel-south gWildlandsProfile 20 2 900 128 95
+# informational: the practice duo is often defeated by now (encounter ends)
+ratesym travel-south gWildlandsProfile 20 2 900 128 0
 snap 07-south
 dump world gWildlandsWorldTelemetry 16
 dump xl gArenaXLTelemetry 8
