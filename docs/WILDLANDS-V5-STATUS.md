@@ -34,7 +34,8 @@ Nothing here is Delta-verified; that is the owner's playtest.
 | I Enterable interiors | PASS | 11 rooms from real Emerald interior layouts, each rendered with its own native tileset pair (swapped under forced blank): Mewtwo = Weather Institute, Rayquaza = Sky Pillar summit, Lugia = Navel Rock depths, Ho-Oh = Navel Rock peak, Kyogre = Marine Cave chamber, 3 Fortree treehouses, 3 wilderness houses. Doors from native warp events plus cliff cave mouths; every door's outside cell is reachable on foot (build audit). Harness entered and exited all 11 doors on the island and the slice house; supplies pickup verified |
 | I Room pickups | PASS | Houses: SUPPLIES (both members +40% HP). Lairs: CACHE (+1 ATK/DEF/SPD) and SUPPLIES. Popups "TEAM HEALED" / "TEAM CACHE +1 ALL" |
 | AI Enemy duo brain | PASS (slice) / BUILT | FIGHT (focus fire on the weaker / better-matched target), RETREAT in bursts when hurt and behind (cover, tall grass, safe circle), LOOT when nothing visible, RAID lair caches and supplies through doors. Harness verified fight and retreat decisions; raids not yet observed in a run |
-| J 30 duos / 60 Pokémon | NOT DONE | Requires owner decision (below) |
+| J 30 duos / 60 Pokémon | PASS (island) | Duo director: player + 29 AI duos (lobby level = player level minus 0-8). One duo fights at full fidelity; the rest run an off-screen sim (travel, storm, sim-vs-sim fights, lair raids). Nearest duo takes over on elimination; far/near swap. Island run: 29 -> 19 left, 11 swaps, 10 sim eliminations; LEFT counter and kill feed |
+| Legendary bosses | PASS (island) | Mewtwo/Lugia/Ho-Oh/Kyogre/Rayquaza wait in their lairs (level +5, double HP, +1 DEF/SPDEF). Beaten: joins as partner (old partner restored after the match), team full heal +1 ATK/DEF/SPD. Harness: Mewtwo active in lair, KO, joined as battler 2 |
 
 ## Known limits (honest)
 
@@ -53,7 +54,7 @@ Nothing here is Delta-verified; that is the owner's playtest.
 - **Test hooks.** `gWildlandsZoneTestSpeed` and `gWildlandsTestPeace` exist
   only for the harness and are 0 in play.
 
-## Decision needed: 30 duos
+## 30 duos (resolved)
 
 Measured constraints: EWRAM 99.81% used (about 500 bytes free); each full
 Arena actor costs ~2 KB of frame buffers plus AI and OAM. Sixty full-fidelity
@@ -71,12 +72,11 @@ palettes, seam blending, render-rate work (sprite count / OAM build).
 
 ## Latest verified run
 
-- Run: https://github.com/eshanpatel96/pokemon-wildlands/actions/runs/38155652795 (source `2c31bd4`)
-- Island ROM: artifact `WILDLANDS-V5-island-ROM` (11707918612), SHA-256 `9a691d4bb804b211595a92292b32672ba6ee88f5bdd4933ffe2a34e189e327fb`. Smoke: 32 PASS / 0 FAIL; sim cadence 99-100% idle and travelling E/N/W/S with AI; all 11 doors entered and exited.
-- Slice ROM: artifact `WILDLANDS-V5-slice-ROM` (11708636672), SHA-256 `45499e5b4517047bcf6672f6c42378d732c9c4b82583b84cd044ea9c5bb751c6`. Smoke: 44 PASS / 0 FAIL; cadence 100%; house entry, supplies, exit; brain fight and retreat; wings fire and land hits.
-- Memory: EWRAM 99.81% (about 500 bytes free), IWRAM 94.27%, ROM 98.63% (island).
-- Evidence: branch `wildlands-evidence`, `runs/38155652795-slice` and `runs/38155652795-island`.
-- Harness hooks (0 in play): `gWildlandsTestPeace`, `gWildlandsTestWarp`, `gWildlandsZoneTestSpeed` (0xFFFF hold, 0xFFFE reset).
+- Run: https://github.com/eshanpatel96/pokemon-wildlands/actions/runs/38160721744 (source `178ab61`)
+- Island ROM: artifact `WILDLANDS-V5-island-ROM` (11710691134), SHA-256 `90df4542157e58a6d7054c73c1e0c6480ad556c7052245f2bc77dab0789c160a`. Smoke 37 PASS / 0 FAIL; cadence 96-99% with the 30-duo director running.
+- Slice ROM: artifact `WILDLANDS-V5-slice-ROM` (11710880319), SHA-256 `2803eebee876b4e7f0a34bac2e180330ee529502150f75c455e2f9301194985b`. Smoke 45 PASS / 0 FAIL.
+- Flicker fix verified: BG1/BG2/BG3 scroll buffers identical on 8 consecutive frames while moving (previously BG1 snapped to 0,0 every other frame).
+- Evidence: branch `wildlands-evidence`, `runs/38160721744-*`.
 
 ## Build recipe
 
