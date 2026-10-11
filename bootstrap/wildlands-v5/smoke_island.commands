@@ -160,6 +160,7 @@ poke gWildlandsZoneTestSpeed 0 2 0
 poke gWildlandsTestPeace 0 1 0
 rate render-idle 300 0 0
 ratesym idle gWildlandsProfile 20 2 300 0 95
+prof idle-fight 120 0
 frames 120 16
 snap 03-east
 frames 1 16
@@ -200,6 +201,9 @@ dump brain gWildlandsBrainTelemetry 8
 dump directorEnd gWildlandsDirectorTelemetry 8
 dump biomeEnd gWildlandsBiomeTelemetry 4
 expect gWildlandsBiomeTelemetry 12 4 0
+prof walk-east 180 16
+prof walk-north 180 64
+dump hitchProf gWildlandsHitch 6
 # ---- Storm tint: run the storm fast until the player is outside it ----
 poke gWildlandsTestPeace 0 1 1
 poke gWildlandsZoneTestSpeed 0 2 400

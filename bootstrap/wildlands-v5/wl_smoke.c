@@ -187,6 +187,37 @@ static void ratesym(const char *label,const char *sym,unsigned off,unsigned widt
     char name[300];snprintf(name,sizeof(name),"sim cadence %s",label);
     check(name,a && pct>=minpct);
 }
+/* prof LABEL FRAMES KEYS: instruction-sampled CPU profile by function
+ * (every 16th instruction). Measurement only; game state is unchanged. */
+struct CodeSym { uint32_t addr; unsigned idx; };
+static struct CodeSym csyms[60000]; static unsigned ncsym;
+static unsigned long long hits[60001];
+static int csym_cmp(const void *a,const void *b){uint32_t x=((const struct CodeSym*)a)->addr,y=((const struct CodeSym*)b)->addr;return x<y?-1:x>y;}
+static void prof(const char *label,unsigned n,unsigned keys){
+    memset(hits,0,sizeof(hits));
+    unsigned long long total=0,steps=0;
+    uint32_t f0=core->frameCounter(core);
+    core->setKeys(core,keys);
+    while(core->frameCounter(core)-f0<n){
+        core->step(core);
+        if((++steps&15))continue;
+        uint32_t pc=0;core->readRegister(core,"pc",&pc);
+        unsigned lo=0,hi=ncsym;
+        if(pc<0x02000000){hits[60000]++;total++;continue;}
+        while(hi-lo>1){unsigned m=(lo+hi)/2;if(csyms[m].addr<=pc)lo=m;else hi=m;}
+        if(ncsym&&csyms[lo].addr<=pc){hits[lo]++;total++;}
+    }
+    core->setKeys(core,0);
+    printf("PROF %s frames=%u samples=%llu bios_or_halt=%.1f%%\n",label,n,total,total?hits[60000]*100.0/total:0);
+    for(int r=0;r<30;r++){
+        unsigned best=0;unsigned long long bv=0;
+        for(unsigned i=0;i<ncsym;i++)if(hits[i]>bv){bv=hits[i];best=i;}
+        if(!bv)break;
+        printf("PROF %s %5.1f%% %s\n",label,bv*100.0/total,syms[csyms[best].idx].name);
+        hits[best]=0;
+    }
+    fflush(stdout);
+}
 static int commands(const char *path) {
     FILE *f=fopen(path,"r");if(!f){perror(path);return 2;}
     char line[1024],cmd[100],arg[240];unsigned n,k,offset,width,expected;
@@ -210,6 +241,7 @@ static int commands(const char *path) {
         }
         else if(sscanf(line,"ratesym %99s %239s %u %u %u %u %u",cmd,arg,&offset,&width,&n,&k,&expected)==7)ratesym(cmd,arg,offset,width,n,k,expected);
         else if(sscanf(line,"rate %99s %u %u %u",cmd,&n,&k,&expected)==4)rate(cmd,n,k,expected);
+        else if(sscanf(line,"prof %99s %u %u",cmd,&n,&k)==3)prof(cmd,n,k);
         else if(sscanf(line,"expectmin %239s %u %u %u",arg,&offset,&width,&expected)==4) {
             uint32_t a=symbol(arg);unsigned value=width==1?rd8(a+offset):width==2?rd16(a+offset):rd32(a+offset);
             char name[300];snprintf(name,sizeof(name),"%s+%u >= %u (got %u)",arg,offset,expected,value);
@@ -234,8 +266,10 @@ int main(int argc,char **argv) {
     FILE *sf=fopen(argv[2],"r");if(!sf){perror(argv[2]);return 2;}
     char line[512],type,name[180];unsigned addr;
     while(fgets(line,sizeof(line),sf))if(sscanf(line,"%x %c %179s",&addr,&type,name)==3 && addr>=0x02000000 && addr<0x0a000000 && type!='a' && type!='A' && nsym<90000) {
+        if((type=='t'||type=='T'||type=='w'||type=='W')&&ncsym<60000){csyms[ncsym].addr=addr;csyms[ncsym++].idx=nsym;}
         syms[nsym].addr=addr;strcpy(syms[nsym++].name,name);
     }
+    qsort(csyms,ncsym,sizeof(csyms[0]),csym_cmp);
     fclose(sf);
     mLogSetDefaultLogger(&hostLogger);
     printf("HOST ABI sizeof(mCore)=%zu savedataClone_offset=%zu\n",sizeof(struct mCore),offsetof(struct mCore,savedataClone));
