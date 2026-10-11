@@ -44,7 +44,7 @@ static void CaptureHud(void)
 {
     u8 text[20];
     bool8 visible=!sArena.paused;
-    bool8 notice=sCapture.notice!=0;
+    bool8 notice=sCapture.notice!=0 && !WildlandsWorld_Active();
     u16 stock=CountTotalItemQuantityInBag(ITEM_POKE_BALL);
     u16 move=ArenaMoveId(0,sArena.bodies[0].moveSlot);
     u8 pp=ArenaMovePP(0,sArena.bodies[0].moveSlot);

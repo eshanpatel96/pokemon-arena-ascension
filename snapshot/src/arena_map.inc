@@ -9,8 +9,9 @@
 // Pause policy: the map is a pause page, so the match clock is stopped while
 // it is open (consistent with every other pause page).
 
-#define MAP_X0 4
-#define MAP_Y0 4
+#include "wildlands_minimap.inc"
+#define MAP_X0 8
+#define MAP_Y0 8
 #define MAP_MAX_W 96
 #define MAP_MAX_H 64
 #define MAPC_WATER 13
@@ -28,8 +29,7 @@ static const u16 sMapColors[3] = {RGB(6, 12, 24), RGB(4, 14, 7), RGB(22, 20, 12)
 
 static u32 MapScale(void)
 {
-    u32 sx = (WL_SLICE_W + MAP_MAX_W - 1) / MAP_MAX_W, sy = (WL_SLICE_H + MAP_MAX_H - 1) / MAP_MAX_H;
-    return max(1u, max(sx, sy));
+    return WL_MINIMAP_SCALE;
 }
 
 static void MapPlot(s32 wx, s32 wy, u32 size, u8 color)
@@ -61,28 +61,19 @@ static void MapDraw(void)
     static const u8 sKeyNext[] = _("NEXT");
     static const u8 sKeyLoot[] = _("LOOT");
     static const u8 sHelp[] = _("B: BACK");
-    u32 scale = MapScale(), x, y, i;
-    u32 w = (WL_SLICE_W + scale - 1) / scale, h = (WL_SLICE_H + scale - 1) / scale;
+    u32 scale = MapScale(), x, i;
+    u32 w = WL_MINIMAP_W, h = WL_MINIMAP_H;
     LoadPalette(sMapColors, BG_PLTT_ID(0) + MAPC_WATER, sizeof(sMapColors));
     FillWindowPixelBuffer(1, PIXEL_FILL(9));
-    WindowRect(1, MAP_X0 - 1, MAP_Y0 - 1, w + 2, h + 2, 8);
-    for (y = 0; y < h; y++)
-        for (x = 0; x < w; x++)
-        {
-            // Majority-free, collision-first: any solid/water metatile in the
-            // cell wins so blocked terrain is never shown as open ground.
-            u32 dx, dy;
-            u8 flags = 0;
-            for (dy = 0; dy < scale; dy++)
-                for (dx = 0; dx < scale; dx++)
-                    flags |= WildlandsWorld_TerrainAt((WL_SLICE_BASE_X + x * scale + dx) * 16 + 8,
-                                                      (WL_SLICE_BASE_Y + y * scale + dy) * 16 + 8);
-            WindowRect(1, MAP_X0 + x, MAP_Y0 + y, 1, 1,
-                (flags & WL_TERRAIN_BRIDGE) ? MAPC_GROUND
-                : (flags & WL_TERRAIN_DEEP_WATER) ? MAPC_WATER
-                : (flags & WL_TERRAIN_SOLID) ? MAPC_SOLID
-                : (flags & WL_TERRAIN_CONCEAL) ? MAPC_GRASS : MAPC_GROUND);
-        }
+    // Base terrain: prerendered at build time from the collision table.
+    {
+        u32 tx, ty, winW = 28;
+        u8 *dst = gWindows[1].tileData;
+        for (ty = 0; ty < WL_MINIMAP_TH && ty + MAP_Y0 / 8 < 9; ty++)
+            for (tx = 0; tx < WL_MINIMAP_TW; tx++)
+                CpuCopy32(&sMinimapTiles[(ty * WL_MINIMAP_TW + tx) * 32],
+                    dst + ((ty + MAP_Y0 / 8) * winW + tx + MAP_X0 / 8) * 32, 32);
+    }
     // Overlays: zone first so actors draw on top.
     if (sZone.active)
     {
