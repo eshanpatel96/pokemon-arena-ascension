@@ -448,17 +448,6 @@ static bool8 SolidCircle(s16 x, s16 y, u8 radius)
     return FALSE;
 }
 
-static bool8 WaterCircle(s16 x, s16 y, u8 radius)
-{
-    static const s8 ox[5] = {0, 1,-1, 0, 0};
-    static const s8 oy[5] = {0, 0, 0, 1,-1};
-    u8 i;
-    for (i = 0; i < 5; i++)
-        if (WildlandsWorld_TerrainAt(x + ox[i] * radius, y + oy[i] * radius) & WL_TERRAIN_DEEP_WATER)
-            return TRUE;
-    return FALSE;
-}
-
 bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
 {
     s32 dx, dy, steps, i, fx, fy, sx, sy;
