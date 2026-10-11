@@ -132,7 +132,10 @@ static u16 PutWorldTileNow(s16 tx, s16 ty)
     bgMiddle[slot] = middle;
     bgTop[slot] = top;
     if (top)
+    {
         gWildlandsWorldTelemetry[7]++;
+        gWildlandsWorldAudit[7] = 1;
+    }
     return 3;
 }
 
