@@ -39,6 +39,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void ZoneInit(void);\nstatic void ZoneTick(void);\nstatic void ZoneDestroy(void);\n'
       'static void ZoneSteerEnemy(struct ArenaBody *body);\nstatic void ZoneHudLine(void);\nstatic u32 ZoneHudKey(void);\n'
       'static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);\n'
+      'static bool8 ZoneOutside(s32 x, s32 y, s32 margin);\n'
       'static EWRAM_DATA u32 sZoneHudKeyShown = 0;\n'
       'static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;\n'
       'static EWRAM_DATA u8 sWildlandsSimSteps = 1;\n'
