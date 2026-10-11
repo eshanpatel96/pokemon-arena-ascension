@@ -1,0 +1,2 @@
+engine/graphics/title_screen/wildlands_v4/title.raw
+engine/graphics/title_screen/wildlands_v4/world_map.raw
