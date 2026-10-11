@@ -194,7 +194,7 @@ void WildlandsWorld_LoadGraphics(void)
     SetGpuReg(REG_OFFSET_BG3CNT, BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1)
         | BGCNT_SCREENBASE(28) | BGCNT_TXT256x256);
 
-    LZ77UnCompVram(gTileset_General.tiles, BG_CHAR_ADDR(1));
+    LZ77UnCompVram(gTileset_General.tiles, (void *)BG_CHAR_ADDR(1));
     LZ77UnCompVram(gTileset_Fortree.tiles,
         (u8 *)BG_CHAR_ADDR(1) + NUM_TILES_IN_PRIMARY * TILE_SIZE_4BPP);
     WildlandsWorld_RestorePalettes();
