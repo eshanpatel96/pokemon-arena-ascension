@@ -268,6 +268,7 @@ static void ZoneTint(void)
     if (out == sZoneTinted && (!out || (sArena.frame & 31)))
         return;
     sZoneTinted = out;
+    gWildlandsZoneTelemetry[11] = out;
     WildlandsWorld_RestorePalettes();
     if (out)
     {

@@ -486,6 +486,9 @@ static void WildlandsPauseBoosts(void);
 static void MapDraw(void);
 EWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};
 EWRAM_DATA u16 gWildlandsProfile[12] = {};
+// [0] max render gap (vblanks) [1] frames over 3 vblanks [2] last/[3] max
+// active-slot load cost [4] max biome swap cost (scanlines) [5] steps over cap
+EWRAM_DATA u16 gWildlandsHitch[8] = {};
 // TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking
 // map/zone UI; always 0 in normal play.
 EWRAM_DATA u8 gWildlandsTestPeace = 0;
@@ -2838,8 +2841,11 @@ static void CB2_Arena(void)
             if(!flying){ArenaExit(FALSE);return;}
         }
         {
-        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 3 ? 3 : gap >= 2 ? 2 : 1) : 1;
+        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 6 ? 6 : gap >= 2 ? gap : 1) : 1;
         u16 savedNewKeys = gMain.newKeys;
+        if (gap > gWildlandsHitch[0]) gWildlandsHitch[0] = gap;
+        if (gap > 3) gWildlandsHitch[1]++;
+        if (gap > 6) gWildlandsHitch[5] += gap - 6;
         sWildlandsSimSteps = simSteps;
         gWildlandsProfile[10] += simSteps; gWildlandsProfile[11]++;
         for (simStep = 0; simStep < simSteps; simStep++)

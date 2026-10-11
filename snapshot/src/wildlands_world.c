@@ -336,9 +336,11 @@ void WildlandsWorld_Init(void)
     gWildlandsWorldAudit[0] = sActive;
 }
 
+extern u16 gWildlandsHitch[8];
 static void SwapBiome(u8 biome, bool8 rebuild)
 {
     const struct Tileset *sec = sWlOutdoorPairs[biome][1];
+    u32 t0 = gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228, t1;
     if (rebuild)
         HideLayers(2);
     sBiome = biome;
@@ -353,6 +355,8 @@ static void SwapBiome(u8 biome, bool8 rebuild)
     }
     gWildlandsBiomeTelemetry[0] = biome + 1;
     gWildlandsBiomeTelemetry[1]++;
+    t1 = gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228;
+    if (t1 - t0 > gWildlandsHitch[4]) gWildlandsHitch[4] = t1 - t0;
 }
 
 // The streamed window (17x17 metatiles) may only ever hold secondary tiles of
