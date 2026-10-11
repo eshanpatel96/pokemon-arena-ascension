@@ -429,31 +429,70 @@ static void ArenaXL_UpdateCamera(void)
         ||Abs(sArenaXLCameraY-(sArenaXLStartY/Q-ARENA_XL_VIEW_H/2))>=512)
         gArenaXLTelemetry[1]=1;
 }
+// Visual size from the art itself: the PMD frames vary a lot (Zapdos is
+// drawn 23px wide, Lapras 43px), so small art is scaled up toward a target
+// from the Pokedex height. Never shrinks below the old default; the five
+// lair legendaries keep their tuned boss size. Cached per side.
+extern const struct PokedexEntry gPokedexEntries[];
+static EWRAM_DATA u16 sScaleSpecies[2] = {0};
+static EWRAM_DATA u16 sScaleValue[2] = {0};
+static u32 MonArtExtent(const struct ArenaSpriteSet *art)
+{
+    const struct ArenaSpriteAnimation *anim = &art->animations[ARENA_ANIM_IDLE];
+    const u32 *header = (const u32 *)anim->tiles;
+    const u16 *map = (const u16 *)(anim->tiles + 8);
+    const u32 *dict = (const u32 *)(anim->tiles + header[0]);
+    s32 x0 = 64, x1 = -1, y0 = 64, y1 = -1;
+    u32 t, y, x;
+    for (t = 0; t < 64; t++)
+    {
+        const u32 *src;
+        if (map[t] >= header[1]) continue;
+        src = dict + map[t] * 8;
+        for (y = 0; y < 8; y++)
+        {
+            u32 row = src[y];
+            if (!row) continue;
+            for (x = 0; x < 8; x++)
+                if ((row >> (x * 4)) & 15)
+                {
+                    s32 px = (t % 8) * 8 + x, py = (t / 8) * 8 + y;
+                    if (px < x0) x0 = px;
+                    if (px > x1) x1 = px;
+                    if (py < y0) y0 = py;
+                    if (py > y1) y1 = py;
+                }
+        }
+    }
+    if (x1 < 0) return 0;
+    return max(x1 - x0, y1 - y0) + 1;
+}
 static u16 MonVisualScale(u8 side)
 {
-    switch (gBattleMons[side].species)
+    u16 species = gBattleMons[side].species, h;
+    u32 extent, target, scale;
+    switch (species)
     {
     case SPECIES_MEWTWO:
     case SPECIES_LUGIA:
     case SPECIES_HO_OH:
     case SPECIES_KYOGRE:
     case SPECIES_RAYQUAZA: return 304;
-    case SPECIES_ARTICUNO:
-    case SPECIES_ZAPDOS:
-    case SPECIES_RAIKOU:
-    case SPECIES_ENTEI:
-    case SPECIES_SUICUNE:
-    case SPECIES_REGIROCK:
-    case SPECIES_REGICE:
-    case SPECIES_REGISTEEL: return 248;
-    case SPECIES_DRAGONITE:
-    case SPECIES_SNORLAX:
-    case SPECIES_BLASTOISE:
-    case SPECIES_CHARIZARD:
-    case SPECIES_SALAMENCE:
-    case SPECIES_METAGROSS: return 236;
-    default: return 230;
     }
+    if (sScaleSpecies[side] == species && sScaleValue[side])
+        return sScaleValue[side];
+    scale = 230;
+    if (sArena.bodies[side].art && (extent = MonArtExtent(sArena.bodies[side].art)) != 0)
+    {
+        h = gPokedexEntries[SpeciesToNationalPokedexNum(species)].height;
+        target = h <= 6 ? 21 : h <= 12 ? 24 : h <= 20 ? 27 : 30;
+        scale = target * 256 / extent;
+        if (scale < 230) scale = 230;
+        if (scale > 400) scale = 400;
+    }
+    sScaleSpecies[side] = species;
+    sScaleValue[side] = scale;
+    return scale;
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
