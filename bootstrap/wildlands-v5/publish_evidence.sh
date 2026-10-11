@@ -3,6 +3,7 @@
 # to dedicated branches so results are reviewable without Actions artifact
 # downloads. NEVER publishes .gba/.sav/.elf binaries.
 set -u
+trap 'echo "::warning::publish line $LINENO failed: $BASH_COMMAND"' ERR
 REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 RUN="${GITHUB_RUN_ID}"
 SHA="${GITHUB_SHA}"
@@ -11,7 +12,7 @@ rm -rf "$WORK"; mkdir -p "$WORK"
 
 push_dir() { # branch srcdir subdir message
   local branch="$1" src="$2" sub="$3" msg="$4" dir="$WORK/$branch"
-  if git clone -q --depth 1 --branch "$branch" "$REPO_URL" "$dir" 2>/dev/null; then :; else
+  if git ls-remote --exit-code "$REPO_URL" "refs/heads/$branch" >/dev/null 2>&1 && git clone -q --depth 1 --branch "$branch" "$REPO_URL" "$dir" 2>/dev/null; then :; else
     mkdir -p "$dir"; git -C "$dir" init -q; git -C "$dir" checkout -q --orphan "$branch"
     git -C "$dir" remote add origin "$REPO_URL"
   fi
@@ -24,7 +25,7 @@ push_dir() { # branch srcdir subdir message
     git -C "$dir" push -q origin "$branch" && return 0
     git -C "$dir" pull -q --rebase origin "$branch" || true
   done
-  echo "push to $branch failed"
+  echo "::warning::push to $branch failed"
 }
 
 # 1. Evidence (text + png only)

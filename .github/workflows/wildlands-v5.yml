@@ -200,4 +200,4 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-        run: bash bootstrap/wildlands-v5/publish_evidence.sh
+        run: bash bootstrap/wildlands-v5/publish_evidence.sh 2>&1 | sed 's/x-access-token:[^@]*@/x-access-token:***@/g'; echo "::notice::publish exit ${PIPESTATUS[0]}"
