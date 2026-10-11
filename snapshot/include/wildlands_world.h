@@ -42,7 +42,10 @@ s8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy);
 void WildlandsWorld_DoorArrival(u8 door, s16 *x, s16 *y);
 bool8 WildlandsWorld_RoomExitPos(s16 x, s16 y, s16 *ex, s16 *ey);
 u8 WildlandsWorld_RoomCount(void);
+u8 WildlandsWorld_LandmarkCount(void);
+void WildlandsWorld_Landmark(u8 i, s16 *x, s16 *y);
 s8 WildlandsWorld_RoomIndexAt(s16 x, s16 y);
+void WildlandsWorld_RoomBoss(u8 room, s32 *x, s32 *y);
 u16 WildlandsWorld_RoomLegend(s8 room);
 void WildlandsWorld_NavPoint(u16 index, s16 *x, s16 *y);
 u16 WildlandsWorld_NavPointCount(void);
@@ -51,6 +54,7 @@ void WildlandsWorld_DoorInfo(u8 i, s16 *x, s16 *y, bool8 *lair);
 
 extern EWRAM_DATA u32 gWildlandsWorldTelemetry[16];
 extern EWRAM_DATA u32 gWildlandsRoomTelemetry[8];
+extern EWRAM_DATA u32 gWildlandsBiomeTelemetry[4];
 extern EWRAM_DATA u32 gWildlandsWorldAudit[8];
 
 #endif

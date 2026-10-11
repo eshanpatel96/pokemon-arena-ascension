@@ -637,6 +637,12 @@ static void SquadDoorSim(void)
             LootLastSpot(&nx, &ny);
         else if (k == 1)
         { nx = WL_PLAYER_START_X; ny = WL_PLAYER_START_Y; }
+        else if (k >= 40 && k - 40 < WildlandsWorld_LandmarkCount())
+        {
+            // Test: stand at clearing k-40 (generator-chosen open ground).
+            WildlandsWorld_Landmark(k - 40, &nx, &ny);
+            lead->facing = FACE_DOWN;
+        }
         else if (k == 4 && SquadAlive(1))
         {
             // KO the active enemy lead through the normal elimination path.
@@ -646,8 +652,11 @@ static void SquadDoorSim(void)
             SquadKO(1, 0);
         }
         lead->x = nx * Q; lead->y = ny * Q;
-        if (k == 1 && sSquadWings[0].active && sSquadWings[0].alive)
+        if ((k == 1 || k >= 40) && sSquadWings[0].active && sSquadWings[0].alive)
+        {
+            sSquadWings[0].x = lead->x; sSquadWings[0].y = lead->y;
             SquadRegroup(&sSquadWings[0], lead);
+        }
     }
     if (!WildlandsWorld_PollDoor(lead->x / Q, lead->y / Q, lead->facing == FACE_UP,
             lead->facing == FACE_DOWN, &nx, &ny))

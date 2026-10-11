@@ -580,7 +580,6 @@ static void DirectorInit(void)
     {
         u16 sp = WildlandsWorld_RoomLegend(i);
         struct DirDuo *d;
-        u32 k;
         if (!sp || !ArenaSprites_Get(sp))
             continue;
         d = &sDir->duo[sDir->count];
@@ -589,9 +588,7 @@ static void DirectorInit(void)
         d->legend = TRUE;
         d->room = i;
         d->state = DIR_LAIR;
-        for (k = 0; k < ARRAY_COUNT(sLootSpots); k++)
-            if (sLootSpots[k].type == LOOT_CACHE && WildlandsWorld_RoomIndexAt(sLootSpots[k].x, sLootSpots[k].y) == (s8)i)
-            { d->x = sLootSpots[k].x; d->y = sLootSpots[k].y - 24; break; }
+        { s32 bx, by; WildlandsWorld_RoomBoss(i, &bx, &by); d->x = bx; d->y = by; }
         sDir->count++;
     }
     // The practice duo already on the field becomes AI duo 1 at its spawn,
