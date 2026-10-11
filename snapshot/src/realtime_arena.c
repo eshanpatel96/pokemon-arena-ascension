@@ -474,6 +474,7 @@ static void ZoneSteerEnemy(struct ArenaBody *body);
 static void ZoneHudLine(void);
 static u32 ZoneHudKey(void);
 static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);
+static bool8 ZoneOutside(s32 x, s32 y, s32 margin);
 static EWRAM_DATA u32 sZoneHudKeyShown = 0;
 static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
 static EWRAM_DATA u8 sWildlandsSimSteps = 1;
