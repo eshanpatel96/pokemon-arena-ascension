@@ -12,7 +12,13 @@
 
 #define ZONE_FPS 60
 // Playtest: the storm felt fast; 90s explore, 45s warning, 75s shrink.
+// The island opens with a longer quiet phase (2:30) so lairs, loot and
+// legendaries are in play before the first circle moves.
+#ifdef WL_ISLAND
+#define ZONE_EXPLORE (150 * ZONE_FPS)
+#else
 #define ZONE_EXPLORE (90 * ZONE_FPS)
+#endif
 #define ZONE_WARN (45 * ZONE_FPS)
 #define ZONE_SHRINK (75 * ZONE_FPS)
 #define ZONE_STAGES 4
@@ -79,6 +85,23 @@ static void ZonePickNext(void)
     maxOff = r - (sZone.toR >> 8);
     if (maxOff < 0) maxOff = 0;
     sZone.toX = sZone.cx; sZone.toY = sZone.cy;
+    // Hot zone: about one circle in three drifts toward a lair whose
+    // legendary is still home, so boss fights stay reachable and contested.
+    {
+        s32 ax, ay;
+        if (ZoneRand() % 100 < 35 && maxOff > 0 && DirectorLairAnchor(&ax, &ay))
+        {
+            s32 ox = ax - sZone.cx, oy = ay - sZone.cy;
+            s32 len = ZoneIsqrt(ox * ox + oy * oy), lim = maxOff * 4 / 5;
+            if (len > lim && len) { ox = ox * lim / len; oy = oy * lim / len; }
+            if (ZoneGround(sZone.cx + ox, sZone.cy + oy))
+            {
+                sZone.toX = sZone.cx + ox; sZone.toY = sZone.cy + oy;
+                gWildlandsZoneTelemetry[14]++;
+                return;
+            }
+        }
+    }
     for (i = 0; i < 12; i++)
     {
         s32 ox = (s32)(ZoneRand() % (2 * maxOff + 1)) - maxOff;

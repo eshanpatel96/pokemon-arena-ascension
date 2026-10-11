@@ -60,7 +60,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void BrainDecide(struct ArenaBody *body, u8 seenMask);\nstatic bool8 BrainAllowsFire(void);\n'
       'static void WildlandsBuildOam(void);\n'
       'static bool8 DirectorAdvance(void);\nstatic void DirectorInit(void);\nstatic void DirectorSim(void);\n'
-      'static u8 DirectorBossDoor(void);\nstatic void DirectorBossEnter(void);\n'
+      'static u8 DirectorBossDoor(void);\nstatic void DirectorBossEnter(void);\nstatic bool8 DirectorLairAnchor(s32 *x, s32 *y);\n'
       'static void DirectorDestroy(void);\nstatic void DirRestorePartner(void);\nstatic bool8 DirectorSoloActive(void);\n'
       'static bool8 DirectorPopupText(u8 *text, u8 *color);\nstatic u8 DirectorLeft(void);\nstatic bool8 DirectorRunning(void);\n'
       'static bool8 DirectorPopupActive(void);\nstatic void DirectorPauseLine(void);\n'
