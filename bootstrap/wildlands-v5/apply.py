@@ -187,19 +187,24 @@ new='''static void VBlank_Arena(void)
 if old not in s: raise SystemExit('vblank anchor drift')
 s=s.replace(old,new,1)
 
-# Arena movement remains axis-separated Q8 sweep. World traversal is an
-# additional terrain check; projectile LOS still uses ArenaNav_LineClear.
+# Arena movement remains axis-separated Q8 sweep. In Wildlands mode
+# WildlandsWorld_BodyLineClear owns both solid-cover and water traversal.
+# The ordinary ArenaNav_LineClear also consults the world, so calling it
+# first is redundant and can reject an otherwise valid species crossing.
+# Legacy ArenaNav collision is retained for non-Wildlands encounters.
 old='''    if ((ghost || ArenaNav_LineClear(body->x / Q, body->y / Q, x / Q, body->y / Q, ARENA_BODY_RADIUS))
         && CoverCanStep(x/Q,body->y/Q)'''
-new='''    if ((ghost || ArenaNav_LineClear(body->x / Q, body->y / Q, x / Q, body->y / Q, ARENA_BODY_RADIUS))
-        && (!WildlandsWorld_Active() || WildlandsWorld_BodyLineClear(side,body->x/Q,body->y/Q,x/Q,body->y/Q,ARENA_BODY_RADIUS))
+new='''    if ((ghost || (WildlandsWorld_Active()
+            ? WildlandsWorld_BodyLineClear(side,body->x/Q,body->y/Q,x/Q,body->y/Q,ARENA_BODY_RADIUS)
+            : ArenaNav_LineClear(body->x/Q,body->y/Q,x/Q,body->y/Q,ARENA_BODY_RADIUS)))
         && CoverCanStep(x/Q,body->y/Q)'''
 if old not in s: raise SystemExit('movement X anchor drift')
 s=s.replace(old,new,1)
 old='''    if ((ghost || ArenaNav_LineClear(body->x / Q, body->y / Q, body->x / Q, y / Q, ARENA_BODY_RADIUS))
         && CoverCanStep(body->x/Q,y/Q)'''
-new='''    if ((ghost || ArenaNav_LineClear(body->x / Q, body->y / Q, body->x / Q, y / Q, ARENA_BODY_RADIUS))
-        && (!WildlandsWorld_Active() || WildlandsWorld_BodyLineClear(side,body->x/Q,body->y/Q,body->x/Q,y/Q,ARENA_BODY_RADIUS))
+new='''    if ((ghost || (WildlandsWorld_Active()
+            ? WildlandsWorld_BodyLineClear(side,body->x/Q,body->y/Q,body->x/Q,y/Q,ARENA_BODY_RADIUS)
+            : ArenaNav_LineClear(body->x/Q,body->y/Q,body->x/Q,y/Q,ARENA_BODY_RADIUS)))
         && CoverCanStep(body->x/Q,y/Q)'''
 if old not in s: raise SystemExit('movement Y anchor drift')
 s=s.replace(old,new,1)
