@@ -323,8 +323,13 @@ static void ZoneSteerEnemy(struct ArenaBody *body)
 // Bottom HUD line (Wildlands replaces the capture-ball help).
 static u32 ZoneHudKey(void)
 {
-    return (sLoot.boost[0][0] * 7 + sLoot.boost[0][1] * 3 + sLoot.boost[0][2]) * 0x9E3779B1u ^ sZone.hudSecond | (sZone.phase << 8) | (ZoneOutside(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, 0) << 11)
-        | ((u32)(SquadAlive(2) ? gBattleMons[2].hp : 0) << 12) | ((u32)(SquadAlive(3) ? gBattleMons[3].hp : 0) << 22);
+    u32 key = (u32)(sLoot.boost[0][0] * 7 + sLoot.boost[0][1] * 3 + sLoot.boost[0][2]) * 0x9E3779B1u;
+    key ^= sZone.hudSecond;
+    key ^= (u32)sZone.phase << 8;
+    key ^= (u32)ZoneOutside(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, 0) << 11;
+    key ^= (u32)(SquadAlive(2) ? gBattleMons[2].hp : 0) << 12;
+    key ^= (u32)(SquadAlive(3) ? gBattleMons[3].hp : 0) << 22;
+    return key;
 }
 
 static void ZoneHudLine(void)

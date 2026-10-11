@@ -476,6 +476,8 @@ static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
 static void LootInit(void);
 static void LootTick(void);
 static void LootDestroy(void);
+static void MapDraw(void);
+EWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};
 struct WildlandsPartnerActor
 {
     s32 x,y;
@@ -1046,19 +1048,20 @@ static void DrawHud(void)
     {
         if(sPausePage==3)
         {
-            static const u8 labels[4][18]={_("POKEMON"),_("BAG"),_("MOVES"),_("RESUME")};
+            static const u8 labels[5][18]={_("POKEMON"),_("BAG"),_("MOVES"),_("RESUME"),_("MAP")};
             static const u8 title[]=_("PAUSED");
             static const u8 help[]=_("UP/DOWN: CHOOSE   A: OPEN");
             FillWindowPixelBuffer(1,PIXEL_FILL(9));
             PrintPopup(8,3,title,5);
-            for(side=0;side<4;side++)
+            for(side=0;side<5;side++)
             {
-                if(side==sPauseChoice)WindowRect(1,7,18+side*11,4,7,5);
-                PrintPopup(18,16+side*11,labels[side],side==sPauseChoice?5:4);
+                if(side==sPauseChoice)WindowRect(1,7,17+side*10,4,7,5);
+                PrintPopup(18,15+side*10,labels[side],side==sPauseChoice?5:4);
             }
             HudTinyWindow(1,7,67,help,7,52);
             PutWindowTilemap(1);CopyWindowToVram(1,COPYWIN_FULL);
         }
+        else if(sPausePage==4)MapDraw();
         else if(sPausePage)
         {
             FillWindowPixelBuffer(1, PIXEL_FILL(9));
@@ -2554,6 +2557,7 @@ static void DestroyShot(struct ArenaShot *shot)
 #include "arena_squad.inc"
 #include "arena_loot.inc"
 #include "arena_zone.inc"
+#include "arena_map.inc"
 
 static void TickShots(void)
 {
@@ -2733,16 +2737,17 @@ static void CB2_Arena(void)
         if(sPausePage==3)
         {
             if(JOY_NEW(DPAD_UP|DPAD_DOWN))
-            {sPauseChoice=(sPauseChoice+(JOY_NEW(DPAD_DOWN)?1:3))%4;sArena.hudDirty=TRUE;}
+            {sPauseChoice=(sPauseChoice+(JOY_NEW(DPAD_DOWN)?1:4))%5;sArena.hudDirty=TRUE;}
             if(JOY_NEW(A_BUTTON))
             {
                 if(sPauseChoice<2 && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1))
                 {gArenaMenuRequest=sPauseChoice==0?2:1;ArenaExit(FALSE);return;}
                 if(sPauseChoice==2){sPausePage=0;sMoveMenuReady=FALSE;sArena.hudDirty=TRUE;}
                 if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sArena.hudDirty=TRUE;}
+                if(sPauseChoice==4){sPausePage=4;sArena.hudDirty=TRUE;}
             }
         }
-        else if(JOY_NEW(L_BUTTON|R_BUTTON))
+        else if(sPausePage<3 && JOY_NEW(L_BUTTON|R_BUTTON))
         {
             sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;
             sMoveMenuReady=FALSE;sArena.hudDirty=TRUE;
