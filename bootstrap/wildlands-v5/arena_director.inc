@@ -660,6 +660,12 @@ static void DirSimOne(u8 i)
                 DirRandomGoal(d);
             }
         }
+        else if (WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y,
+                     d->x + (dx > 0 ? 40 : -40), d->y, 6) && Abs(dx) > 24)
+            d->x += dx > 0 ? 40 : -40;   // slide along the obstacle
+        else if (WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y,
+                     d->x, d->y + (dy > 0 ? 40 : -40), 6) && Abs(dy) > 24)
+            d->y += dy > 0 ? 40 : -40;
         else
         {
             // Blocked: most goal changes happen here, so this is also where a
