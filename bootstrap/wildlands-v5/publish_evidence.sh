@@ -2,7 +2,8 @@
 # Publish text evidence, runtime screenshots and the patched engine C/H source
 # to dedicated branches so results are reviewable without Actions artifact
 # downloads. NEVER publishes .gba/.sav/.elf binaries.
-set -u
+echo "::notice::publish start token=${GH_TOKEN:+set} repo=${GITHUB_REPOSITORY:-unset} run=${GITHUB_RUN_ID:-unset}"
+set -E
 trap 'echo "::warning::publish line $LINENO failed: $BASH_COMMAND"' ERR
 REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 RUN="${GITHUB_RUN_ID}"
@@ -38,7 +39,7 @@ if [ -d evidence ]; then
 fi
 [ -f delivery/manifest.json ] && cp delivery/manifest.json "$E/delivery-manifest.json"
 echo "{\"run\":\"$RUN\",\"sha\":\"$SHA\",\"workflow\":\"${GITHUB_WORKFLOW}\",\"ref\":\"${GITHUB_REF_NAME}\"}" > "$E/run.json"
-push_dir wildlands-evidence "$E" "runs/$RUN" "evidence run $RUN for $SHA"
+push_dir wildlands-evidence "$E" "runs/$RUN" "evidence run $RUN for $SHA"; echo "::notice::evidence push rc=$?"
 
 # 2. Patched engine source snapshot (C/H/INC text only, our code + open-source upstream)
 if [ -d engine/src ]; then
