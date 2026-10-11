@@ -9,6 +9,7 @@ on:
       - 'docs/WILDLANDS-V4*'
       - 'docs/WILDLANDS-ROSTER-LOCK.md'
       - '.github/workflows/wildlands-v5-gameplay.yml'
+      - 'bootstrap/wildlands-v5-gameplay/**'
   workflow_dispatch:
 concurrency:
   group: wildlands-v5-gameplay-${{ github.ref }}
@@ -51,6 +52,9 @@ jobs:
           python3 bootstrap/wildlands-v4/apply.py engine | tee evidence/wildlands-v4-apply.txt
           python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
           git rev-parse HEAD > evidence/source-commit.txt
+      - name: Apply V5 gameplay additions
+        run: |
+          python3 bootstrap/wildlands-v5-gameplay/apply.py engine | tee evidence/v5-gameplay-apply.txt
       - name: Generate native assets
         working-directory: engine
         run: |
