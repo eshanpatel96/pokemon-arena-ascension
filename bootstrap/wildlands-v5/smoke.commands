@@ -117,6 +117,7 @@ poke gWildlandsTestPeace 0 1 0
 # ---- Gate D true duo combat (squad wings are battlers 2 and 3) ----
 dump squad0 gWildlandsSquadTelemetry 16
 dump partner0 gWildlandsPartnerTelemetry 8
+dump wingdiag0 gWildlandsWingDiag 8
 expect gWildlandsSquadTelemetry 0 4 3
 frames 240 16
 # ---- Enemy duo brain: fights when even, retreats when losing ----
@@ -140,6 +141,7 @@ frames 900 1
 snap 09-duo-fight-attacking
 dump squad2 gWildlandsSquadTelemetry 16
 dump partner gWildlandsPartnerTelemetry 8
+dump wingdiag gWildlandsWingDiag 8
 dump profile gWildlandsProfile 4
 # ---- Gate F pickups: spot 0 lies on the bridge lane walked above ----
 dump loot gWildlandsLootTelemetry 14

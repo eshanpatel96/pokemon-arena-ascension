@@ -347,6 +347,9 @@ static void SquadFire(struct SquadWing *w)
     PlaySE(p->kind == ARENA_MOVE_PROJECTILE ? SE_M_SWIFT : SE_M_SCRATCH);
 }
 
+// DIAG (partner movement): [0..1] waypoint [2..3] goal [4] moving frames
+// [5] x blocked [6] y blocked [7] route misses
+EWRAM_DATA u32 gWildlandsWingDiag[8] = {};
 static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
 {
     s32 dx, dy, d, nx, ny;
@@ -358,6 +361,7 @@ static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
         { w->waypointX = wp.x; w->waypointY = wp.y; }
         else
         {
+            if (!w->team) gWildlandsWingDiag[7]++;
             // No route found: head straight for the goal and let terrain
             // slide it; the stuck detector regroups it if that fails too
             // (it used to freeze in place, e.g. storm-steering on the slice).
@@ -375,10 +379,18 @@ static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
     nx = Clamp(w->x + dx * step / d, ARENA_MIN_X * Q, ARENA_MAX_X * Q);
     ny = Clamp(w->y + dy * step / d, ARENA_MIN_Y * Q, ARENA_MAX_Y * Q);
     w->facing = Facing(dx, dy);
+    if (!w->team)
+    {
+        gWildlandsWingDiag[0] = w->waypointX; gWildlandsWingDiag[1] = w->waypointY;
+        gWildlandsWingDiag[2] = goalX / Q; gWildlandsWingDiag[3] = goalY / Q;
+        gWildlandsWingDiag[4]++;
+    }
     if (!WildlandsWorld_Active() || WildlandsWorld_SpeciesLineClear(w->species, w->x / Q, w->y / Q, nx / Q, w->y / Q, 10))
         w->x = nx;
+    else if (!w->team) gWildlandsWingDiag[5]++;
     if (!WildlandsWorld_Active() || WildlandsWorld_SpeciesLineClear(w->species, w->x / Q, w->y / Q, w->x / Q, ny / Q, 10))
         w->y = ny;
+    else if (!w->team) gWildlandsWingDiag[6]++;
 }
 
 // Leash: a wing that falls far behind its lead, or is stuck against
