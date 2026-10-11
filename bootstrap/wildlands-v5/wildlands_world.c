@@ -29,6 +29,14 @@ static EWRAM_DATA s16 sLastTileY = 0x7FFF;
 static EWRAM_DATA u8 sLastChunkX = 0xFF;
 static EWRAM_DATA u8 sLastChunkY = 0xFF;
 
+#define WL_PENDING_TILES 72
+struct WildlandsPendingTile
+{
+    u16 slot, bottom, middle, top;
+};
+static EWRAM_DATA struct WildlandsPendingTile sPending[WL_PENDING_TILES] = {};
+static EWRAM_DATA u8 sPendingCount = 0;
+
 EWRAM_DATA u32 gWildlandsWorldTelemetry[16] = {};
 
 static s32 Abs32(s32 n) { return n < 0 ? -n : n; }
@@ -110,7 +118,7 @@ static void GetWorldTile(s16 worldTx, s16 worldTy, u16 *bottom, u16 *middle, u16
     }
 }
 
-static u16 PutWorldTile(s16 tx, s16 ty)
+static u16 PutWorldTileNow(s16 tx, s16 ty)
 {
     u16 bottom, middle, top;
     u16 slot = ((u16)ty & 31) * 32 + ((u16)tx & 31);
@@ -127,13 +135,29 @@ static u16 PutWorldTile(s16 tx, s16 ty)
     return 3;
 }
 
+static u16 QueueWorldTile(s16 tx, s16 ty)
+{
+    struct WildlandsPendingTile *p;
+    if (sPendingCount >= WL_PENDING_TILES)
+    {
+        gWildlandsWorldTelemetry[12]++;
+        return 0;
+    }
+    p = &sPending[sPendingCount++];
+    p->slot = ((u16)ty & 31) * 32 + ((u16)tx & 31);
+    GetWorldTile(tx, ty, &p->bottom, &p->middle, &p->top);
+    if (p->top)
+        gWildlandsWorldTelemetry[7]++;
+    return 3;
+}
+
 static u16 RebuildWindow(s16 tileX, s16 tileY)
 {
     s16 x, y;
     u16 writes = 0;
     for (y = tileY - 1; y <= tileY + 30; y++)
         for (x = tileX - 1; x <= tileX + 30; x++)
-            writes += PutWorldTile(x, y);
+            writes += PutWorldTileNow(x, y);
     gWildlandsWorldTelemetry[1]++;
     return writes;
 }
@@ -170,6 +194,7 @@ void WildlandsWorld_LoadGraphics(void)
 
     DmaFill16(3, 0, BG_SCREEN_ADDR(28), 0x1800);
     sLastTileX = sLastTileY = 0x7FFF;
+    sPendingCount = 0;
 }
 
 void WildlandsWorld_Init(void)
@@ -178,6 +203,7 @@ void WildlandsWorld_Init(void)
     sActive = VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE);
     sLastTileX = sLastTileY = 0x7FFF;
     sLastChunkX = sLastChunkY = 0xFF;
+    sPendingCount = 0;
     gWildlandsWorldTelemetry[15] = sActive;
 }
 
@@ -195,42 +221,54 @@ void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
     tileX = cameraX >> 3;
     tileY = cameraY >> 3;
 
-    if (sLastTileX == 0x7FFF || Abs32(tileX - sLastTileX) > 1 || Abs32(tileY - sLastTileY) > 1)
+    if (sLastTileX == 0x7FFF)
         writes = RebuildWindow(tileX, tileY);
+    else if (Abs32(tileX - sLastTileX) > 1 || Abs32(tileY - sLastTileY) > 1)
+    {
+        // Teleports/camera jumps are not part of normal continuous movement.
+        // Rebuild immediately only for recovery; ordinary streaming is queued
+        // and committed entirely during VBlank below.
+        writes = RebuildWindow(tileX, tileY);
+        gWildlandsWorldTelemetry[3]++;
+    }
     else
     {
+        sPendingCount = 0;
         if (tileX > sLastTileX)
         {
             x = tileX + 30;
             for (y = tileY - 1; y <= tileY + 30; y++)
-                writes += PutWorldTile(x, y);
+                writes += QueueWorldTile(x, y);
         }
         else if (tileX < sLastTileX)
         {
             x = tileX - 1;
             for (y = tileY - 1; y <= tileY + 30; y++)
-                writes += PutWorldTile(x, y);
+                writes += QueueWorldTile(x, y);
         }
 
         if (tileY > sLastTileY)
         {
             y = tileY + 30;
             for (x = tileX - 1; x <= tileX + 30; x++)
-                writes += PutWorldTile(x, y);
+                writes += QueueWorldTile(x, y);
         }
         else if (tileY < sLastTileY)
         {
             y = tileY - 1;
             for (x = tileX - 1; x <= tileX + 30; x++)
-                writes += PutWorldTile(x, y);
+                writes += QueueWorldTile(x, y);
         }
     }
 
     sLastTileX = tileX;
     sLastTileY = tileY;
-    gWildlandsWorldTelemetry[0] += writes;
-    if (writes > gWildlandsWorldTelemetry[8])
-        gWildlandsWorldTelemetry[8] = writes;
+    if (sPendingCount == 0)
+    {
+        gWildlandsWorldTelemetry[0] += writes;
+        if (writes > gWildlandsWorldTelemetry[8])
+            gWildlandsWorldTelemetry[8] = writes;
+    }
 
     chunkX = cameraX >> 8;
     chunkY = cameraY >> 8;
@@ -251,6 +289,43 @@ void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
     now = gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228;
     if (now - stamp > gWildlandsWorldTelemetry[9])
         gWildlandsWorldTelemetry[9] = now - stamp;
+}
+
+void WildlandsWorld_VBlank(void)
+{
+    u32 i;
+    volatile u16 *bgBottom;
+    volatile u16 *bgMiddle;
+    volatile u16 *bgTop;
+    if (!sActive || !sPendingCount)
+        return;
+
+    bgBottom = (volatile u16 *)BG_SCREEN_ADDR(28);
+    bgMiddle = (volatile u16 *)BG_SCREEN_ADDR(30);
+    bgTop = (volatile u16 *)BG_SCREEN_ADDR(29);
+    for (i = 0; i < sPendingCount; i++)
+    {
+        const struct WildlandsPendingTile *p = &sPending[i];
+        bgBottom[p->slot] = p->bottom;
+        bgMiddle[p->slot] = p->middle;
+        bgTop[p->slot] = p->top;
+    }
+    gWildlandsWorldTelemetry[0] += sPendingCount * 3;
+    if (sPendingCount > gWildlandsWorldTelemetry[8])
+        gWildlandsWorldTelemetry[8] = sPendingCount;
+    sPendingCount = 0;
+}
+
+void WildlandsWorld_TickBody(u8 side, s16 x, s16 y)
+{
+    u8 terrain;
+    if (!sActive)
+        return;
+    terrain = WildlandsWorld_TerrainAt(x, y);
+    if (side == 0 && (terrain & WL_TERRAIN_CONCEAL))
+        gWildlandsWorldTelemetry[5]++;
+    if (side == 0 && (terrain & WL_TERRAIN_DEEP_WATER))
+        gWildlandsWorldTelemetry[6]++;
 }
 
 static bool8 IsBridgeBehavior(u8 behavior)
