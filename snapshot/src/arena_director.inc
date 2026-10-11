@@ -660,8 +660,28 @@ static void DirSimOne(u8 i)
                 DirRandomGoal(d);
             }
         }
+        else if (WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y,
+                     d->x + (dx > 0 ? 40 : -40), d->y, 6) && Abs(dx) > 24)
+            d->x += dx > 0 ? 40 : -40;   // slide along the obstacle
+        else if (WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y,
+                     d->x, d->y + (dy > 0 ? 40 : -40), 6) && Abs(dy) > 24)
+            d->y += dy > 0 ? 40 : -40;
         else
+        {
+            // Blocked: most goal changes happen here, so this is also where a
+            // duo reconsiders a lair (one blocked tick in four).
+            s32 bossScore;
+            u8 lair = (DirRand() & 3) ? DIR_NONE : DirBossPick(d, d->x, d->y, &bossScore);
             DirRandomGoal(d);
+            if (lair != DIR_NONE)
+            {
+                s32 ox, oy;
+                DirLairDoor(&sDir->duo[lair], &ox, &oy);
+                d->plan = lair + 1;
+                d->gx = ox; d->gy = oy;
+                sDir->bossCooldown = max(sDir->bossCooldown, 600);
+            }
+        }
     }
 }
 
