@@ -56,6 +56,7 @@ jobs:
           python3 bootstrap/wildlands-v4/apply.py engine | tee evidence/v4-lab-base.txt
           python3 bootstrap/wildlands-v5/generate_world.py engine | tee evidence/world-generation.json
           python3 bootstrap/wildlands-v5/apply.py engine | tee evidence/v5-world-apply.txt
+          python3 bootstrap/wildlands-v5/squad_apply.py engine | tee evidence/v5-squad-apply.txt
           python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
           git rev-parse HEAD > evidence/source-commit.txt
           cp engine/data/wildlands_world/manifest.json evidence/world-manifest.json
@@ -142,7 +143,7 @@ jobs:
         run: |
           gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/wildlands-v5/wl_smoke.c -lmgba -o evidence/wildlands-v5-smoke
           set -o pipefail
-          timeout 300 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime bootstrap/wildlands-v5/smoke.commands - 2>&1 | tee evidence/smoke.log
+          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime bootstrap/wildlands-v5/smoke.commands - 2>&1 | tee evidence/smoke.log
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image
@@ -157,7 +158,7 @@ jobs:
           cp bootstrap/wildlands-v5/*.py bootstrap/wildlands-v5/*.c bootstrap/wildlands-v5/*.h bootstrap/wildlands-v5/*.commands recovery/bootstrap/ 2>/dev/null || true
           if test -d engine; then
             cp engine/src/realtime_arena.c engine/src/arena_navigation.c engine/src/arena_terrain.c engine/src/wildlands_world.c recovery/src/ 2>/dev/null || true
-            cp engine/src/arena_psychic.inc engine/src/arena_toss.inc recovery/src/ 2>/dev/null || true
+            cp engine/src/arena_psychic.inc engine/src/arena_toss.inc engine/src/arena_squad.inc recovery/src/ 2>/dev/null || true
             cp engine/include/wildlands_world.h engine/include/wildlands_world_data.h recovery/include/ 2>/dev/null || true
             cp engine/data/wildlands_world/* recovery/data/wildlands_world/ 2>/dev/null || true
           fi

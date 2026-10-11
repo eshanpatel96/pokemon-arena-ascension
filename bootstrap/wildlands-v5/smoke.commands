@@ -48,3 +48,18 @@ dump render gArenaRenderTelemetry 4
 dump world gWildlandsWorldTelemetry 16
 dump audit gWildlandsWorldAudit 8
 snap 07-after-cadence
+
+# ---- Gate D true duo combat (squad wings are battlers 2 and 3) ----
+dump squad0 gWildlandsSquadTelemetry 16
+expect gWildlandsSquadTelemetry 0 4 3
+frames 240 16
+frames 900 0
+snap 08-duo-fight
+dump squad1 gWildlandsSquadTelemetry 16
+dump realtime gRealtimeArenaTelemetry 8
+expectmin gWildlandsSquadTelemetry 4 4 1
+expectmin gWildlandsSquadTelemetry 8 4 1
+expectmax gWildlandsSquadTelemetry 60 4 0
+frames 900 1
+snap 09-duo-fight-attacking
+dump squad2 gWildlandsSquadTelemetry 16
