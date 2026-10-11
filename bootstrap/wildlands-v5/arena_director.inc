@@ -789,7 +789,12 @@ static u8 DirectorBossDoor(void)
     x = sArena.bodies[1].x / Q; y = sArena.bodies[1].y / Q;
     if (WildlandsWorld_InRoom(x, y))
         return 0xFF;
-    lair = DirBossPick(&tmp, x, y, &score);
+    // A duo that was already on its way (planned off screen) keeps its plan
+    // while it is the on-screen duo, unless that lair stopped being viable.
+    if (tmp.plan && DirBossScore(&tmp, &sDir->duo[tmp.plan - 1], x, y) > -200)
+        lair = tmp.plan - 1;
+    else
+        lair = DirBossPick(&tmp, x, y, &score);
     if (lair == DIR_NONE || DirNearest(FALSE) == DIR_NONE)
         return 0xFF;     // someone must be able to take the field meanwhile
     DirLairDoor(&sDir->duo[lair], &x, &y);
