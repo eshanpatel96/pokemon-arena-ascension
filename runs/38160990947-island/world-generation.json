@@ -1,0 +1,634 @@
+{
+  "world": "island",
+  "format": "ROM-resident 16x16 Emerald metatile entries (General+Fortree)",
+  "world_metatiles": [
+    256,
+    192
+  ],
+  "world_pixels": [
+    4096,
+    3072
+  ],
+  "source_plan": "docs/art/wildlands-map-concept-v3.png -> island_plan.py (semantic only)",
+  "land_metatiles": 23311,
+  "reachable_metatiles": 23299,
+  "reachable_pct": 99.95,
+  "lairs": {
+    "lugia": {
+      "box": [
+        17,
+        34,
+        14,
+        12
+      ],
+      "approaches": [
+        "N",
+        "S",
+        "E"
+      ],
+      "reachable": true,
+      "reachable_cells": 41,
+      "prefab": "FortreeCity"
+    },
+    "rayquaza": {
+      "box": [
+        113,
+        18,
+        14,
+        12
+      ],
+      "approaches": [
+        "E",
+        "S",
+        "W"
+      ],
+      "reachable": true,
+      "reachable_cells": 147,
+      "prefab": "Route119"
+    },
+    "mewtwo": {
+      "box": [
+        208,
+        34,
+        16,
+        12
+      ],
+      "approaches": [
+        "N",
+        "S",
+        "W"
+      ],
+      "reachable": true,
+      "reachable_cells": 63,
+      "prefab": "Route119"
+    },
+    "kyogre": {
+      "box": [
+        33,
+        162,
+        14,
+        12
+      ],
+      "approaches": [
+        "N",
+        "W",
+        "E"
+      ],
+      "reachable": true,
+      "reachable_cells": 53,
+      "prefab": "Route120"
+    },
+    "hooh": {
+      "box": [
+        208,
+        162,
+        16,
+        12
+      ],
+      "approaches": [
+        "W",
+        "N"
+      ],
+      "reachable": true,
+      "reachable_cells": 156,
+      "prefab": "Route120"
+    }
+  },
+  "bridge_fallbacks": 0,
+  "seam_violations": [
+    7954,
+    2930
+  ],
+  "nav_anchors": 2511,
+  "nav_edges": 11598,
+  "nav_giant_component_pct": 95.6,
+  "loot_spots": 48,
+  "player_start": [
+    122,
+    100
+  ],
+  "enemy_start": [
+    134,
+    100
+  ],
+  "interiors": {
+    "rooms": {
+      "treehouse1": {
+        "layout": "FortreeCity_House1",
+        "rect": [
+          0,
+          202,
+          8,
+          6
+        ],
+        "pair": [
+          "Building",
+          "GenericBuilding"
+        ],
+        "exit": [
+          3,
+          207
+        ],
+        "exit_faces_down": true,
+        "lair": false,
+        "legend": "0",
+        "arrival": [
+          52,
+          3302
+        ],
+        "loot": [
+          3
+        ],
+        "floor_cells": 26,
+        "pruned_cells": 0
+      },
+      "treehouse2": {
+        "layout": "FortreeCity_House2",
+        "rect": [
+          24,
+          202,
+          8,
+          6
+        ],
+        "pair": [
+          "Building",
+          "GenericBuilding"
+        ],
+        "exit": [
+          27,
+          207
+        ],
+        "exit_faces_down": true,
+        "lair": false,
+        "legend": "0",
+        "arrival": [
+          436,
+          3302
+        ],
+        "loot": [
+          3
+        ],
+        "floor_cells": 24,
+        "pruned_cells": 0
+      },
+      "treehouse3": {
+        "layout": "FortreeCity_House1",
+        "rect": [
+          48,
+          202,
+          8,
+          6
+        ],
+        "pair": [
+          "Building",
+          "GenericBuilding"
+        ],
+        "exit": [
+          51,
+          207
+        ],
+        "exit_faces_down": true,
+        "lair": false,
+        "legend": "0",
+        "arrival": [
+          820,
+          3302
+        ],
+        "loot": [
+          3
+        ],
+        "floor_cells": 26,
+        "pruned_cells": 0
+      },
+      "mewtwo": {
+        "layout": "Route119_WeatherInstitute_1F",
+        "rect": [
+          72,
+          202,
+          20,
+          13
+        ],
+        "pair": [
+          "Building",
+          "Lab"
+        ],
+        "exit": [
+          81,
+          214
+        ],
+        "exit_faces_down": true,
+        "lair": true,
+        "legend": "SPECIES_MEWTWO",
+        "arrival": [
+          1304,
+          3410
+        ],
+        "loot": [
+          4,
+          3
+        ],
+        "floor_cells": 154,
+        "pruned_cells": 0
+      },
+      "lugia": {
+        "layout": "NavelRock_Bottom",
+        "rect": [
+          108,
+          202,
+          22,
+          22
+        ],
+        "pair": [
+          "General",
+          "NavelRock"
+        ],
+        "exit": [
+          122,
+          221
+        ],
+        "exit_faces_down": false,
+        "lair": true,
+        "legend": "SPECIES_LUGIA",
+        "arrival": [
+          1944,
+          3550
+        ],
+        "loot": [
+          4,
+          3
+        ],
+        "floor_cells": 28,
+        "pruned_cells": 1
+      },
+      "hooh": {
+        "layout": "NavelRock_Top",
+        "rect": [
+          146,
+          202,
+          25,
+          28
+        ],
+        "pair": [
+          "General",
+          "NavelRock"
+        ],
+        "exit": [
+          159,
+          222
+        ],
+        "exit_faces_down": false,
+        "lair": true,
+        "legend": "SPECIES_HO_OH",
+        "arrival": [
+          2542,
+          3548
+        ],
+        "loot": [
+          4,
+          3
+        ],
+        "floor_cells": 37,
+        "pruned_cells": 0
+      },
+      "kyogre": {
+        "layout": "SeafloorCavern_Room9",
+        "rect": [
+          187,
+          202,
+          27,
+          46
+        ],
+        "pair": [
+          "General",
+          "Cave"
+        ],
+        "exit": [
+          192,
+          206
+        ],
+        "exit_faces_down": false,
+        "lair": true,
+        "legend": "SPECIES_KYOGRE",
+        "arrival": [
+          3070,
+          3292
+        ],
+        "loot": [
+          4,
+          3
+        ],
+        "floor_cells": 233,
+        "pruned_cells": 65
+      },
+      "rayquaza": {
+        "layout": "SkyPillar_Top",
+        "rect": [
+          0,
+          258,
+          27,
+          24
+        ],
+        "pair": [
+          "General",
+          "Pacifidlog"
+        ],
+        "exit": [
+          16,
+          272
+        ],
+        "exit_faces_down": false,
+        "lair": true,
+        "legend": "SPECIES_RAYQUAZA",
+        "arrival": [
+          256,
+          4374
+        ],
+        "loot": [
+          4,
+          3
+        ],
+        "floor_cells": 65,
+        "pruned_cells": 279
+      },
+      "house1": {
+        "layout": "FallarborTown_CozmosHouse",
+        "rect": [
+          43,
+          258,
+          10,
+          9
+        ],
+        "pair": [
+          "Building",
+          "GenericBuilding"
+        ],
+        "exit": [
+          46,
+          266
+        ],
+        "exit_faces_down": true,
+        "lair": false,
+        "legend": "0",
+        "arrival": [
+          744,
+          4242
+        ],
+        "loot": [
+          3
+        ],
+        "floor_cells": 63,
+        "pruned_cells": 2
+      },
+      "house2": {
+        "layout": "FallarborTown_CozmosHouse",
+        "rect": [
+          69,
+          258,
+          10,
+          9
+        ],
+        "pair": [
+          "Building",
+          "GenericBuilding"
+        ],
+        "exit": [
+          72,
+          266
+        ],
+        "exit_faces_down": true,
+        "lair": false,
+        "legend": "0",
+        "arrival": [
+          1160,
+          4242
+        ],
+        "loot": [
+          3
+        ],
+        "floor_cells": 63,
+        "pruned_cells": 2
+      },
+      "house3": {
+        "layout": "FallarborTown_CozmosHouse",
+        "rect": [
+          95,
+          258,
+          10,
+          9
+        ],
+        "pair": [
+          "Building",
+          "GenericBuilding"
+        ],
+        "exit": [
+          98,
+          266
+        ],
+        "exit_faces_down": true,
+        "lair": false,
+        "legend": "0",
+        "arrival": [
+          1576,
+          4242
+        ],
+        "loot": [
+          3
+        ],
+        "floor_cells": 63,
+        "pruned_cells": 2
+      }
+    },
+    "doors": [
+      {
+        "cell": [
+          214,
+          43
+        ],
+        "room": "mewtwo",
+        "kind": "door",
+        "outside": [
+          3432,
+          718
+        ]
+      },
+      {
+        "cell": [
+          214,
+          167
+        ],
+        "room": "hooh",
+        "kind": "door",
+        "outside": [
+          3432,
+          2702
+        ]
+      },
+      {
+        "cell": [
+          19,
+          38
+        ],
+        "room": "treehouse1",
+        "kind": "door",
+        "outside": [
+          312,
+          638
+        ]
+      },
+      {
+        "cell": [
+          26,
+          38
+        ],
+        "room": "treehouse2",
+        "kind": "door",
+        "outside": [
+          420,
+          632
+        ]
+      },
+      {
+        "cell": [
+          34,
+          38
+        ],
+        "room": "treehouse3",
+        "kind": "door",
+        "outside": [
+          552,
+          638
+        ]
+      },
+      {
+        "cell": [
+          41,
+          37
+        ],
+        "room": "lugia",
+        "kind": "door",
+        "outside": [
+          664,
+          622
+        ]
+      },
+      {
+        "cell": [
+          84,
+          105
+        ],
+        "room": "house1",
+        "kind": "door",
+        "outside": [
+          1352,
+          1710
+        ]
+      },
+      {
+        "cell": [
+          146,
+          158
+        ],
+        "room": "house2",
+        "kind": "door",
+        "outside": [
+          2344,
+          2558
+        ]
+      },
+      {
+        "cell": [
+          182,
+          121
+        ],
+        "room": "house3",
+        "kind": "door",
+        "outside": [
+          2920,
+          1966
+        ]
+      },
+      {
+        "cell": [
+          39,
+          152
+        ],
+        "room": "kyogre",
+        "kind": "cave",
+        "outside": [
+          632,
+          2462
+        ]
+      },
+      {
+        "cell": [
+          123,
+          22
+        ],
+        "room": "rayquaza",
+        "kind": "cave",
+        "outside": [
+          1976,
+          382
+        ]
+      }
+    ],
+    "pairs": [
+      [
+        "General",
+        "Fortree"
+      ],
+      [
+        "Building",
+        "GenericBuilding"
+      ],
+      [
+        "Building",
+        "Lab"
+      ],
+      [
+        "General",
+        "NavelRock"
+      ],
+      [
+        "General",
+        "Cave"
+      ],
+      [
+        "General",
+        "Pacifidlog"
+      ]
+    ],
+    "total_rows": 284
+  },
+  "doors_reachable": {
+    "mewtwo@214,43": true,
+    "hooh@214,167": true,
+    "treehouse1@19,38": true,
+    "treehouse2@26,38": true,
+    "treehouse3@34,38": true,
+    "lugia@41,37": true,
+    "house1@84,105": true,
+    "house2@146,158": true,
+    "house3@182,121": true,
+    "kyogre@39,152": true,
+    "rayquaza@123,22": true
+  },
+  "wild_houses": [
+    [
+      83,
+      102
+    ],
+    [
+      145,
+      155
+    ],
+    [
+      181,
+      118
+    ]
+  ],
+  "not_claimed": [
+    "destructible cover",
+    "legendary boss encounters"
+  ]
+}
