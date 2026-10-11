@@ -20,7 +20,7 @@ Nothing here is Delta-verified; that is the owner's playtest.
 | Gate | Status | Evidence |
 |---|---|---|
 | A Reproducible build | PASS | Clean CI assembly from pinned V11.1 inputs; ROM header/size/SHA in manifest; EWRAM 99.66%, IWRAM 94.27%, ROM 97.95% (slice) / 98.45% (island) |
-| B Game-time cadence | PASS | Simulation steps per emulated frame 95-99% idle/4 directions/attacking (slice) and 97-99% idle/travel E/N/W (island, AI active). Render rate ~40% (about 30 fps visuals): see limits |
+| B Game-time cadence | PASS | Simulation 99-100% of real time in every biome and on long travel. World render locked at 30 fps (every frame advances exactly two 60 Hz steps); walking window: 98% of frames on time, 2% one VBlank late |
 | B Cross-chunk streaming | PASS | World telemetry: chunk crossings, no rebuild resets during travel; island travel spans many 256px chunks |
 | C Interactive terrain | PASS (telemetry + screenshots) | Collision/water/bridge/concealment/projectile-block audit flags; tall-grass concealment beyond 48px for AI, player auto-lock and the map. Video walkthrough not produced |
 | D True 2v2 | PASS (first slice) | Partner and enemy wing both fire and land damaging hits; both enemies take damage and KO; zero friendly hits; enemy lead KO promoted its wing in the island run. Player-side promotion not yet observed in a run |
@@ -35,6 +35,8 @@ Nothing here is Delta-verified; that is the owner's playtest.
 | I Room pickups | PASS | Houses: SUPPLIES (both members +40% HP). Lairs: CACHE (+1 ATK/DEF/SPD) and SUPPLIES. Popups "TEAM HEALED" / "TEAM CACHE +1 ALL" |
 | I Biomes + clearings | PASS (island) | Five biomes on native secondaries streamed per region (woodland/Fortree, desert/Mauville, mountain/Fallarbor, volcano/Lavaridge, beach/Slateport) with primary-only belts; 16 named clearings with native landmark prefabs, cover props and >=2 exits; walked and cadence-checked in every biome (95-100%) |
 | I Cover | PASS (build audit) | Solid tiles (trees, rocks, cliffs, buildings, props) block movement and shots; water blocks land movement only; tall grass conceals; canopy layer draws behind actors and pickups. Invisible walls (ground art with collision) cleared and audited to 0 in CI |
+| AI boss runs | PASS (island) | Utility score per lair (storm coverage now and next circle, type matchup, HP, distance, crowding, late-game caution, comeback bonus); off-screen duos travel the nav graph to the door, fight a simulated round (win: the legendary joins them with heal and +2 levels; loss: chip damage stays on the legendary, duo escapes hurt or is out); the on-screen duo walks to the door and hands over. Harness: 2 attempts, 1 legendary taken by AI, 1 escape |
+| Storm rain | PASS (island) | Rain streaks drawn only over the part of the screen the storm covers (no free BG layer for fog), plus the violet tint and edge markers; 16 streaks visible outside the circle, none indoors |
 | AI Enemy duo brain | PASS (slice) / BUILT | FIGHT (focus fire on the weaker / better-matched target), RETREAT in bursts when hurt and behind (cover, tall grass, safe circle), LOOT when nothing visible, RAID lair caches and supplies through doors. Harness verified fight and retreat decisions; raids not yet observed in a run |
 | J 30 duos / 60 Pokémon | PASS (island) | Duo director: player + 29 AI duos (lobby level = player level minus 0-8). One duo fights at full fidelity; the rest run an off-screen sim (travel, storm, sim-vs-sim fights, lair raids). Nearest duo takes over on elimination; far/near swap. Island run: 29 -> 19 left, 11 swaps, 10 sim eliminations; LEFT counter and kill feed |
 | Legendary bosses | PASS (island) | Mewtwo/Lugia/Ho-Oh/Kyogre/Rayquaza wait in their lairs (level +5, double HP, +1 DEF/SPDEF). Beaten: joins as partner (old partner restored after the match), team full heal +1 ATK/DEF/SPD. Harness: Mewtwo active in lair, KO, joined as battler 2 |
@@ -97,3 +99,10 @@ compile, mGBA smoke (`wl_smoke.c` + `smoke*.commands`).
 - Fixed: travel cadence 49-63% (nav fallback scanned all anchors), 18-frame hitch on enemy duo swap (CreateMon learnset replay), lavender puddle-fill ponds, 827 invisible-wall cells, cramped Lugia/Ho-Oh/Rayquaza lairs; mountain and beach biomes doubled
 - Asset audit: no palm-tree tiles exist in Emerald outdoor tilesets (Slateport, Dewford, Pacifidlog, Battle Frontier checked); beach uses Slateport umbrellas/chairs/Seashore House and native sea rocks
 - Still open: render rate ~28-34% of VBlanks (simulation stays real-time); small square grass patches with a stone centre in the highlands; AI lair raid not yet observed in a run; shinies not done; no Delta playtest
+
+## Run 38179606785 (source 092ae12): boss AI, storm rain, frame pacing
+
+- Island 104 PASS / 0 FAIL, ROM SHA-256 b569a6258ebc08fe2abff57e43a02b0177a828cbf286310d0a93842354373b39 (artifact 11716224775)
+- Slice 46 PASS / 0 FAIL, ROM SHA-256 91f34d2ebd8cac89cf71b9930dc12899cd87bcfe3c0a2cbbffc08fbecf7153c6 (artifact 11717088819)
+- Frame pacing: locked 30 fps world render; cost cuts (no idle 240-colour palette reblend, memoised move profiles, cheaper pickup scans, HP-only HUD repaint, HUD work split over two frames, bounded A*, no arena-corner scan on the island, director mons built at level 1)
+- Boss runs and rain verified in the harness; invisible walls 0; no Delta playtest yet
