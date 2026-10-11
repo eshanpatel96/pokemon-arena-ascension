@@ -586,6 +586,8 @@ static void SquadDoorSim(void)
         else if (k == 1)
         { nx = WL_PLAYER_START_X; ny = WL_PLAYER_START_Y; }
         lead->x = nx * Q; lead->y = ny * Q;
+        if (k == 1 && sSquadWings[0].active && sSquadWings[0].alive)
+            SquadRegroup(&sSquadWings[0], lead);
     }
     if (!WildlandsWorld_PollDoor(lead->x / Q, lead->y / Q, lead->facing == FACE_UP,
             lead->facing == FACE_DOWN, &nx, &ny))
