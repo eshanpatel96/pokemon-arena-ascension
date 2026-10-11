@@ -13,7 +13,7 @@ rm -rf "$WORK"; mkdir -p "$WORK"
 
 push_dir() { # branch srcdir subdir message
   local branch="$1" src="$2" sub="$3" msg="$4" dir="$WORK/$branch"
-  if git ls-remote --exit-code "$REPO_URL" "refs/heads/$branch" >/dev/null 2>&1 && git clone -q --depth 1 --branch "$branch" "$REPO_URL" "$dir" 2>/dev/null; then :; else
+  if git -C "$WORK" ls-remote --exit-code "$REPO_URL" "refs/heads/$branch" >/dev/null 2>&1 && git -C "$WORK" clone -q --depth 1 --branch "$branch" "$REPO_URL" "$dir" 2>/dev/null; then :; else
     mkdir -p "$dir"; git -C "$dir" init -q; git -C "$dir" checkout -q --orphan "$branch"
     git -C "$dir" remote add origin "$REPO_URL"
   fi
