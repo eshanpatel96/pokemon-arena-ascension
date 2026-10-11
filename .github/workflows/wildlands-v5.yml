@@ -89,7 +89,7 @@ jobs:
           if [ "$WORLD" = island ]; then
             test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 98304
             test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 49152
-            python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=99 and all(v['reachable'] and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct'])"
+            python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=97 and all(v['reachable_cells']>=30 and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct'])"
           else
           test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 3840
           test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 1920

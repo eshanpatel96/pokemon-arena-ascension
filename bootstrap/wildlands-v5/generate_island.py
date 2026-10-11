@@ -39,6 +39,29 @@ for y in range(H):
         e, _ = model.pick(cls[y * W + x], cls, x, y, W, H, rng)
         world.append((e if e is not None else 1) & 0x0FFF)
 
+# Legendary lairs: authentic native-scale Route 119/120 + Fortree structures
+# stamped into the reserved pockets (same General+Fortree tileset pair).
+# (layout, x, y, w, h) crops; all are scenery/cover, none enterable.
+PREFABS = {
+    'mewtwo':   ('Route119', 0, 22, 16, 14),   # Weather Institute -> Research Facility
+    'kyogre':   ('Route120', 12, 12, 18, 16),  # cave mound in bridged pond basin -> Abyssal Basin
+    'rayquaza': ('Route119', 14, 18, 18, 20),  # waterfall gorge, log bridges, stairs -> Sky Highlands
+    'hooh':     ('Route120', 1, 48, 16, 16),   # Ancient Tomb boulder ring -> Ember Temple (stone)
+    'lugia':    ('FortreeCity', 6, 0, 30, 6),  # treetop lookouts + rope bridges -> Tempest Shrine
+}
+stamped = {}
+for name, (layout, sx, sy, sw, sh) in PREFABS.items():
+    L = json.load(open(root / 'data/layouts/layouts.json'))['layouts']
+    lay = next(l for l in L if l and l['name'] == layout + '_Layout')
+    src = words(root / lay['blockdata_filepath'])
+    bx, by, bw, bh = boxes[name][:4]
+    ox = max(1, min(W - sw - 1, bx + bw // 2 - sw // 2))
+    oy = max(1, min(H - sh - 1, by + bh // 2 - sh // 2))
+    for yy in range(sh):
+        for xx in range(sw):
+            world[(oy + yy) * W + ox + xx] = src[(sy + yy) * lay['width'] + sx + xx] & 0x0FFF
+    stamped[name] = (ox, oy, sw, sh, layout)
+
 primary_attr = words(root / 'data/tilesets/primary/general/metatile_attributes.bin')
 secondary_attr = words(root / 'data/tilesets/secondary/fortree/metatile_attributes.bin')
 terrain = build_table(root, world, primary_attr, secondary_attr)
@@ -57,8 +80,13 @@ def walkable(x, y):
 # native path metatile so routes never depend on Surf.
 path_tile = model.t0[PATH].most_common(1)[0][0] & 0x0FFF
 fixed = 0
+in_prefab = set()
+for ox, oy, sw, sh, _l in stamped.values():
+    for yy in range(oy, oy + sh):
+        for xx in range(ox, ox + sw):
+            in_prefab.add(yy * W + xx)
 for i, c in enumerate(plan):
-    if c in (BRIDGE, PATH, LAIR) and not walkable(i % W, i // W):
+    if c in (BRIDGE, PATH) and i not in in_prefab and not walkable(i % W, i // W):
         world[i] = path_tile
         fixed += 1
 terrain = build_table(root, world, primary_attr, secondary_attr)
@@ -86,8 +114,8 @@ land = sum(1 for y in range(H) for x in range(W) if walkable(x, y))
 reach = len(seen)
 lair_reach = {}
 for name, b in boxes.items():
-    x0, y0, w, h = b[:4]
-    lair_reach[name] = any((x, y) in seen for y in range(y0, y0 + h) for x in range(x0, x0 + w))
+    x0, y0, w, h = stamped[name][:4] if name in stamped else b[:4]
+    lair_reach[name] = sum(1 for y in range(y0, y0 + h) for x in range(x0, x0 + w) if (x, y) in seen)
 
 # Spawns for the duo practice match: two reachable points ~12 metatiles apart
 # in the central wilds.
@@ -155,7 +183,9 @@ manifest = {
     'source_plan': 'docs/art/wildlands-map-concept-v3.png -> island_plan.py (semantic only)',
     'land_metatiles': land, 'reachable_metatiles': reach,
     'reachable_pct': round(100 * reach / max(1, land), 2),
-    'lairs': {k: {'box': list(v[:4]), 'approaches': list(v[4]) if len(v) > 4 else [], 'reachable': lair_reach[k]}
+    'lairs': {k: {'box': list(v[:4]), 'approaches': list(v[4]) if len(v) > 4 else [],
+                  'reachable': lair_reach[k] > 0, 'reachable_cells': lair_reach[k],
+                  'prefab': stamped.get(k, [None])[-1] if k in stamped else None}
               for k, v in boxes.items()},
     'bridge_fallbacks': fixed, 'nav_anchors': len(nav), 'loot_spots': len(loot),
     'player_start': P, 'enemy_start': E,
