@@ -487,6 +487,8 @@ EWRAM_DATA u16 gWildlandsLoop[4] = {};
 // maxima (scanlines): [0] simulation steps [1] render [2] world VBlank streaming
 // [3] whole callback [4] renders over 400 scanlines [5] last sim length
 EWRAM_DATA u16 gWildlandsSpike[6] = {};
+// maxima (scanlines): [0] SquadSimStep (zone, loot, doors, director, wings) [1] TickEnemy
+EWRAM_DATA u16 gWildlandsSpikeSim[2] = {};
 static void LootInit(void);
 static void LootTick(void);
 static void LootDestroy(void);
@@ -2865,7 +2867,8 @@ static void CB2_Arena(void)
         {
         if (simStep) { if (sArena.resultTimer || !sArena.active) break; gMain.newKeys = 0; }
         sArena.frame++;
-        SquadSimStep();
+        {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; SquadSimStep();
+         q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[0])gWildlandsSpikeSim[0]=q1-q0;}
         for(i=0;i<2;i++)
             if(!sArena.bodies[i].shotTimer && !sArena.bodies[i].actionLife
                 && !ArenaMovePP(i,sArena.bodies[i].moveSlot))
@@ -2899,7 +2902,8 @@ static void CB2_Arena(void)
                 now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
                 gArenaFrameTelemetry.scanlines[0]=now-phaseStamp;phaseStamp=now;
                 if(sCapture.state!=ARENA_CAPTURE_AIM)TickPlayer();
-                TickEnemy();
+                {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; TickEnemy();
+                 q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}
                 if(WildlandsWorld_Active())
                 {
                     WildlandsWorld_TickBody(0,sArena.bodies[0].x/Q,sArena.bodies[0].y/Q);

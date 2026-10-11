@@ -100,8 +100,8 @@ static void ZonePickNext(void)
 // for fog; all four carry the HUD and the three terrain layers).
 // Rows of the 8x8 streak tile (4bpp): blue tail, white head.
 static const u32 sZoneRainTile[8] = {
-    0x06000000, 0x06000000, 0x00600000, 0x00600000,
-    0x00020000, 0x00020000, 0x00002000, 0x00002000,
+    0x66000000, 0x06600000, 0x06600000, 0x00660000,
+    0x00226000, 0x00022000, 0x00022000, 0x00002200,
 };
 EWRAM_DATA u8 gWildlandsRainVisible = 0;
 
@@ -121,7 +121,6 @@ static void ZoneCreateRain(void)
             struct Sprite *r = &gSprites[sZone.rain[i]];
             r->invisible = TRUE;
             r->animPaused = TRUE;
-            r->oam.objMode = ST_OAM_OBJ_BLEND;
             r->oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG);
         }
     }
