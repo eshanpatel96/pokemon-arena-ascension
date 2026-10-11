@@ -162,7 +162,7 @@ rate render-idle 300 0 0
 dump frameIdle gArenaFrameTelemetry 10
 dump renderIdle gArenaRenderTelemetry 4
 dump profIdle gWildlandsProfile 6
-dump loopIdle gWildlandsLoop 2
+dumph loopIdle gWildlandsLoop 0 4
 ratesym idle gWildlandsProfile 20 2 300 0 95
 prof idle-fight 120 0
 frames 120 16
@@ -188,7 +188,7 @@ ratesym travel-east gWildlandsProfile 20 2 600 16 95
 dump frameTravel gArenaFrameTelemetry 10
 dump renderTravel gArenaRenderTelemetry 4
 rate render-walk 300 16 0
-dump loopWalk gWildlandsLoop 2
+dumph loopWalk gWildlandsLoop 0 4
 snap 04-east-far
 ratesym travel-north gWildlandsProfile 20 2 600 64 95
 snap 05-north
@@ -216,7 +216,7 @@ dump hitchProf gWildlandsHitch 6
 poke gWildlandsZoneTestSpeed 0 2 65535
 poke gWildlandsBossTestBias 0 1 120
 frames 5400 0
-dump boss gWildlandsBossTelemetry 4
+dumph boss gWildlandsBossTelemetry 0 12
 dump bossDirector gWildlandsDirectorTelemetry 8
 expectmin gWildlandsBossTelemetry 0 2 1
 poke gWildlandsBossTestBias 0 1 0
@@ -226,6 +226,6 @@ poke gWildlandsTestPeace 0 1 1
 poke gWildlandsZoneTestSpeed 0 2 400
 frames 300 0
 snap 30-storm-outside
-dump rain gWildlandsRainVisible 1
+dumph rain gWildlandsRainVisible 0 1
 expectmin gWildlandsRainVisible 0 1 4
 dump zoneEnd gWildlandsZoneTelemetry 16

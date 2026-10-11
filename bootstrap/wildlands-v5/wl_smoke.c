@@ -252,6 +252,7 @@ static int commands(const char *path) {
             char name[300];snprintf(name,sizeof(name),"%s+%u <= %u (got %u)",arg,offset,expected,value);
             check(name,a && value<=expected);
         }
+        else if(sscanf(line,"dumph %99s %239s %u %u",cmd,arg,&offset,&n)==4)dump_halves(cmd,arg,offset,n);
         else if(sscanf(line,"dump %99s %239s %u",cmd,arg,&n)==3)dump_words(cmd,arg,n);
         else if(sscanf(line,"expect %239s %u %u %u",arg,&offset,&width,&expected)==4) {
             uint32_t a=symbol(arg);unsigned value=width==1?rd8(a+offset):width==2?rd16(a+offset):rd32(a+offset);
