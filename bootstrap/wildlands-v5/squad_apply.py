@@ -339,6 +339,31 @@ patch(A, '    CaptureHud();\n    sArena.hudDirty = FALSE;\n',
 # Enemy goal choice: the arena-corner fallback scan is meaningless on the island.
 patch(A, '        if(i==8&&best!=0x7FFFFFFF)break;\n', '        if(i==8&&(best!=0x7FFFFFFF||WildlandsWorld_Active()))break;\n')
 
+# HUD: an HP-only change (the common case: hits, storm ticks) repaints just
+# that side's bar and number instead of the whole panel and both names.
+patch('src/arena_hud.inc', '    // One small authored background; preserve the terrain through alpha corners.\n',
+      '    if(sHudCached && sHudLastMax[0]==gBattleMons[0].maxHP && sHudLastMax[1]==gBattleMons[1].maxHP\n'
+      '        && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species\n'
+      '        && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level\n'
+      '        && sHudWingKey==WildlandsHudWingKey())\n'
+      '    {\n'
+      '        for(side=0;side<2;side++)\n'
+      '        {\n'
+      '            const struct BattlePokemon *mon=&gBattleMons[side];\n'
+      '            u32 bar=side?129:8,fill=mon->maxHP?mon->hp*102/mon->maxHP:0;\n'
+      '            u8 color=mon->hp*5<=mon->maxHP?6:mon->hp*2<=mon->maxHP?7:5;\n'
+      '            if(sHudLastHp[side]==mon->hp)continue;\n'
+      '            if(mon->hp&&!fill)fill=1;\n'
+      '            HudRect(side?126:5,15,109,7,1);\n'
+      '            HudRect(bar,13,102,8,12);HudRect(bar,13,fill,1,4);HudRect(bar,14,fill,7,color);\n'
+      '            ConvertIntToDecimalStringN(text,mon->hp,STR_CONV_MODE_LEFT_ALIGN,3);\n'
+      '            HudTiny(bar+46,16,text,9,3);HudTiny(bar+45,15,text,4,3);\n'
+      '            sHudLastHp[side]=mon->hp;\n'
+      '        }\n'
+      '        return;\n'
+      '    }\n'
+      '    // One small authored background; preserve the terrain through alpha corners.\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',
