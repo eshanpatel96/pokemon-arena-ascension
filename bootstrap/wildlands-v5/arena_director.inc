@@ -621,6 +621,12 @@ static void DirSimOne(u8 i)
     {
         struct ArenaPoint wp;
         u16 sp = d->species[d->hp[0] ? 0 : 1];
+        s32 sx = dist > 48 ? dx * 48 / dist : dx, sy = dist > 48 ? dy * 48 / dist : dy;
+        if (dist && WildlandsWorld_SpeciesLineClear(sp, d->x, d->y, d->x + sx, d->y + sy, 6))
+        {
+            d->x += sx; d->y += sy;
+            return;
+        }
         if (WildlandsWorld_NextWaypointSpecies(sp, d->x, d->y, d->gx, d->gy, &wp))
         {
             s32 wx = wp.x - d->x, wy = wp.y - d->y, wd = max(Abs(wx), Abs(wy));
