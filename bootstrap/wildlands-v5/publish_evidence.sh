@@ -12,7 +12,8 @@ WORK="${RUNNER_TEMP:-/tmp}/publish"
 rm -rf "$WORK"; mkdir -p "$WORK"
 
 push_dir() { # branch srcdir subdir message
-  local branch="$1" src="$2" sub="$3" msg="$4" dir="$WORK/$branch"
+  local branch="$1" src="$2" sub="$3" msg="$4"
+  local dir="$WORK/$branch"
   local G="git -c http.extraheader= -c http.https://github.com/.extraheader= -C $dir"
   rm -rf "$dir"; mkdir -p "$dir"
   $G init -q; $G remote add origin "$REPO_URL"
