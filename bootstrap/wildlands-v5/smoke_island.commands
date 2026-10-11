@@ -254,6 +254,18 @@ dump bossDirector gWildlandsDirectorTelemetry 8
 expectmin gWildlandsBossTelemetry 0 2 1
 poke gWildlandsBossTestBias 0 1 0
 poke gWildlandsZoneTestSpeed 0 2 0
+# ---- Storm rain: shrink to the second circle and stand outside it ----
+poke gWildlandsTestPeace 0 1 1
+poke gWildlandsTestWarp 0 1 13
+frames 30 0
+poke gWildlandsZoneTestSpeed 0 2 400
+frames 33 0
+poke gWildlandsZoneTestSpeed 0 2 65535
+frames 30 0
+snap 29-storm-rain
+dump zoneRain gWildlandsZoneTelemetry 16
+dumph rainA gWildlandsRainVisible 0 1
+expectmin gWildlandsRainVisible 0 1 4
 # ---- Storm tint: run the storm fast until the player is outside it ----
 poke gWildlandsTestPeace 0 1 1
 poke gWildlandsZoneTestSpeed 0 2 400
