@@ -187,13 +187,29 @@ void WildlandsWorld_LoadGraphics(void)
         return;
 
     // BG1/BG2/BG3 all reference the same unmodified Emerald General+Fortree
-    // 4bpp tile atlas. BG0 remains the native Arena HUD.
+    // 4bpp tile atlas. BG0 remains the native Arena HUD. Update the engine's
+    // BG control structs as well as the hardware registers: ShowBg() rebuilds
+    // BGCNT from these structs and otherwise restores the legacy Arena BG1
+    // 8bpp/BG2 charbase-3 settings after this function returns.
+    SetBgAttribute(1, BG_ATTR_CHARBASEINDEX, 1);
+    SetBgAttribute(1, BG_ATTR_MAPBASEINDEX, 30);
+    SetBgAttribute(1, BG_ATTR_PALETTEMODE, 0);
+    SetBgAttribute(1, BG_ATTR_PRIORITY, 2);
+    SetBgAttribute(2, BG_ATTR_CHARBASEINDEX, 1);
+    SetBgAttribute(2, BG_ATTR_MAPBASEINDEX, 29);
+    SetBgAttribute(2, BG_ATTR_PALETTEMODE, 0);
+    SetBgAttribute(2, BG_ATTR_PRIORITY, 0);
+    SetBgAttribute(3, BG_ATTR_CHARBASEINDEX, 1);
+    SetBgAttribute(3, BG_ATTR_MAPBASEINDEX, 28);
+    SetBgAttribute(3, BG_ATTR_PALETTEMODE, 0);
+    SetBgAttribute(3, BG_ATTR_PRIORITY, 3);
+
     SetGpuReg(REG_OFFSET_BG1CNT, BGCNT_PRIORITY(2) | BGCNT_CHARBASE(1)
-        | BGCNT_SCREENBASE(30) | BGCNT_TXT256x256);
+        | BGCNT_SCREENBASE(30) | BGCNT_16COLOR | BGCNT_TXT256x256);
     SetGpuReg(REG_OFFSET_BG2CNT, BGCNT_PRIORITY(0) | BGCNT_CHARBASE(1)
-        | BGCNT_SCREENBASE(29) | BGCNT_TXT256x256);
+        | BGCNT_SCREENBASE(29) | BGCNT_16COLOR | BGCNT_TXT256x256);
     SetGpuReg(REG_OFFSET_BG3CNT, BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1)
-        | BGCNT_SCREENBASE(28) | BGCNT_TXT256x256);
+        | BGCNT_SCREENBASE(28) | BGCNT_16COLOR | BGCNT_TXT256x256);
 
     LZ77UnCompVram(gTileset_General.tiles, (void *)BG_CHAR_ADDR(1));
     LZ77UnCompVram(gTileset_Fortree.tiles,
@@ -472,12 +488,19 @@ static bool8 SpeciesCanWater(u16 species)
         || gSpeciesInfo[species].types[1] == TYPE_FLYING;
 }
 
+#define WL_WORLD_BODY_RADIUS 6
+
 static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
 {
     s32 dx, dy, steps, i, fx, fy, sx, sy;
     u8 terrain;
     if (!sActive)
         return TRUE;
+    // Arena's 10px combat body is intentionally wider than a one-metatile
+    // Emerald bridge/path. Keep combat hitboxes unchanged, but use a 6px field
+    // footprint so legal 16px paths and bridges remain traversable.
+    if (radius > WL_WORLD_BODY_RADIUS)
+        radius = WL_WORLD_BODY_RADIUS;
     dx = x2 - x1;
     dy = y2 - y1;
     steps = max(Abs32(dx), Abs32(dy)) / 4 + 1;
