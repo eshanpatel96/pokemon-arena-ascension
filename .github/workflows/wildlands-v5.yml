@@ -1,19 +1,20 @@
 name: Wildlands V5 World Validation
 on:
   push:
-    branches: [wildlands-v5-world-validation]
+    branches: [wildlands-v5-world-validation, wildlands-v5]
     paths:
       - '.github/workflows/wildlands-v5.yml'
       - 'bootstrap/wildlands-v5/**'
       - 'bootstrap/wildlands-v4/**'
       - 'bootstrap/arena-xl/**'
       - 'docs/WILDLANDS-V5*'
+      - 'bootstrap/v11-smoke.c'
   workflow_dispatch:
 concurrency:
   group: wildlands-v5-world-${{ github.ref }}
   cancel-in-progress: true
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   build-world:
@@ -194,3 +195,9 @@ jobs:
           name: WILDLANDS-V5-WORLD-RECOVERY
           path: recovery/
           if-no-files-found: warn
+
+      - name: Publish evidence and engine source to branches
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash bootstrap/wildlands-v5/publish_evidence.sh
