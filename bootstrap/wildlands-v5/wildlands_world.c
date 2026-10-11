@@ -615,7 +615,11 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     next->x = x;
     next->y = y;
     gWildlandsWorldTelemetry[10]++;
-    gWildlandsWorldAudit[5] = 1;
+    // Audit is monotonic: 1 means a route query occurred; 2 means at least
+    // one real terrain-valid route succeeded. Later failed replans must not
+    // erase proof that the AI already navigated the world successfully.
+    if (gWildlandsWorldAudit[5] < 1)
+        gWildlandsWorldAudit[5] = 1;
 
     // Most movement is open-terrain movement. Preserve the exact traversal
     // test and skip graph work entirely when the target is directly reachable.
