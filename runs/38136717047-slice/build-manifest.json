@@ -1,0 +1,43 @@
+{
+  "name": "Pokemon Wildlands V5 World Validation",
+  "source_commit": "cf36a10c27771a058a7f19643d79837e8750e36d",
+  "rom_sha256": "8c2c7ed1d76ac03bc79cec9466de58d140452e117bfb0e96f5ea30be0a7c1f6d",
+  "rom_bytes": 33554432,
+  "world_coordinate_space_pixels": [
+    4096,
+    3072
+  ],
+  "validation_slice_pixels": [
+    640,
+    768
+  ],
+  "terrain_source": "native Route120 + Fortree metatile data; no floor bitmap",
+  "controller": "native realtime Arena movement/dodge/attack/cooldown/hit path",
+  "rendering": "three streamed 4bpp Emerald metatile BG layers + native Arena OBJ actors",
+  "true_2v2": false,
+  "partner": "terrain-routing highlighted follower; non-damaging validation actor",
+  "thirty_duo_simulation": false,
+  "structures": {
+    "fortree_outpost": "cover/scenery only; not enterable in this validation"
+  },
+  "cosmetic_only": [
+    "Emerald tileset animations are static in this validation",
+    "Seismic Toss world sky cut uses blackout instead of the space backdrop",
+    "legacy destructible Arena prop sprites/fragments are disabled in world mode"
+  ],
+  "memory": {
+    "EWRAM": {
+      "used_bytes": 261260,
+      "usage_percent": 99.66
+    },
+    "IWRAM": {
+      "used_bytes": 30892,
+      "usage_percent": 94.27
+    },
+    "ROM": {
+      "used_bytes": 32867324,
+      "usage_percent": 97.95
+    }
+  },
+  "verification": "mGBA automated runtime only; iPhone Delta requires user playtest"
+}
