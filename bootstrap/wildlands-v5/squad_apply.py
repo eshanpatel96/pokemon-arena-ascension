@@ -116,6 +116,11 @@ patch(A, '''                        PlaySE(SE_M_MORNING_SUN);
     }
     CaptureTick();''')
 
+# Ball capture is not part of the battle royale: L+R launches matches and
+# must not raise the capture-aim prompt over the Wildlands HUD.
+patch(A, '    if(!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();',
+      '    if(!WildlandsWorld_Active()&&!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();')
+
 # Profiling: camera/stream, sprite animation, OAM build (scanlines).
 patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer();',
       '    {u32 p0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,p1;\n'
