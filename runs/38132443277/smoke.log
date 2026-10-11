@@ -1,0 +1,42 @@
+HOST ABI sizeof(mCore)=5480 savedataClone_offset=5408
+TEST FLASH BACKEND: fresh erased 131072-byte save attached; runtime save/export still must pass.
+STATE 00-title frame=300 pc=080008c8 callback2=080c0fdd save_status=0 party=0 sb1=02025a28 map=0,0 pos=0,0 layout=0
+WORLD 00-title bgcnt=0700,0000,0000,0000 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+INPUT 00-title heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+STATE 01-lab frame=1594 pc=0000001c callback2=0809c8dd save_status=0 party=2 sb1=02025a28 map=26,110 pos=6,10 layout=58
+WORLD 01-lab bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+INPUT 01-lab heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CHECK PASS gWildlandsWorldAudit
+CHECK PASS gWildlandsWorldAudit
+CHECK PASS gWildlandsWorldAudit
+CHECK PASS gWildlandsPartnerTelemetry
+STATE 02-world-start frame=2331 pc=09cddc94 callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 02-world-start bgcnt=1f00,1e06,1d04,1c07 xl=1896,1408,1776,1328,1776,1328 audit=1,0,0,0,0,2,0,1 tele=3072,1,0,0,2,0,0,1024,3072,791,10,6,0,6,5,1
+INPUT 02-world-start heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=56 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=4 aiPaths=3 wall=0,0 capture=0 sendout=0/144 cbUpdates=56
+STATE 02a-first-right-frame frame=2332 pc=0000001c callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 02a-first-right-frame bgcnt=1f00,1e06,1d04,1c07 xl=1896,1408,1776,1328,1776,1328 audit=1,0,0,0,0,2,0,1 tele=3072,1,0,0,2,0,0,1024,3072,791,10,6,0,6,5,1
+INPUT 02a-first-right-frame heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=56 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=4 aiPaths=3 wall=0,0 capture=0 sendout=0/144 cbUpdates=56
+STATE 02a-move-30 frame=2361 pc=0809f8ce callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 02a-move-30 bgcnt=1f00,1e06,1d04,1c07 xl=1901,1408,1781,1328,1781,1328 audit=1,0,0,0,0,2,0,1 tele=3072,1,0,0,2,0,0,1024,3072,791,10,7,0,6,5,1
+INPUT 02a-move-30 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=60 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=4 aiPaths=3 wall=0,0 capture=0 sendout=0/144 cbUpdates=60
+STATE 02b-move-90 frame=2421 pc=09cddcb0 callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 02b-move-90 bgcnt=1f00,1e06,1d04,1c07 xl=1918,1408,1798,1328,1798,1328 audit=1,1,1,0,0,2,0,1 tele=3264,1,1,0,2,0,0,1088,3072,791,11,8,0,7,5,1
+INPUT 02b-move-90 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=69 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=4 aiPaths=3 wall=0,0 capture=0 sendout=0/144 cbUpdates=69
+STATE 02c-move-180 frame=2511 pc=09cddda0 callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 02c-move-180 bgcnt=1f00,1e06,1d04,1c07 xl=1943,1408,1823,1328,1823,1328 audit=1,1,1,0,0,2,0,1 tele=3552,1,1,0,2,0,0,1184,3072,791,13,9,0,7,5,1
+INPUT 02c-move-180 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=83 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=4 aiPaths=3 wall=0,0 capture=0 sendout=0/144 cbUpdates=83
+CHECK PASS gWildlandsWorldAudit
+CHECK PASS gWildlandsWorldAudit
+CHECK PASS gWildlandsWorldAudit
+STATE 03-crossing-fire frame=2511 pc=09cddda0 callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 03-crossing-fire bgcnt=1f00,1e06,1d04,1c07 xl=1943,1408,1823,1328,1823,1328 audit=1,1,1,0,0,2,0,1 tele=3552,1,1,0,2,0,0,1184,3072,791,13,9,0,7,5,1
+INPUT 03-crossing-fire heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=83 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=4 aiPaths=3 wall=0,0 capture=0 sendout=0/144 cbUpdates=83
+STATE 04-after-dodge frame=2570 pc=09cde71a callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 04-after-dodge bgcnt=1f00,1e06,1d04,1c07 xl=1990,1408,1870,1328,1870,1328 audit=1,1,1,0,0,2,0,1 tele=4128,1,1,0,2,0,0,1376,3072,791,14,9,0,7,5,1
+INPUT 04-after-dodge heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=92 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=4 aiPaths=3 wall=0,0 capture=0 sendout=0/144 cbUpdates=92
+STATE 05-water-probe frame=2650 pc=08086402 callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 05-water-probe bgcnt=1f00,1e06,1d04,1c07 xl=2001,1428,1881,1348,1881,1348 audit=1,1,1,0,1,2,0,1 tele=4512,1,1,0,10,0,4,1504,3072,791,17,9,0,7,5,1
+INPUT 05-water-probe heldRaw=0080 newRaw=0000 held=0080 new=0000 rtFrames=105 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=5 aiPaths=4 wall=0,0 capture=0 sendout=0/144 cbUpdates=105
+STATE 06-grass-probe frame=2770 pc=08086424 callback2=08050f69 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 06-grass-probe bgcnt=1f00,1e06,1d04,1c07 xl=2001,1391,1881,1311,1881,1311 audit=1,1,1,0,1,2,0,1 tele=4992,1,1,0,10,0,9,1664,3072,791,20,9,0,7,5,1
+INPUT 06-grass-probe heldRaw=0040 newRaw=0000 held=0040 new=0000 rtFrames=127 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=6 aiPaths=5 wall=0,0 capture=0 sendout=0/144 cbUpdates=127
