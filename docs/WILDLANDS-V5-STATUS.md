@@ -31,8 +31,10 @@ Nothing here is Delta-verified; that is the owner's playtest.
 | G Shinies | NOT DONE (audited feasible) | One 16-colour palette per Arena species shared by all frames; every actor owns an OBJ palette slot, so normal + shiny of one species can coexist. Needs a build-time shiny palette table; rarity undecided |
 | H Title | BUILT | Approved concept at native 240x160, 256 colours, caption removed |
 | I Island + landmarks | PASS (prototype) | 256x192 native metatiles from the concept plan; 97.4% of walkable land reachable on real collision; all five lairs reachable with 2-3 approaches; nav graph 2387 nodes |
-| I Enterable interiors | PASS | 11 rooms from real Emerald interior layouts, each rendered with its own native tileset pair (swapped under forced blank): Mewtwo = Weather Institute, Rayquaza = Sky Pillar summit, Lugia = Navel Rock depths, Ho-Oh = Navel Rock peak, Kyogre = Marine Cave chamber, 3 Fortree treehouses, 3 wilderness houses. Doors from native warp events plus cliff cave mouths; every door's outside cell is reachable on foot (build audit). Harness entered and exited all 11 doors on the island and the slice house; supplies pickup verified |
+| I Enterable interiors | PASS | Rooms from real Emerald interior layouts, each rendered with its own native tileset pair: Mewtwo = Weather Institute (154 floor cells), Rayquaza = Altering Cave (263), Lugia = Faraway Island grove (180), Ho-Oh = Birth Island summit (169), Kyogre = Seafloor Cavern chamber (233), 3 Fortree treehouses, 3 wilderness houses. Doors from native warp events plus cliff cave mouths; every door's outside cell is reachable on foot (build audit). Harness entered and exited all 11 doors on the island and the slice house; supplies pickup verified |
 | I Room pickups | PASS | Houses: SUPPLIES (both members +40% HP). Lairs: CACHE (+1 ATK/DEF/SPD) and SUPPLIES. Popups "TEAM HEALED" / "TEAM CACHE +1 ALL" |
+| I Biomes + clearings | PASS (island) | Five biomes on native secondaries streamed per region (woodland/Fortree, desert/Mauville, mountain/Fallarbor, volcano/Lavaridge, beach/Slateport) with primary-only belts; 16 named clearings with native landmark prefabs, cover props and >=2 exits; walked and cadence-checked in every biome (95-100%) |
+| I Cover | PASS (build audit) | Solid tiles (trees, rocks, cliffs, buildings, props) block movement and shots; water blocks land movement only; tall grass conceals; canopy layer draws behind actors and pickups. Invisible walls (ground art with collision) cleared and audited to 0 in CI |
 | AI Enemy duo brain | PASS (slice) / BUILT | FIGHT (focus fire on the weaker / better-matched target), RETREAT in bursts when hurt and behind (cover, tall grass, safe circle), LOOT when nothing visible, RAID lair caches and supplies through doors. Harness verified fight and retreat decisions; raids not yet observed in a run |
 | J 30 duos / 60 Pokémon | PASS (island) | Duo director: player + 29 AI duos (lobby level = player level minus 0-8). One duo fights at full fidelity; the rest run an off-screen sim (travel, storm, sim-vs-sim fights, lair raids). Nearest duo takes over on elimination; far/near swap. Island run: 29 -> 19 left, 11 swaps, 10 sim eliminations; LEFT counter and kill feed |
 | Legendary bosses | PASS (island) | Mewtwo/Lugia/Ho-Oh/Kyogre/Rayquaza wait in their lairs (level +5, double HP, +1 DEF/SPDEF). Beaten: joins as partner (old partner restored after the match), team full heal +1 ATK/DEF/SPD. Harness: Mewtwo active in lair, KO, joined as battler 2 |
@@ -87,3 +89,11 @@ palettes, seam blending, render-rate work (sprite count / OAM build).
 `squad_apply.py` (2v2, zone, loot, map, catch-up), `move_editor_apply.py`,
 `wildlands-v4/generate_ui.py`, `wildlands-v5/title.py`, native asset build,
 compile, mGBA smoke (`wl_smoke.c` + `smoke*.commands`).
+
+## Run 38172551959 (source a0fe30f): biome round 2
+
+- Island 66 PASS / 0 FAIL, ROM SHA-256 7cbd3fb23ba075bea5fe14256a0d6faa5e23640efeee157dccb2316552aebdd8 (artifact 11714796435)
+- Slice 45 PASS / 0 FAIL, ROM SHA-256 46ed572fa2950301491ed4304b35fa6deb9c0d81118a6e19162060252abf2930
+- Fixed: travel cadence 49-63% (nav fallback scanned all anchors), 18-frame hitch on enemy duo swap (CreateMon learnset replay), lavender puddle-fill ponds, 827 invisible-wall cells, cramped Lugia/Ho-Oh/Rayquaza lairs; mountain and beach biomes doubled
+- Asset audit: no palm-tree tiles exist in Emerald outdoor tilesets (Slateport, Dewford, Pacifidlog, Battle Frontier checked); beach uses Slateport umbrellas/chairs/Seashore House and native sea rocks
+- Still open: render rate ~28-34% of VBlanks (simulation stays real-time); small square grass patches with a stone centre in the highlands; AI lair raid not yet observed in a run; shinies not done; no Delta playtest
