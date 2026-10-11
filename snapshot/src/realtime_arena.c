@@ -478,6 +478,7 @@ static void LootTick(void);
 static void LootDestroy(void);
 static void MapDraw(void);
 EWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};
+EWRAM_DATA u16 gWildlandsProfile[12] = {};
 struct WildlandsPartnerActor
 {
     s32 x,y;
@@ -3090,9 +3091,14 @@ static void CB2_Arena(void)
     if (sArena.hudDirty || sHudRecovery!=RecoveryPips() || JOY_NEW(START_BUTTON | L_BUTTON | R_BUTTON)) DrawHud();
     gArenaRenderTelemetry[1]=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228-now;
     now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
+    {u32 p0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,p1;
     ArenaXL_UpdateCamera();
+    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;
     AnimateSprites();
+    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[7]=p1-p0;p0=p1;
     BuildOamBuffer();
+    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;
+    {u32 n=0,k;for(k=0;k<MAX_SPRITES;k++)if(gSprites[k].inUse)n++;gWildlandsProfile[9]=n;}}
     // BG0's paused picker must cover actors and attack sprites. Change only
     // this frame's OAM, so normal priorities return automatically on resume.
     for(i=0;i<128;i++)
