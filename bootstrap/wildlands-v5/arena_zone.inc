@@ -18,7 +18,6 @@
 #define ZONE_STAGES 4
 #define ZONE_MARKERS 12
 #define ZONE_RAIN 12
-#define ZONE_RAIN_TAG 0xA7E1
 
 enum { ZONE_EXPLORING, ZONE_WARNING, ZONE_SHRINKING, ZONE_SUDDEN_DEATH };
 
@@ -98,23 +97,20 @@ static void ZonePickNext(void)
 // Storm rain: translucent streaks drawn only over the part of the screen the
 // storm covers, so the safe edge reads at a glance (no free BG layer is left
 // for fog; all four carry the HUD and the three terrain layers).
-// Rows of the 8x8 streak tile (4bpp): blue tail, white head.
-static const u32 sZoneRainTile[8] = {
-    0x66000000, 0x06600000, 0x06600000, 0x00660000,
-    0x00226000, 0x00022000, 0x00022000, 0x00002200,
-};
+// The streak tile lives in the loot sheet (one extra tile after the gems):
+// that allocation is proven safe from the Arena's frame uploads.
 EWRAM_DATA u8 gWildlandsRainVisible = 0;
-// diagnostics: [0] rain tile start [1] rain[0] sprite id [2] its oam tileNum [3] priority | palette << 4 | objMode << 8 | affine << 12
+// diagnostics: [0] rain tile [1] rain[0] sprite id [2] its oam tileNum [3] priority | palette << 4 | objMode << 8 | affine << 12
 EWRAM_DATA u16 gWildlandsRainDiag[4] = {};
 
 static void ZoneCreateRain(void)
 {
-    struct SpriteSheet sheet = {sZoneRainTile, sizeof(sZoneRainTile), ZONE_RAIN_TAG};
     struct SpriteTemplate t = sShotTemplate;
+    u16 start = GetSpriteTileStartByTag(LOOT_TAG);
     u32 i;
-    t.tileTag = ZONE_RAIN_TAG;
-    if (GetSpriteTileStartByTag(ZONE_RAIN_TAG) == 0xFFFF)
-        LoadSpriteSheet(&sheet);
+    if (start == 0xFFFF)
+        return;
+    t.tileTag = LOOT_TAG;
     for (i = 0; i < ZONE_RAIN; i++)
     {
         sZone.rain[i] = CreateSprite(&t, 0, 0, 1);
@@ -123,6 +119,7 @@ static void ZoneCreateRain(void)
             struct Sprite *r = &gSprites[sZone.rain[i]];
             r->invisible = TRUE;
             r->animPaused = TRUE;
+            r->oam.tileNum = start + LOOT_TYPES * 4;
             r->oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG);
         }
     }
@@ -135,6 +132,8 @@ static void ZoneDrawRain(void)
     s32 r = sZone.r >> 8;
     bool8 show = sZone.active && !sArena.paused && WildlandsWorld_Active()
         && !WildlandsWorld_InRoom(camX + 120, camY + 80);
+    if (sZone.rain[0] == MAX_SPRITES && show && !(sArena.frame & 31))
+        ZoneCreateRain();
     for (i = 0; i < ZONE_RAIN; i++)
     {
         struct Sprite *spr;
@@ -155,7 +154,7 @@ static void ZoneDrawRain(void)
         n++;
     }
     gWildlandsRainVisible = n;
-    gWildlandsRainDiag[0] = GetSpriteTileStartByTag(ZONE_RAIN_TAG);
+    gWildlandsRainDiag[0] = GetSpriteTileStartByTag(LOOT_TAG);
     gWildlandsRainDiag[1] = sZone.rain[0];
     if (sZone.rain[0] != MAX_SPRITES)
     {
@@ -177,7 +176,6 @@ static void ZoneCreateMarkers(void)
             gSprites[sZone.markers[i]].invisible = TRUE;
         }
     }
-    ZoneCreateRain();
 }
 
 static void ZoneInit(void)
@@ -214,7 +212,6 @@ static void ZoneDestroy(void)
     for (i = 0; i < ZONE_RAIN; i++)
         if (sZone.rain[i] != MAX_SPRITES)
         { DestroySprite(&gSprites[sZone.rain[i]]); sZone.rain[i] = MAX_SPRITES; }
-    FreeSpriteTilesByTag(ZONE_RAIN_TAG);
 }
 
 // Squared distance from the circle edge test, pixels.

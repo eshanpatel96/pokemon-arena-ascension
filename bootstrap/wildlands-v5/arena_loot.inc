@@ -72,7 +72,12 @@ static const u16 sLootColors[10] = {
 
 static void LootLoadGraphics(void)
 {
-    u32 tiles[LOOT_TYPES * 32] = {0};
+    u32 tiles[LOOT_TYPES * 32 + 8] = {0};
+    // Extra tile for the storm rain streak (arena_zone.inc): blue tail, white head.
+    static const u32 sRainStreak[8] = {
+        0x66000000, 0x06600000, 0x06600000, 0x00660000,
+        0x00226000, 0x00022000, 0x00022000, 0x00002200,
+    };
     struct SpriteSheet sheet = {tiles, sizeof(tiles), LOOT_TAG};
     u32 t, x, y;
     // Code-native 16x16 gem per type: outline, body, shade, highlight.
@@ -96,6 +101,7 @@ static void LootLoadGraphics(void)
                     tiles[tile * 8 + y % 8] |= c << ((x % 8) * 4);
                 }
             }
+    memcpy(&tiles[LOOT_TYPES * 32], sRainStreak, sizeof(sRainStreak));
     LoadSpriteSheet(&sheet);
     if (IndexOfSpritePaletteTag(SHOT_TAG) != 0xFF)
         LoadPalette(sLootColors, OBJ_PLTT_ID(IndexOfSpritePaletteTag(SHOT_TAG)) + 5, sizeof(sLootColors));
