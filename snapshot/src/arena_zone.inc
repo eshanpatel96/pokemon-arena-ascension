@@ -104,6 +104,8 @@ static const u32 sZoneRainTile[8] = {
     0x00226000, 0x00022000, 0x00022000, 0x00002200,
 };
 EWRAM_DATA u8 gWildlandsRainVisible = 0;
+// diagnostics: [0] rain tile start [1] rain[0] sprite id [2] its oam tileNum [3] priority | palette << 4 | objMode << 8 | affine << 12
+EWRAM_DATA u16 gWildlandsRainDiag[4] = {};
 
 static void ZoneCreateRain(void)
 {
@@ -153,6 +155,14 @@ static void ZoneDrawRain(void)
         n++;
     }
     gWildlandsRainVisible = n;
+    gWildlandsRainDiag[0] = GetSpriteTileStartByTag(ZONE_RAIN_TAG);
+    gWildlandsRainDiag[1] = sZone.rain[0];
+    if (sZone.rain[0] != MAX_SPRITES)
+    {
+        struct Sprite *r0 = &gSprites[sZone.rain[0]];
+        gWildlandsRainDiag[2] = r0->oam.tileNum;
+        gWildlandsRainDiag[3] = r0->oam.priority | (r0->oam.paletteNum << 4) | (r0->oam.objMode << 8) | (r0->oam.affineMode << 12);
+    }
 }
 
 static void ZoneCreateMarkers(void)
