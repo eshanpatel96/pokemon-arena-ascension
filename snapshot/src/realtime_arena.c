@@ -455,6 +455,15 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+static void SquadInit(void);
+static void SquadTick(void);
+static void SquadDestroy(void);
+static bool8 SquadPromote(u8 side);
+struct ArenaShot;
+static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaMoveProfile *p, s16 oldX, s16 oldY);
+static void SquadEnemyRetarget(struct ArenaBody *body);
+extern EWRAM_DATA u32 gWildlandsSquadTelemetry[16];
+static EWRAM_DATA u8 sSquadShotOwner[SHOTS_COUNT] = {};
 struct WildlandsPartnerActor
 {
     s32 x,y;
@@ -1445,7 +1454,7 @@ static void CB2_ArenaInit(void)
         SetOamMatrix(gSprites[body->sprite].oam.matrixNum, body->art ? 0x100 : 0x200, 0, 0, body->art ? 0x100 : 0x200);
         body->drawnFrame = body->drawnDirection = 255;
     }
-    WildlandsPartner_Init();
+    SquadInit();
     sArena.cueSprite = CreateSprite(&sShotTemplate, 120, 32, 0);
     gSprites[sArena.cueSprite].oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG + 1);
     gSprites[sArena.cueSprite].invisible = TRUE;
@@ -1636,6 +1645,7 @@ static void Fire(u8 side, u8 slot, s32 targetX, s32 targetY)
         sArena.shots[i].vx = dx * profile->speed / len;
         sArena.shots[i].vy = dy * profile->speed / len;
         sArena.shots[i].side = side; sArena.shots[i].move = profile->move;
+        sSquadShotOwner[i] = 0;
         sArena.shots[i].life = profile->range * Q / profile->speed;
         sArena.shots[i].direction = body->shotFacing; sArena.shots[i].age = 0;
         sArena.shots[i].elementMask=0;
@@ -2077,7 +2087,7 @@ static void TickEnemy(void)
                 && WildlandsWorld_IsConcealed(sArena.bodies[0].x/Q,sArena.bodies[0].y/Q)
                 && ArenaNav_Distance(body->x/Q,body->y/Q,
                     sArena.bodies[0].x/Q,sArena.bodies[0].y/Q)>48))
-        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;}
+        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;SquadEnemyRetarget(body);}
         else gArenaCoverTelemetry[5]++;
         if(sDecoys[0].life && sDecoys[0].age>=24 && !SmokeBlocks(body->x/Q,body->y/Q,sDecoys[0].x,sDecoys[0].y))
         {
@@ -2248,7 +2258,7 @@ static void ApplyResolvedHit(u8 side,u16 move,s32 damage)
         }
         sArena.hudDirty=TRUE;
         PlaySE(move==MOVE_ABSORB?SE_M_ABSORB_2:SE_M_COMET_PUNCH);
-        if(!hp)
+        if(!hp && !SquadPromote(targetSide))
         {
             // Let a committed beam finish its visual release after a KO.
             // Damage/PP are already resolved; no further hits or input run.
@@ -2524,6 +2534,8 @@ static void DestroyShot(struct ArenaShot *shot)
     shot->life=0;
 }
 
+#include "arena_squad.inc"
+
 static void TickShots(void)
 {
     u32 i;
@@ -2558,7 +2570,8 @@ static void TickShots(void)
         {DestroyShot(shot);continue;}
         if(DecoySegment(shot->side^1,oldX,oldY,shot->x/Q,shot->y/Q,p->radius))
         {DestroyShot(shot);continue;}
-        if (ArenaMoves_SegmentHit(oldX,oldY,shot->x/Q,shot->y/Q,target->x/Q,target->y/Q,p->radius) && !target->dash)
+        if (SquadShotStep(i,shot,p,oldX,oldY)) {}
+        else if (ArenaMoves_SegmentHit(oldX,oldY,shot->x/Q,shot->y/Q,target->x/Q,target->y/Q,p->radius) && !target->dash)
         {
             if(SpecialInvulnerable(shot->side^1))gArenaWarpTossTelemetry[7]++;
             else{ApplyMoveHit(shot->side,shot->move);shot->life = 1;}
@@ -3025,7 +3038,7 @@ static void CB2_Arena(void)
     DecoyDraw();
     SpecialDraw();
     MonVisualScaleApply();
-    WildlandsPartner_Update();
+    SquadTick();
     CoverDraw();
     BarrierDraw();
     GuardDraw();
@@ -3125,7 +3138,7 @@ static void ArenaExit(bool8 fainted)
         }
         gSprites[sArena.aimSprite].invisible=TRUE;
         gSprites[sArena.cueSprite].invisible=TRUE;
-        WildlandsPartner_Destroy();
+        SquadDestroy();
         BuildOamBuffer();ArenaRender_Ready();
         gMain.callback1=sArena.savedCB1;
         RealtimeArena_ResumeBattle(TRUE);
@@ -3134,7 +3147,7 @@ static void ArenaExit(bool8 fainted)
     }
     SetVBlankCallback(NULL);
     ArenaFeedback_Destroy();
-    WildlandsPartner_Destroy();
+    SquadDestroy();
     for (i = 0; i < 2; i++)
     {
         struct Sprite *sprite = &gSprites[sArena.bodies[i].sprite];

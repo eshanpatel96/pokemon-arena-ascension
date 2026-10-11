@@ -18,6 +18,8 @@ extern const struct Tileset gTileset_General;
 extern const struct Tileset gTileset_Fortree;
 
 static const u16 sWorldSlice[] = INCBIN_U16("data/wildlands_world/slice.bin");
+// One flag byte per metatile, generated at build time (terrain_flags.py).
+static const u8 sWorldTerrain[] = INCBIN_U8("data/wildlands_world/terrain.bin");
 static const struct ArenaPoint sNavPoints[] =
 {
 #include "wildlands_world_nav.inc"
@@ -375,53 +377,14 @@ void WildlandsWorld_RecordProjectileBlock(void)
         gWildlandsWorldAudit[6] = 1;
 }
 
-static bool8 IsBridgeBehavior(u8 behavior)
-{
-    return MetatileBehavior_IsBridgeOverWater(behavior)
-        || MetatileBehavior_IsBridgeOverWaterNoEdge(behavior)
-        || MetatileBehavior_IsFortreeBridge(behavior);
-}
-
 static u8 TerrainEntry(s16 mx, s16 my)
 {
-    u16 entry;
-    u16 attr;
-    u8 behavior;
-    u8 flags = 0;
-
+    // Hot path: a single ROM byte read. The former per-sample chain of ~15
+    // out-of-line MetatileBehavior_* calls (x9 footprint samples x every 4px of
+    // every swept line) consumed several frames per Arena update.
     if (!InSlice(mx, my))
         return WL_TERRAIN_SOLID | WL_TERRAIN_DEEP_WATER | WL_TERRAIN_WET;
-
-    entry = EntryAtMetatile(mx, my);
-    attr = MetatileAttr(entry);
-    behavior = UNPACK_BEHAVIOR(attr);
-
-    if (UNPACK_COLLISION(entry)
-        || MetatileBehavior_IsEastBlocked(behavior)
-        || MetatileBehavior_IsWestBlocked(behavior)
-        || MetatileBehavior_IsNorthBlocked(behavior)
-        || MetatileBehavior_IsSouthBlocked(behavior)
-        || MetatileBehavior_IsJumpEast(behavior)
-        || MetatileBehavior_IsJumpWest(behavior)
-        || MetatileBehavior_IsJumpNorth(behavior)
-        || MetatileBehavior_IsJumpSouth(behavior))
-        flags |= WL_TERRAIN_SOLID;
-
-    if (IsBridgeBehavior(behavior))
-        flags |= WL_TERRAIN_BRIDGE;
-    else if (MetatileBehavior_IsSurfableWaterOrUnderwater(behavior))
-        flags |= WL_TERRAIN_DEEP_WATER | WL_TERRAIN_WET;
-
-    if (MetatileBehavior_IsPuddle(behavior)
-        || MetatileBehavior_IsShallowFlowingWater(behavior))
-        flags |= WL_TERRAIN_WET;
-
-    if (MetatileBehavior_IsTallGrass(behavior)
-        || MetatileBehavior_IsLongGrass(behavior)
-        || MetatileBehavior_IsLongGrassSouthEdge(behavior))
-        flags |= WL_TERRAIN_CONCEAL;
-
-    return flags;
+    return sWorldTerrain[(my - WL_SLICE_BASE_Y) * WL_SLICE_W + (mx - WL_SLICE_BASE_X)];
 }
 
 u8 WildlandsWorld_TerrainAt(s16 x, s16 y)
@@ -559,14 +522,16 @@ bool8 WildlandsWorld_IsWet(s16 x, s16 y)
 
 u16 WildlandsWorld_ClipRay(s16 x, s16 y, s16 dx, s16 dy, u16 distance, u8 radius)
 {
+    // Linear march. The previous version re-swept the whole segment from the
+    // origin at every 4px step (quadratic in range).
     u16 d;
     if (!sActive)
         return distance;
+    if (SolidCircle(x, y, radius))
+        return 0;
     for (d = 4; d <= distance; d += 4)
     {
-        s16 nx = x + dx * d / 256;
-        s16 ny = y + dy * d / 256;
-        if (!WildlandsWorld_LineClear(x, y, nx, ny, radius))
+        if (SolidCircle(x + dx * d / 256, y + dy * d / 256, radius))
             return d > 4 ? d - 4 : 0;
     }
     return distance;
