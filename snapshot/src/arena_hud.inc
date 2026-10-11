@@ -81,4 +81,5 @@ static void DrawStatusHud(void)
     WildlandsHudWingBars();
     sHudWingKey=WildlandsHudWingKey();
     sHudCached=TRUE;
+    sWildlandsHudDrew=TRUE;
 }

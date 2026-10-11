@@ -979,7 +979,7 @@ static bool8 MoverStand(bool8 speciesMode, u16 mover, s16 x, s16 y)
 // same land footprint/footing test used here, so following node to node is
 // legal for every land mover. Scratch lives on the heap during a match.
 #define WL_NAV_HEAP 640
-#define WL_NAV_EXPANSIONS 700
+#define WL_NAV_EXPANSIONS 320   // bounded: a longer route continues from the best node next replan
 struct WildlandsNavScratch
 {
     u16 stamp[WL_NAV_NODES];

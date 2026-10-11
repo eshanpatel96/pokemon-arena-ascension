@@ -480,6 +480,7 @@ static EWRAM_DATA u32 sZoneHudKeyShown = 0;
 static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
 static EWRAM_DATA u8 sWildlandsSimSteps = 1;
 static EWRAM_DATA u8 sWildlandsSceneryLit = 0;
+static EWRAM_DATA bool8 sWildlandsHudDrew = FALSE, sWildlandsHudDeferred = FALSE;
 static EWRAM_DATA u16 sWildlandsHeldNew = 0;
 // renders after [0] one VBlank [1] two (the locked pace) [2] three or more (a hitch)
 // [3] latest scanline a render started at
@@ -1091,6 +1092,7 @@ static void DrawHud(void)
     u32 side;
     u8 text[64];
     u8 *end;
+    sWildlandsHudDrew=FALSE;
     DrawStatusHud();
     if (sArena.paused)
     {
@@ -1154,8 +1156,9 @@ static void DrawHud(void)
         }
     }
     CopyWindowToVram(0, COPYWIN_GFX);
-    CaptureHud();
-    sArena.hudDirty = FALSE;
+    if(!sWildlandsHudDrew||sArena.paused||!WildlandsWorld_Active()||sWildlandsHudDeferred)
+    {CaptureHud();sArena.hudDirty = FALSE;sWildlandsHudDeferred=FALSE;}
+    else {sArena.hudDirty = TRUE;sWildlandsHudDeferred=TRUE;}
 }
 
 static void LoadAimMarker(void)
@@ -1970,7 +1973,7 @@ static void AiChooseGoal(void)
         // Prefer the eight tactical positions around the observed opponent.
         // Only scan all obstacle corners when those positions are occluded.
         // This bounds routine thinking cost without removing the fallback.
-        if(i==8&&best!=0x7FFFFFFF)break;
+        if(i==8&&(best!=0x7FFFFFFF||WildlandsWorld_Active()))break;
         if (i < 8)
         {
             p.x = Clamp(sArena.observed.x + offsets[i][0] * preferred / Q, ARENA_MIN_X, ARENA_MAX_X);
