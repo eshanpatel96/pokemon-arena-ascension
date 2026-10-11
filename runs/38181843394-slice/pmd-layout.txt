@@ -1,0 +1,5 @@
+ls: cannot access 'engine/.arena-dev/pmd': No such file or directory
+----
+find: ‘engine/.arena-dev’: No such file or directory
+----
+head: cannot open 'engine/.arena-dev/pmd/sprites.inc' for reading: No such file or directory
