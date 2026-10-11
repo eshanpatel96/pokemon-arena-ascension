@@ -23,6 +23,7 @@ static const struct ArenaPoint sNavPoints[] =
 #include "wildlands_world_nav.inc"
 };
 
+#define WL_BLANK_TILE 1023
 static EWRAM_DATA bool8 sActive = FALSE;
 static EWRAM_DATA s16 sLastTileX = 0x7FFF;
 static EWRAM_DATA s16 sLastTileY = 0x7FFF;
@@ -98,9 +99,9 @@ static void GetWorldTile(s16 worldTx, s16 worldTy, u16 *bottom, u16 *middle, u16
     u16 a = ShiftWorldPalette(tiles[sub]);
     u16 b = ShiftWorldPalette(tiles[4 + sub]);
 
-    *bottom = 0;
-    *middle = 0;
-    *top = 0;
+    *bottom = WL_BLANK_TILE;
+    *middle = WL_BLANK_TILE;
+    *top = WL_BLANK_TILE;
     switch (layer)
     {
     case METATILE_LAYER_TYPE_COVERED:
@@ -197,6 +198,11 @@ void WildlandsWorld_LoadGraphics(void)
     LZ77UnCompVram(gTileset_General.tiles, (void *)BG_CHAR_ADDR(1));
     LZ77UnCompVram(gTileset_Fortree.tiles,
         (u8 *)BG_CHAR_ADDR(1) + NUM_TILES_IN_PRIMARY * TILE_SIZE_4BPP);
+    // Tile 0 is real Emerald art, so it cannot represent an empty layer.
+    // Validation slice generation asserts tile 1023 is unused; zero it for
+    // transparent top/middle/bottom layer holes.
+    DmaFill16(3, 0, (u8 *)BG_CHAR_ADDR(1) + WL_BLANK_TILE * TILE_SIZE_4BPP,
+        TILE_SIZE_4BPP);
     WildlandsWorld_RestorePalettes();
 
     DmaFill16(3, 0, BG_SCREEN_ADDR(28), 0x1800);
@@ -576,12 +582,13 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     next->x = x;
     next->y = y;
     gWildlandsWorldTelemetry[10]++;
+    gWildlandsWorldAudit[5] = 1;
 
     if (MoverLine(speciesMode, mover, x, y, goalX, goalY))
     {
         next->x = goalX;
         next->y = goalY;
-        gWildlandsWorldAudit[5] = 1;
+        gWildlandsWorldAudit[5] = 2;
         return TRUE;
     }
 
@@ -627,7 +634,7 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
         gWildlandsWorldTelemetry[11]++;
         return FALSE;
     }
-    gWildlandsWorldAudit[5] = 1;
+    gWildlandsWorldAudit[5] = 2;
     return TRUE;
 }
 
