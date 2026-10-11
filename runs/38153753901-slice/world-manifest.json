@@ -1,0 +1,244 @@
+{
+  "format": "ROM-resident 16x16 Emerald metatile entries; runtime streamed as native 8x8 BG tiles",
+  "world_pixels": [
+    4096,
+    3072
+  ],
+  "validation_slice_metatiles": [
+    40,
+    48
+  ],
+  "validation_slice_pixels": [
+    640,
+    768
+  ],
+  "slice_world_metatile_origin": [
+    108,
+    72
+  ],
+  "sources": {
+    "route120": "data/layouts/Route120/map.bin",
+    "fortree": "data/layouts/FortreeCity/map.bin",
+    "primary_tileset": "General",
+    "secondary_tileset": "Fortree"
+  },
+  "roles": {
+    "trees_cliffs_building": "solid cover; block bodies, projectiles and LOS",
+    "bridge": "walkable crossing; does not count as water",
+    "tall_long_grass": "concealment; walkable",
+    "deep_water": "blocks ordinary land bodies; Water/Flying traversal allowed",
+    "puddles_shallow": "walkable wet terrain",
+    "fortree_structure": "cover; its native door enters a Fortree house interior"
+  },
+  "interiors": {
+    "rooms": {
+      "house": {
+        "layout": "FortreeCity_House1",
+        "rect": [
+          0,
+          58,
+          8,
+          6
+        ],
+        "pair": [
+          "Building",
+          "GenericBuilding"
+        ],
+        "exit": [
+          3,
+          63
+        ],
+        "exit_faces_down": true,
+        "lair": false,
+        "arrival": [
+          52,
+          998
+        ],
+        "loot": [
+          3
+        ],
+        "floor_cells": 26,
+        "pruned_cells": 0
+      }
+    },
+    "doors": [
+      {
+        "cell": [
+          32,
+          44
+        ],
+        "room": "house",
+        "kind": "door",
+        "outside": [
+          520,
+          734
+        ]
+      }
+    ],
+    "pairs": [
+      [
+        "General",
+        "Fortree"
+      ],
+      [
+        "Building",
+        "GenericBuilding"
+      ]
+    ],
+    "total_rows": 66
+  },
+  "nav_points_world_pixels": [
+    [
+      1816,
+      1408
+    ],
+    [
+      1880,
+      1408
+    ],
+    [
+      1896,
+      1408
+    ],
+    [
+      1976,
+      1408
+    ],
+    [
+      2088,
+      1408
+    ],
+    [
+      2184,
+      1408
+    ],
+    [
+      2216,
+      1408
+    ],
+    [
+      2216,
+      1288
+    ],
+    [
+      2280,
+      1256
+    ],
+    [
+      2216,
+      1544
+    ],
+    [
+      2280,
+      1624
+    ],
+    [
+      2216,
+      1768
+    ],
+    [
+      2088,
+      1640
+    ],
+    [
+      1976,
+      1640
+    ],
+    [
+      1864,
+      1640
+    ],
+    [
+      1816,
+      1560
+    ],
+    [
+      2008,
+      1784
+    ],
+    [
+      2168,
+      1816
+    ],
+    [
+      2120,
+      1768
+    ]
+  ],
+  "player_start_local": [
+    10,
+    16
+  ],
+  "enemy_start_local": [
+    30,
+    16
+  ],
+  "void_entry": 4257,
+  "loot_spots": [
+    [
+      1960,
+      1408,
+      0
+    ],
+    [
+      1800,
+      1224,
+      2
+    ],
+    [
+      1896,
+      1240,
+      0
+    ],
+    [
+      2040,
+      1208,
+      1
+    ],
+    [
+      2232,
+      1208,
+      2
+    ],
+    [
+      2056,
+      1336,
+      0
+    ],
+    [
+      2248,
+      1384,
+      1
+    ],
+    [
+      1800,
+      1432,
+      2
+    ],
+    [
+      2184,
+      1432,
+      0
+    ],
+    [
+      1784,
+      1544,
+      1
+    ],
+    [
+      1896,
+      1592,
+      2
+    ],
+    [
+      2040,
+      1608,
+      0
+    ],
+    [
+      1848,
+      2120,
+      3
+    ]
+  ]
+}
