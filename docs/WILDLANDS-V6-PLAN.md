@@ -12,6 +12,7 @@ A5. Water: Flying types (and Levitate) fly over water; Water types swim; swimmer
 A6. Loot never dead at the cap: cap raised to +3, a capped pickup turns into a team heal; plus a PP-restore pickup.
 A7. Rest regen: a duo that stands still and does not attack for 3s heals slowly (not in the storm).
 A8. Random player spawn per match on legal ground away from lairs and other duos.
+A10. Roster movesets: every roster Pokémon starts with Arena-supported moves only (same loadout rule as the AI duos); the coach and move editor offer only supported moves (playtest: Zapdos had moves it could not use).
 A9. Enemy AI: no backing into walls to stand and shoot (firing spots need an exit; strafe while firing). Partner AI: tighter follow, smarter target choice, out of the storm, never stuck.
 
 ## B. Duo control and information
