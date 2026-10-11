@@ -1,42 +1,35 @@
-# Pokémon Wildlands V6: build list (draft from V5 playtests, 2026-10-11)
+# Pokémon Wildlands V6: build list (from the V5 playtests, 2026-10-11)
 
-Base: wildlands-v5 at c00d296, run 38181288381 (island 107/0, slice 46/0).
+Base: wildlands-v5 (V5 ROM run 38181288381; fixes after it ship in V6).
+Every item is verified in the mGBA harness (PASS / NOT RUN reported per item); Delta playtest is the owner's.
 
-## Performance
-1. 60 fps while exploring: cull off-screen sprites from sort/animate, run off-screen work (30 duos, loot, storm upkeep) at half rate, move hot collision code to IWRAM. Fall back to an even 30 only in heavy fights.
+## A. Playtest fixes (gameplay)
+A1. Out of PP never drops a match into the classic turn-based battle (Struggle instead); a won match heals the party in the Lab. [done in 26357c2]
+A2. Sprite size from the art: small PMD frames (Zapdos) scale up toward a Pokédex-height target. [done in b1f7e99]
+A3. Legendaries never retreat or leave their lair; they press harder at low HP.
+A4. Lair entrances: replace the Lugia treetop huts with one obvious open-ground entrance and a map marker; audit every lair entrance and door for large Pokémon snagging.
+A5. Water: Flying types (and Levitate) fly over water; Water types swim; swimmers are slower in deep water so water is not a free escape; more crossings.
+A6. Loot never dead at the cap: cap raised to +3, a capped pickup turns into a team heal; plus a PP-restore pickup.
+A7. Rest regen: a duo that stands still and does not attack for 3s heals slowly (not in the storm).
+A8. Random player spawn per match on legal ground away from lairs and other duos.
+A9. Enemy AI: no backing into walls to stand and shoot (firing spots need an exit; strafe while firing). Partner AI: tighter follow, smarter target choice, out of the storm, never stuck.
 
-## Movement and water
-2. Flying types (and Levitate) fly over water; Water types keep swimming; everyone else uses fords and bridges.
-3. Rebalance swimmers so water is not a free escape (slower swim speed or no firing while submerged), and add more crossings.
+## B. Duo control and information
+B1. R swaps you into your partner (short cooldown); the AI takes the other.
+B2. Bigger partner HP panel (name, HP).
+B3. TEAM page in pause: both members, moves and PP, buffs vs cap, legendary partner, kills and pickups, foe buffs.
+B4. LOG page in pause: last ~12 events with match time.
+B5. Storm on the map: danger zone shaded, phase and timer, arrow to the safe edge, lair status.
 
-## Duo control and info
-4. R swaps you into your partner (short cooldown); the AI takes the other.
-5. Bigger partner HP panel (name and HP, matching the main bars).
-6. TEAM page in pause: both members, moves and PP, buffs vs cap, legendary partner status, kills and pickups, foe buffs.
-7. Match LOG page in pause: last ~12 events with match time (eliminations, legendary attacked or taken, pickups, storm phases, your KOs).
-8. Storm on the map: shade the danger zone, phase and timer, arrow to the safe edge, lair status (alive, attacked, taken).
+## C. Systems
+C1. Status effects in real time for all four battlers (burn and poison tick, paralysis slows and stalls, sleep and freeze timed with fire thaw, confusion aim drift), status icons, status-cure pickup.
+C2. Lab coach NPC: pick your duo, set moves (Arena-legal only), controls card, start; no START menu or bag needed in the Lab.
+C3. Shiny Pokémon (rate to decide; default 1/64 for the BR so they are seen).
+C4. End-of-match summary (placement, kills, damage, legendaries, time); spectate the nearest duo after elimination.
 
-## Loot and healing
-9. No dead pickups at the cap: raise the cap and turn a capped pickup into something useful (heal or PP), plus new loot types (PP restore, shield, speed burst).
-10. Rest regen: a duo standing still and not attacking for ~3s heals slowly (not in the storm).
+## D. Performance and world
+D1. 60 fps while exploring (off-screen sprites out of sort and animate, off-screen work at half rate, hot collision in IWRAM); even 30 in heavy fights.
+D2. Map polish toward overworld immersion: cleaner edges and transitions, fewer blocky single-tile rocks, natural decor, fewer stray islets, landmark review.
 
-## AI
-11. Enemy AI: stop backing into walls and standing still while shooting; pick retreat and firing spots with an exit and strafe while firing.
-12. Partner AI: tighter follow, better target choice, stays out of the storm, never stuck on scenery.
-
-## Map
-13. Polish toward overworld immersion: cleaner edges and transitions, fewer blocky single-tile rocks, natural decor, fewer stray islets, landmark placement review.
-
-## Status effects
-16. Full real-time status pass for all four battlers (player, partner, enemy lead and wing): burn and poison tick damage, paralysis slows and briefly stalls, sleep and freeze last a few seconds (fire thaws), confusion makes aim drift. Status icons on the HP panels and in the TEAM page; a status-cure pickup; the AI avoids attacking into Protect and targets statused foes.
-
-## Lab setup
-17. A coach NPC in the Team Lab replaces the PC, bag and MOVE EDITOR sign for setup: pick your duo from the roster, set each one's moves (legal Arena moves only), see a short controls card, then start the match. No START menu or bag needed in the Lab.
-
-## Features
-14. Shiny Pokémon (rarity to decide).
-15. End-of-match summary; spectate after elimination.
-
-## Open from V5 testing
-- Floor items reported as "little shiny things": waiting on a screenshot.
-- Legendary encounter: owner playtest pending.
+## Open
+- Floor items reported as "little shiny things": no screenshot yet; recheck in V6 captures.
