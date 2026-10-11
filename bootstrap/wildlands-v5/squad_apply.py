@@ -47,6 +47,9 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void LootInit(void);\nstatic void LootTick(void);\nstatic void LootDestroy(void);\n'
       'static void WildlandsPauseBoosts(void);\nstatic void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n'
       'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n'
+      '// [0] max render gap (vblanks) [1] frames over 3 vblanks [2] last/[3] max\n'
+      '// active-slot load cost [4] max biome swap cost (scanlines) [5] steps over cap\n'
+      'EWRAM_DATA u16 gWildlandsHitch[8] = {};\n'
       '// TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking\n'
       '// map/zone UI; always 0 in normal play.\n'
       'EWRAM_DATA u8 gWildlandsTestPeace = 0;\n'
@@ -114,8 +117,11 @@ patch(A, '        else if(JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sP
 # once, so movement, AI, cooldowns, projectiles and the storm advance in real
 # time. Edge-triggered input is consumed by the first step only.
 patch(A, '        sArena.frame++;\n        for(i=0;i<2;i++)\n',
-      '        {\n        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 3 ? 3 : gap >= 2 ? 2 : 1) : 1;\n'
+      '        {\n        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 6 ? 6 : gap >= 2 ? gap : 1) : 1;\n'
       '        u16 savedNewKeys = gMain.newKeys;\n'
+      '        if (gap > gWildlandsHitch[0]) gWildlandsHitch[0] = gap;\n'
+      '        if (gap > 3) gWildlandsHitch[1]++;\n'
+      '        if (gap > 6) gWildlandsHitch[5] += gap - 6;\n'
       '        sWildlandsSimSteps = simSteps;\n'
       '        gWildlandsProfile[10] += simSteps; gWildlandsProfile[11]++;\n'
       '        for (simStep = 0; simStep < simSteps; simStep++)\n        {\n'

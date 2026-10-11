@@ -203,6 +203,7 @@ static void DirLoadActive(u8 index)
     struct ArenaBody *body = &sArena.bodies[1];
     u8 lead = (d->species[0] && d->hp[0]) ? 0 : 1;
     u8 other = lead ^ 1;
+    u32 t0 = WL_NOW();
     DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend);
     if (d->species[other] && d->hp[other])
         DirMakeMon(&gEnemyParty[1], d->species[other], d->level, d->hp[other], FALSE);
@@ -240,6 +241,8 @@ static void DirLoadActive(u8 index)
     gWildlandsDirectorTelemetry[6]++;
     ArenaFeedback_Dust(d->x, d->y, TRUE);
     sArena.hudDirty = TRUE;
+    gWildlandsHitch[2] = WL_NOW() - t0;
+    if (gWildlandsHitch[2] > gWildlandsHitch[3]) gWildlandsHitch[3] = gWildlandsHitch[2];
 }
 
 static u8 DirNearest(bool8 includeLegends)

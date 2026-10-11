@@ -96,6 +96,7 @@ expect gWildlandsBiomeTelemetry 0 4 1
 ratesym walk-woodland-research gWildlandsProfile 20 2 180 16 95
 snap 21-woodland-research-walked
 dump biome-woodland-research gWildlandsBiomeTelemetry 4
+dump hitch-woodland-research gWildlandsHitch 4
 dump squad-woodland-research gWildlandsSquadTelemetry 16
 poke gWildlandsTestWarp 0 1 44
 frames 90 0
@@ -104,6 +105,7 @@ expect gWildlandsBiomeTelemetry 0 4 1
 ratesym walk-woodland-tempest gWildlandsProfile 20 2 180 16 95
 snap 21-woodland-tempest-walked
 dump biome-woodland-tempest gWildlandsBiomeTelemetry 4
+dump hitch-woodland-tempest gWildlandsHitch 4
 dump squad-woodland-tempest gWildlandsSquadTelemetry 16
 poke gWildlandsTestWarp 0 1 48
 frames 90 0
@@ -112,6 +114,7 @@ expect gWildlandsBiomeTelemetry 0 4 2
 ratesym walk-desert-mewtwo gWildlandsProfile 20 2 180 16 95
 snap 21-desert-mewtwo-walked
 dump biome-desert-mewtwo gWildlandsBiomeTelemetry 4
+dump hitch-desert-mewtwo gWildlandsHitch 4
 dump squad-desert-mewtwo gWildlandsSquadTelemetry 16
 poke gWildlandsTestWarp 0 1 49
 frames 90 0
@@ -120,6 +123,7 @@ expect gWildlandsBiomeTelemetry 0 4 2
 ratesym walk-desert-ruins gWildlandsProfile 20 2 180 16 95
 snap 21-desert-ruins-walked
 dump biome-desert-ruins gWildlandsBiomeTelemetry 4
+dump hitch-desert-ruins gWildlandsHitch 4
 dump squad-desert-ruins gWildlandsSquadTelemetry 16
 poke gWildlandsTestWarp 0 1 47
 frames 90 0
@@ -128,6 +132,7 @@ expect gWildlandsBiomeTelemetry 0 4 3
 ratesym walk-highlands-rayquaza gWildlandsProfile 20 2 180 16 95
 snap 21-highlands-rayquaza-walked
 dump biome-highlands-rayquaza gWildlandsBiomeTelemetry 4
+dump hitch-highlands-rayquaza gWildlandsHitch 4
 dump squad-highlands-rayquaza gWildlandsSquadTelemetry 16
 poke gWildlandsTestWarp 0 1 51
 frames 90 0
@@ -136,6 +141,7 @@ expect gWildlandsBiomeTelemetry 0 4 4
 ratesym walk-volcano-hooh gWildlandsProfile 20 2 180 16 95
 snap 21-volcano-hooh-walked
 dump biome-volcano-hooh gWildlandsBiomeTelemetry 4
+dump hitch-volcano-hooh gWildlandsHitch 4
 dump squad-volcano-hooh gWildlandsSquadTelemetry 16
 poke gWildlandsTestWarp 0 1 52
 frames 90 0
@@ -144,6 +150,7 @@ expect gWildlandsBiomeTelemetry 0 4 5
 ratesym walk-beach-seashore gWildlandsProfile 20 2 180 16 95
 snap 21-beach-seashore-walked
 dump biome-beach-seashore gWildlandsBiomeTelemetry 4
+dump hitch-beach-seashore gWildlandsHitch 4
 dump squad-beach-seashore gWildlandsSquadTelemetry 16
 expect gWildlandsBiomeTelemetry 12 4 0
 expectmin gWildlandsBiomeTelemetry 4 4 4
@@ -181,6 +188,7 @@ snap 06-west
 # informational: the practice duo is often defeated by now (encounter ends)
 ratesym travel-south gWildlandsProfile 20 2 900 128 0
 snap 07-south
+dump hitchTravel gWildlandsHitch 4
 dump world gWildlandsWorldTelemetry 16
 dump xl gArenaXLTelemetry 8
 dump profile gWildlandsProfile 6
@@ -192,3 +200,9 @@ dump brain gWildlandsBrainTelemetry 8
 dump directorEnd gWildlandsDirectorTelemetry 8
 dump biomeEnd gWildlandsBiomeTelemetry 4
 expect gWildlandsBiomeTelemetry 12 4 0
+# ---- Storm tint: run the storm fast until the player is outside it ----
+poke gWildlandsTestPeace 0 1 1
+poke gWildlandsZoneTestSpeed 0 2 400
+frames 300 0
+snap 30-storm-outside
+dump zoneEnd gWildlandsZoneTelemetry 16
