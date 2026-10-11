@@ -180,6 +180,11 @@ dump profIdle gWildlandsProfile 6
 dumph loopIdle gWildlandsLoop 0 4
 ratesym idle gWildlandsProfile 20 2 300 0 95
 prof idle-fight 120 0
+# ---- PP regenerates in the world (1 per move every 2s) ----
+poke gBattleMons 36 1 1
+frames 300 0
+dumph pp gBattleMons 36 2
+expectmin gBattleMons 36 1 2
 frames 120 16
 snap 03-east
 frames 1 16
