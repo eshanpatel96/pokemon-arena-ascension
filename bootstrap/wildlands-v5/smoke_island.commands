@@ -158,7 +158,14 @@ poke gWildlandsTestWarp 0 1 1
 frames 60 0
 poke gWildlandsZoneTestSpeed 0 2 0
 poke gWildlandsTestPeace 0 1 0
+poke gWildlandsSpike 0 2 0
+poke gWildlandsSpike 2 2 0
+poke gWildlandsSpike 4 2 0
+poke gWildlandsSpike 6 2 0
+poke gWildlandsSpike 8 2 0
+poke gWildlandsSpike 10 2 0
 rate render-idle 300 0 0
+dumph spikeIdle gWildlandsSpike 0 6
 dump frameIdle gArenaFrameTelemetry 10
 dump renderIdle gArenaRenderTelemetry 4
 dump profIdle gWildlandsProfile 6
@@ -187,7 +194,14 @@ dump loot gWildlandsLootTelemetry 14
 ratesym travel-east gWildlandsProfile 20 2 600 16 95
 dump frameTravel gArenaFrameTelemetry 10
 dump renderTravel gArenaRenderTelemetry 4
+poke gWildlandsSpike 0 2 0
+poke gWildlandsSpike 2 2 0
+poke gWildlandsSpike 4 2 0
+poke gWildlandsSpike 6 2 0
+poke gWildlandsSpike 8 2 0
+poke gWildlandsSpike 10 2 0
 rate render-walk 300 16 0
+dumph spikeWalk gWildlandsSpike 0 6
 dumph loopWalk gWildlandsLoop 0 4
 snap 04-east-far
 ratesym travel-north gWildlandsProfile 20 2 600 64 95

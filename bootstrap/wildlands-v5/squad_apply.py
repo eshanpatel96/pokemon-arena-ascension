@@ -296,6 +296,23 @@ patch(A, 'static EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n',
       '// [3] latest scanline a render started at\n'
       'EWRAM_DATA u16 gWildlandsLoop[4] = {};\n')
 
+# Spike telemetry: which part of a render overran its two-VBlank slot.
+patch(A, 'EWRAM_DATA u16 gWildlandsLoop[4] = {};\n',
+      'EWRAM_DATA u16 gWildlandsLoop[4] = {};\n'
+      '// maxima (scanlines): [0] simulation steps [1] render [2] world VBlank streaming\n'
+      '// [3] whole callback [4] renders over 400 scanlines [5] last sim length\n'
+      'EWRAM_DATA u16 gWildlandsSpike[6] = {};\n')
+patch(A, '    CaptureTick();\n',
+      '    {u16 t=(u16)(gMain.vblankCounter1*228+(REG_VCOUNT+68)%228-stamp); gWildlandsSpike[5]=t; if(t>gWildlandsSpike[0])gWildlandsSpike[0]=t;}\n'
+      '    CaptureTick();\n')
+patch(A, '    gArenaFrameTelemetry.scanlines[5]=now-stamp;\n',
+      '    gArenaFrameTelemetry.scanlines[5]=now-stamp;\n'
+      '    {u16 t=(u16)(now-stamp); if(t>gWildlandsSpike[3])gWildlandsSpike[3]=t; if(t>400)gWildlandsSpike[4]++;\n'
+      '     if(t>gWildlandsSpike[5]&&(u16)(t-gWildlandsSpike[5])>gWildlandsSpike[1])gWildlandsSpike[1]=t-gWildlandsSpike[5];}\n')
+patch(A, 'static void VBlank_Arena(void)\n{\n    WildlandsWorld_VBlank();\n',
+      'static void VBlank_Arena(void)\n{\n'
+      '    {u16 v0=REG_VCOUNT,d; WildlandsWorld_VBlank(); d=(u16)(REG_VCOUNT-v0); if(d<228&&d>gWildlandsSpike[2])gWildlandsSpike[2]=d;}\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',
