@@ -493,6 +493,7 @@ EWRAM_DATA u8 gWildlandsTestWarp = 0;
 static void LootLastSpot(s16 *x, s16 *y);
 static void BrainDecide(struct ArenaBody *body, u8 seenMask);
 static bool8 BrainAllowsFire(void);
+static void WildlandsBuildOam(void);
 static u8 BrainWingTarget(u8 picked);
 static bool8 BrainWingFollows(void);
 static void BrainInit(void);
@@ -3145,7 +3146,7 @@ static void CB2_Arena(void)
     p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;
     AnimateSprites();
     p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[7]=p1-p0;p0=p1;
-    BuildOamBuffer();
+    WildlandsBuildOam();
     p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;
     {u32 n=0,k;for(k=0;k<MAX_SPRITES;k++)if(gSprites[k].inUse)n++;gWildlandsProfile[9]=n;}}
     // BG0's paused picker must cover actors and attack sprites. Change only

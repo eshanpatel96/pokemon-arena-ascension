@@ -88,7 +88,7 @@ static void LootLoadGraphics(void)
                 if (d > 13 && d <= 16) c = 3;
                 if (d <= 5 && dx < 0 && dy < 0) c = 2;
                 // Supplies read as a cross, caches as a gem with a bright core.
-                if (t == LOOT_HEAL && d <= 13 && (Abs(dx) <= 3 || Abs(dy) <= 3)) c = 2;
+                if (t == LOOT_HEAL && d <= 11 && (Abs(dx) <= 1 || Abs(dy) <= 1)) c = 2;
                 if (t == LOOT_CACHE && d <= 4) c = 2;
                 if (c)
                 {
