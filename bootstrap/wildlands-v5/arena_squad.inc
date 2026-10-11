@@ -353,7 +353,8 @@ static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
     if (WildlandsWorld_Active() && !((sArena.frame + w->team * 8) & 15))
     {
         struct ArenaPoint wp;
-        if (WildlandsWorld_NextWaypointSpecies(w->species, w->x / Q, w->y / Q, goalX / Q, goalY / Q, &wp))
+        if (WildlandsWorld_NextWaypointSpecies(w->species, w->x / Q, w->y / Q, goalX / Q, goalY / Q, &wp)
+            && (Abs(wp.x - w->x / Q) > 2 || Abs(wp.y - w->y / Q) > 2))
         { w->waypointX = wp.x; w->waypointY = wp.y; }
         else
         {
