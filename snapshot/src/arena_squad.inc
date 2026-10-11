@@ -355,7 +355,13 @@ static void SquadMoveWing(struct SquadWing *w, s32 goalX, s32 goalY, s32 step)
         struct ArenaPoint wp;
         if (WildlandsWorld_NextWaypointSpecies(w->species, w->x / Q, w->y / Q, goalX / Q, goalY / Q, &wp))
         { w->waypointX = wp.x; w->waypointY = wp.y; }
-        else { w->waypointX = w->x / Q; w->waypointY = w->y / Q; }
+        else
+        {
+            // No route found: head straight for the goal and let terrain
+            // slide it; the stuck detector regroups it if that fails too
+            // (it used to freeze in place, e.g. storm-steering on the slice).
+            w->waypointX = goalX / Q; w->waypointY = goalY / Q;
+        }
     }
     else if (!WildlandsWorld_Active())
     { w->waypointX = goalX / Q; w->waypointY = goalY / Q; }
