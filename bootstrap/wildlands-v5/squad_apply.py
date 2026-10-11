@@ -31,7 +31,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void SquadInit(void);\nstatic void SquadTick(void);\nstatic void SquadDestroy(void);\n'
       'static bool8 SquadPromote(u8 side);\nstruct ArenaShot;\n'
       'static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaMoveProfile *p, s16 oldX, s16 oldY);\n'
-      'static void SquadEnemyRetarget(struct ArenaBody *body);\n'
+      'static void SquadEnemyRetarget(struct ArenaBody *body);\nstatic bool8 SquadEnemySees(void);\n'
       'extern EWRAM_DATA u32 gWildlandsSquadTelemetry[16];\n'
       'static EWRAM_DATA u8 sSquadShotOwner[SHOTS_COUNT] = {};\n'
       'static void SquadSimStep(void);\n'
@@ -42,7 +42,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;\n'
       'static EWRAM_DATA u8 sWildlandsSimSteps = 1;\n'
       'static void LootInit(void);\nstatic void LootTick(void);\nstatic void LootDestroy(void);\n'
-      'static void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n'
+      'static void WildlandsPauseBoosts(void);\nstatic void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n'
       'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n'
       '// TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking\n'
       '// map/zone UI; always 0 in normal play.\n'
@@ -138,6 +138,14 @@ patch(C, '    bool8 notice=sCapture.notice!=0;', '    bool8 notice=sCapture.noti
 # Animation clocks follow game time, not render rate.
 patch(A, '                body->animClock += animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q;',
       '                body->animClock += (animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q) * sWildlandsSimSteps;')
+
+# The enemy lead only aims at a target it can see (not at a roam point).
+patch(A, '''            if (!body->cooldown && ArenaMovePP(1,body->moveSlot)
+                && distance < p->range && distance > 8''', '''            if (!body->cooldown && ArenaMovePP(1,body->moveSlot) && SquadEnemySees()
+                && distance < p->range && distance > 8''')
+
+patch(A, '            FillWindowPixelBuffer(1,PIXEL_FILL(9));\n            PrintPopup(8,3,title,5);',
+      '            FillWindowPixelBuffer(1,PIXEL_FILL(9));\n            PrintPopup(8,3,title,5);\n            WildlandsPauseBoosts();')
 
 # Profiling: camera/stream, sprite animation, OAM build (scanlines).
 patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer();',

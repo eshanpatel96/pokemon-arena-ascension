@@ -145,8 +145,14 @@ def train(root, secondary_name, secondary_key, extra_layouts=()):
     L = json.load(open(root / 'data/layouts/layouts.json'))['layouts']
     pair = Pair(root, 'general', secondary_name)
     m = Model()
+    import re
+    # Wilderness only: towns/cities contribute Poke Center roofs, signs and
+    # house fragments that must never appear in open terrain.
+    wild = re.compile(r'^(Route\d+|SafariZone_\w+|PetalburgWoods|FarawayIsland_Entrance|SouthernIsland_Exterior|BirthIsland_Exterior|NavelRock_Exterior)_Layout$')
     for l in L:
         if not l or l['primary_tileset'] != 'gTileset_General':
+            continue
+        if not wild.match(l['name']):
             continue
         same = l['secondary_tileset'] == secondary_key
         b = (root / l['blockdata_filepath']).read_bytes()
