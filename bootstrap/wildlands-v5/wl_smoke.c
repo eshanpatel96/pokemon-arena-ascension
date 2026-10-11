@@ -195,6 +195,12 @@ static int commands(const char *path) {
         else if(!strcmp(cmd,"reset")){core->reset(core);}
         else if(!strcmp(cmd,"native_save")){save_from_menu();}
         else if(sscanf(line,"map %u %u",&n,&k)==2)check("expected map",is_map(n,k));
+        else if(sscanf(line,"poke %239s %u %u %u",arg,&offset,&width,&expected)==4) {
+            uint32_t a=symbol(arg);
+            if(a){ if(width==1)core->busWrite8(core,a+offset,expected); else if(width==2)core->busWrite16(core,a+offset,expected); else core->busWrite32(core,a+offset,expected); }
+            printf("POKE %s+%u=%u %s\n",arg,offset,expected,a?"ok":"MISSING");fflush(stdout);
+            check("poke target exists",a!=0);
+        }
         else if(sscanf(line,"ratesym %99s %239s %u %u %u %u %u",cmd,arg,&offset,&width,&n,&k,&expected)==7)ratesym(cmd,arg,offset,width,n,k,expected);
         else if(sscanf(line,"rate %99s %u %u %u",cmd,&n,&k,&expected)==4)rate(cmd,n,k,expected);
         else if(sscanf(line,"expectmin %239s %u %u %u",arg,&offset,&width,&expected)==4) {

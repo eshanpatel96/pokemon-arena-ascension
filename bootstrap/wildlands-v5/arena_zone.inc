@@ -33,8 +33,15 @@ static EWRAM_DATA struct ArenaZone sZone = {};
 // [8..11] storm damage dealt to battlers 0..3 [12] clock frames
 // [13] exposed-actor frames [14] next-circle legal picks [15] tie-breaks
 EWRAM_DATA u32 gWildlandsZoneTelemetry[16] = {};
+// TEST HOOK ONLY: extra zone-clock frames per sim step, written by the mGBA
+// harness to exercise full storm cycles quickly. Always 0 in normal play.
+EWRAM_DATA u16 gWildlandsZoneTestSpeed = 0;
 
+#ifdef WL_ZONE_RADII
+static const u16 sZoneRadii[ZONE_STAGES + 1] = WL_ZONE_RADII;
+#else
 static const u16 sZoneRadii[ZONE_STAGES + 1] = {600, 360, 210, 110, 40};
+#endif
 static const u8 sZonePctPerSec[ZONE_STAGES + 1] = {1, 1, 2, 4, 8};
 
 static u32 ZoneRand(void)
@@ -242,8 +249,8 @@ static void ZoneSim(void)
         return;
     if (!sArena.paused && !sArena.resultTimer)
     {
-        sZone.clock++;
-        sZone.phaseClock++;
+        sZone.clock += 1 + gWildlandsZoneTestSpeed;
+        sZone.phaseClock += 1 + gWildlandsZoneTestSpeed;
         switch (sZone.phase)
         {
         case ZONE_EXPLORING:

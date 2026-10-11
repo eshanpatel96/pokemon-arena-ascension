@@ -1,0 +1,42 @@
+# Full-island prototype runtime smoke (WILDLANDS_WORLD=island)
+frames 300 0
+snap 00-title
+press 8
+frames 120 0
+press 1
+frames 1100 0
+snap 01-lab
+press 768
+frames 700 0
+expect gWildlandsWorldAudit 0 4 1
+dump squad0 gWildlandsSquadTelemetry 16
+snap 02-island-start
+rate render-idle 300 0 0
+ratesym idle gWildlandsProfile 20 2 300 0 95
+frames 120 16
+snap 03-east
+dump loot gWildlandsLootTelemetry 12
+ratesym travel-east gWildlandsProfile 20 2 600 16 95
+snap 04-east-far
+ratesym travel-north gWildlandsProfile 20 2 600 64 95
+snap 05-north
+ratesym travel-west gWildlandsProfile 20 2 900 32 95
+snap 06-west
+ratesym travel-south gWildlandsProfile 20 2 900 128 95
+snap 07-south
+dump world gWildlandsWorldTelemetry 16
+dump xl gArenaXLTelemetry 8
+dump profile gWildlandsProfile 6
+press 8
+press 128
+press 128
+press 128
+press 128
+press 1
+frames 20 0
+snap 08-island-map
+dump map gWildlandsMapTelemetry 4
+expectmin gWildlandsMapTelemetry 0 4 1
+press 2
+press 2
+frames 60 0

@@ -14,6 +14,18 @@ expect gWildlandsWorldAudit 20 4 2
 expect gWildlandsWorldAudit 28 4 1
 expect gWildlandsPartnerTelemetry 0 4 1
 snap 02-world-start
+# ---- Gate E closing zone (test clock x21 via harness poke; 0 in play) ----
+dump zone0 gWildlandsZoneTelemetry 16
+poke gWildlandsZoneTestSpeed 0 2 20
+frames 300 0
+dump zoneA gWildlandsZoneTelemetry 16
+expectmin gWildlandsZoneTelemetry 0 4 1
+expectmin gWildlandsZoneTelemetry 56 4 1
+frames 360 0
+snap 10-zone-shrink
+dump zoneB gWildlandsZoneTelemetry 16
+expectmin gWildlandsZoneTelemetry 4 4 1
+poke gWildlandsZoneTestSpeed 0 2 0
 # Use 1-frame samples while Right is held: the existing snapshots were
 # taken only after frames() released the key, so zero heldKeys was expected.
 frames 1 16
@@ -69,14 +81,6 @@ press 2
 frames 60 0
 snap 13-resumed
 
-# ---- Gate E closing zone: exploration ends, next circle announced ----
-dump zone0 gWildlandsZoneTelemetry 16
-frames 7800 0
-snap 10-zone-warning
-dump zone1 gWildlandsZoneTelemetry 16
-expectmin gWildlandsZoneTelemetry 0 4 1
-expectmin gWildlandsZoneTelemetry 56 4 1
-dump profile2 gWildlandsProfile 6
 # ---- Gate D true duo combat (squad wings are battlers 2 and 3) ----
 dump squad0 gWildlandsSquadTelemetry 16
 expect gWildlandsSquadTelemetry 0 4 3

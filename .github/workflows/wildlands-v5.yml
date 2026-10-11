@@ -9,6 +9,7 @@ on:
       - 'bootstrap/arena-xl/**'
       - 'docs/WILDLANDS-V5*'
       - 'docs/art/**'
+      - 'bootstrap/wildlands-map/**'
   workflow_dispatch:
 concurrency:
   group: wildlands-v5-world-${{ github.ref }}
@@ -20,6 +21,12 @@ jobs:
   build-world:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        world: [slice, island]
+    env:
+      WORLD: ${{ matrix.world }}
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +62,7 @@ jobs:
           set -o pipefail
           python3 bootstrap/arena-xl/apply.py engine | tee evidence/arena-xl-base.txt
           python3 bootstrap/wildlands-v4/apply.py engine | tee evidence/v4-lab-base.txt
-          python3 bootstrap/wildlands-v5/generate_world.py engine | tee evidence/world-generation.json
+          if [ "$WORLD" = island ]; then python3 bootstrap/wildlands-v5/generate_island.py engine | tee evidence/world-generation.json; else python3 bootstrap/wildlands-v5/generate_world.py engine | tee evidence/world-generation.json; fi
           python3 bootstrap/wildlands-v5/apply.py engine | tee evidence/v5-world-apply.txt
           python3 bootstrap/wildlands-v5/squad_apply.py engine | tee evidence/v5-squad-apply.txt
           python3 bootstrap/wildlands-v5/move_editor_apply.py engine | tee evidence/v5-move-editor.txt
@@ -79,6 +86,11 @@ jobs:
           python3 bootstrap/wildlands-v4/audit_roster.py engine | tee evidence/roster-audit.json
           grep -q '"curated_selectable_count": 105' evidence/roster-audit.json
           grep -q '"groudon_arena_sprite": false' evidence/roster-audit.json
+          if [ "$WORLD" = island ]; then
+            test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 98304
+            test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 49152
+            python3 -c "import json;m=json.load(open('engine/data/wildlands_world/manifest.json'));assert m['reachable_pct']>=99 and all(v['reachable'] and len(v['approaches'])>=2 for v in m['lairs'].values()),m;print('ISLAND REACHABILITY AUDIT PASS',m['reachable_pct'])"
+          else
           test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 3840
           test "$(stat -c %s engine/data/wildlands_world/terrain.bin)" -eq 1920
           python3 - <<'PY'
@@ -92,6 +104,7 @@ jobs:
           assert m['roles']['bridge'].startswith('walkable')
           print('WORLD REPRESENTATION AUDIT PASS')
           PY
+          fi
 
       - name: Compile real GBA ROM
         working-directory: engine
@@ -147,7 +160,8 @@ jobs:
           gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/wildlands-v5/wl_smoke.c -lmgba -o evidence/wildlands-v5-smoke
           set +e
           set -o pipefail
-          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime bootstrap/wildlands-v5/smoke.commands - 2>&1 | tee evidence/smoke.log
+          CMDS=bootstrap/wildlands-v5/smoke.commands; [ "$WORLD" = island ] && CMDS=bootstrap/wildlands-v5/smoke_island.commands
+          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime $CMDS - 2>&1 | tee evidence/smoke.log
           rc=$?
           python3 - <<'PY2'
           from pathlib import Path
@@ -188,7 +202,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-V5-WORLD-ROM
+          name: WILDLANDS-V5-${{ matrix.world }}-ROM
           path: delivery/
           if-no-files-found: ignore
 
@@ -196,7 +210,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-V5-WORLD-EVIDENCE
+          name: WILDLANDS-V5-${{ matrix.world }}-EVIDENCE
           path: evidence/
           if-no-files-found: warn
 
@@ -204,7 +218,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-V5-WORLD-RECOVERY
+          name: WILDLANDS-V5-${{ matrix.world }}-RECOVERY
           path: recovery/
           if-no-files-found: warn
 

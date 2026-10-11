@@ -6,7 +6,7 @@ echo "::notice::publish start token=${GH_TOKEN:+set} repo=${GITHUB_REPOSITORY:-u
 set -E
 trap 'echo "::warning::publish line $LINENO failed: $BASH_COMMAND"' ERR
 REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-RUN="${GITHUB_RUN_ID}"
+RUN="${GITHUB_RUN_ID}${WORLD:+-$WORLD}"
 SHA="${GITHUB_SHA}"
 WORK="${RUNNER_TEMP:-/tmp}/publish"
 rm -rf "$WORK"; mkdir -p "$WORK"
