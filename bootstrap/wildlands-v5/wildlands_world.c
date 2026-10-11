@@ -437,8 +437,14 @@ static bool8 SolidCircle(s16 x, s16 y, u8 radius)
     static const s8 oy[9] = {0, 0, 0, 1,-1, 1,-1, 1,-1};
     u8 i;
     for (i = 0; i < 9; i++)
-        if (WildlandsWorld_TerrainAt(x + ox[i] * radius, y + oy[i] * radius) & WL_TERRAIN_SOLID)
+    {
+        s16 sx = x + ox[i] * radius;
+        s16 sy = y + oy[i] * radius;
+        // Native Emerald map collision applies to the sampled metatile.
+        // This is an explicit footprint test, not an actor-centre-only check.
+        if (WildlandsWorld_TerrainAt(sx, sy) & WL_TERRAIN_SOLID)
             return TRUE;
+    }
     return FALSE;
 }
 
