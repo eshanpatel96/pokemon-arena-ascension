@@ -87,6 +87,31 @@ s=s.replace('''void ArenaTerrain_Draw(bool8 paused,bool8 frozen)
 p.write_text(s)
 
 # ---------------------------------------------------------------------------
+# Arena biome compatibility: world mode still computes biome/stage identity
+# for move/environment logic, but MUST NOT queue the legacy 8bpp court art.
+# Those queued DMA writes otherwise land after the native Emerald 4bpp world
+# tiles and corrupt the streamed background.
+# ---------------------------------------------------------------------------
+p=root/'src/arena_biomes.inc'
+s=p.read_text()
+old='''    if(gArenaStage>=8&&gArenaStage<16)gArenaBiome=4;
+    LoadPalette(sStagePalettes[gArenaStage],0,512);
+    StormBiome(sStageTiles[gArenaStage],sStagePalettes[gArenaStage]);
+    LoadBgTiles(1,sStageTiles[gArenaStage],38400,0);
+    LoadBgTilemap(1,sForestMap,sizeof(sForestMap),0);
+}'''
+new='''    if(gArenaStage>=8&&gArenaStage<16)gArenaBiome=4;
+    if(WildlandsWorld_Active())
+        return;
+    LoadPalette(sStagePalettes[gArenaStage],0,512);
+    StormBiome(sStageTiles[gArenaStage],sStagePalettes[gArenaStage]);
+    LoadBgTiles(1,sStageTiles[gArenaStage],38400,0);
+    LoadBgTilemap(1,sForestMap,sizeof(sForestMap),0);
+}'''
+if old not in s: raise SystemExit('arena biome world skip anchor drift')
+p.write_text(s.replace(old,new,1))
+
+# ---------------------------------------------------------------------------
 # Core realtime Arena integration.
 # ---------------------------------------------------------------------------
 p=root/'src/realtime_arena.c'
