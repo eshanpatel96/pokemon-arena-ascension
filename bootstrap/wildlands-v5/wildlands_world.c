@@ -603,16 +603,18 @@ static bool8 MoverStand(bool8 speciesMode, u16 mover, s16 x, s16 y)
 static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     s16 goalX, s16 goalY, struct ArenaPoint *next)
 {
-    u32 i, j;
+    u32 i;
     s32 best = 0x7FFFFFFF;
-    s32 score, second;
-    u16 d1, d2;
+    s32 score;
+    u16 d1, dg, directDistance;
 
     next->x = x;
     next->y = y;
     gWildlandsWorldTelemetry[10]++;
     gWildlandsWorldAudit[5] = 1;
 
+    // Most movement is open-terrain movement. Preserve the exact traversal
+    // test and skip graph work entirely when the target is directly reachable.
     if (MoverLine(speciesMode, mover, x, y, goalX, goalY))
     {
         next->x = goalX;
@@ -621,35 +623,38 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
         return TRUE;
     }
 
+    // V5 validation uses a deliberately small, hand-curated anchor set.
+    // The previous implementation nested every anchor against every other
+    // anchor and repeated long collision sweeps (O(N^2 * line length)). On
+    // real GBA timing that could occupy the CPU across hundreds of VBlanks.
+    // Choose one legal visible anchor per call instead; repeated calls advance
+    // through the route. This keeps pathing bounded while preserving native
+    // body/water legality and never teleports an actor through cover.
+    directDistance = PointDistance(x, y, goalX, goalY);
     for (i = 0; i < WL_NAV_POINT_COUNT; i++)
     {
         const struct ArenaPoint *p = &sNavPoints[i];
-        if (!MoverStand(speciesMode, mover, p->x, p->y)
-            || !MoverLine(speciesMode, mover, x, y, p->x, p->y))
+
+        if (!MoverStand(speciesMode, mover, p->x, p->y))
             continue;
 
         d1 = PointDistance(x, y, p->x, p->y);
+        dg = PointDistance(p->x, p->y, goalX, goalY);
+
+        // Cheap geometry first. Only then pay for the swept terrain test.
+        score = d1 + dg;
+        if (score >= best + 256)
+            continue;
+        if (!MoverLine(speciesMode, mover, x, y, p->x, p->y))
+            continue;
+
+        // Anchors with a clean final leg are strongly preferred. Otherwise,
+        // favor real progress toward the destination but still allow a short
+        // lateral detour around cliffs/trees/river edges.
         if (MoverLine(speciesMode, mover, p->x, p->y, goalX, goalY))
-            score = d1 + PointDistance(p->x, p->y, goalX, goalY) - 4000;
-        else
-        {
-            second = 0x7FFFFFFF;
-            for (j = 0; j < WL_NAV_POINT_COUNT; j++)
-            {
-                const struct ArenaPoint *q = &sNavPoints[j];
-                if (i == j
-                    || !MoverStand(speciesMode, mover, q->x, q->y)
-                    || !MoverLine(speciesMode, mover, p->x, p->y, q->x, q->y))
-                    continue;
-                d2 = PointDistance(p->x, p->y, q->x, q->y);
-                score = d1 + d2 + PointDistance(q->x, q->y, goalX, goalY);
-                if (MoverLine(speciesMode, mover, q->x, q->y, goalX, goalY))
-                    score -= 2000;
-                if (score < second)
-                    second = score;
-            }
-            score = second;
-        }
+            score -= 4096;
+        else if (dg >= directDistance && d1 > 64)
+            score += 1024;
 
         if (score < best)
         {
@@ -663,6 +668,7 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
         gWildlandsWorldTelemetry[11]++;
         return FALSE;
     }
+
     gWildlandsWorldAudit[5] = 2;
     return TRUE;
 }
