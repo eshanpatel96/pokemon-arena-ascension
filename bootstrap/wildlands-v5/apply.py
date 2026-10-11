@@ -386,8 +386,10 @@ old='''    dx=tx-p->x;dy=ty-p->y;
         if(ArenaNav_LineClear(p->x/Q,p->y/Q,nx/Q,p->y/Q,10))p->x=nx;
         if(ArenaNav_LineClear(p->x/Q,p->y/Q,p->x/Q,ny/Q,10))p->y=ny;
     }'''
-new='''    if(WildlandsWorld_Active() && (!(sArena.frame&7)
-        || ArenaNav_Distance(p->x/Q,p->y/Q,p->waypointX,p->waypointY)<4))
+new='''    // Replan the follower at a bounded 1/8 Arena-tick cadence. Replanning
+    // again merely because it reached a waypoint caused almost one swept-route
+    // query per gameplay update and starved the native realtime loop.
+    if(WildlandsWorld_Active() && !(sArena.frame&7))
     {
         struct ArenaPoint wp;
         if(WildlandsWorld_NextWaypointSpecies(p->species,p->x/Q,p->y/Q,tx/Q,ty/Q,&wp))
