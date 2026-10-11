@@ -480,6 +480,9 @@ static void LootDestroy(void);
 static void MapDraw(void);
 EWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};
 EWRAM_DATA u16 gWildlandsProfile[12] = {};
+// TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking
+// map/zone UI; always 0 in normal play.
+EWRAM_DATA u8 gWildlandsTestPeace = 0;
 struct WildlandsPartnerActor
 {
     s32 x,y;
@@ -2082,6 +2085,7 @@ static void TickEnemy(void)
     struct ArenaBody *body = &sArena.bodies[1];
     s32 dx, dy, len;
     body->moving = FALSE;
+    if (gWildlandsTestPeace) return;
     if(SpecialBusy(1)||GuardBusy())return;
     if(gBattleMons[1].status1&(STATUS1_SLEEP|STATUS1_FREEZE))return;
     if (body->cooldown && !body->shotTimer && !body->actionLife) body->cooldown--;
@@ -2144,7 +2148,7 @@ static void TickEnemy(void)
         }
     }
     if (ArenaNav_Distance(body->x/Q,body->y/Q,sArena.waypoint.x,sArena.waypoint.y) < 3
-        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4) AiRoute();
+        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4 && !(sArena.frame & 7)) AiRoute();
     ZoneSteerEnemy(body);
     dx = sArena.waypoint.x * Q - body->x;
     dy = sArena.waypoint.y * Q - body->y;

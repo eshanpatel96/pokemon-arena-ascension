@@ -18,6 +18,7 @@ void WildlandsWorld_VBlank(void);
 void WildlandsWorld_TickBody(u8 side, s16 x, s16 y);
 void WildlandsWorld_RecordProjectileBlock(void);
 void WildlandsWorld_RestorePalettes(void);
+void WildlandsWorld_ReleaseNav(void);
 
 u8 WildlandsWorld_TerrainAt(s16 x, s16 y);
 bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius);

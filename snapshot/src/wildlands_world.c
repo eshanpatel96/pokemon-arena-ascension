@@ -24,6 +24,8 @@ static const struct ArenaPoint sNavPoints[] =
 {
 #include "wildlands_world_nav.inc"
 };
+#include "wildlands_nav_graph.inc"
+#include "malloc.h"
 
 #define WL_BLANK_TILE 1023
 static EWRAM_DATA bool8 sActive = FALSE;
@@ -606,6 +608,141 @@ static bool8 MoverStand(bool8 speciesMode, u16 mover, s16 x, s16 y)
     return WildlandsWorld_CanStandSide((u8)mover, x, y, 10);
 }
 
+#if WL_NAV_GRAPH
+// ---- Island navigation: bounded A* over the build-time validated lattice ----
+// Edges were accepted at build time only if the straight segment passes the
+// same land footprint/footing test used here, so following node to node is
+// legal for every land mover. Scratch lives on the heap during a match.
+#define WL_NAV_HEAP 640
+#define WL_NAV_EXPANSIONS 700
+struct WildlandsNavScratch
+{
+    u16 stamp[WL_NAV_NODES];
+    u16 g[WL_NAV_NODES];
+    u16 parent[WL_NAV_NODES];
+    u16 heap[WL_NAV_HEAP];
+    u16 key[WL_NAV_HEAP];
+    u16 gen;
+};
+static EWRAM_DATA struct WildlandsNavScratch *sNav = NULL;
+static const s8 sNavDx[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+static const s8 sNavDy[8] = {0, 1, 1, 1, 0, -1, -1, -1};
+
+void WildlandsWorld_ReleaseNav(void)
+{
+    if (sNav) { Free(sNav); sNav = NULL; }
+}
+
+static u16 NavNeighbor(u16 u, u8 d)
+{
+    u16 cell = sNavCell[u];
+    s16 gx = cell % WL_NAV_GRID_W + sNavDx[d], gy = cell / WL_NAV_GRID_W + sNavDy[d];
+    if (gx < 0 || gy < 0 || gx >= WL_NAV_GRID_W || gy >= WL_NAV_GRID_H)
+        return 0xFFFF;
+    return sNavGrid[gy * WL_NAV_GRID_W + gx];
+}
+
+static u16 NavHeuristic(u16 a, u16 b)
+{
+    s16 dx = Abs32(sNavPoints[a].x - sNavPoints[b].x) >> 4, dy = Abs32(sNavPoints[a].y - sNavPoints[b].y) >> 4;
+    return (dx > dy ? dx * 10 + dy * 4 : dy * 10 + dx * 4) * 10 / WL_NAV_STEP;
+}
+
+// First node after `start` on a cheapest path toward `goal` (or toward the
+// closest expanded node if the bounded search does not reach it).
+static u16 NavSearch(u16 start, u16 goal)
+{
+    u16 n = 0, best = start, bestH = 0xFFFF, expansions = 0, u, v, i;
+    if (!sNav)
+        return 0xFFFF;
+    if (++sNav->gen == 0) { memset(sNav->stamp, 0, sizeof(sNav->stamp)); sNav->gen = 1; }
+    sNav->stamp[start] = sNav->gen; sNav->g[start] = 0; sNav->parent[start] = start;
+    sNav->heap[n] = start; sNav->key[n++] = NavHeuristic(start, goal);
+    while (n && expansions < WL_NAV_EXPANSIONS)
+    {
+        u16 h;
+        u8 d;
+        // pop min (binary heap)
+        u = sNav->heap[0];
+        n--;
+        if (n)
+        {
+            u16 lastNode = sNav->heap[n], lastKey = sNav->key[n], pos = 0;
+            for (;;)
+            {
+                u16 child = pos * 2 + 1;
+                if (child >= n) break;
+                if (child + 1 < n && sNav->key[child + 1] < sNav->key[child]) child++;
+                if (sNav->key[child] >= lastKey) break;
+                sNav->heap[pos] = sNav->heap[child]; sNav->key[pos] = sNav->key[child]; pos = child;
+            }
+            sNav->heap[pos] = lastNode; sNav->key[pos] = lastKey;
+        }
+        expansions++;
+        h = NavHeuristic(u, goal);
+        if (h < bestH) { bestH = h; best = u; }
+        if (u == goal) { best = u; break; }
+        for (d = 0; d < 8; d++)
+        {
+            u16 cost;
+            if (!(sNavEdges[u] & (1 << d))) continue;
+            v = NavNeighbor(u, d);
+            if (v == 0xFFFF) continue;
+            cost = sNav->g[u] + ((d & 1) ? 14 : 10);
+            if (sNav->stamp[v] == sNav->gen && sNav->g[v] <= cost) continue;
+            sNav->stamp[v] = sNav->gen; sNav->g[v] = cost; sNav->parent[v] = u;
+            if (n < WL_NAV_HEAP)
+            {
+                u16 pos = n++, key = cost + NavHeuristic(v, goal);
+                while (pos)
+                {
+                    u16 par = (pos - 1) / 2;
+                    if (sNav->key[par] <= key) break;
+                    sNav->heap[pos] = sNav->heap[par]; sNav->key[pos] = sNav->key[par]; pos = par;
+                }
+                sNav->heap[pos] = v; sNav->key[pos] = key;
+            }
+        }
+    }
+    gWildlandsWorldTelemetry[12] = expansions;
+    if (best == start)
+        return 0xFFFF;
+    for (i = 0; i < WL_NAV_NODES && sNav->parent[best] != start; i++)
+        best = sNav->parent[best];
+    return best;
+}
+
+static bool8 MoverLine(bool8 speciesMode, u16 mover, s16 x1, s16 y1, s16 x2, s16 y2);
+
+// Nearest graph node to (x,y); with requireLine, only nodes reachable by a
+// straight legal segment count.
+static u16 NavNodeNear(bool8 speciesMode, u16 mover, s16 x, s16 y, bool8 requireLine)
+{
+    s16 cx = (x >> 4) / WL_NAV_STEP, cy = (y >> 4) / WL_NAV_STEP, dx, dy;
+    u16 best = 0xFFFF;
+    u32 bestD = 0xFFFFFFFF;
+    for (dy = -1; dy <= 1; dy++)
+        for (dx = -1; dx <= 1; dx++)
+        {
+            s16 gx = cx + dx, gy = cy + dy;
+            u16 node;
+            s32 ddx, ddy;
+            u32 d;
+            if (gx < 0 || gy < 0 || gx >= WL_NAV_GRID_W || gy >= WL_NAV_GRID_H) continue;
+            node = sNavGrid[gy * WL_NAV_GRID_W + gx];
+            if (node == 0xFFFF) continue;
+            ddx = sNavPoints[node].x - x; ddy = sNavPoints[node].y - y;
+            d = ddx * ddx + ddy * ddy;
+            if (d >= bestD) continue;
+            if (requireLine && !MoverLine(speciesMode, mover, x, y, sNavPoints[node].x, sNavPoints[node].y)) continue;
+            bestD = d; best = node;
+        }
+    return best;
+}
+#else
+void WildlandsWorld_ReleaseNav(void) {}
+#endif
+
 static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     s16 goalX, s16 goalY, struct ArenaPoint *next)
 {
@@ -640,6 +777,25 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     // Choose one legal visible anchor per call instead; repeated calls advance
     // through the route. This keeps pathing bounded while preserving native
     // body/water legality and never teleports an actor through cover.
+#if WL_NAV_GRAPH
+    if (sActive && !sNav)
+        sNav = AllocZeroed(sizeof(*sNav));
+    if (sNav)
+    {
+        u16 s = NavNodeNear(speciesMode, mover, x, y, TRUE);
+        u16 t = NavNodeNear(speciesMode, mover, goalX, goalY, FALSE);
+        if (s != 0xFFFF && t != 0xFFFF)
+        {
+            u16 n = s == t ? t : NavSearch(s, t);
+            if (n != 0xFFFF && MoverLine(speciesMode, mover, x, y, sNavPoints[n].x, sNavPoints[n].y))
+                *next = sNavPoints[n];
+            else
+                *next = sNavPoints[s];
+            gWildlandsWorldAudit[5] = 2;
+            return TRUE;
+        }
+    }
+#endif
     directDistance = PointDistance(x, y, goalX, goalY);
     {
         // Bounded work per call: rank anchors by cheap geometry, then pay for
