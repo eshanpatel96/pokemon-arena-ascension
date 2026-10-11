@@ -450,7 +450,7 @@ new='''static void TossSpaceStep(u8 step)
         case 7:
             ShowBg(3);ShowBg(2);ShowBg(1);ShowBg(0);
             WildlandsWorld_RestorePalettes();
-            LoadPalette(sArenaPalette,0,sizeof(u16));
+            LoadPalette(sArenaPalette,0,sizeof(sArenaPalette));
             t->space=FALSE;
             break;
         }
