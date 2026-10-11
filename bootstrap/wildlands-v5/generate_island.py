@@ -223,6 +223,8 @@ for (x, y) in cells:
         loot.append((px, py, len(loot) % 3))
 
 (out / 'slice.bin').write_bytes(struct.pack('<%dH' % len(world), *world))
+from minimap import emit as _emit_minimap
+_emit_minimap(terrain, W, H, root / 'include/wildlands_minimap.inc')
 (out / 'terrain.bin').write_bytes(terrain)
 (root / 'include/wildlands_world_nav.inc').write_text(''.join(f'    {{{x}, {y}}},\n' for x, y in nav))
 (root / 'include/wildlands_loot.inc').write_text(''.join(f'    {{{x}, {y}, {t}}},\n' for x, y, t in loot))

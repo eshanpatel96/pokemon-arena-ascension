@@ -112,6 +112,8 @@ from terrain_flags import build_table
 terrain=build_table(root,world,primary_attr,secondary_attr)
 (out/'terrain.bin').write_bytes(terrain)
 assert len(terrain)==W*H
+from minimap import emit as _emit_minimap
+_emit_minimap(terrain, W, H, root/'include/wildlands_minimap.inc')
 
 nav_inc='\n'.join(
     f'    {{{x}, {y}}},'
