@@ -12,18 +12,26 @@ expect gWildlandsWorldAudit 0 4 1
 dump squad0 gWildlandsSquadTelemetry 16
 snap 02-island-start
 poke gWildlandsTestPeace 0 1 1
-press 8
-press 128
-press 128
-press 128
-press 128
-press 1
+frames 6 8
+frames 30 0
+frames 6 128
+frames 30 0
+frames 6 128
+frames 30 0
+frames 6 128
+frames 30 0
+frames 6 128
+frames 30 0
+frames 6 1
+frames 30 0
 frames 20 0
 snap 08-island-map
 dump map gWildlandsMapTelemetry 4
 expectmin gWildlandsMapTelemetry 0 4 1
-press 2
-press 2
+frames 6 2
+frames 30 0
+frames 6 2
+frames 30 0
 frames 60 0
 poke gWildlandsTestPeace 0 1 0
 rate render-idle 300 0 0

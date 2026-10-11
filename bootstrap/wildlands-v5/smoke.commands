@@ -68,19 +68,27 @@ snap 07-after-cadence
 dump profile1 gWildlandsProfile 6
 poke gWildlandsTestPeace 0 1 1
 # ---- Gate G live map: START -> MAP (5th entry) ----
-press 8
-press 128
-press 128
-press 128
-press 128
+frames 6 8
+frames 30 0
+frames 6 128
+frames 30 0
+frames 6 128
+frames 30 0
+frames 6 128
+frames 30 0
+frames 6 128
+frames 30 0
 snap 11-pause-menu
-press 1
+frames 6 1
+frames 30 0
 frames 20 0
 snap 12-live-map
 dump map gWildlandsMapTelemetry 4
 expectmin gWildlandsMapTelemetry 0 4 1
-press 2
-press 2
+frames 6 2
+frames 30 0
+frames 6 2
+frames 30 0
 frames 60 0
 snap 13-resumed
 
