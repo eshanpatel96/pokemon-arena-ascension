@@ -12,6 +12,7 @@ expect gWildlandsWorldAudit 0 4 1
 dump squad0 gWildlandsSquadTelemetry 16
 snap 02-island-start
 poke gWildlandsTestPeace 0 1 1
+poke gWildlandsZoneTestSpeed 0 2 65535
 frames 6 8
 frames 30 0
 frames 6 128
@@ -75,6 +76,7 @@ expectmin gWildlandsRoomTelemetry 4 4 6
 expect gWildlandsRoomTelemetry 8 4 0
 poke gWildlandsTestWarp 0 1 1
 frames 60 0
+poke gWildlandsZoneTestSpeed 0 2 0
 poke gWildlandsTestPeace 0 1 0
 rate render-idle 300 0 0
 ratesym idle gWildlandsProfile 20 2 300 0 95

@@ -34,7 +34,8 @@ static EWRAM_DATA struct ArenaZone sZone = {};
 // [13] exposed-actor frames [14] next-circle legal picks [15] tie-breaks
 EWRAM_DATA u32 gWildlandsZoneTelemetry[16] = {};
 // TEST HOOK ONLY: extra zone-clock frames per sim step, written by the mGBA
-// harness to exercise full storm cycles quickly. Always 0 in normal play.
+// harness to exercise full storm cycles quickly (0xFFFF holds the storm
+// still while UI/interior checks run). Always 0 in normal play.
 EWRAM_DATA u16 gWildlandsZoneTestSpeed = 0;
 
 #ifdef WL_ZONE_RADII
@@ -254,7 +255,7 @@ static void ZoneSim(void)
 {
     if (!sZone.active)
         return;
-    if (!sArena.paused && !sArena.resultTimer)
+    if (!sArena.paused && !sArena.resultTimer && gWildlandsZoneTestSpeed != 0xFFFF)
     {
         sZone.clock += 1 + gWildlandsZoneTestSpeed;
         sZone.phaseClock += 1 + gWildlandsZoneTestSpeed;

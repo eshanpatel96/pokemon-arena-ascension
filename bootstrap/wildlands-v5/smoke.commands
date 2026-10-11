@@ -15,6 +15,7 @@ expect gWildlandsWorldAudit 28 4 1
 expect gWildlandsPartnerTelemetry 0 4 1
 snap 02-world-start
 poke gWildlandsTestPeace 0 1 1
+poke gWildlandsZoneTestSpeed 0 2 65535
 # ---- Gate G live map: START -> MAP (5th entry) ----
 frames 6 8
 frames 30 0
