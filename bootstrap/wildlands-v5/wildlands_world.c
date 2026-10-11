@@ -20,7 +20,7 @@ extern const struct Tileset gTileset_Fortree;
 static const u16 sWorldSlice[] = INCBIN_U16("data/wildlands_world/slice.bin");
 static const struct ArenaPoint sNavPoints[] =
 {
-#include "data/wildlands_world/nav.inc"
+#include "wildlands_world_nav.inc"
 };
 
 static EWRAM_DATA bool8 sActive = FALSE;
