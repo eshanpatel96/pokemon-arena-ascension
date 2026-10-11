@@ -48,6 +48,7 @@ s8 WildlandsWorld_RoomIndexAt(s16 x, s16 y);
 void WildlandsWorld_RoomBoss(u8 room, s32 *x, s32 *y);
 u16 WildlandsWorld_RoomLegend(s8 room);
 void WildlandsWorld_NavPoint(u16 index, s16 *x, s16 *y);
+bool8 WildlandsWorld_SnapToNav(s16 *x, s16 *y);
 u16 WildlandsWorld_NavPointCount(void);
 u8 WildlandsWorld_DoorCount(void);
 void WildlandsWorld_DoorInfo(u8 i, s16 *x, s16 *y, bool8 *lair);
