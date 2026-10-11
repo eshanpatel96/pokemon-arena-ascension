@@ -366,6 +366,8 @@ static u32 ZoneHudKey(void)
     key ^= (u32)ZoneOutside(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, 0) << 11;
     key ^= (u32)(SquadAlive(2) ? gBattleMons[2].hp : 0) << 12;
     key ^= (u32)(SquadAlive(3) ? gBattleMons[3].hp : 0) << 22;
+    key ^= (u32)DirectorLeft() << 26;
+    key ^= (u32)DirectorPopupActive() << 30;
     return key;
 }
 
@@ -397,6 +399,16 @@ static void ZoneHudLine(void)
         *end++ = CHAR_COLON;
         ConvertIntToDecimalStringN(end, s % 60, STR_CONV_MODE_LEADING_ZEROS, 2);
     }
+    {
+        u8 color;
+        if (DirectorPopupText(text, &color))
+        {
+            // Kill feed / legendary news take the zone slot like pickups.
+            HudTinyWindow(2, 104, 10, text, color, 11);
+            StringCopy(text, sZone.phase == ZONE_SUDDEN_DEATH ? sFinal : sSafe);
+            goto foes;
+        }
+    }
     if (LootPopupText(text))
     {
         // Pickup feedback takes the zone slot for ~2.5s, in highlight colour.
@@ -405,6 +417,7 @@ static void ZoneHudLine(void)
     }
     else
         HudTinyWindow(2, 104, 10, text, out ? 6 : 4, 9);
+foes:
     end = StringCopy(text, sAlly);
     *end++ = CHAR_SPACE;
     if (SquadAlive(2)) ConvertIntToDecimalStringN(end, gBattleMons[2].hp, STR_CONV_MODE_LEFT_ALIGN, 3);
@@ -414,7 +427,14 @@ static void ZoneHudLine(void)
     if (SquadAlive(3)) ConvertIntToDecimalStringN(end, gBattleMons[3].hp, STR_CONV_MODE_LEFT_ALIGN, 3);
     else StringCopy(end, sDown);
     HudTinyWindow(2, 172, 10, text, 6, 6);
-    LootHudText(text);
+    if (DirectorLeft() || DirectorRunning())
+    {
+        static const u8 sLeftTag[] = _("LEFT");
+        end = ConvertIntToDecimalStringN(text, DirectorLeft(), STR_CONV_MODE_LEFT_ALIGN, 2);
+        StringCopy(end, sLeftTag);
+    }
+    else
+        LootHudText(text);
     HudTinyWindow(2, 204, 10, text, 5, 6);
 }
 
@@ -434,4 +454,5 @@ static void WildlandsPauseBoosts(void)
     HudTinyWindow(1, 120, 26, sFoe, 6, 10);
     text[2] = CHAR_0 + sLoot.boost[1][0]; text[6] = CHAR_0 + sLoot.boost[1][1]; text[10] = CHAR_0 + sLoot.boost[1][2];
     HudTinyWindow(1, 120, 34, text, 4, 11);
+    DirectorPauseLine();
 }

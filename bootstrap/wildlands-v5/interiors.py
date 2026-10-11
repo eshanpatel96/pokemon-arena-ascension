@@ -83,7 +83,8 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
         ex, ey, mapname = _exit_warp(root, lay['id'])
         rooms.append(dict(key=key, x=x, y=y, w=w, h=h, blocks=blocks, pair=pairs.index(pr),
                           pd=pair_data[pr], exit=(ex, ey), map=mapname, loot=spec.get('loot', []),
-                          lair=spec.get('lair', False)))
+                          lair=spec.get('lair', False),
+                          legend=('SPECIES_' + spec['legend']) if spec.get('legend') else '0'))
         x += w + GAP_X
         shelf_h = max(shelf_h, h)
     total_h = y + shelf_h + 2
@@ -160,7 +161,7 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
         r['floor'] = len(seen); r['pruned'] = pruned
         # Arrival: legal floor next to the exit, clear of its trigger.
         ax, ay = near_stand(ecx, ecy - (20 if down else 0), (ecx, ecy), 22, rect=rect)
-        room_rows.append((r['x'], r['y'], r['w'], r['h'], r['pair'], ex, ey, 1 if down else 0, 1 if r['lair'] else 0, ax, ay))
+        room_rows.append((r['x'], r['y'], r['w'], r['h'], r['pair'], ex, ey, 1 if down else 0, 1 if r['lair'] else 0, ax, ay, r['legend']))
         # Loot: spread over legal floor, far from the exit, deterministic.
         floor = [(xx, yy) for yy in range(r['h']) for xx in range(r['w'])
                  if stand_px((r['x'] + xx) * 16 + 8, (r['y'] + yy) * 16 + 8, rect=rect)]
@@ -176,7 +177,7 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
         for (px, py), t in zip(picked, r['loot']):
             loot_px.append(((base[0] * 16) + px, (base[1] * 16) + py, t))
         man_rooms[r['key']] = dict(layout=r['map'], rect=list(rect), pair=list(pairs[r['pair']]),
-                                   exit=[ex, ey], exit_faces_down=down, lair=r['lair'], arrival=[ax, ay], loot=r['loot'],
+                                   exit=[ex, ey], exit_faces_down=down, lair=r['lair'], legend=r['legend'], arrival=[ax, ay], loot=r['loot'],
                                    floor_cells=r['floor'], pruned_cells=r['pruned'])
     keys = [r['key'] for r in rooms]
     man_doors = []
@@ -202,11 +203,11 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
         src.append(f'extern const struct Tileset gTileset_{s};')
     src.append('static const struct Tileset *const sWlPairs[WL_PAIR_COUNT][2] = {'
                + ','.join(f'{{&gTileset_{p},&gTileset_{s}}}' for p, s in pairs) + '};')
-    src.append('struct WlRoom { u16 x, y, exitX, exitY; u8 w, h, pair, exitDown, lair; s16 arriveX, arriveY; };')
+    src.append('struct WlRoom { u16 x, y, exitX, exitY; u8 w, h, pair, exitDown, lair; s16 arriveX, arriveY; u16 legend; };')
     src.append('struct WlDoor { u16 x, y; u8 room, water; s16 outX, outY; };')
     src.append('static const struct WlRoom sWlRooms[WL_ROOM_COUNT] = {' + ','.join(
-        f'{{{x + BMX},{y + BMY},{ex + BMX},{ey + BMY},{w},{h},{p},{dn},{lr},{ax + BX},{ay + BY}}}'
-        for x, y, w, h, p, ex, ey, dn, lr, ax, ay in room_rows) + '};')
+        f'{{{x + BMX},{y + BMY},{ex + BMX},{ey + BMY},{w},{h},{p},{dn},{lr},{ax + BX},{ay + BY},{lg}}}'
+        for x, y, w, h, p, ex, ey, dn, lr, ax, ay, lg in room_rows) + '};')
     src.append('static const struct WlDoor sWlDoors[WL_DOOR_COUNT] = {' + ','.join(
         f'{{{x + BMX},{y + BMY},{ri},{wt},{ox + BX},{oy + BY}}}' for x, y, ri, wt, ox, oy in door_rows) + '};')
     manifest = dict(rooms=man_rooms, doors=man_doors, pairs=[list(p) for p in pairs], total_rows=total_h)

@@ -87,6 +87,22 @@ frames 60 16
 snap 02b-move-90
 frames 90 16
 snap 02c-move-180
+frames 1 16
+snap 02d-consec-0
+frames 1 16
+snap 02d-consec-1
+frames 1 16
+snap 02d-consec-2
+frames 1 16
+snap 02d-consec-3
+frames 1 16
+snap 02d-consec-4
+frames 1 16
+snap 02d-consec-5
+frames 1 16
+snap 02d-consec-6
+frames 1 16
+snap 02d-consec-7
 expect gWildlandsWorldAudit 4 4 1
 expect gWildlandsWorldAudit 8 4 1
 expect gWildlandsWorldAudit 20 4 2

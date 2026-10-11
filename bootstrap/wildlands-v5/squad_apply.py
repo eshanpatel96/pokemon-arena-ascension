@@ -14,6 +14,7 @@ shutil.copy(here / 'arena_zone.inc', root / 'src/arena_zone.inc')
 shutil.copy(here / 'arena_loot.inc', root / 'src/arena_loot.inc')
 shutil.copy(here / 'arena_map.inc', root / 'src/arena_map.inc')
 shutil.copy(here / 'arena_brain.inc', root / 'src/arena_brain.inc')
+shutil.copy(here / 'arena_director.inc', root / 'src/arena_director.inc')
 
 
 def patch(path, old, new, count=1):
@@ -55,11 +56,16 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void LootLastSpot(s16 *x, s16 *y);\n'
       'static void BrainDecide(struct ArenaBody *body, u8 seenMask);\nstatic bool8 BrainAllowsFire(void);\n'
       'static void WildlandsBuildOam(void);\n'
+      'static bool8 DirectorAdvance(void);\nstatic void DirectorInit(void);\nstatic void DirectorSim(void);\n'
+      'static void DirectorDestroy(void);\nstatic void DirRestorePartner(void);\nstatic bool8 DirectorSoloActive(void);\n'
+      'static bool8 DirectorPopupText(u8 *text, u8 *color);\nstatic u8 DirectorLeft(void);\nstatic bool8 DirectorRunning(void);\n'
+      'static bool8 DirectorPopupActive(void);\nstatic void DirectorPauseLine(void);\n'
+      'void Wildlands_ArenaLoadout(struct Pokemon *mon);\n'
       'static u8 BrainWingTarget(u8 picked);\nstatic bool8 BrainWingFollows(void);\nstatic void BrainInit(void);\n')
 # The follower actor is superseded by real squad wings.
-patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    BrainInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
+patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    BrainInit();\n    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')
-patch(A, 'WildlandsPartner_Destroy();', 'SquadDestroy();ZoneDestroy();LootDestroy();', count=2)
+patch(A, 'WildlandsPartner_Destroy();', 'DirectorDestroy();SquadDestroy();ZoneDestroy();LootDestroy();', count=2)
 # A new encounter (not a menu round trip) starts squad/zone/loot fresh.
 patch(A, '    sEnvironmentInitialized=FALSE;\n    memset(&sArena, 0, sizeof(sArena));', '    sEnvironmentInitialized=FALSE;\n    sWildlandsEncounterLive=FALSE;\n    memset(&sArena, 0, sizeof(sArena));')
 # Native shots clear wing ownership of their pool slot.
@@ -79,7 +85,7 @@ patch(A, '        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y 
 # The duo brain also runs while the player hides in grass or smoke.
 patch(A, '        else gArenaCoverTelemetry[5]++;\n        if(sDecoys[0].life', '        else {gArenaCoverTelemetry[5]++;SquadEnemyRetarget(body);}\n        if(sDecoys[0].life')
 # Module body: after DestroyShot (needs shots, Fire helpers, SpecialInvulnerable).
-patch(A, 'static void TickShots(void)\n{', '#include "arena_squad.inc"\n#include "arena_loot.inc"\n#include "arena_zone.inc"\n#include "arena_map.inc"\n#include "arena_brain.inc"\n\nstatic void TickShots(void)\n{')
+patch(A, 'static void TickShots(void)\n{', '#include "arena_squad.inc"\n#include "arena_loot.inc"\n#include "arena_zone.inc"\n#include "arena_map.inc"\n#include "arena_brain.inc"\n#include "arena_director.inc"\n\nstatic void TickShots(void)\n{')
 # Enemy lead rotates toward the safe circle when exposed or pre-rotating.
 patch(A, '    dx = sArena.waypoint.x * Q - body->x;\n', '    ZoneSteerEnemy(body);\n    dx = sArena.waypoint.x * Q - body->x;\n')
 # Bottom HUD: zone countdown and squad HP replace the capture-ball help.
@@ -198,6 +204,12 @@ patch(A, '''    else if (dy) gArenaAiTelemetry.wallBlocks[side]++;
 # The world now extends below the island (room strip).
 patch('include/arena_navigation.h', '#define ARENA_MAX_Y 3040\n',
       '#include "wildlands_world_data.h"\n#ifdef WL_ARENA_MAX_Y\n#define ARENA_MAX_Y WL_ARENA_MAX_Y\n#else\n#define ARENA_MAX_Y 3040\n#endif\n')
+
+# Director: Arena-legal loadouts for the AI lobby (career's own legal-move bank).
+p = root / 'src/ascension_career.c'
+t = p.read_text()
+if 'Wildlands_ArenaLoadout' not in t:
+    p.write_text(t + '\nvoid Wildlands_ArenaLoadout(struct Pokemon *mon)\n{\n    V111Loadout(mon, NULL);\n}\n')
 
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',

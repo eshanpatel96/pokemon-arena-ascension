@@ -98,6 +98,13 @@ static void snapshot(const char *name) {
             wt?rd32(wt+48):0,wt?rd32(wt+52):0,wt?rd32(wt+56):0,wt?rd32(wt+60):0);
     }
     {
+        uint32_t gb=symbol("sGpuRegBuffer");
+        printf("SCROLL %s io=%u,%u/%u,%u/%u,%u buf=%u,%u/%u,%u/%u,%u dispcnt=%04x vcount=%u\n",name,
+            rd16(0x04000014),rd16(0x04000016),rd16(0x04000018),rd16(0x0400001a),rd16(0x0400001c),rd16(0x0400001e),
+            gb?rd16(gb+0x14):0,gb?rd16(gb+0x16):0,gb?rd16(gb+0x18):0,gb?rd16(gb+0x1a):0,gb?rd16(gb+0x1c):0,gb?rd16(gb+0x1e):0,
+            rd16(0x04000000),rd16(0x04000006));
+    }
+    {
         uint32_t rt=symbol("gRealtimeArenaTelemetry"), ai=symbol("gArenaAiTelemetry"), cap=symbol("sCapture");
         uint32_t so=symbol("gArenaSendoutTelemetry"), ft=symbol("gArenaFrameTelemetry");
         printf("INPUT %s heldRaw=%04x newRaw=%04x held=%04x new=%04x rtFrames=%u rtSpeed=%u rtActive=%u rtPaused=%u aiDec=%u aiPaths=%u wall=%u,%u capture=%u sendout=%u/%u cbUpdates=%u\n",

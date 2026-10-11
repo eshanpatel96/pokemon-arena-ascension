@@ -12,6 +12,7 @@
 #include "battle.h"
 #include "constants/abilities.h"
 #include "constants/pokemon.h"
+#include "constants/species.h"
 #include "fieldmap.h"
 
 extern const struct Tileset gTileset_General;
@@ -566,6 +567,17 @@ bool8 WildlandsWorld_RoomExitPos(s16 x, s16 y, s16 *ex, s16 *ey)
 }
 
 u8 WildlandsWorld_RoomCount(void) { return WL_ROOM_COUNT; }
+s8 WildlandsWorld_RoomIndexAt(s16 x, s16 y) { return sActive ? RoomAt(x, y) : -1; }
+u16 WildlandsWorld_RoomLegend(s8 room) { return room < 0 ? 0 : sWlRooms[room].legend; }
+
+// A legal outdoor point from the build-time navigation anchors.
+void WildlandsWorld_NavPoint(u16 index, s16 *x, s16 *y)
+{
+    index %= ARRAY_COUNT(sNavPoints);
+    *x = sNavPoints[index].x;
+    *y = sNavPoints[index].y;
+}
+u16 WildlandsWorld_NavPointCount(void) { return ARRAY_COUNT(sNavPoints); }
 u8 WildlandsWorld_DoorCount(void) { return WL_DOOR_COUNT; }
 void WildlandsWorld_DoorInfo(u8 i, s16 *x, s16 *y, bool8 *lair)
 {

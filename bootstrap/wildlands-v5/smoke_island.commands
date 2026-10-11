@@ -82,6 +82,22 @@ rate render-idle 300 0 0
 ratesym idle gWildlandsProfile 20 2 300 0 95
 frames 120 16
 snap 03-east
+frames 1 16
+snap 03a-consec-0
+frames 1 16
+snap 03a-consec-1
+frames 1 16
+snap 03a-consec-2
+frames 1 16
+snap 03a-consec-3
+frames 1 16
+snap 03a-consec-4
+frames 1 16
+snap 03a-consec-5
+frames 1 16
+snap 03a-consec-6
+frames 1 16
+snap 03a-consec-7
 dump loot gWildlandsLootTelemetry 14
 ratesym travel-east gWildlandsProfile 20 2 600 16 95
 snap 04-east-far

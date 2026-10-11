@@ -303,11 +303,11 @@ ROOMS = {
     'treehouse1': dict(layout='FortreeCity_House1', loot=[LOOT_HEAL]),
     'treehouse2': dict(layout='FortreeCity_House2', loot=[LOOT_HEAL]),
     'treehouse3': dict(layout='FortreeCity_House1', loot=[LOOT_HEAL]),
-    'mewtwo':  dict(layout='Route119_WeatherInstitute_1F', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
-    'lugia':   dict(layout='NavelRock_Bottom', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
-    'hooh':    dict(layout='NavelRock_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
-    'kyogre':  dict(layout='MarineCave_End', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
-    'rayquaza': dict(layout='SkyPillar_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True),
+    'mewtwo':  dict(layout='Route119_WeatherInstitute_1F', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='MEWTWO'),
+    'lugia':   dict(layout='NavelRock_Bottom', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='LUGIA'),
+    'hooh':    dict(layout='NavelRock_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='HO_OH'),
+    'kyogre':  dict(layout='MarineCave_End', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='KYOGRE'),
+    'rayquaza': dict(layout='SkyPillar_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='RAYQUAZA'),
 }
 for i in range(len(houses)):
     ROOMS['house%d' % (i + 1)] = dict(layout='House1', loot=[LOOT_HEAL])
@@ -344,6 +344,7 @@ void_entry = model.t0[OCEAN].most_common(1)[0][0] & 0x0FFF
 #define WL_NAV_POINT_COUNT {len(nav)}
 #define WL_ZONE_RADII {{2600, 1500, 850, 450, 180}}
 #define WL_ISLAND 1
+#define WL_DIRECTOR_DUOS 30
 #endif
 ''')
 manifest = {

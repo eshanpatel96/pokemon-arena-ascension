@@ -179,6 +179,7 @@ header=f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define WL_ENEMY_START_X {(BASE_X+ENEMY[0])*16+8}
 #define WL_ENEMY_START_Y {BASE_Y*16+ENEMY_Y_PX}
 #define WL_NAV_POINT_COUNT {len(nav_pixels)}
+#define WL_DIRECTOR_DUOS 4
 #endif
 '''
 (root/'include/wildlands_world_data.h').write_text(header)
