@@ -47,7 +47,7 @@ jobs:
       - name: Native dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3-pil libmgba-dev
+          sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3-pil python3-numpy libmgba-dev
 
       - name: Assemble exact V11.1 source
         run: |

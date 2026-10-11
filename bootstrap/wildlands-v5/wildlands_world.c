@@ -27,6 +27,7 @@ static const struct ArenaPoint sNavPoints[] =
 };
 #include "wildlands_nav_graph.inc"
 #include "wildlands_rooms.inc"
+#include "wildlands_biomes.inc"
 #include "malloc.h"
 
 #define WL_BLANK_TILE 1023
@@ -51,6 +52,13 @@ static EWRAM_DATA s8 sRoom = -1;
 static EWRAM_DATA s8 sEntryDoor = -1;
 static EWRAM_DATA u8 sWarpCooldown = 0;
 static EWRAM_DATA u8 sBlankFrames = 0;
+// Biome streaming: index of the secondary tileset currently in VRAM for the
+// outdoors, and the camera tile it was last checked at.
+static EWRAM_DATA u8 sBiome = 0;
+static EWRAM_DATA s16 sBiomeTileX = 0x7FFF, sBiomeTileY = 0x7FFF;
+// [0] biome in VRAM + 1 [1] secondary swaps [2] swaps that needed a window
+// rebuild [3] windows that saw two secondaries at once (must stay 0)
+EWRAM_DATA u32 gWildlandsBiomeTelemetry[4] = {};
 // [0] door entries [1] exits [2] current room+1 [3] tileset swaps
 // [4] last door [5] slide nudges [6] room of last entry+1
 // [7] streaming queue overflows (dropped tiles; must stay 0)
@@ -79,7 +87,9 @@ static u16 EntryAtMetatile(s16 mx, s16 my)
 
 static const struct Tileset *const *CurPair(void)
 {
-    return sWlPairs[sRoom < 0 ? 0 : sWlRooms[sRoom].pair];
+    if (sRoom < 0)
+        return sWlOutdoorPairs[sBiome];
+    return sWlPairs[sWlRooms[sRoom].pair];
 }
 
 static const u16 *MetatileTiles(u16 entry)
@@ -243,16 +253,26 @@ static void LoadPairTiles(void)
 
 // Region change (door, ladder, menu re-entry inside a room): swap the tile
 // atlas and palettes under forced blank, then rebuild the whole window.
+#define WL_LAYER_BITS (DISPCNT_BG1_ON | DISPCNT_BG2_ON | DISPCNT_BG3_ON | DISPCNT_OBJ_ON)
+// Hide the terrain layers and sprites (the HUD stays) while VRAM is
+// rewritten: the screen shows the dark backdrop for a few frames. Forced
+// blank was used before and flashed WHITE on hardware.
+static void HideLayers(u8 frames)
+{
+    REG_DISPCNT &= ~WL_LAYER_BITS;
+    ClearGpuRegBits(REG_OFFSET_DISPCNT, WL_LAYER_BITS);
+    sBlankFrames = frames;
+}
+
 static void EnterRegion(s8 room)
 {
-    REG_DISPCNT |= DISPCNT_FORCED_BLANK;
-    SetGpuRegBits(REG_OFFSET_DISPCNT, DISPCNT_FORCED_BLANK);
+    HideLayers(3);
     sRoom = room;
     LoadPairTiles();
     WildlandsWorld_RestorePalettes();
     sPendingCount = 0;
     sLastTileX = sLastTileY = 0x7FFF;
-    sBlankFrames = 3;
+    sBiomeTileX = 0x7FFF;
     gWildlandsRoomTelemetry[2] = room + 1;
     gWildlandsRoomTelemetry[3]++;
 }
@@ -274,7 +294,10 @@ void WildlandsWorld_LoadGraphics(void)
     SetBgAttribute(2, BG_ATTR_CHARBASEINDEX, 1);
     SetBgAttribute(2, BG_ATTR_MAPBASEINDEX, 29);
     SetBgAttribute(2, BG_ATTR_PALETTEMODE, 0);
-    SetBgAttribute(2, BG_ATTR_PRIORITY, 0);
+    // Top layer (canopies, roofs) at priority 1: actors, shots and pickups
+    // (OAM priority 0/1) always draw IN FRONT of foreground scenery, so a
+    // fight behind trees stays readable. The HUD (BG0) stays on top.
+    SetBgAttribute(2, BG_ATTR_PRIORITY, 1);
     SetBgAttribute(3, BG_ATTR_CHARBASEINDEX, 1);
     SetBgAttribute(3, BG_ATTR_MAPBASEINDEX, 28);
     SetBgAttribute(3, BG_ATTR_PALETTEMODE, 0);
@@ -282,7 +305,7 @@ void WildlandsWorld_LoadGraphics(void)
 
     SetGpuReg(REG_OFFSET_BG1CNT, BGCNT_PRIORITY(2) | BGCNT_CHARBASE(1)
         | BGCNT_SCREENBASE(30) | BGCNT_16COLOR | BGCNT_TXT256x256);
-    SetGpuReg(REG_OFFSET_BG2CNT, BGCNT_PRIORITY(0) | BGCNT_CHARBASE(1)
+    SetGpuReg(REG_OFFSET_BG2CNT, BGCNT_PRIORITY(1) | BGCNT_CHARBASE(1)
         | BGCNT_SCREENBASE(29) | BGCNT_16COLOR | BGCNT_TXT256x256);
     SetGpuReg(REG_OFFSET_BG3CNT, BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1)
         | BGCNT_SCREENBASE(28) | BGCNT_16COLOR | BGCNT_TXT256x256);
@@ -306,8 +329,90 @@ void WildlandsWorld_Init(void)
     sRoom = -1;
     sWarpCooldown = 0;
     sBlankFrames = 0;
+    sBiome = WL_BIOME_START;
+    sBiomeTileX = sBiomeTileY = 0x7FFF;
+    gWildlandsBiomeTelemetry[0] = sBiome + 1;
     gWildlandsWorldTelemetry[15] = sActive;
     gWildlandsWorldAudit[0] = sActive;
+}
+
+static void SwapBiome(u8 biome, bool8 rebuild)
+{
+    const struct Tileset *sec = sWlOutdoorPairs[biome][1];
+    if (rebuild)
+        HideLayers(2);
+    sBiome = biome;
+    LZ77UnCompVram(sec->tiles, (u8 *)BG_CHAR_ADDR(1) + NUM_TILES_IN_PRIMARY * TILE_SIZE_4BPP);
+    DmaFill16(3, 0, (u8 *)BG_CHAR_ADDR(1) + WL_BLANK_TILE * TILE_SIZE_4BPP, TILE_SIZE_4BPP);
+    WildlandsWorld_RestorePalettes();
+    if (rebuild)
+    {
+        sPendingCount = 0;
+        sLastTileX = sLastTileY = 0x7FFF;
+        gWildlandsBiomeTelemetry[2]++;
+    }
+    gWildlandsBiomeTelemetry[0] = biome + 1;
+    gWildlandsBiomeTelemetry[1]++;
+}
+
+// The streamed window (17x17 metatiles) may only ever hold secondary tiles of
+// the biome whose tileset is in VRAM. Biomes are generated >= 18 metatiles
+// apart with primary-only belts between them, so the swap normally happens
+// unseen while the window is all-primary (prefetching the nearest biome);
+// a teleport into another biome swaps behind hidden layers instead.
+static void BiomeCheck(s16 tileX, s16 tileY)
+{
+    s16 mx0, my0, mx, my;
+    u32 seen = 0;
+    if (WL_BIOME_COUNT < 2 || (tileX == sBiomeTileX && tileY == sBiomeTileY))
+        return;
+    sBiomeTileX = tileX; sBiomeTileY = tileY;
+    mx0 = ((tileX - 1) >> 1) - WL_SLICE_BASE_X;
+    my0 = ((tileY - 1) >> 1) - WL_SLICE_BASE_Y;
+    for (my = my0 < 0 ? 0 : my0; my <= my0 + 16 && my < WL_OUTDOOR_H; my++)
+    {
+        const u8 *row = &sWlBiomeCells[my * WL_SLICE_W];
+        for (mx = mx0 < 0 ? 0 : mx0; mx <= mx0 + 16 && mx < WL_SLICE_W; mx++)
+            if (row[mx])
+                seen |= 1u << (row[mx] - 1);
+    }
+    if (seen & ~(1u << sBiome))
+    {
+        u8 k;
+        if ((seen & (seen - 1)))
+            gWildlandsBiomeTelemetry[3]++;   // two secondaries in one window
+        for (k = 0; k < WL_BIOME_COUNT; k++)
+            if ((seen >> k) & 1 && k != sBiome)
+                break;
+        if (k < WL_BIOME_COUNT)
+            SwapBiome(k, TRUE);
+        return;
+    }
+    if (!seen)
+    {
+        // All-primary window: prefetch the nearest biome core block.
+        s16 bx = ((tileX >> 1) + 8 - WL_SLICE_BASE_X) / WL_BIOME_BLOCK;
+        s16 by = ((tileY >> 1) + 5 - WL_SLICE_BASE_Y) / WL_BIOME_BLOCK;
+        s16 r, dx, dy;
+        for (r = 0; r <= 3; r++)
+            for (dy = -r; dy <= r; dy++)
+                for (dx = -r; dx <= r; dx++)
+                {
+                    s16 x = bx + dx, y = by + dy;
+                    u8 v;
+                    if ((dx > -r && dx < r && dy > -r && dy < r) || x < 0 || y < 0
+                        || x >= WL_BIOME_GW || y >= WL_BIOME_GH)
+                        continue;
+                    v = sWlBiomeBlocks[y * WL_BIOME_GW + x];
+                    if (v && v - 1 != sBiome)
+                    {
+                        SwapBiome(v - 1, FALSE);
+                        return;
+                    }
+                    if (v)
+                        return;   // nearest core is the one already loaded
+                }
+    }
 }
 
 void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
@@ -329,7 +434,9 @@ void WildlandsWorld_UpdateCamera(s16 cameraX, s16 cameraY)
         if (room != sRoom)
             EnterRegion(room);
         else if (sBlankFrames && !--sBlankFrames)
-            ClearGpuRegBits(REG_OFFSET_DISPCNT, DISPCNT_FORCED_BLANK);
+            SetGpuRegBits(REG_OFFSET_DISPCNT, WL_LAYER_BITS);
+        if (sRoom < 0)
+            BiomeCheck(cameraX >> 3, cameraY >> 3);
     }
     tileX = cameraX >> 3;
     tileY = cameraY >> 3;
@@ -567,8 +674,16 @@ bool8 WildlandsWorld_RoomExitPos(s16 x, s16 y, s16 *ex, s16 *ey)
 }
 
 u8 WildlandsWorld_RoomCount(void) { return WL_ROOM_COUNT; }
+u8 WildlandsWorld_LandmarkCount(void) { return WL_LANDMARK_COUNT; }
+void WildlandsWorld_Landmark(u8 i, s16 *x, s16 *y)
+{
+    i %= WL_LANDMARK_COUNT;
+    *x = sWlLandmarks[i][0];
+    *y = sWlLandmarks[i][1];
+}
 s8 WildlandsWorld_RoomIndexAt(s16 x, s16 y) { return sActive ? RoomAt(x, y) : -1; }
 u16 WildlandsWorld_RoomLegend(s8 room) { return room < 0 ? 0 : sWlRooms[room].legend; }
+void WildlandsWorld_RoomBoss(u8 room, s32 *x, s32 *y) { *x = sWlRooms[room].bossX; *y = sWlRooms[room].bossY; }
 
 // A legal outdoor point from the build-time navigation anchors.
 void WildlandsWorld_NavPoint(u16 index, s16 *x, s16 *y)

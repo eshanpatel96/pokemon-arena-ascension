@@ -35,7 +35,7 @@ frames 6 2
 frames 30 0
 frames 60 0
 # ---- Interiors: lairs and a house, each with its own native tileset pair ----
-poke gWildlandsTestWarp 0 1 10
+poke gWildlandsTestWarp 0 1 20
 frames 90 0
 snap 09-lair-mewtwo
 dump rooms gWildlandsRoomTelemetry 8
@@ -54,37 +54,99 @@ expect gBattleMons 176 2 150
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 expect gWildlandsRoomTelemetry 8 4 0
-poke gWildlandsTestWarp 0 1 20
+poke gWildlandsTestWarp 0 1 19
 frames 90 0
 snap 10-lair-rayquaza
 expect gWildlandsRoomTelemetry 8 4 8
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
-poke gWildlandsTestWarp 0 1 15
+poke gWildlandsTestWarp 0 1 13
 frames 90 0
 snap 11-lair-lugia
 expect gWildlandsRoomTelemetry 8 4 5
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
-poke gWildlandsTestWarp 0 1 11
+poke gWildlandsTestWarp 0 1 22
 frames 90 0
 snap 12-lair-hooh
+expect gWildlandsRoomTelemetry 8 4 6
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
-poke gWildlandsTestWarp 0 1 19
+poke gWildlandsTestWarp 0 1 24
 frames 90 0
 snap 13-lair-kyogre
+expect gWildlandsRoomTelemetry 8 4 7
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 poke gWildlandsTestWarp 0 1 16
 frames 90 0
 snap 14-house
+expect gWildlandsRoomTelemetry 8 4 13
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 snap 15-house-door-outside
 dump rooms2 gWildlandsRoomTelemetry 8
 expectmin gWildlandsRoomTelemetry 4 4 6
 expect gWildlandsRoomTelemetry 8 4 0
+# ---- Biome tour: each environment streams its own native secondary tileset ----
+poke gWildlandsTestWarp 0 1 42
+frames 90 0
+snap 20-woodland-research
+expect gWildlandsBiomeTelemetry 0 4 1
+ratesym walk-woodland-research gWildlandsProfile 20 2 180 16 95
+snap 21-woodland-research-walked
+dump biome-woodland-research gWildlandsBiomeTelemetry 4
+dump squad-woodland-research gWildlandsSquadTelemetry 16
+poke gWildlandsTestWarp 0 1 44
+frames 90 0
+snap 20-woodland-tempest
+expect gWildlandsBiomeTelemetry 0 4 1
+ratesym walk-woodland-tempest gWildlandsProfile 20 2 180 16 95
+snap 21-woodland-tempest-walked
+dump biome-woodland-tempest gWildlandsBiomeTelemetry 4
+dump squad-woodland-tempest gWildlandsSquadTelemetry 16
+poke gWildlandsTestWarp 0 1 48
+frames 90 0
+snap 20-desert-mewtwo
+expect gWildlandsBiomeTelemetry 0 4 2
+ratesym walk-desert-mewtwo gWildlandsProfile 20 2 180 16 95
+snap 21-desert-mewtwo-walked
+dump biome-desert-mewtwo gWildlandsBiomeTelemetry 4
+dump squad-desert-mewtwo gWildlandsSquadTelemetry 16
+poke gWildlandsTestWarp 0 1 49
+frames 90 0
+snap 20-desert-ruins
+expect gWildlandsBiomeTelemetry 0 4 2
+ratesym walk-desert-ruins gWildlandsProfile 20 2 180 16 95
+snap 21-desert-ruins-walked
+dump biome-desert-ruins gWildlandsBiomeTelemetry 4
+dump squad-desert-ruins gWildlandsSquadTelemetry 16
+poke gWildlandsTestWarp 0 1 47
+frames 90 0
+snap 20-highlands-rayquaza
+expect gWildlandsBiomeTelemetry 0 4 3
+ratesym walk-highlands-rayquaza gWildlandsProfile 20 2 180 16 95
+snap 21-highlands-rayquaza-walked
+dump biome-highlands-rayquaza gWildlandsBiomeTelemetry 4
+dump squad-highlands-rayquaza gWildlandsSquadTelemetry 16
+poke gWildlandsTestWarp 0 1 51
+frames 90 0
+snap 20-volcano-hooh
+expect gWildlandsBiomeTelemetry 0 4 4
+ratesym walk-volcano-hooh gWildlandsProfile 20 2 180 16 95
+snap 21-volcano-hooh-walked
+dump biome-volcano-hooh gWildlandsBiomeTelemetry 4
+dump squad-volcano-hooh gWildlandsSquadTelemetry 16
+poke gWildlandsTestWarp 0 1 52
+frames 90 0
+snap 20-beach-seashore
+expect gWildlandsBiomeTelemetry 0 4 5
+ratesym walk-beach-seashore gWildlandsProfile 20 2 180 16 95
+snap 21-beach-seashore-walked
+dump biome-beach-seashore gWildlandsBiomeTelemetry 4
+dump squad-beach-seashore gWildlandsSquadTelemetry 16
+expect gWildlandsBiomeTelemetry 12 4 0
+expectmin gWildlandsBiomeTelemetry 4 4 4
 poke gWildlandsTestWarp 0 1 1
 frames 60 0
 poke gWildlandsZoneTestSpeed 0 2 0
@@ -128,3 +190,5 @@ dump roomsEnd gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 28 4 0
 dump brain gWildlandsBrainTelemetry 8
 dump directorEnd gWildlandsDirectorTelemetry 8
+dump biomeEnd gWildlandsBiomeTelemetry 4
+expect gWildlandsBiomeTelemetry 12 4 0

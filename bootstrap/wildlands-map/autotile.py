@@ -15,8 +15,8 @@ from pathlib import Path
 from emerald_tiles import Pair
 
 # semantic classes
-OCEAN, WATER, GRASS, TALL, PATH, SAND, TREE, ROCK, OTHER = range(9)
-NAMES = ['ocean', 'water', 'grass', 'tall', 'path', 'sand', 'tree', 'rock', 'other']
+OCEAN, WATER, GRASS, TALL, PATH, SAND, TREE, ROCK, OTHER, STONE = range(10)
+NAMES = ['ocean', 'water', 'grass', 'tall', 'path', 'sand', 'tree', 'rock', 'other', 'stone']
 WATER_B = {0x10, 0x11, 0x12, 0x14, 0x15, 0x19, 0x1a}
 OCEAN_B = {0x15}
 
@@ -51,7 +51,8 @@ def classify(pair, entry):
         return GRASS
     if r > 150 and g > 130 and b < 140:
         return PATH
-    return OTHER
+    # Walkable rocky ground (Fallarbor/Lavaridge plateaus, ash, stone floors).
+    return STONE
 
 
 def neigh_sig(cls, x, y, w, h, c0, mode):
@@ -139,8 +140,11 @@ class Model:
         return None, 3
 
 
-def train(root, secondary_name, secondary_key, extra_layouts=()):
-    """Train on every General+<secondary> outdoor layout plus primary-only cells of all others."""
+def train(root, secondary_name, secondary_key, extra_layouts=(), only=None, boost=1):
+    """Train on every General+<secondary> outdoor layout plus primary-only cells of all others.
+    `only`: if given, just these layouts teach secondary tiles (others of the same
+    secondary teach primary cells only), and they count `boost` times so a
+    biome's signature ground (Route 111 dune sand, say) wins over generic ground."""
     root = Path(root)
     L = json.load(open(root / 'data/layouts/layouts.json'))['layouts']
     pair = Pair(root, 'general', secondary_name)
@@ -155,6 +159,8 @@ def train(root, secondary_name, secondary_key, extra_layouts=()):
         if not wild.match(l['name']):
             continue
         same = l['secondary_tileset'] == secondary_key
+        if same and only is not None and l['name'].replace('_Layout', '') not in only:
+            same = False
         b = (root / l['blockdata_filepath']).read_bytes()
         words = list(struct.unpack('<%dH' % (len(b) // 2), b))
         w, h = l['width'], l['height']
@@ -162,12 +168,37 @@ def train(root, secondary_name, secondary_key, extra_layouts=()):
         if not same and prim_share < 0.85:
             continue  # interiors/caves: different visual language
         if same:
-            m.learn(pair, words, w, h, lambda mid: True)
+            for _ in range(boost if only else 1):
+                m.learn(pair, words, w, h, lambda mid: True)
         else:
             # other secondaries: learn only primary cells; classify via that layout's own pair
             m.learn(pair, words, w, h, lambda mid: mid < 512, foreign_secondary=True)
     m.finalize(pair)
     return pair, m
+
+
+def train_primary(root):
+    """General-primary-only model (every outdoor layout, primary cells only):
+    used for biome belts so the secondary tileset can be swapped unseen."""
+    root = Path(root)
+    L = json.load(open(root / 'data/layouts/layouts.json'))['layouts']
+    import re
+    wild = re.compile(r'^(Route\d+|SafariZone_\w+|PetalburgWoods|FarawayIsland_Entrance|SouthernIsland_Exterior|BirthIsland_Exterior|NavelRock_Exterior)_Layout$')
+    pairs = {}
+    m = Model()
+    base = None
+    for l in L:
+        if not l or l['primary_tileset'] != 'gTileset_General' or not wild.match(l['name']):
+            continue
+        sec = re.sub(r'(?<!^)(?=[A-Z])', '_', l['secondary_tileset'][9:]).lower()
+        if sec not in pairs:
+            pairs[sec] = Pair(root, 'general', sec)
+        b = (root / l['blockdata_filepath']).read_bytes()
+        words = list(struct.unpack('<%dH' % (len(b) // 2), b))
+        m.learn(pairs[sec], words, l['width'], l['height'], lambda mid: mid < 512, foreign_secondary=True)
+        base = base or pairs[sec]
+    m.finalize(base)
+    return base, m
 
 
 def pair_ok(m, a, b, horiz):

@@ -270,7 +270,12 @@ static void ZoneTint(void)
     sZoneTinted = out;
     WildlandsWorld_RestorePalettes();
     if (out)
+    {
         BlendPalette(BG_PLTT_ID(1), 13 * 16, 6, RGB(14, 4, 20));
+        // The arena re-blends BG palettes from the unfaded buffer each frame;
+        // commit the tint there so it persists. RestorePalettes undoes it.
+        CpuCopy16(&gPlttBufferFaded[BG_PLTT_ID(1)], &gPlttBufferUnfaded[BG_PLTT_ID(1)], 13 * 16 * 2);
+    }
 }
 
 // Simulation step (runs once per fixed 60Hz step, possibly twice per render).

@@ -2,19 +2,25 @@
 """Full Wildlands island (4096x3072 px, 256x192 metatiles) for the Arena world.
 
 Drop-in alternative to generate_world.py (same output files and header
-macros), selected with WILDLANDS_WORLD=island. Terrain comes from the
-approved concept map (docs/art/wildlands-map-concept-v3.png) turned into a
-semantic plan (bootstrap/wildlands-map/island_plan.py), then into native
-General+Fortree metatiles by learned autotiling from real Hoenn layouts in
-this engine tree. Collision/material flags are derived from those metatiles
-(terrain_flags.py), never from the picture.
+macros), selected with WILDLANDS_WORLD=island.
 
-Status: island art/collision PROTOTYPE. Lair pockets are reserved ground with
-multiple approaches; landmark prefabs and per-region secondary tilesets are
-later work and are not claimed here.
+Pipeline (all native Emerald data, nothing painted):
+1. concept map -> cleaned semantic plan (island_plan.py);
+2. biome layer (biome_plan.py): woodland / desert / highlands / volcano /
+   beach, large combat clearings with landmarks, two-wide winding routes
+   between them (MST + nearest neighbours: every clearing has >= 2 exits),
+   natural fords over inland water;
+3. per-cell autotiling: biome cores use a model trained on that biome's real
+   routes (Fortree 119-120, Mauville 110-111, Fallarbor 113-115, Lavaridge
+   112, Slateport 108-109); belts between cores use the General primary only,
+   so the runtime can swap the one secondary tileset in VRAM unseen;
+4. seam repair against real neighbour pairs; landmark prefabs (real route
+   crops with their doors) and cover props (real boulders, outcrops, bushes,
+   hedges, sea rocks mined from routes) stamped with their own collision;
+5. collision/material flags per cell from that cell's own tileset pair.
 """
 from pathlib import Path
-import json, random, struct, sys
+import json, random, struct, sys, re
 
 root = Path(sys.argv[1])
 here = Path(__file__).resolve().parent
@@ -22,115 +28,225 @@ repo = here.parents[1]
 sys.path.insert(0, str(repo / 'bootstrap/wildlands-map'))
 sys.path.insert(0, str(here))
 
-from island_plan import build, BRIDGE, LAIR, LAIRS, W, H          # noqa: E402
-from autotile import train, PATH, GRASS, WATER, OCEAN           # noqa: E402
-from terrain_flags import build_table, words                    # noqa: E402
+from island_plan import build, BRIDGE, LAIR, LAIRS, W, H, despeckle, min_blocks, connect_land   # noqa: E402
+from autotile import (train, train_primary, repair, violations, PATH, GRASS, WATER, OCEAN,     # noqa: E402
+                      TALL, SAND, TREE, ROCK, STONE)
+from terrain_flags import FlagModel, words                                                     # noqa: E402
+import biome_plan as bp                                                                         # noqa: E402
+from props import mine as mine_props                                                            # noqa: E402
 
 out = root / 'data/wildlands_world'
 out.mkdir(parents=True, exist_ok=True)
+rng = random.Random(5)
 
+# ---- 1-2. plan + biome layer ---------------------------------------------
 plan, boxes = build(repo / 'docs/art/wildlands-map-concept-v3.png')
-pair, model = train(root, 'fortree', 'gTileset_Fortree')
-# Crossings are natural land necks (grass fords) rather than a path tile
-# painted over water: shores get real edge art and nobody needs to fly.
+g = plan[:]
+g, clearings = bp.carve_clearings(g, rng)
+g, routes = bp.carve_routes(g, clearings, rng)
+des, core = bp.biome_cores(g)
+g = bp.biome_ground(g, des)
+g = bp.texture_fields(g, des, rng)
+g = despeckle(g, sweeps=2, keep=(BRIDGE, LAIR, OCEAN))
+g = min_blocks(g, {WATER, TREE, ROCK})
+g = connect_land(g, rng)
+plan = g
+# Crossings are natural land necks (grass fords): shores get real edge art.
 cls = [GRASS if c in (BRIDGE, LAIR) else c for c in plan]
 
-# Legendary lairs: authentic native-scale Route 119/120 + Fortree structures
-# stamped into the reserved pockets (same General+Fortree tileset pair).
-# (layout, x, y, w, h) crops.
-PREFABS = {
-    'mewtwo':   ('Route119', 0, 22, 16, 14),   # Weather Institute -> Research Facility
-    'kyogre':   ('Route120', 12, 12, 18, 16),  # cave mound in bridged pond basin -> Abyssal Basin
-    'rayquaza': ('Route119', 14, 18, 18, 20),  # waterfall gorge, log bridges, stairs -> Sky Highlands
-    'hooh':     ('Route120', 1, 48, 16, 16),   # Ancient Tomb boulder ring -> Ember Temple (stone)
-    'lugia':    ('FortreeCity', 8, 0, 28, 8),  # treetop lookouts + rope bridges + ladders -> Tempest Shrine
-}
+# ---- 3. models -----------------------------------------------------------
 LAYOUTS = json.load(open(root / 'data/layouts/layouts.json'))['layouts']
-stamped = {}
-in_prefab = set()
-for name, (layout, sx, sy, sw, sh) in PREFABS.items():
-    bx, by, bw, bh = boxes[name][:4]
-    cx0 = max(2, min(W - sw - 2, bx + bw // 2 - sw // 2))
-    cy0 = max(2, min(H - sh - 4, by + bh // 2 - sh // 2))
-    # Sit the whole structure, a one-cell ring and the two rows its ladders
-    # and doors open onto, on land (playtest: Fortree ladders ended in the sea).
-    best = None
-    for dy in range(-8, 9):
-        for dx in range(-12, 13):
-            ox, oy = cx0 + dx, cy0 + dy
-            if not (2 <= ox and ox + sw + 2 <= W and 2 <= oy and oy + sh + 4 <= H):
-                continue
-            wet = sum(1 for yy in range(oy - 1, oy + sh + 3) for xx in range(ox - 1, ox + sw + 1)
-                      if plan[yy * W + xx] in (OCEAN, WATER))
-            score = wet * 100 + abs(dx) + abs(dy)
-            if best is None or score < best[0]:
-                best = (score, ox, oy)
-    _, ox, oy = best
-    for yy in range(oy - 1, oy + sh + 3):
-        for xx in range(ox - 1, ox + sw + 1):
-            cls[yy * W + xx] = GRASS
-    stamped[name] = (ox, oy, sw, sh, layout)
+SEC_KEY = {'fortree': 'gTileset_Fortree', 'mauville': 'gTileset_Mauville', 'fallarbor': 'gTileset_Fallarbor',
+           'lavaridge': 'gTileset_Lavaridge', 'slateport': 'gTileset_Slateport'}
+models = {}
+pairs = {}
+BIOME_ROUTES = {'mauville': {'Route111'}, 'fallarbor': {'Route113', 'Route114', 'Route115'},
+                'lavaridge': {'Route112'}, 'slateport': {'Route109', 'Route108'}, 'fortree': None}
+for k, name in enumerate(bp.SECONDARIES, start=1):
+    pairs[k], models[k] = train(root, name, SEC_KEY[name], only=BIOME_ROUTES[name], boost=4)
+pairs[0], models[0] = train_primary(root)
+model = models[bp.FORTREE]
 
-rng = random.Random(3)
-world = []
-for y in range(H):
-    for x in range(W):
-        e, _ = model.pick(cls[y * W + x], cls, x, y, W, H, rng)
-        world.append((e if e is not None else 1) & 0x0FFF)
-# Seam repair: swap tiles whose neighbour pairs never occur in real Emerald
-# maps for same-class tiles that do (fixes stray pixels at class borders).
-from autotile import repair, violations
-seam_before = violations(model, world, W, H)
-world, _repair_log = repair(model, world, cls, W, H, sweeps=4)
-seam_after = violations(model, world, W, H)
-for name, (layout, sx, sy, sw, sh) in PREFABS.items():
+# ---- landmarks -------------------------------------------------------------
+# (layout, crop x, y, w, h, biome secondary)
+PREFABS = {
+    'lugia':    ('FortreeCity', 8, 0, 28, 8, bp.FORTREE),     # treetop lookouts + rope bridges + ladders
+    'kyogre':   ('Route120', 12, 12, 18, 16, bp.FORTREE),     # Scorched Slab mound in a bridged pond
+    'research': ('Route119', 0, 22, 16, 14, bp.FORTREE),      # Weather Institute -> research facility
+    'tomb':     ('Route120', 1, 48, 12, 16, bp.FORTREE),      # Ancient Tomb boulder ring
+    'house1':   ('Route119', 32, 106, 4, 4, bp.FORTREE),
+    'house2':   ('Route119', 32, 106, 4, 4, bp.FORTREE),
+    'house3':   ('Route119', 32, 106, 4, 4, bp.FORTREE),
+    'rayquaza': ('Route115', 22, 31, 11, 7, bp.FALLARBOR),    # Meteor Falls mouth in the stone highlands
+    'mewtwo':   ('Route111', 15, 51, 9, 9, bp.MAUVILLE),      # Mirage Tower
+    'ruins':    ('Route111', 24, 82, 10, 8, bp.MAUVILLE),     # Desert Ruins
+    'hooh':     ('Route112', 6, 31, 11, 8, bp.LAVARIDGE),     # Fiery Path mouth in the volcano slopes
+    'seashore': ('Route109', 7, 1, 12, 12, bp.SLATEPORT),     # Seashore House + umbrellas
+}
+keepout = {}
+for c in clearings:
+    if c['landmark']:
+        _l, _sx, _sy, sw_, sh_, _sec = PREFABS[c['landmark']]
+        keepout[c['name']] = (c['cx'] - sw_ // 2, c['cy'] - sh_ // 2, c['cx'] + sw_ // 2, c['cy'] + sh_ // 2)
+cls = bp.clearing_cover(cls, clearings, rng, keepout)
+stamped = {}
+fixed_cells = {}        # cell -> (entry, secondary index) stamped over autotile
+for c in clearings:
+    key = c['landmark']
+    if not key:
+        continue
+    layout, sx, sy, sw, sh, sec = PREFABS[key]
     lay = next(l for l in LAYOUTS if l and l['name'] == layout + '_Layout')
     src = words(root / lay['blockdata_filepath'])
-    ox, oy = stamped[name][:2]
+    ox, oy = c['cx'] - sw // 2, c['cy'] - sh // 2
+    ox = max(2, min(W - sw - 2, ox)); oy = max(2, min(H - sh - 3, oy))
+    for yy in range(oy - 1, oy + sh + 2):
+        for xx in range(ox - 1, ox + sw + 1):
+            if cls[yy * W + xx] not in (OCEAN,):
+                cls[yy * W + xx] = bp.FLOOR[sec] if (yy >= oy + sh or yy < oy or xx < ox or xx >= ox + sw) else cls[yy * W + xx]
     for yy in range(sh):
         for xx in range(sw):
-            world[(oy + yy) * W + ox + xx] = src[(sy + yy) * lay['width'] + sx + xx] & 0x0FFF
-            in_prefab.add((oy + yy) * W + ox + xx)
+            e = src[(sy + yy) * lay['width'] + sx + xx] & 0x0FFF
+            fixed_cells[(oy + yy) * W + ox + xx] = (e, sec if (e & 0x3FF) >= 512 else 0)
+    stamped[key] = (ox, oy, sw, sh, layout, sx, sy, sec)
 
-# Wilderness houses: an authentic Route 119 house (General+Fortree), stamped
-# whole onto open grass away from lairs; each door leads to its own interior.
-_l119 = next(l for l in json.load(open(root / 'data/layouts/layouts.json'))['layouts']
-             if l and l['name'] == 'Route119_Layout')
-_b119 = words(root / _l119['blockdata_filepath'])
-HOUSE = [[_b119[(106 + yy) * _l119['width'] + 32 + xx] & 0x0FFF for xx in range(4)] for yy in range(4)]
-HOUSE_DOOR = (1, 3)
-houses = []
-for tx, ty in ((70, 100), (150, 150), (196, 96), (120, 40)):
-    best = None
-    for r in range(0, 40):
-        for dy in range(-r, r + 1):
-            for dx in range(-r, r + 1):
-                if best or max(abs(dx), abs(dy)) != r:
-                    continue
-                x0, y0 = tx + dx, ty + dy
-                if not (2 <= x0 < W - 8 and 2 <= y0 < H - 9):
-                    continue
-                if any(cls[(y0 - 1 + yy) * W + x0 - 1 + xx] not in (GRASS,) for yy in range(7) for xx in range(6)):
-                    continue
-                if any(abs(x0 - bx - bw // 2) < bw // 2 + 14 and abs(y0 - by - bh // 2) < bh // 2 + 14
-                       for (bx, by, bw, bh, *_r) in boxes.values()):
-                    continue
-                if any(abs(x0 - hx) + abs(y0 - hy) < 40 for hx, hy in houses):
-                    continue
-                best = (x0, y0)
-    if best and len(houses) < 3:
-        houses.append(best)
-        for yy in range(4):
-            for xx in range(4):
-                world[(best[1] + yy) * W + best[0] + xx] = HOUSE[yy][xx]
-        for xx in range(-1, 5):
-            world[(best[1] + 4) * W + best[0] + xx] = model.t0[GRASS].most_common(1)[0][0] & 0x0FFF
-        stamped['house%d' % len(houses)] = (best[0], best[1], 4, 5, 'Route119')
+# ---- 3b. autotile per cell (core model or primary-only in belts) -----------
+world = [0] * (W * H)
+secmap = [0] * (W * H)       # secondary index each cell's tile depends on
+for y in range(H):
+    for x in range(W):
+        i = y * W + x
+        k = core[i]
+        m = models[k] if k else models[0]
+        e, _ = m.pick(cls[i], cls, x, y, W, H, rng)
+        if e is None:
+            e, _ = models[0].pick(cls[i], cls, x, y, W, H, rng)
+        e = (e if e is not None else 1) & 0x0FFF
+        if (e & 0x3FF) >= 512 and not k:
+            e, _ = models[0].pick(cls[i], cls, x, y, W, H, rng)
+            e = (e or 1) & 0x0FFF
+        world[i] = e
+        secmap[i] = k if (e & 0x3FF) >= 512 else 0
+# Seam repair per region with that region's model (others frozen).
+def region_violations():
+    from autotile import pair_ok
+    v = 0
+    for i in range(W * H):
+        x, y = i % W, i // W
+        m = models[core[i]] if core[i] else models[0]
+        if x + 1 < W and not pair_ok(m, world[i], world[i + 1], True): v += 1
+        if y + 1 < H and not pair_ok(m, world[i], world[i + W], False): v += 1
+    return v
+seam_before = region_violations()
+for k in [0] + list(range(1, len(bp.SECONDARIES) + 1)):
+    frozen = [(core[i] != k) or (i in fixed_cells) for i in range(W * H)]
+    world, _ = repair(models[k], world, cls, W, H, sweeps=3, frozen=frozen)
+for i in range(W * H):
+    secmap[i] = core[i] if (world[i] & 0x3FF) >= 512 else 0
+seam_after = region_violations()
 
+# ---- 4. cover props ----------------------------------------------------------
+fm = FlagModel(root)
+PROPS = mine_props(root, fm)
+SEC_NAME_TO_IDX = {n: k for k, n in enumerate(bp.SECONDARIES, start=1)}
+def prop_ok_for(p, biome):
+    if p['w'] * p['h'] > 4:
+        return False
+    return p['need'] == 'general' or SEC_NAME_TO_IDX.get(p['need']) == biome
+WALKCLS = (GRASS, PATH, SAND, STONE, TALL)
+prop_log = []
+for c in clearings:
+    biome = c['biome']
+    land_props = [p for p in PROPS if p['kind'] == 'land' and prop_ok_for(p, biome)]
+    if biome == bp.FORTREE:
+        land_props = [p for p in land_props if p['look'] == 'green'] * 2 + [p for p in land_props if p['look'] == 'rock']
+    else:
+        land_props = [p for p in land_props if p['look'] == 'rock' or p['need'] != 'general']
+    want = max(5, c['r'] * 3 // 4)
+    lm = stamped.get(c['landmark'])
+    placed = []
+    for attempt in range(400):
+        if len(placed) >= want or not land_props:
+            break
+        p = rng.choice(land_props)
+        a = rng.random() * 6.283; rr = c['r'] * (0.35 + 0.6 * rng.random())
+        x0 = int(c['cx'] + rr * __import__('math').cos(a)) - p['w'] // 2
+        y0 = int(c['cy'] + rr * __import__('math').sin(a)) - p['h'] // 2
+        if not (3 <= x0 < W - 6 and 3 <= y0 < H - 6):
+            continue
+        # ring of 2 cells of open floor, away from the landmark and other props
+        area = [(x0 + dx, y0 + dy) for dy in range(-2, p['h'] + 2) for dx in range(-2, p['w'] + 2)]
+        if any(cls[yy * W + xx] not in WALKCLS or (yy * W + xx) in fixed_cells for xx, yy in area):
+            continue
+        # a prop that needs a secondary may only sit inside that biome's core
+        need = SEC_NAME_TO_IDX.get(p['need'], 0)
+        if need and any(core[(y0 + j) * W + x0 + i2] != need for j in range(p['h']) for i2 in range(p['w'])):
+            continue
+        if lm and not (x0 + p['w'] + 3 < lm[0] or x0 > lm[0] + lm[2] + 3 or y0 + p['h'] + 3 < lm[1] or y0 > lm[1] + lm[3] + 3):
+            continue
+        if any(abs(x0 - qx) < 5 and abs(y0 - qy) < 5 for qx, qy in placed):
+            continue
+        for j, row in enumerate(p['rows']):
+            for i2, e in enumerate(row):
+                fixed_cells[(y0 + j) * W + x0 + i2] = (e, SEC_NAME_TO_IDX.get(p['need'], 0) if (e & 0x3FF) >= 512 else 0)
+        placed.append((x0, y0))
+    # concealment: one or two tall-grass patches in woodland/beach clearings
+    if biome in (bp.FORTREE, bp.SLATEPORT):
+        for _ in range(2):
+            a = rng.random() * 6.283; rr = c['r'] * 0.6
+            tx = int(c['cx'] + rr * __import__('math').cos(a)); ty = int(c['cy'] + rr * __import__('math').sin(a))
+            for yy in range(ty, ty + 3):
+                for xx in range(tx, tx + 4):
+                    if cls[yy * W + xx] in (GRASS, SAND) and (yy * W + xx) not in fixed_cells:
+                        cls[yy * W + xx] = TALL
+                        e, _ = models[0].pick(TALL, cls, xx, yy, W, H, rng)
+                        if e is not None:
+                            world[yy * W + xx] = e & 0x0FFF
+    prop_log.append((c['name'], len(placed)))
+
+for i, (e, k) in fixed_cells.items():
+    world[i] = e
+    secmap[i] = k
+
+# ---- 5. collision per cell from its own pair ------------------------------
+attr_cache = {}
+def sec_attrs(k):
+    if k not in attr_cache:
+        name = bp.SECONDARIES[k - 1] if k else 'fortree'
+        attr_cache[k] = words(root / f'data/tilesets/secondary/{name}/metatile_attributes.bin')
+    return attr_cache[k]
 primary_attr = words(root / 'data/tilesets/primary/general/metatile_attributes.bin')
-secondary_attr = words(root / 'data/tilesets/secondary/fortree/metatile_attributes.bin')
-terrain = build_table(root, world, primary_attr, secondary_attr)
+def build_terrain(world):
+    out_t = bytearray()
+    for i, e in enumerate(world):
+        mid = e & 0x3FF
+        if mid < 512:
+            a = primary_attr[mid]
+        else:
+            t = sec_attrs(secmap[i] or bp.FORTREE)
+            a = t[mid - 512] if mid - 512 < len(t) else 0
+        out_t.append(fm.flags(e, a & 0xff))
+    return bytes(out_t)
+terrain = build_terrain(world)
 SOLID, DEEP = 1, 2
+
+# Belt invariant over the REAL tiles: no 17x17 window may contain secondary
+# tiles of two different biomes.
+import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view as swv
+S = np.array(secmap, dtype=np.int8).reshape(H, W)
+belt_ok = True
+for k in range(1, len(bp.SECONDARIES) + 1):
+    mk = (S == k).astype(np.int8)
+    if not mk.any():
+        continue
+    pad = np.pad(mk, 8)
+    dil = swv(swv(pad, 17, axis=1).max(axis=-1), 17, axis=0).max(axis=-1)
+    clash = (dil > 0) & (S != 0) & (S != k)
+    if clash.any():
+        belt_ok = False
+        ys, xs = np.nonzero(clash)
+        print('BELT CLASH', bp.SECONDARIES[k - 1], 'near', list(zip(xs[:5].tolist(), ys[:5].tolist())))
 
 
 def walkable(x, y):
@@ -140,17 +256,16 @@ def walkable(x, y):
     return not (f & SOLID) and (not (f & DEEP) or (f & 16))
 
 
-# Bridges in the plan must be walkable in the real metatiles: if the learned
-# tile for a planned bridge/path cell over water is not, fall back to a plain
-# native path metatile so routes never depend on Surf.
-path_tile = model.t0[PATH].most_common(1)[0][0] & 0x0FFF
-grass_tile = model.t0[GRASS].most_common(1)[0][0] & 0x0FFF
+# Planned crossings must be walkable in the real metatiles.
+path_tile = models[0].t0[PATH].most_common(1)[0][0] & 0x0FFF
+grass_tile = models[0].t0[GRASS].most_common(1)[0][0] & 0x0FFF
 fixed = 0
 for i, c in enumerate(plan):
-    if c in (BRIDGE, PATH) and i not in in_prefab and not walkable(i % W, i // W):
+    if c in (BRIDGE, PATH) and i not in fixed_cells and not walkable(i % W, i // W):
         world[i] = grass_tile if c == BRIDGE else path_tile
+        secmap[i] = 0
         fixed += 1
-terrain = build_table(root, world, primary_attr, secondary_attr)
+terrain = build_terrain(world)
 
 # Connectivity audit over the real collision data.
 from collections import deque
@@ -268,37 +383,55 @@ comp_ok = round(100 * giant / max(1, N), 1)
     'static const u16 sNavCell[WL_NAV_NODES] = {' + ','.join(str((k[1] // STEP) * GW + k[0] // STEP) for k in keys) + '};\n')
 
 
-# Loot: 32 reachable, non-concealed spots spread over the island, plus one on
-# the player's spawn approach for the runtime pickup test.
+# Loot: two orbs per clearing (fights happen there) plus spread singles on
+# routes; one on the player's spawn approach for the runtime pickup test.
 loot = [(P[0] * 16 + 8 + 48, P[1] * 16 + 8, 0)] if (P[0] + 3, P[1]) in seen else []
+def free_spot(cx, cy, r):
+    for _ in range(80):
+        x = cx + rng.randint(-r, r); y = cy + rng.randint(-r, r)
+        if (x, y) in seen and not terrain[y * W + x] & 8 and all(
+                abs(x * 16 + 8 - lx) + abs(y * 16 + 8 - ly) > 64 for lx, ly, _ in loot):
+            return x * 16 + 8, y * 16 + 8
+    return None
+for c in clearings:
+    for _ in range(2):
+        p = free_spot(c['cx'], c['cy'], c['r'] - 2)
+        if p and len(loot) < 40:
+            loot.append((p[0], p[1], len(loot) % 3))
 cells = sorted(seen)
 rng2 = random.Random(11)
 rng2.shuffle(cells)
 for (x, y) in cells:
-    if len(loot) >= 32:
+    if len(loot) >= 44:
         break
     if terrain[y * W + x] & 8:
         continue
     px, py = x * 16 + 8, y * 16 + 8
-    if all(abs(px - lx) + abs(py - ly) > 300 for lx, ly, _ in loot):
+    if all(abs(px - lx) + abs(py - ly) > 360 for lx, ly, _ in loot):
         loot.append((px, py, len(loot) % 3))
 
 # ---- Enterable interiors -------------------------------------------------
-# Doors come from the prefabs' own native warp events, plus a cliff cave
-# mouth (Emerald's open secret-base cave metatile) where a lair has no door.
+# Doors are the landmarks' own native warp events; Kyogre's mound only has a
+# water door, so its land entrance is a cliff cave mouth.
 CAVE_CLOSED, CAVE_OPEN = 0x1B0, 0x1B1
+DEST_ROOM = {
+    'FORTREE_CITY_HOUSE1': 'treehouse1', 'FORTREE_CITY_HOUSE2': 'treehouse2',
+    'FORTREE_CITY_HOUSE3': 'treehouse3', 'FORTREE_CITY_HOUSE4': 'lugia',
+    'ROUTE119_WEATHER_INSTITUTE_1F': 'research', 'ANCIENT_TOMB': 'tomb',
+    'METEOR_FALLS_1F_1R': 'rayquaza', 'MIRAGE_TOWER_1F': 'mewtwo', 'DESERT_RUINS': 'ruins',
+    'FIERY_PATH': 'hooh', 'ROUTE109_SEASHORE_HOUSE': 'seashore',
+}
 doors = []
-def door_at(name, cx, cy, room, kind='door'):
-    ox, oy = stamped[name][:2]
-    doors.append(dict(cell=(ox + cx, oy + cy), room=room, kind=kind))
-door_at('mewtwo', 6, 10, 'mewtwo')                 # Weather Institute door
-door_at('hooh', 6, 7, 'hooh')                      # Ancient Tomb door
-door_at('lugia', 2, 3, 'treehouse1')
-door_at('lugia', 9, 3, 'treehouse2')
-door_at('lugia', 17, 3, 'treehouse3')
-door_at('lugia', 24, 2, 'lugia')                   # far treehouse -> Tempest Shrine
-for i in range(len(houses)):
-    door_at('house%d' % (i + 1), *HOUSE_DOOR, 'house%d' % (i + 1))
+for key, (ox, oy, sw, sh, layout, sx, sy, sec) in stamped.items():
+    mj = json.load(open(root / f'data/maps/{layout}/map.json'))
+    for w_ in mj.get('warp_events', []):
+        dest = w_['dest_map'].replace('MAP_', '')
+        if not (sx <= w_['x'] < sx + sw and sy <= w_['y'] < sy + sh):
+            continue
+        room = key if dest == 'ROUTE119_HOUSE' else DEST_ROOM.get(dest)
+        if not room or any(d['room'] == room for d in doors):
+            continue
+        doors.append(dict(cell=(ox + w_['x'] - sx, oy + w_['y'] - sy), room=room, kind='door'))
 def cave_mouth(name, room):
     ox, oy, sw, sh = stamped[name][:4]
     ccx, ccy = ox + sw // 2, oy + sh // 2
@@ -315,14 +448,14 @@ def cave_mouth(name, room):
     assert cand, f'no cave mouth site for {name}'
     _, _, xx, yy = min(cand)
     world[yy * W + xx] = CAVE_OPEN | 0x0400
+    secmap[yy * W + xx] = 0
     doors.append(dict(cell=(xx, yy), room=room, kind='cave'))
 cave_mouth('kyogre', 'kyogre')
-cave_mouth('rayquaza', 'rayquaza')
-terrain = build_table(root, world, primary_attr, secondary_attr)
+terrain = build_terrain(world)
 door_audit = {}
 for d in doors:
     x, y = d['cell']
-    door_audit['%s@%d,%d' % (d['room'], x, y)] = d['kind'] == 'water' or (x, y + 1) in seen
+    door_audit['%s@%d,%d' % (d['room'], x, y)] = (x, y + 1) in seen
 from interiors import build as build_rooms
 LOOT_HEAL, LOOT_CACHE = 3, 4
 ROOMS = {
@@ -334,9 +467,16 @@ ROOMS = {
     'hooh':    dict(layout='NavelRock_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='HO_OH'),
     'kyogre':  dict(layout='SeafloorCavern_Room9', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='KYOGRE'),
     'rayquaza': dict(layout='SkyPillar_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='RAYQUAZA'),
+    'research': dict(layout='Route119_WeatherInstitute_2F', loot=[LOOT_HEAL]),
+    'tomb':    dict(layout='AncientTomb', loot=[LOOT_HEAL]),
+    'ruins':   dict(layout='DesertRuins', loot=[LOOT_HEAL]),
+    'seashore': dict(layout='Route109_SeashoreHouse', loot=[LOOT_HEAL]),
+    'house1':  dict(layout='House1', loot=[LOOT_HEAL]),
+    'house2':  dict(layout='House1', loot=[LOOT_HEAL]),
+    'house3':  dict(layout='House1', loot=[LOOT_HEAL]),
 }
-for i in range(len(houses)):
-    ROOMS['house%d' % (i + 1)] = dict(layout='House1', loot=[LOOT_HEAL])
+used_rooms = {d['room'] for d in doors}
+ROOMS = {k: v for k, v in ROOMS.items() if k in used_rooms}
 outdoor_terrain = terrain
 world, terrain, TOTAL_H, rooms_src, room_loot, rooms_manifest = build_rooms(
     root, world, terrain, W, H, (0, 0), ('General', 'Fortree'), doors, ROOMS)
@@ -344,12 +484,50 @@ loot = loot[:64 - len(room_loot)] + room_loot
 (root / 'include/wildlands_rooms.inc').write_text(rooms_src)
 (root / 'include/wildlands_loot.inc').write_text(''.join(f'    {{{x}, {y}, {t}}},\n' for x, y, t in loot))
 
+# ---- runtime biome streaming tables -------------------------------------
+from collections import Counter as _C
+BLOCK = 8
+GWb, GHb = W // BLOCK, H // BLOCK
+blocks = []
+for by in range(GHb):
+    for bx in range(GWb):
+        v = _C(core[(by * BLOCK + j) * W + bx * BLOCK + i] for j in range(BLOCK) for i in range(BLOCK))
+        nz = [(n, k) for k, n in v.items() if k]
+        blocks.append(max(nz)[1] if nz else 0)
+(out / 'biome.bin').write_bytes(bytes(secmap[:W * H]))
+start_biome = core[P[1] * W + P[0]] or blocks[(P[1] // BLOCK) * GWb + P[0] // BLOCK] or bp.FORTREE
+def stand_spot(c):
+    st = stamped.get(c['landmark'])
+    tx, ty = (c['cx'], st[1] + st[3] + 2) if st else (c['cx'], c['cy'])
+    for r in range(0, 20):
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                x, y = tx + dx, ty + dy
+                if max(abs(dx), abs(dy)) == r and (x, y) in seen and all(
+                        (x + i, y + j) in seen for i in (-1, 0, 1) for j in (-1, 0, 1)):
+                    return x * 16 + 8, y * 16 + 8
+    return c['cx'] * 16 + 8, c['cy'] * 16 + 8
+landmark_pts = [stand_spot(c) for c in clearings]
+(root / 'include/wildlands_biomes.inc').write_text(
+    '// Generated by generate_island.py: biome secondary streaming.\n'
+    f'#define WL_BIOME_COUNT {len(bp.SECONDARIES)}\n'
+    + ''.join(f'extern const struct Tileset {SEC_KEY[n]};\n' for n in bp.SECONDARIES)
+    + 'extern const struct Tileset gTileset_General;\n'
+    + 'static const struct Tileset *const sWlOutdoorPairs[WL_BIOME_COUNT][2] = {'
+    + ','.join(f'{{&gTileset_General,&{SEC_KEY[n]}}}' for n in bp.SECONDARIES) + '};\n'
+    f'#define WL_BIOME_BLOCK {BLOCK}\n#define WL_BIOME_GW {GWb}\n#define WL_BIOME_GH {GHb}\n'
+    'static const u8 sWlBiomeBlocks[WL_BIOME_GW * WL_BIOME_GH] = {' + ','.join(map(str, blocks)) + '};\n'
+    'static const u8 sWlBiomeCells[] = INCBIN_U8("data/wildlands_world/biome.bin");\n'
+    f'#define WL_BIOME_START {start_biome - 1}\n'
+    f'#define WL_LANDMARK_COUNT {len(landmark_pts)}\n'
+    'static const s16 sWlLandmarks[WL_LANDMARK_COUNT][2] = {' + ','.join(f'{{{x},{y}}}' for x, y in landmark_pts) + '};\n')
+
 (out / 'slice.bin').write_bytes(struct.pack('<%dH' % len(world), *world))
 from minimap import emit as _emit_minimap
 _emit_minimap(outdoor_terrain, W, H, root / 'include/wildlands_minimap.inc')
 (out / 'terrain.bin').write_bytes(terrain)
 (root / 'include/wildlands_world_nav.inc').write_text(''.join(f'    {{{x}, {y}}},\n' for x, y in nav))
-void_entry = model.t0[OCEAN].most_common(1)[0][0] & 0x0FFF
+void_entry = models[0].t0[OCEAN].most_common(1)[0][0] & 0x0FFF
 (root / 'include/wildlands_world_data.h').write_text(f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define GUARD_WILDLANDS_WORLD_DATA_H
 #define WL_WORLD_PIXEL_W 4096
@@ -385,7 +563,11 @@ manifest = {
               for k, v in boxes.items()},
     'bridge_fallbacks': fixed, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
     'player_start': P, 'enemy_start': E,
-    'interiors': rooms_manifest, 'doors_reachable': door_audit, 'wild_houses': houses,
+    'interiors': rooms_manifest, 'doors_reachable': door_audit,
+    'biomes': {bp.BIOME_NAMES[k]: sum(1 for v in core if v == k) for k in bp.BIOME_NAMES},
+    'belt_ok': belt_ok, 'clearings': clearings, 'routes': routes, 'props_per_clearing': prop_log,
+    'landmarks': {k: list(v[:4]) + [bp.SECONDARIES[v[7] - 1]] for k, v in stamped.items()},
+    'landmark_spots': [[c['name'], bp.BIOME_NAMES[c['biome']], x, y] for c, (x, y) in zip(clearings, landmark_pts)],
     'not_claimed': ['destructible cover', 'legendary boss encounters'],
 }
 (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
