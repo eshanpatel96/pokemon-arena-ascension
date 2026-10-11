@@ -460,10 +460,10 @@ static bool8 SideCanWater(u8 side)
 
 static bool8 SpeciesCanWater(u16 species)
 {
-    return gBaseStats[species].type1 == TYPE_WATER
-        || gBaseStats[species].type2 == TYPE_WATER
-        || gBaseStats[species].type1 == TYPE_FLYING
-        || gBaseStats[species].type2 == TYPE_FLYING;
+    return gSpeciesInfo[species].types[0] == TYPE_WATER
+        || gSpeciesInfo[species].types[1] == TYPE_WATER
+        || gSpeciesInfo[species].types[0] == TYPE_FLYING
+        || gSpeciesInfo[species].types[1] == TYPE_FLYING;
 }
 
 static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
