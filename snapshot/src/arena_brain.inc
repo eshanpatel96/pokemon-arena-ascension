@@ -20,6 +20,9 @@ enum { BRAIN_ROAM, BRAIN_FIGHT, BRAIN_RETREAT, BRAIN_LOOT, BRAIN_RAID };
 static EWRAM_DATA struct {
     u8 mode, focus, door, spot;
     u16 modeClock, roomStart, roamClock, calm;
+    u16 modeStart, retreatEnd, offStamp;
+    u8 offReady;
+    u8 off[4][4];   // cached BrainOffense(attacker, defender), battlers 0..3
 } sBrain = {};
 // [0] mode [1] focus battler [2] fight decisions [3] retreat decisions
 // [4] loot runs started [5] lair raids entered [6] raid exits
@@ -28,7 +31,7 @@ EWRAM_DATA u32 gWildlandsBrainTelemetry[8] = {};
 
 // Best type effectiveness (x10) of any damaging move `attacker` knows
 // against `defender`, with STAB folded in (x15/10).
-static u32 BrainOffense(u8 attacker, u8 defender)
+static u32 BrainOffenseCalc(u8 attacker, u8 defender)
 {
     u32 best = 0, i, k;
     for (i = 0; i < MAX_MON_MOVES; i++)
@@ -55,6 +58,22 @@ static u32 BrainOffense(u8 attacker, u8 defender)
             best = m;
     }
     return best ? best : 5;
+}
+
+// The type table walk is ~100 entries per move: cache the 4x4 matrix and
+// refresh it every 20s (moves and types are static within an encounter).
+static u32 BrainOffense(u8 attacker, u8 defender)
+{
+    if (!sBrain.offReady || (u16)(sArena.frame - sBrain.offStamp) > 1200)
+    {
+        u32 a, d;
+        for (a = 0; a < 4; a++)
+            for (d = 0; d < 4; d++)
+                sBrain.off[a][d] = (a & 1) == (d & 1) ? 10 : min(255, BrainOffenseCalc(a, d));
+        sBrain.offReady = TRUE;
+        sBrain.offStamp = sArena.frame;
+    }
+    return sBrain.off[attacker][defender];
 }
 
 static u32 BrainHpPct(u8 b)
@@ -158,8 +177,11 @@ static void BrainSetMode(u8 mode)
 {
     if (sBrain.mode == mode)
         return;
+    if (sBrain.mode == BRAIN_RETREAT)
+        sBrain.retreatEnd = sArena.frame;
     sBrain.mode = mode;
     sBrain.modeClock = 0;
+    sBrain.modeStart = sArena.frame;
     if (mode == BRAIN_LOOT || mode == BRAIN_RAID) gWildlandsBrainTelemetry[4]++;
     gWildlandsBrainTelemetry[0] = mode;
 }
@@ -256,9 +278,22 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
     if (seenMask)
     {
         bool8 losing = adv < 70 || (BrainHpPct(1) < 35 && adv < 115);
-        bool8 recovered = adv > 95 && BrainHpPct(1) > 45;
+        u16 inMode = sArena.frame - sBrain.modeStart;
+        u16 sinceRetreat = sArena.frame - sBrain.retreatEnd;
+        bool8 cornered = FALSE;
+        for (b = 0; b < 2; b++)
+            if (seenMask & (1 << b))
+            {
+                s32 x, y;
+                SquadPos(b ? 2 : 0, &x, &y);
+                if (ArenaNav_Distance(body->x / Q, body->y / Q, x / Q, y / Q) < 64)
+                    cornered = TRUE;
+            }
         sBrain.calm = 0;
-        if (losing || (sBrain.mode == BRAIN_RETREAT && !recovered && sBrain.modeClock < 40))
+        // Retreat in bursts (<= 2.5s), never twice within 4s, and turn to
+        // fight when caught up with: a weak duo still has to fight sometimes.
+        if (losing && !cornered
+            && (sBrain.mode == BRAIN_RETREAT ? inMode < 150 : (sinceRetreat > 240 || !sBrain.retreatEnd)))
         {
             s32 tx = 0, ty = 0, gx, gy;
             u8 n = 0;

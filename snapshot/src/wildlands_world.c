@@ -762,18 +762,23 @@ s8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy)
     if (!sActive)
         return 0;
     water = SideCanWater(side);
-    for (k = 1; k <= 6; k++)
+    // Point tests only: a <=5px shift is smaller than the footprint, so the
+    // start and end squares overlap and no sweep is needed.
+    for (k = 1; k <= 5; k++)
     {
         s8 dir;
         for (dir = -1; dir <= 1; dir += 2)
         {
             s16 nx = x + (sx ? 0 : dir * k), ny = y + (sx ? dir * k : 0);
-            if (TraversalClear(water, x, y, nx, ny, WL_WORLD_BODY_RADIUS)
-                && TraversalClear(water, nx, ny, nx + sx * 3, ny + sy * 3, WL_WORLD_BODY_RADIUS))
-            {
-                gWildlandsRoomTelemetry[5]++;
-                return dir;
-            }
+            s16 fx = nx + sx * 3, fy = ny + sy * 3;
+            u8 t;
+            if (SolidCircle(nx, ny, WL_WORLD_BODY_RADIUS) || SolidCircle(fx, fy, WL_WORLD_BODY_RADIUS))
+                continue;
+            t = TerrainEntry(fx >> 4, fy >> 4);
+            if (!water && (t & WL_TERRAIN_DEEP_WATER) && !(t & WL_TERRAIN_BRIDGE))
+                continue;
+            gWildlandsRoomTelemetry[5]++;
+            return dir;
         }
     }
     return 0;
