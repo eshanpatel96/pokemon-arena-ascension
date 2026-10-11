@@ -22,7 +22,7 @@ static EWRAM_DATA struct {
     u8 mode, focus, door, spot;
     u16 modeClock, roomStart, roamClock, calm;
     u16 modeStart, retreatEnd, offStamp;
-    u8 offReady;
+    u8 offReady, boss;   // boss: this RAID is a legendary fight, not a cache run
     u8 off[4][4];   // cached BrainOffense(attacker, defender), battlers 0..3
 } sBrain = {};
 // [0] mode [1] focus battler [2] fight decisions [3] retreat decisions
@@ -180,6 +180,8 @@ static void BrainSetMode(u8 mode)
         return;
     if (sBrain.mode == BRAIN_RETREAT)
         sBrain.retreatEnd = sArena.frame;
+    if (mode != BRAIN_RAID)
+        sBrain.boss = FALSE;
     sBrain.mode = mode;
     sBrain.modeClock = 0;
     sBrain.modeStart = sArena.frame;
@@ -223,6 +225,22 @@ static void BrainRaid(struct ArenaBody *body)
     WildlandsWorld_DoorInfo(sBrain.door, &ox, &oy, &lair);
     if (!WildlandsWorld_InRoom(bx, by))
     {
+        if (sBrain.boss)
+        {
+            // Legendary run: re-checked every 2s (storm, HP); at the door the
+            // duo goes in and the director resolves the fight off screen.
+            if (DirectorBossDoor() != sBrain.door)
+            { BrainSetMode(BRAIN_ROAM); return; }
+            if (ArenaNav_Distance(bx, by, ox, oy) < 14)
+            {
+                gWildlandsBrainTelemetry[5]++;
+                BrainSetMode(BRAIN_ROAM);
+                DirectorBossEnter();
+                return;
+            }
+            sArena.observed.x = ox; sArena.observed.y = oy;
+            return;
+        }
         if (LootTaken(sBrain.spot))
         { BrainSetMode(BRAIN_ROAM); return; }
         if (ArenaNav_Distance(bx, by, ox, oy) < 14)
@@ -354,6 +372,20 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
         sArena.observed.x = sLootSpots[sBrain.spot].x;
         sArena.observed.y = sLootSpots[sBrain.spot].y;
         return;
+    }
+    {
+        u8 bossDoor = DirectorBossDoor();
+        if (bossDoor != 0xFF)
+        {
+            if (sBrain.mode != BRAIN_RAID || !sBrain.boss)
+            {
+                BrainSetMode(BRAIN_RAID);
+                sBrain.boss = TRUE;
+                sBrain.door = bossDoor;
+            }
+            BrainRaid(body);
+            return;
+        }
     }
     {
         u8 spot, door;

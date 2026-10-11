@@ -60,6 +60,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void BrainDecide(struct ArenaBody *body, u8 seenMask);\nstatic bool8 BrainAllowsFire(void);\n'
       'static void WildlandsBuildOam(void);\n'
       'static bool8 DirectorAdvance(void);\nstatic void DirectorInit(void);\nstatic void DirectorSim(void);\n'
+      'static u8 DirectorBossDoor(void);\nstatic void DirectorBossEnter(void);\n'
       'static void DirectorDestroy(void);\nstatic void DirRestorePartner(void);\nstatic bool8 DirectorSoloActive(void);\n'
       'static bool8 DirectorPopupText(u8 *text, u8 *color);\nstatic u8 DirectorLeft(void);\nstatic bool8 DirectorRunning(void);\n'
       'static bool8 DirectorPopupActive(void);\nstatic void DirectorPauseLine(void);\n'
@@ -279,6 +280,16 @@ patch('src/arena_moves.c', 'const struct ArenaMoveProfile *ArenaMoves_Get(u16 mo
       '            if (i < 255) { sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = i + 1; }\n'
       '            return &sProfiles[i];\n'
       '        }\n    return 0;\n}\n')
+
+# Loop timing: where in the frame CB2 starts (VBlank interrupt + main-loop
+# overhead before it) and how often a render took one vs several VBlanks.
+patch(A, '    u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;\n',
+      '    u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;\n'
+      '    {u16 ln=(REG_VCOUNT+68)%228; gWildlandsLoop[0]=ln; if(ln>gWildlandsLoop[1])gWildlandsLoop[1]=ln; gWildlandsLoop[gap>=2?3:2]++;}\n')
+patch(A, 'static EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n',
+      'static EWRAM_DATA u8 sWildlandsSceneryLit = 0;\n'
+      '// [0] scanline CB2 started at (after VBlank) [1] max [2] one-VBlank loops [3] slower loops\n'
+      'EWRAM_DATA u16 gWildlandsLoop[4] = {};\n')
 
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
