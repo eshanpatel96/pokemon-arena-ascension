@@ -291,7 +291,9 @@ reach = len(seen)
 lair_reach = {}
 for name, b in boxes.items():
     x0, y0, w, h = stamped[name][:4] if name in stamped else b[:4]
-    lair_reach[name] = sum(1 for y in range(y0, y0 + h) for x in range(x0, x0 + w) if (x, y) in seen)
+    # Landmark prefabs are mostly solid art (cliff caves, towers); measure the
+    # fighting ground: the prefab plus a 4-cell apron of its clearing.
+    lair_reach[name] = sum(1 for y in range(y0 - 4, y0 + h + 4) for x in range(x0 - 4, x0 + w + 4) if (x, y) in seen)
 
 # Spawns for the duo practice match: two reachable points ~12 metatiles apart
 # in the central wilds.
