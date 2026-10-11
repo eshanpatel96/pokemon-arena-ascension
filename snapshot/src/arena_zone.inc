@@ -255,6 +255,18 @@ static void ZoneSim(void)
 {
     if (!sZone.active)
         return;
+    if (gWildlandsZoneTestSpeed == 0xFFFE)
+    {
+        // TEST HOOK ONLY: restore the opening circle, then hold it.
+        sZone.phase = ZONE_EXPLORING; sZone.stage = 0;
+        sZone.clock = sZone.phaseClock = 0;
+        sZone.cx = (WL_SLICE_BASE_X + WL_SLICE_W / 2) * 16;
+        sZone.cy = (WL_SLICE_BASE_Y + WL_OUTDOOR_H / 2) * 16;
+        sZone.r = sZoneRadii[0] << 8;
+        sZone.toX = sZone.cx; sZone.toY = sZone.cy; sZone.toR = sZone.r;
+        memset(sZone.frac, 0, sizeof(sZone.frac));
+        gWildlandsZoneTestSpeed = 0xFFFF;
+    }
     if (!sArena.paused && !sArena.resultTimer && gWildlandsZoneTestSpeed != 0xFFFF)
     {
         sZone.clock += 1 + gWildlandsZoneTestSpeed;
