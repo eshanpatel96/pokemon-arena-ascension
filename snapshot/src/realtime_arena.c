@@ -3253,6 +3253,12 @@ static void ArenaExit(bool8 fainted)
             VarSet(VAR_ASCENSION_CHAMPION_WINS,min(9999,VarGet(VAR_ASCENSION_CHAMPION_WINS)+1));
             VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCENSION_MASTERS_BEST)+1));
         }
+        if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1 && FlagGet(FLAG_ARENA_PRACTICE) && gBattleMons[0].hp==0)
+        {
+            u16 zero=0; u32 k;
+            for(k=0;k<PARTY_SIZE;k++)
+                if(GetMonData(&gPlayerParty[k],MON_DATA_SPECIES))SetMonData(&gPlayerParty[k],MON_DATA_HP,&zero);
+        }
         sArena.active=FALSE;sArena.classic=FALSE;
         gRealtimeArenaTelemetry.active=FALSE;
         gRealtimeArenaTelemetry.exits++;
