@@ -615,6 +615,28 @@ static void DirSimOne(u8 i)
     // Travel: ~40px per update toward the goal on legal ground.
     dx = d->gx - d->x; dy = d->gy - d->y;
     dist = max(Abs(dx), Abs(dy));
+    // A duo on a boss run follows the island nav graph (validated edges, so
+    // every intermediate point is legal ground if it becomes the active duo).
+    if (d->plan)
+    {
+        struct ArenaPoint wp;
+        u16 sp = d->species[d->hp[0] ? 0 : 1];
+        if (WildlandsWorld_NextWaypointSpecies(sp, d->x, d->y, d->gx, d->gy, &wp))
+        {
+            s32 wx = wp.x - d->x, wy = wp.y - d->y, wd = max(Abs(wx), Abs(wy));
+            if (wd > 48) { wx = wx * 48 / wd; wy = wy * 48 / wd; }
+            if (wd)
+            {
+                d->x += wx; d->y += wy;
+                gWildlandsBossTelemetry[14]++;
+                return;
+            }
+        }
+        d->plan = 0;
+        gWildlandsBossTelemetry[5]++;
+        DirRandomGoal(d);
+        return;
+    }
     if (dist < 24 || (sZone.active && ZoneOutside(d->gx, d->gy, 24) && !(DirRand() & 3)))
     {
         // New goal: a lair when a boss run scores well (see DirBossScore),
