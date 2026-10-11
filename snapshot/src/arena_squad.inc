@@ -415,7 +415,7 @@ static void SquadThink(struct SquadWing *w)
         if (w->moving && w->x == w->lastX && w->y == w->lastY) w->stuckClock++;
         else if (w->moving) w->stuckClock = 0;
         w->lastX = w->x; w->lastY = w->y;
-        if (ld > 260 || (ld > 64 && w->stuckClock > 90))
+        if (ld > 260 || (ld > 64 && w->stuckClock > 90) || w->stuckClock > 180)
             SquadRegroup(w, lead);
     }
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
@@ -586,6 +586,8 @@ static void SquadDoorSim(void)
         else if (k == 1)
         { nx = WL_PLAYER_START_X; ny = WL_PLAYER_START_Y; }
         lead->x = nx * Q; lead->y = ny * Q;
+        if (k == 1 && sSquadWings[0].active && sSquadWings[0].alive)
+            SquadRegroup(&sSquadWings[0], lead);
     }
     if (!WildlandsWorld_PollDoor(lead->x / Q, lead->y / Q, lead->facing == FACE_UP,
             lead->facing == FACE_DOWN, &nx, &ny))
