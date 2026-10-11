@@ -441,7 +441,6 @@ static void SquadDraw(struct SquadWing *w)
         BlendPalette(OBJ_PLTT_ID(IndexOfSpritePaletteTag(w->tag)), 16, 0, RGB_WHITE);
 }
 
-EWRAM_DATA u16 gWildlandsProfile[8] = {};
 #define WL_NOW() (gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228)
 static void SquadTick(void)
 {

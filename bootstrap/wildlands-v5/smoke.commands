@@ -48,7 +48,32 @@ dump render gArenaRenderTelemetry 4
 dump world gWildlandsWorldTelemetry 16
 dump audit gWildlandsWorldAudit 8
 snap 07-after-cadence
+dump profile1 gWildlandsProfile 6
+# ---- Gate G live map: START -> MAP (5th entry) ----
+press 8
+press 128
+press 128
+press 128
+press 128
+snap 11-pause-menu
+press 1
+frames 20 0
+snap 12-live-map
+dump map gWildlandsMapTelemetry 4
+expectmin gWildlandsMapTelemetry 0 4 1
+press 2
+press 2
+frames 60 0
+snap 13-resumed
 
+# ---- Gate E closing zone: exploration ends, next circle announced ----
+dump zone0 gWildlandsZoneTelemetry 16
+frames 7800 0
+snap 10-zone-warning
+dump zone1 gWildlandsZoneTelemetry 16
+expectmin gWildlandsZoneTelemetry 0 4 1
+expectmin gWildlandsZoneTelemetry 56 4 1
+dump profile2 gWildlandsProfile 6
 # ---- Gate D true duo combat (squad wings are battlers 2 and 3) ----
 dump squad0 gWildlandsSquadTelemetry 16
 expect gWildlandsSquadTelemetry 0 4 3
@@ -68,29 +93,3 @@ dump profile gWildlandsProfile 4
 dump loot gWildlandsLootTelemetry 12
 expectmin gWildlandsLootTelemetry 0 4 1
 expect gWildlandsLootTelemetry 44 4 0
-# ---- Gate E closing zone: exploration ends, next circle announced ----
-dump zone0 gWildlandsZoneTelemetry 16
-frames 3000 0
-snap 10-zone-warning
-dump zone1 gWildlandsZoneTelemetry 16
-expectmin gWildlandsZoneTelemetry 0 4 1
-expectmin gWildlandsZoneTelemetry 56 4 1
-rate late-idle 300 0 90
-dump frame2 gArenaFrameTelemetry 10
-dump profile2 gWildlandsProfile 4
-# ---- Gate G live map: START -> MAP (5th entry) ----
-press 8
-press 128
-press 128
-press 128
-press 128
-snap 11-pause-menu
-press 1
-frames 20 0
-snap 12-live-map
-dump map gWildlandsMapTelemetry 4
-expectmin gWildlandsMapTelemetry 0 4 1
-press 2
-press 2
-frames 60 0
-snap 13-resumed

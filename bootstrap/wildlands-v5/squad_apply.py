@@ -40,7 +40,8 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static EWRAM_DATA u32 sZoneHudKeyShown = 0;\n'
       'static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;\n'
       'static void LootInit(void);\nstatic void LootTick(void);\nstatic void LootDestroy(void);\n'
-      'static void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n')
+      'static void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n'
+      'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')
@@ -85,6 +86,14 @@ patch(A, '                if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sA
       '                if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sArena.hudDirty=TRUE;}\n                if(sPauseChoice==4){sPausePage=4;sArena.hudDirty=TRUE;}')
 patch(A, '        else if(JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;',
       '        else if(sPausePage<3 && JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;')
+
+# Profiling: camera/stream, sprite animation, OAM build (scanlines).
+patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer();',
+      '    {u32 p0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,p1;\n'
+      '    ArenaXL_UpdateCamera();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;\n'
+      '    AnimateSprites();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[7]=p1-p0;p0=p1;\n'
+      '    BuildOamBuffer();\n    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;\n'
+      '    {u32 n=0,k;for(k=0;k<MAX_SPRITES;k++)if(gSprites[k].inUse)n++;gWildlandsProfile[9]=n;}}')
 
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
