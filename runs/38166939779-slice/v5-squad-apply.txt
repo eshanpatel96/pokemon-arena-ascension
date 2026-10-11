@@ -1,0 +1,4 @@
+src/arena_warp_toss.inc 4 BG1 scroll writes guarded
+src/arena_toss.inc 2 BG1 scroll writes guarded
+src/arena_flame_clash.inc 1 BG1 scroll writes guarded
+Wildlands V5 squad combat + closing zone installed: 4 battlers, wing combat, team targeting, promotion on KO, world-coordinate storm with time-based exposure
