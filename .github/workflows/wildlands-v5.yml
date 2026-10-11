@@ -1,0 +1,196 @@
+name: Wildlands V5 World Validation
+on:
+  push:
+    branches: [wildlands-v5-world-validation]
+    paths:
+      - '.github/workflows/wildlands-v5.yml'
+      - 'bootstrap/wildlands-v5/**'
+      - 'bootstrap/wildlands-v4/**'
+      - 'bootstrap/arena-xl/**'
+      - 'docs/WILDLANDS-V5*'
+  workflow_dispatch:
+concurrency:
+  group: wildlands-v5-world-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build-world:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-ASSEMBLED-SOURCE
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: V11-1-DEVELOPMENT-ROM-NOT-FINAL-BETA
+          run-id: 37959084673
+          github-token: ${{ github.token }}
+          path: baseline-rom
+
+      - name: Native dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev zlib1g-dev python3-pil libmgba-dev
+
+      - name: Assemble exact V11.1 source
+        run: |
+          echo '0812cedb0e1b9affae7d9705157ff392fad7f51211e4889f30a4e4927ae726c7  baseline/v11-1-assembled-source.tar.gz' | sha256sum -c
+          tar -xzf baseline/v11-1-assembled-source.tar.gz engine
+          mkdir -p delivery evidence recovery
+          python3 bootstrap/v11-1/phase2.py engine | tee evidence/v11-1-phase2.txt
+          python3 bootstrap/v11-1/prepare_inputs.py engine baseline-rom/Pokemon-Arena-Ascension-V11-1-DEV.gba | tee evidence/preserved-inputs.txt
+
+      - name: Apply Arena World foundation
+        run: |
+          set -o pipefail
+          python3 bootstrap/arena-xl/apply.py engine | tee evidence/arena-xl-base.txt
+          python3 bootstrap/wildlands-v4/apply.py engine | tee evidence/v4-lab-base.txt
+          python3 bootstrap/wildlands-v5/generate_world.py engine | tee evidence/world-generation.json
+          python3 bootstrap/wildlands-v5/apply.py engine | tee evidence/v5-world-apply.txt
+          python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
+          git rev-parse HEAD > evidence/source-commit.txt
+          cp engine/data/wildlands_world/manifest.json evidence/world-manifest.json
+          cp engine/include/wildlands_world_data.h evidence/
+
+      - name: Generate native assets
+        working-directory: engine
+        run: |
+          make -j2 -f make_tools.mk
+          make -j2 generated
+          ./tools/arena/dev.sh assets
+          python3 ../bootstrap/v11-1/deduplicate_art.py .
+          cp v11-1-art-dedup-proof.json ../evidence/
+
+      - name: Audit roster and world representation
+        run: |
+          python3 bootstrap/wildlands-v4/audit_roster.py engine | tee evidence/roster-audit.json
+          grep -q '"curated_selectable_count": 105' evidence/roster-audit.json
+          grep -q '"groudon_arena_sprite": false' evidence/roster-audit.json
+          test "$(stat -c %s engine/data/wildlands_world/slice.bin)" -eq 3840
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          m=json.loads(Path('engine/data/wildlands_world/manifest.json').read_text())
+          assert m['world_pixels']==[4096,3072]
+          assert m['validation_slice_metatiles']==[40,48]
+          assert m['sources']['route120']=='data/layouts/Route120/map.bin'
+          assert m['sources']['fortree']=='data/layouts/FortreeCity/map.bin'
+          assert m['roles']['bridge'].startswith('walkable')
+          print('WORLD REPRESENTATION AUDIT PASS')
+          PY
+
+      - name: Compile real GBA ROM
+        working-directory: engine
+        run: |
+          set -o pipefail
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Wildlands-V5-World-Validation 2>&1 | tee ../evidence/build.log
+          cp Pokemon-Wildlands-V5-World-Validation.gba ../delivery/
+          cp Pokemon-Wildlands-V5-World-Validation.elf Pokemon-Wildlands-V5-World-Validation.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-Wildlands-V5-World-Validation.elf > ../evidence/symbols.txt
+
+      - name: Build manifest and memory report
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,re
+          p=Path('delivery/Pokemon-Wildlands-V5-World-Validation.gba')
+          b=p.read_bytes()
+          assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
+          log=Path('evidence/build.log').read_text(errors='replace')
+          mem={}
+          for name,used,total,pct in re.findall(r'^\s*(EWRAM|IWRAM|ROM):\s+(\d+) B\s+(\d+) (?:KB|MB)\s+([\d.]+)%',log,re.M):
+              mem[name]={'used_bytes':int(used),'usage_percent':float(pct)}
+          manifest={
+            'name':'Pokemon Wildlands V5 World Validation',
+            'source_commit':os.environ['GITHUB_SHA'],
+            'rom_sha256':hashlib.sha256(b).hexdigest(),
+            'rom_bytes':len(b),
+            'world_coordinate_space_pixels':[4096,3072],
+            'validation_slice_pixels':[640,768],
+            'terrain_source':'native Route120 + Fortree metatile data; no floor bitmap',
+            'controller':'native realtime Arena movement/dodge/attack/cooldown/hit path',
+            'rendering':'three streamed 4bpp Emerald metatile BG layers + native Arena OBJ actors',
+            'true_2v2':False,
+            'partner':'terrain-routing highlighted follower; non-damaging validation actor',
+            'thirty_duo_simulation':False,
+            'structures':{'fortree_outpost':'cover/scenery only; not enterable in this validation'},
+            'cosmetic_only':['Emerald tileset animations are static in this validation','Seismic Toss world sky cut uses blackout instead of the space backdrop','legacy destructible Arena prop sprites/fragments are disabled in world mode'],
+            'memory':mem,
+            'verification':'mGBA automated runtime only; iPhone Delta requires user playtest'
+          }
+          Path('delivery/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          Path('delivery/README.txt').write_text(
+            'Wildlands V5 World Validation. NEW GAME -> Lab; L+R launches the validation encounter. '
+            'The battlefield is a streamed native Emerald Route120/Fortree metatile world inside the Arena runtime. '
+            'This is a world-engine validation slice, NOT the full island and NOT true 2v2 yet. '
+            'mGBA verification is automated; Delta/iPhone remains a separate user test.\n')
+          Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          print(json.dumps(manifest,indent=2))
+          PY
+
+      - name: mGBA world gameplay smoke
+        run: |
+          gcc -O2 -std=c11 -D_GNU_SOURCE -include mgba/flags.h bootstrap/v11-smoke.c -lmgba -o evidence/wildlands-v5-smoke
+          set -o pipefail
+          timeout 300 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime bootstrap/wildlands-v5/smoke.commands - 2>&1 | tee evidence/smoke.log
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          for p in Path('evidence/runtime').glob('*.ppm'):
+              Image.open(p).save(p.with_suffix('.png')); p.unlink()
+          PY
+
+      - name: Recovery package
+        if: always()
+        run: |
+          mkdir -p recovery/src recovery/include recovery/data/wildlands_world recovery/bootstrap
+          cp bootstrap/wildlands-v5/*.py bootstrap/wildlands-v5/*.c bootstrap/wildlands-v5/*.h bootstrap/wildlands-v5/*.commands recovery/bootstrap/ 2>/dev/null || true
+          if test -d engine; then
+            cp engine/src/realtime_arena.c engine/src/arena_navigation.c engine/src/arena_terrain.c engine/src/wildlands_world.c recovery/src/ 2>/dev/null || true
+            cp engine/src/arena_psychic.inc engine/src/arena_toss.inc recovery/src/ 2>/dev/null || true
+            cp engine/include/wildlands_world.h engine/include/wildlands_world_data.h recovery/include/ 2>/dev/null || true
+            cp engine/data/wildlands_world/* recovery/data/wildlands_world/ 2>/dev/null || true
+          fi
+          cp evidence/source-commit.txt recovery/ 2>/dev/null || true
+          cat > recovery/README.txt <<'EOF'
+          Recovery package for the exact Wildlands V5 World Validation build.
+          Reconstruct V11.1 from workflow run 37959084673, then apply:
+          bootstrap/arena-xl/apply.py
+          bootstrap/wildlands-v4/apply.py
+          bootstrap/wildlands-v5/generate_world.py
+          bootstrap/wildlands-v5/apply.py
+          The patched critical source/data snapshots are included here as verification/recovery references.
+          EOF
+
+      - name: Upload ROM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WILDLANDS-V5-WORLD-ROM
+          path: delivery/
+          if-no-files-found: ignore
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WILDLANDS-V5-WORLD-EVIDENCE
+          path: evidence/
+          if-no-files-found: warn
+
+      - name: Upload recovery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WILDLANDS-V5-WORLD-RECOVERY
+          path: recovery/
+          if-no-files-found: warn
