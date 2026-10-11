@@ -55,7 +55,7 @@ Nothing here is Delta-verified; that is the owner's playtest.
 
 ## Decision needed: 30 duos
 
-Measured constraints: EWRAM 99.66% used (about 880 bytes free); each full
+Measured constraints: EWRAM 99.81% used (about 500 bytes free); each full
 Arena actor costs ~2 KB of frame buffers plus AI and OAM. Sixty full-fidelity
 actors cannot fit. The feasible design is a local full-fidelity pool (the
 current 4 actors, maybe 6) plus a lightweight off-screen simulation for the
@@ -71,10 +71,12 @@ palettes, seam blending, render-rate work (sprite count / OAM build).
 
 ## Latest verified run
 
-- Run: https://github.com/eshanpatel96/pokemon-wildlands/actions/runs/38137170086 (source `20f1b04`)
-- Slice ROM: artifact `WILDLANDS-V5-slice-ROM` (11701720722), SHA-256 `da7ba7b5a644ce422f60ab740c503a0d07e045824ba67729f5cfa6e1b98702cf`. Smoke: 30 PASS / 0 FAIL.
-- Island ROM: artifact `WILDLANDS-V5-island-ROM` (11702240328), SHA-256 `48d23abe11ec2a41bc396528007de8f6117b73c2cc65125d7accb51d6575eec5`. Smoke: 9 PASS; sim cadence 97-99% idle and travelling E/N with AI; the encounter was won during the W leg (Arena exited to the lab), which the harness records as a cadence miss.
-- Evidence: branch `wildlands-evidence`, `runs/38137170086-slice` and `runs/38137170086-island`.
+- Run: https://github.com/eshanpatel96/pokemon-wildlands/actions/runs/38155652795 (source `2c31bd4`)
+- Island ROM: artifact `WILDLANDS-V5-island-ROM` (11707918612), SHA-256 `9a691d4bb804b211595a92292b32672ba6ee88f5bdd4933ffe2a34e189e327fb`. Smoke: 32 PASS / 0 FAIL; sim cadence 99-100% idle and travelling E/N/W/S with AI; all 11 doors entered and exited.
+- Slice ROM: artifact `WILDLANDS-V5-slice-ROM` (11708636672), SHA-256 `45499e5b4517047bcf6672f6c42378d732c9c4b82583b84cd044ea9c5bb751c6`. Smoke: 44 PASS / 0 FAIL; cadence 100%; house entry, supplies, exit; brain fight and retreat; wings fire and land hits.
+- Memory: EWRAM 99.81% (about 500 bytes free), IWRAM 94.27%, ROM 98.63% (island).
+- Evidence: branch `wildlands-evidence`, `runs/38155652795-slice` and `runs/38155652795-island`.
+- Harness hooks (0 in play): `gWildlandsTestPeace`, `gWildlandsTestWarp`, `gWildlandsZoneTestSpeed` (0xFFFF hold, 0xFFFE reset).
 
 ## Build recipe
 
