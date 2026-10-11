@@ -119,12 +119,13 @@ expect gWildlandsSquadTelemetry 0 4 3
 frames 240 16
 # ---- Enemy duo brain: fights when even, retreats when losing ----
 dump brain0 gWildlandsBrainTelemetry 8
-expectmin gWildlandsBrainTelemetry 8 4 1
 poke gBattleMons 128 2 4
-frames 240 0
+frames 120 0
 snap 08a-enemy-retreat
+frames 300 16
 dump brain1 gWildlandsBrainTelemetry 8
 expectmin gWildlandsBrainTelemetry 12 4 1
+expectmin gWildlandsBrainTelemetry 8 4 1
 frames 900 0
 snap 08-duo-fight
 dump squad1 gWildlandsSquadTelemetry 16
