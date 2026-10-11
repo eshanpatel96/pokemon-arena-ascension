@@ -82,7 +82,7 @@ def remove_small(g, cls, minsize, into_fn):
     return g
 
 
-def surrounding(g, i, exclude):
+def surrounding(g, i, exclude, default=GRASS):
     x, y = i % W, i // W
     v = Counter()
     for dy in range(-2, 3):
@@ -90,7 +90,7 @@ def surrounding(g, i, exclude):
             xx, yy = x + dx, y + dy
             if 0 <= xx < W and 0 <= yy < H and g[yy * W + xx] not in exclude:
                 v[g[yy * W + xx]] += 1
-    return v.most_common(1)[0][0] if v else GRASS
+    return v.most_common(1)[0][0] if v else default
 
 
 def thicken_water(g):
@@ -113,7 +113,7 @@ def thicken_water(g):
 def connect_land(g, rng):
     """Join every walkable component to the largest by carving PATH (over trees/rock)
     or BRIDGE (over inland water). Ocean is never bridged."""
-    while True:
+    for _guard in range(400):
         comp, sizes = components(g, lambda c: c in WALK)
         if len(sizes) <= 1:
             return g
@@ -123,7 +123,7 @@ def connect_land(g, rng):
         if sizes[other] < 12:
             for i in range(W * H):
                 if comp[i] >= 0 and comp[i] != main and sizes[comp[i]] < 12:
-                    g[i] = surrounding(g, i, WALK | {OCEAN})
+                    g[i] = surrounding(g, i, WALK | {OCEAN}, default=TREE)
             continue
         start = [i for i in range(W * H) if comp[i] == other]
         prev = {i: None for i in start}; q = deque(start); hit = None
@@ -145,6 +145,7 @@ def connect_land(g, rng):
         while k is not None and comp[k] != other:
             g[k] = BRIDGE if g[k] == WATER else PATH
             k = prev[k]
+    raise SystemExit('connect_land did not converge')
 
 
 def reserve_lairs(g):
@@ -195,8 +196,26 @@ def lair_approaches(g, boxes):
     return g, boxes
 
 
+def groves(g, rng, count=520):
+    """Immersion: small tree clumps in open grass, never touching paths,
+    bridges, water or lairs, so every route stays open."""
+    for _ in range(count):
+        x, y = rng.randrange(2, W - 6), rng.randrange(2, H - 6)
+        gw, gh = rng.choice(((2, 2), (2, 3), (3, 2), (3, 3), (4, 2), (2, 4)))
+        ok = True
+        for yy in range(y - 1, y + gh + 1):
+            for xx in range(x - 1, x + gw + 1):
+                if g[yy * W + xx] != GRASS:
+                    ok = False
+        if ok:
+            for yy in range(y, y + gh):
+                for xx in range(x, x + gw):
+                    g[yy * W + xx] = TREE
+    return g
+
+
 def sprinkle_tall(g, rng):
-    for _ in range(140):
+    for _ in range(260):
         x, y = rng.randrange(W), rng.randrange(H)
         if g[y * W + x] != GRASS:
             continue
@@ -238,6 +257,38 @@ def banks(g):
     return out
 
 
+def open_rock(g):
+    """Morphological opening of cliff/rock: thin concept lines (cliff edges,
+    bridge outlines) become ground; only real rock masses >=3 cells survive."""
+    def erode(src):
+        out = src[:]
+        for y in range(H):
+            for x in range(W):
+                if src[y * W + x] != ROCK:
+                    continue
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        xx, yy = x + dx, y + dy
+                        if not (0 <= xx < W and 0 <= yy < H) or src[yy * W + xx] != ROCK:
+                            out[y * W + x] = -1
+        return out
+    e = erode(g)
+    out = g[:]
+    for y in range(H):
+        for x in range(W):
+            if g[y * W + x] != ROCK:
+                continue
+            keep = False
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    xx, yy = x + dx, y + dy
+                    if 0 <= xx < W and 0 <= yy < H and e[yy * W + xx] == ROCK:
+                        keep = True
+            if not keep:
+                out[y * W + x] = GRASS
+    return out
+
+
 def build(concept_path, seed=7):
     rng = random.Random(seed)
     g = plan_from_concept(concept_path)
@@ -250,10 +301,13 @@ def build(concept_path, seed=7):
     g = remove_small(g, TREE, 4, lambda g, i: surrounding(g, i, {TREE}))
     g = majority(g, 1, keep=(OCEAN,))
     g = coarsen(g, 2)
+    g = open_rock(g)
     g = thicken_water(g)
     g = banks(g)
     g, boxes = reserve_lairs(g)
     g, boxes = lair_approaches(g, boxes)
     g = connect_land(g, rng)
+    g = groves(g, rng)
     g = sprinkle_tall(g, rng)
+    g = connect_land(g, rng)
     return g, boxes

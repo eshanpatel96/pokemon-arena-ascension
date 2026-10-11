@@ -98,9 +98,14 @@ class Model:
         for cnt in self.t0.values():
             uses.update({e & 0x3ff: n for e, n in cnt.items()})
         dark_water = {0x11, 0x12, 0x15}
+        # Fortree's round bush-trees read as orchards at island scale; forests
+        # use the dense Route 119/120 canopy family instead.
+        bush = {0x1d4, 0x1d5, 0x1dc, 0x1dd, 0x1e4, 0x1e5, 0x1d6, 0x1d7, 0x1de, 0x1df, 0x1e6, 0x1e7, 0x1ec, 0x1ed}
         def ok(c, e):
             mid = e & 0x3ff
             if uses[mid] < min_tile_uses:
+                return False
+            if c == TREE and mid in bush:
                 return False
             if c == WATER and pair.behavior(mid) in dark_water:
                 return False
