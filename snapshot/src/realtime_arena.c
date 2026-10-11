@@ -488,7 +488,7 @@ EWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};
 EWRAM_DATA u16 gWildlandsProfile[12] = {};
 // [0] max render gap (vblanks) [1] frames over 3 vblanks [2] last/[3] max
 // active-slot load cost [4] max biome swap cost (scanlines) [5] steps over cap
-EWRAM_DATA u16 gWildlandsHitch[8] = {};
+EWRAM_DATA u16 gWildlandsHitch[12] = {};
 // TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking
 // map/zone UI; always 0 in normal play.
 EWRAM_DATA u8 gWildlandsTestPeace = 0;

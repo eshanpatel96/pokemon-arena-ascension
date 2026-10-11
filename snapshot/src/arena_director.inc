@@ -204,12 +204,15 @@ static void DirLoadActive(u8 index)
     u8 lead = (d->species[0] && d->hp[0]) ? 0 : 1;
     u8 other = lead ^ 1;
     u32 t0 = WL_NOW();
+    u32 t1;
     DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend);
+    t1 = WL_NOW(); gWildlandsHitch[6] = t1 - t0;
     if (d->species[other] && d->hp[other])
         DirMakeMon(&gEnemyParty[1], d->species[other], d->level, d->hp[other], FALSE);
     else
         ZeroMonData(&gEnemyParty[1]);
     gBattlerPartyIndexes[1] = 0;
+    gWildlandsHitch[7] = WL_NOW() - t1; t1 = WL_NOW();
     SquadFillBattleMon(1, &gEnemyParty[0]);
     if (d->legend)
     {
@@ -228,10 +231,12 @@ static void DirLoadActive(u8 index)
     sArena.observed.x = sArena.goal.x = sArena.waypoint.x = d->x;
     sArena.observed.y = sArena.goal.y = sArena.waypoint.y = d->y;
     sArena.thinkTimer = 1; sArena.aiState = AI_REPOSITION; sArena.goalTimer = 0;
+    gWildlandsHitch[8] = WL_NOW() - t1; t1 = WL_NOW();
     SquadHideWing(&sSquadWings[1]);
     sSquadWings[1].alive = FALSE;
     if (GetMonData(&gEnemyParty[1], MON_DATA_SPECIES))
         SquadSpawnWing(1);   // creates its sprites
+    gWildlandsHitch[9] = WL_NOW() - t1; t1 = WL_NOW();
     memset(&sBrain, 0, sizeof(sBrain));
     sBrain.focus = 0xFF;
     sEnemySight.lost = 99;
@@ -241,6 +246,7 @@ static void DirLoadActive(u8 index)
     gWildlandsDirectorTelemetry[6]++;
     ArenaFeedback_Dust(d->x, d->y, TRUE);
     sArena.hudDirty = TRUE;
+    gWildlandsHitch[10] = WL_NOW() - t1;
     gWildlandsHitch[2] = WL_NOW() - t0;
     if (gWildlandsHitch[2] > gWildlandsHitch[3]) gWildlandsHitch[3] = gWildlandsHitch[2];
 }
