@@ -11,6 +11,7 @@
 #include "arena_navigation.h"
 #include "wildlands_world.h"
 #include "wildlands_world_data.h"
+#define WL_BG1(reg, value) do { if (!WildlandsWorld_Active()) SetGpuReg(reg, value); } while (0)
 #include "arena_sprites.h"
 #include "arena_feedback.h"
 #include "arena_moves.h"

@@ -11,11 +11,12 @@
 // shrink; exposure 1/2/4/8% max HP per second by stage; then sudden death.
 
 #define ZONE_FPS 60
-#define ZONE_EXPLORE (60 * ZONE_FPS)
-#define ZONE_WARN (30 * ZONE_FPS)
-#define ZONE_SHRINK (60 * ZONE_FPS)
+// Playtest: the storm felt fast; 90s explore, 45s warning, 75s shrink.
+#define ZONE_EXPLORE (90 * ZONE_FPS)
+#define ZONE_WARN (45 * ZONE_FPS)
+#define ZONE_SHRINK (75 * ZONE_FPS)
 #define ZONE_STAGES 4
-#define ZONE_MARKERS 6
+#define ZONE_MARKERS 12
 
 enum { ZONE_EXPLORING, ZONE_WARNING, ZONE_SHRINKING, ZONE_SUDDEN_DEATH };
 
@@ -220,34 +221,56 @@ static void ZoneDamage(void)
     }
 }
 
+// Storm edge: markers every 20px along the stretch of the circle nearest
+// the camera (straight-line tangent approximation; exact enough on screen),
+// so the wall reads as a line instead of a few dots.
 static void ZoneDrawMarkers(void)
 {
-    u32 i, n = 0, a;
-    s32 r = sZone.r >> 8;
+    u32 i, n = 0;
+    s32 r = sZone.r >> 8, ccx = sArenaXLCameraX + 120, ccy = sArenaXLCameraY + 80;
+    s32 dx = ccx - sZone.cx, dy = ccy - sZone.cy;
+    s32 d = ZoneIsqrt(dx * dx + dy * dy);
     bool8 blink = sZone.phase == ZONE_WARNING && (sZone.clock & 16);
-    // Indoors the storm edge is not on screen (the room is drawn alone).
-    if (WildlandsWorld_InRoom(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q))
-        a = 32;
-    else
-        a = 0;
-    for (; a < 32 && n < ZONE_MARKERS; a++)
+    bool8 hide = WildlandsWorld_InRoom(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q) || !d || r <= 0;
+    if (!hide)
     {
-        s32 x = sZone.cx + Cos(a * 8, r);
-        s32 y = sZone.cy + Sin(a * 8, r);
-        if (x < sArenaXLCameraX - 8 || x > sArenaXLCameraX + 248
-            || y < sArenaXLCameraY - 8 || y > sArenaXLCameraY + 168)
-            continue;
-        if (sZone.markers[n] != MAX_SPRITES)
+        s32 px = sZone.cx + dx * r / d, py = sZone.cy + dy * r / d;   // nearest edge point
+        s32 tx = -dy * 20 / d, ty = dx * 20 / d;                      // 20px along the edge
+        s32 k;
+        for (k = -(ZONE_MARKERS / 2); k < ZONE_MARKERS / 2 && n < ZONE_MARKERS; k++)
         {
-            struct Sprite *s = &gSprites[sZone.markers[n]];
-            s->x = x; s->y = y;
-            s->invisible = sArena.paused || blink;
+            s32 x = px + tx * k, y = py + ty * k;
+            if (x < sArenaXLCameraX - 8 || x > sArenaXLCameraX + 248
+                || y < sArenaXLCameraY - 8 || y > sArenaXLCameraY + 168)
+                continue;
+            if (sZone.markers[n] != MAX_SPRITES)
+            {
+                struct Sprite *s = &gSprites[sZone.markers[n]];
+                s->x = x; s->y = y;
+                s->invisible = sArena.paused || blink;
+            }
+            n++;
         }
-        n++;
     }
     for (i = n; i < ZONE_MARKERS; i++)
         if (sZone.markers[i] != MAX_SPRITES)
             gSprites[sZone.markers[i]].invisible = TRUE;
+}
+
+// Storm tint: while the player stands in the storm the terrain palettes are
+// blended toward violet (BG palettes only; HUD palette 0 untouched).
+static EWRAM_DATA bool8 sZoneTinted = FALSE;
+static void ZoneTint(void)
+{
+    bool8 out = sZone.active && !sArena.paused
+        && ZoneOutside(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, 0);
+    // Re-apply periodically while out: a door or menu reloads the palettes.
+    if (out == sZoneTinted && (!out || (sArena.frame & 31)))
+        return;
+    sZoneTinted = out;
+    WildlandsWorld_RestorePalettes();
+    if (out)
+        BlendPalette(BG_PLTT_ID(1), 13 * 16, 6, RGB(14, 4, 20));
 }
 
 // Simulation step (runs once per fixed 60Hz step, possibly twice per render).
@@ -310,6 +333,8 @@ static void ZoneTick(void)
     if (!sZone.active)
         return;
     ZoneDrawMarkers();
+    if (WildlandsWorld_Active())
+        ZoneTint();
     gWildlandsZoneTelemetry[0] = sZone.phase;
     gWildlandsZoneTelemetry[1] = sZone.stage;
     gWildlandsZoneTelemetry[2] = sZone.cx;
@@ -404,20 +429,19 @@ static void ZoneHudLine(void)
         if (DirectorPopupText(text, &color))
         {
             // Kill feed / legendary news take the zone slot like pickups.
-            HudTinyWindow(2, 104, 10, text, color, 11);
-            StringCopy(text, sZone.phase == ZONE_SUDDEN_DEATH ? sFinal : sSafe);
-            goto foes;
+            // Kill feed / legendary news: full width up to the LEFT counter.
+            HudTinyWindow(2, 104, 10, text, color, 20);
+            goto left;
         }
     }
     if (LootPopupText(text))
     {
         // Pickup feedback takes the zone slot for ~2.5s, in highlight colour.
-        HudTinyWindow(2, 104, 10, text, sLoot.popupTeam ? 6 : 5, 11);
-        StringCopy(text, sZone.phase == ZONE_SUDDEN_DEATH ? sFinal : sSafe);
+        HudTinyWindow(2, 104, 10, text, sLoot.popupTeam ? 6 : 5, 20);
+        goto left;
     }
     else
         HudTinyWindow(2, 104, 10, text, out ? 6 : 4, 9);
-foes:
     end = StringCopy(text, sAlly);
     *end++ = CHAR_SPACE;
     if (SquadAlive(2)) ConvertIntToDecimalStringN(end, gBattleMons[2].hp, STR_CONV_MODE_LEFT_ALIGN, 3);
@@ -427,6 +451,7 @@ foes:
     if (SquadAlive(3)) ConvertIntToDecimalStringN(end, gBattleMons[3].hp, STR_CONV_MODE_LEFT_ALIGN, 3);
     else StringCopy(end, sDown);
     HudTinyWindow(2, 172, 10, text, 6, 6);
+left:
     if (DirectorLeft() || DirectorRunning())
     {
         static const u8 sLeftTag[] = _("LEFT");

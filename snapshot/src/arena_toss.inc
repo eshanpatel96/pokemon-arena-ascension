@@ -268,7 +268,7 @@ static void TossEnd(void)
     }
     t->phase = 0;
     t->height[0] = t->height[1] = 0;
-    SetGpuReg(REG_OFFSET_BG1VOFS, 0);
+    WL_BG1(REG_OFFSET_BG1VOFS, 0);
     // The attacker's recovery from Fire() is still pending; the victim needs a
     // moment to get up. Neither can act during the landing frames themselves.
     attacker->cooldown = max(attacker->cooldown, 20);
@@ -422,5 +422,5 @@ static void TossDraw(void)
     if (t->phase == TOSS_LAND && t->timer < TOSS_SQUASH_FRAMES + 2)
         ArenaMoveFx_Action(t->attacker, &sTossImpactFx, victim->x / Q, victim->y / Q - 14,
                            FACE_DOWN, t->timer, TRUE, sArena.paused);
-    SetGpuReg(REG_OFFSET_BG1VOFS, t->shake && !sArena.paused ? ((t->shake & 1) ? (t->shake / 4 + 1) : (0x200 - t->shake / 4 - 1)) : 0);
+    WL_BG1(REG_OFFSET_BG1VOFS, t->shake && !sArena.paused ? ((t->shake & 1) ? (t->shake / 4 + 1) : (0x200 - t->shake / 4 - 1)) : 0);
 }

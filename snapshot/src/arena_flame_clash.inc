@@ -58,7 +58,7 @@ static void ClashDraw(void)
     {
         u8 age=sFlameClash.age;
         // A short, bounded impact tremor, not a persistent camera offset.
-        SetGpuReg(REG_OFFSET_BG1VOFS,!sArena.paused&&age>=80&&age<92
+        WL_BG1(REG_OFFSET_BG1VOFS,!sArena.paused&&age>=80&&age<92
             ? ((age&1)?2:0x1FE):0);
     }
 }

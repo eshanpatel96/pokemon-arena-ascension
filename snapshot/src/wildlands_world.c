@@ -684,25 +684,22 @@ bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
     return TRUE;
 }
 
-// Deep water: only Water types (swimming) and Levitate hoverers cross it.
-// Flying types walk like everyone else (a flying Charizard visibly "walking"
-// on the sea read as a bug in playtest).
+// Deep water: only Water types swim. Nobody flies or hovers over it (a
+// Charizard or Gengar "walking" on the sea read as a bug); every water body
+// that separates land has a bridge, so no land Pokemon is ever cut off.
 static bool8 SideCanWater(u8 side)
 {
     return gBattleMons[side].types[0] == TYPE_WATER
-        || gBattleMons[side].types[1] == TYPE_WATER
-        || gBattleMons[side].ability == ABILITY_LEVITATE;
+        || gBattleMons[side].types[1] == TYPE_WATER;
 }
-
-#define WL_WORLD_BODY_RADIUS 6
 
 static bool8 SpeciesCanWater(u16 species)
 {
     return gSpeciesInfo[species].types[0] == TYPE_WATER
-        || gSpeciesInfo[species].types[1] == TYPE_WATER
-        || gSpeciesInfo[species].abilities[0] == ABILITY_LEVITATE
-        || gSpeciesInfo[species].abilities[1] == ABILITY_LEVITATE;
+        || gSpeciesInfo[species].types[1] == TYPE_WATER;
 }
+
+#define WL_WORLD_BODY_RADIUS 6
 
 
 static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
@@ -716,6 +713,14 @@ static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, 
     // footprint so legal 16px paths and bridges remain traversable.
     if (radius > WL_WORLD_BODY_RADIUS)
         radius = WL_WORLD_BODY_RADIUS;
+    // A land mover that somehow stands in deep water (knock-back into a
+    // shoreline corner, a spawn) may always move: it can only walk out.
+    if (!waterAllowed)
+    {
+        u8 start = TerrainEntry(x1 >> 4, y1 >> 4);
+        if ((start & WL_TERRAIN_DEEP_WATER) && !(start & WL_TERRAIN_BRIDGE))
+            waterAllowed = TRUE;
+    }
     dx = x2 - x1;
     dy = y2 - y1;
     // Footing (water) is checked at the centre, so keep centre samples <=8px

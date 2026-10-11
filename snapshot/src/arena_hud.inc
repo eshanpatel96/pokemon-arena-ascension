@@ -10,6 +10,9 @@ static const u8 sHudPPLabel[] = _("PP ");
 static EWRAM_DATA bool8 sHudCached=FALSE;
 static EWRAM_DATA u16 sHudLastHp[2]={},sHudLastMax[2]={},sHudLastSpecies[2]={};
 static EWRAM_DATA u8 sHudLastLevel[2]={};
+static EWRAM_DATA u32 sHudWingKey=0;
+static u32 WildlandsHudWingKey(void);
+static void WildlandsHudWingBars(void);
 static void HudTinyWindow(u8 window,u32 x,u32 y,const u8 *text,u8 color,u32 maxChars)
 {
     u32 n=0;
@@ -40,7 +43,8 @@ static void DrawStatusHud(void)
     if(sHudCached && sHudLastHp[0]==gBattleMons[0].hp && sHudLastHp[1]==gBattleMons[1].hp
         && sHudLastMax[0]==gBattleMons[0].maxHP && sHudLastMax[1]==gBattleMons[1].maxHP
         && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species
-        && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level)return;
+        && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level
+        && sHudWingKey==WildlandsHudWingKey())return;
     // One small authored background; preserve the terrain through alpha corners.
     FillWindowPixelBuffer(0,0);
     CpuFastCopy(sHudPanelTiles,gWindows[0].tileData,30*2*32);
@@ -74,5 +78,7 @@ static void DrawStatusHud(void)
         HudRect(118,8,5,2,4);HudRect(119,10,3,1,4);
         HudRect(120,7,1,1,4);
     }
+    WildlandsHudWingBars();
+    sHudWingKey=WildlandsHudWingKey();
     sHudCached=TRUE;
 }
