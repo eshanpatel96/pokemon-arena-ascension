@@ -435,7 +435,7 @@ static void SquadDraw(struct SquadWing *w)
         ArenaRender_Copy(buffer, (u8 *)OBJ_VRAM0 + GetSpriteTileStartByTag(w->tag) * 32, 2048);
         w->drawnFrame = frame; w->drawnDirection = w->facing;
     }
-    if (!sArena.paused) w->animClock += animation == ARENA_ANIM_WALK ? 300 : Q;
+    if (!sArena.paused) w->animClock += (animation == ARENA_ANIM_WALK ? 300 : Q) * sWildlandsSimSteps;
     if (w->flash)
     {
         BlendPalette(OBJ_PLTT_ID(IndexOfSpritePaletteTag(w->tag)), 16, w->flash + 3, RGB_WHITE);

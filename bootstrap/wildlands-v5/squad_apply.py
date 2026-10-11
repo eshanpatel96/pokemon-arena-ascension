@@ -40,6 +40,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);\n'
       'static EWRAM_DATA u32 sZoneHudKeyShown = 0;\n'
       'static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;\n'
+      'static EWRAM_DATA u8 sWildlandsSimSteps = 1;\n'
       'static void LootInit(void);\nstatic void LootTick(void);\nstatic void LootDestroy(void);\n'
       'static void MapDraw(void);\nEWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};\n'
       'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n'
@@ -98,6 +99,7 @@ patch(A, '        else if(JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sP
 patch(A, '        sArena.frame++;\n        for(i=0;i<2;i++)\n',
       '        {\n        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 3 ? 3 : gap >= 2 ? 2 : 1) : 1;\n'
       '        u16 savedNewKeys = gMain.newKeys;\n'
+      '        sWildlandsSimSteps = simSteps;\n'
       '        gWildlandsProfile[10] += simSteps; gWildlandsProfile[11]++;\n'
       '        for (simStep = 0; simStep < simSteps; simStep++)\n        {\n'
       '        if (simStep) { if (sArena.resultTimer || !sArena.active) break; gMain.newKeys = 0; }\n'
@@ -132,6 +134,10 @@ patch(A, 'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.b
       'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.bodies[1];\n    s32 dx, dy, len;\n    body->moving = FALSE;\n    if (gWildlandsTestPeace) return;\n')
 
 patch(C, '    bool8 notice=sCapture.notice!=0;', '    bool8 notice=sCapture.notice!=0 && !WildlandsWorld_Active();')
+
+# Animation clocks follow game time, not render rate.
+patch(A, '                body->animClock += animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q;',
+      '                body->animClock += (animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q) * sWildlandsSimSteps;')
 
 # Profiling: camera/stream, sprite animation, OAM build (scanlines).
 patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer();',
