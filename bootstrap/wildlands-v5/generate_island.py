@@ -197,13 +197,20 @@ for c in clearings:
             tx = int(c['cx'] + rr * __import__('math').cos(a)); ty = int(c['cy'] + rr * __import__('math').sin(a))
             for yy in range(ty, ty + 3):
                 for xx in range(tx, tx + 4):
-                    if cls[yy * W + xx] in (GRASS, SAND) and (yy * W + xx) not in fixed_cells:
+                    if 2 <= xx < W - 2 and 2 <= yy < H - 2 and cls[yy * W + xx] in (GRASS, SAND) and (yy * W + xx) not in fixed_cells:
                         cls[yy * W + xx] = TALL
                         e, _ = models[0].pick(TALL, cls, xx, yy, W, H, rng)
                         if e is not None:
                             world[yy * W + xx] = e & 0x0FFF
     prop_log.append((c['name'], len(placed)))
 
+# Pond interiors: the General shallow-puddle fill (0x19E, walkable, flat
+# lavender) reads as a palette glitch when used for whole ponds; use the
+# native deep pond fill so water looks and behaves like water.
+puddle_fix = 0
+for i in range(W * H):
+    if cls[i] == WATER and (world[i] & 0x3FF) == 0x19E:
+        world[i] = 0xA1; secmap[i] = 0; puddle_fix += 1
 for i, (e, k) in fixed_cells.items():
     world[i] = e
     secmap[i] = k
@@ -465,10 +472,10 @@ ROOMS = {
     'treehouse2': dict(layout='FortreeCity_House2', loot=[LOOT_HEAL]),
     'treehouse3': dict(layout='FortreeCity_House1', loot=[LOOT_HEAL]),
     'mewtwo':  dict(layout='Route119_WeatherInstitute_1F', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='MEWTWO'),
-    'lugia':   dict(layout='NavelRock_Bottom', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='LUGIA'),
-    'hooh':    dict(layout='NavelRock_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='HO_OH'),
+    'lugia':   dict(layout='FarawayIsland_Interior', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='LUGIA'),
+    'hooh':    dict(layout='BirthIsland_Exterior', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='HO_OH'),
     'kyogre':  dict(layout='SeafloorCavern_Room9', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='KYOGRE'),
-    'rayquaza': dict(layout='SkyPillar_Top', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='RAYQUAZA'),
+    'rayquaza': dict(layout='AlteringCave', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='RAYQUAZA'),
     'research': dict(layout='Route119_WeatherInstitute_2F', loot=[LOOT_HEAL]),
     'tomb':    dict(layout='AncientTomb', loot=[LOOT_HEAL]),
     'ruins':   dict(layout='DesertRuins', loot=[LOOT_HEAL]),
@@ -524,6 +531,7 @@ landmark_pts = [stand_spot(c) for c in clearings]
     f'#define WL_LANDMARK_COUNT {len(landmark_pts)}\n'
     'static const s16 sWlLandmarks[WL_LANDMARK_COUNT][2] = {' + ','.join(f'{{{x},{y}}}' for x, y in landmark_pts) + '};\n')
 
+(out / 'design-classes.bin').write_bytes(bytes(cls))   # design/audit only (not linked)
 (out / 'slice.bin').write_bytes(struct.pack('<%dH' % len(world), *world))
 from minimap import emit as _emit_minimap
 _emit_minimap(outdoor_terrain, W, H, root / 'include/wildlands_minimap.inc')
@@ -563,7 +571,7 @@ manifest = {
                   'reachable': lair_reach[k] > 0, 'reachable_cells': lair_reach[k],
                   'prefab': stamped.get(k, [None])[-1] if k in stamped else None}
               for k, v in boxes.items()},
-    'bridge_fallbacks': fixed, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
+    'bridge_fallbacks': fixed, 'pond_puddle_fixes': puddle_fix, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot),
     'player_start': P, 'enemy_start': E,
     'interiors': rooms_manifest, 'doors_reachable': door_audit,
     'biomes': {bp.BIOME_NAMES[k]: sum(1 for v in core if v == k) for k in bp.BIOME_NAMES},

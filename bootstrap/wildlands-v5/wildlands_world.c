@@ -1081,13 +1081,13 @@ static bool8 MoverLine(bool8 speciesMode, u16 mover, s16 x1, s16 y1, s16 x2, s16
 
 // Nearest graph node to (x,y); with requireLine, only nodes reachable by a
 // straight legal segment count.
-static u16 NavNodeNear(bool8 speciesMode, u16 mover, s16 x, s16 y, bool8 requireLine)
+static u16 NavNodeNear(bool8 speciesMode, u16 mover, s16 x, s16 y, bool8 requireLine, s16 r)
 {
     s16 cx = (x >> 4) / WL_NAV_STEP, cy = (y >> 4) / WL_NAV_STEP, dx, dy;
     u16 best = 0xFFFF;
     u32 bestD = 0xFFFFFFFF;
-    for (dy = -1; dy <= 1; dy++)
-        for (dx = -1; dx <= 1; dx++)
+    for (dy = -r; dy <= r; dy++)
+        for (dx = -r; dx <= r; dx++)
         {
             s16 gx = cx + dx, gy = cy + dy;
             u16 node;
@@ -1154,8 +1154,20 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
         sNav = AllocZeroed(sizeof(*sNav));
     if (sNav)
     {
-        u16 s = NavNodeNear(speciesMode, mover, x, y, TRUE);
-        u16 t = NavNodeNear(speciesMode, mover, goalX, goalY, FALSE);
+        u16 s = NavNodeNear(speciesMode, mover, x, y, TRUE, 1);
+        u16 t = NavNodeNear(speciesMode, mover, goalX, goalY, FALSE, 1);
+        if (s == 0xFFFF)
+            s = NavNodeNear(speciesMode, mover, x, y, TRUE, 2);
+        if (t == 0xFFFF)
+            t = NavNodeNear(speciesMode, mover, goalX, goalY, FALSE, 3);
+        // The island graph covers all walkable land. When neither ring finds a
+        // node, the 2.5k-anchor linear scan below would cost several frames, so
+        // report no route and let the caller steer straight.
+        if (s == 0xFFFF || t == 0xFFFF)
+        {
+            gWildlandsWorldTelemetry[11]++;
+            return FALSE;
+        }
         if (s != 0xFFFF && t != 0xFFFF)
         {
             u16 n = s == t ? t : NavSearch(s, t);

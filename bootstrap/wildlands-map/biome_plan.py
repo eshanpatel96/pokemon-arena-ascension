@@ -38,9 +38,11 @@ def desired_biome(x, y):
         return LAVARIDGE
     if x + wx >= 168 and y + wy < 128:
         return MAUVILLE
-    if 100 <= x - wx * 0.5 <= 158 and y + wy * 0.7 < 54:
+    # Mountain highlands: the whole north-central range (plateaus, cliffs).
+    if 96 <= x - wx * 0.5 <= 164 and y + wy * 0.7 < 74:
         return FALLARBOR
-    if 92 <= x + wx * 0.5 <= 164 and y + wy * 0.5 >= 156:
+    # Beach: the broad south coast.
+    if 64 <= x + wx * 0.5 <= 170 and y + wy * 0.5 >= 148:
         return SLATEPORT
     return FORTREE
 
@@ -73,7 +75,7 @@ CLEARINGS = [
     ('research', ('E', 6), 14, FORTREE, 'research'),
     ('tomb', ('H', 8), 14, FORTREE, 'tomb'),
     ('tempest', ('C', 8), 10, FORTREE, 'house1'),
-    ('glade', ('F', 10), 10, FORTREE, 'house2'),
+    ('glade', ('F', 8), 10, FORTREE, 'house2'),
     ('north_wood', ('E', 3), 10, FORTREE, 'house3'),
     ('rayquaza', ('H', 2), 12, FALLARBOR, 'rayquaza'),
     ('mewtwo', ('N', 3), 12, MAUVILLE, 'mewtwo'),
@@ -82,8 +84,8 @@ CLEARINGS = [
     ('hooh', ('N', 11), 12, LAVARIDGE, 'hooh'),
     ('beach', ('H', 12), 13, SLATEPORT, 'seashore'),
     ('east_wood', ('L', 5), 10, FORTREE, None),
-    ('south_wood', ('K', 10), 10, FORTREE, None),
-    ('sky_meadow', ('J', 5), 10, FORTREE, None),
+    ('cove', ('J', 11), 11, SLATEPORT, None),
+    ('crags', ('J', 4), 11, FALLARBOR, None),
 ]
 
 FLOOR = {FORTREE: GRASS, MAUVILLE: SAND, FALLARBOR: STONE, LAVARIDGE: STONE, SLATEPORT: SAND}
@@ -287,6 +289,10 @@ def biome_ground(g, des):
             g[i] = SAND
         elif b in (FALLARBOR, LAVARIDGE) and c in (GRASS, PATH, SAND):
             g[i] = STONE
+        elif b == SLATEPORT and dist[i] <= 12 and c in (GRASS, PATH, TALL):
+            g[i] = SAND
+        elif b == SLATEPORT and dist[i] <= 7 and c == TREE:
+            g[i] = SAND            # broad open shoreline, groves stay inland
         elif dist[i] <= 4 and c in (GRASS, PATH):
             g[i] = SAND
     return g
