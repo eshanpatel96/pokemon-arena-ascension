@@ -49,7 +49,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'EWRAM_DATA u16 gWildlandsProfile[12] = {};\n'
       '// [0] max render gap (vblanks) [1] frames over 3 vblanks [2] last/[3] max\n'
       '// active-slot load cost [4] max biome swap cost (scanlines) [5] steps over cap\n'
-      'EWRAM_DATA u16 gWildlandsHitch[8] = {};\n'
+      'EWRAM_DATA u16 gWildlandsHitch[12] = {};\n'
       '// TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking\n'
       '// map/zone UI; always 0 in normal play.\n'
       'EWRAM_DATA u8 gWildlandsTestPeace = 0;\n'

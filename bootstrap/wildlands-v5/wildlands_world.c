@@ -336,7 +336,7 @@ void WildlandsWorld_Init(void)
     gWildlandsWorldAudit[0] = sActive;
 }
 
-extern u16 gWildlandsHitch[8];
+extern u16 gWildlandsHitch[12];
 static void SwapBiome(u8 biome, bool8 rebuild)
 {
     const struct Tileset *sec = sWlOutdoorPairs[biome][1];
