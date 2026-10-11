@@ -97,7 +97,7 @@ nav_inc='\n'.join(
     f'    {{{(BASE_X+x)*16+8}, {(BASE_Y+y)*16+8}}},'
     for x,y in nav
 )+'\n'
-(out/'nav.inc').write_text(nav_inc)
+(root/'include/wildlands_world_nav.inc').write_text(nav_inc)
 
 header=f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define GUARD_WILDLANDS_WORLD_DATA_H
