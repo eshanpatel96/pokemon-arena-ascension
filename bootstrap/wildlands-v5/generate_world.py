@@ -82,8 +82,8 @@ for p in desired:
 
 # Important validation positions: player/enemy are on opposite sides of the
 # native bridge; tall grass and water are one short movement away.
-PLAYER=(5,15)
-ENEMY=(33,15)
+PLAYER=(5,16)
+ENEMY=(30,16)
 assert walkable(*PLAYER) and walkable(*ENEMY)
 
 # Use a native Route120 water metatile outside the validation slice. Runtime
