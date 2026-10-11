@@ -30,7 +30,10 @@ Nothing here is Delta-verified; that is the owner's playtest.
 | G Move editor | BUILT | Lab MOVE EDITOR sign: native relearner UI listing legal Arena-supported moves, no items. Not exercised by the harness |
 | G Shinies | NOT DONE (audited feasible) | One 16-colour palette per Arena species shared by all frames; every actor owns an OBJ palette slot, so normal + shiny of one species can coexist. Needs a build-time shiny palette table; rarity undecided |
 | H Title | BUILT | Approved concept at native 240x160, 256 colours, caption removed |
-| I Island + landmarks | PASS (prototype) | 256x192 native metatiles from the concept plan; 97.5% of walkable land reachable on real collision; all five lairs reachable with 2-3 approaches; nav graph 2387 nodes |
+| I Island + landmarks | PASS (prototype) | 256x192 native metatiles from the concept plan; 97.4% of walkable land reachable on real collision; all five lairs reachable with 2-3 approaches; nav graph 2387 nodes |
+| I Enterable interiors | PASS | 11 rooms from real Emerald interior layouts, each rendered with its own native tileset pair (swapped under forced blank): Mewtwo = Weather Institute, Rayquaza = Sky Pillar summit, Lugia = Navel Rock depths, Ho-Oh = Navel Rock peak, Kyogre = Marine Cave chamber, 3 Fortree treehouses, 3 wilderness houses. Doors from native warp events plus cliff cave mouths; every door's outside cell is reachable on foot (build audit). Harness entered and exited all 11 doors on the island and the slice house; supplies pickup verified |
+| I Room pickups | PASS | Houses: SUPPLIES (both members +40% HP). Lairs: CACHE (+1 ATK/DEF/SPD) and SUPPLIES. Popups "TEAM HEALED" / "TEAM CACHE +1 ALL" |
+| AI Enemy duo brain | PASS (slice) / BUILT | FIGHT (focus fire on the weaker / better-matched target), RETREAT in bursts when hurt and behind (cover, tall grass, safe circle), LOOT when nothing visible, RAID lair caches and supplies through doors. Harness verified fight and retreat decisions; raids not yet observed in a run |
 | J 30 duos / 60 Pokémon | NOT DONE | Requires owner decision (below) |
 
 ## Known limits (honest)
@@ -38,10 +41,11 @@ Nothing here is Delta-verified; that is the owner's playtest.
 - **Render rate ~30 fps.** Native `BuildOamBuffer` alone is ~67 scanlines with
   ~50 live sprites. Game time is real-time via fixed-timestep catch-up, so
   movement/AI/storm speed is correct; visuals update about every other frame.
-- **Landmarks are scenery.** Weather Institute (Mewtwo), cave basin (Kyogre),
-  waterfall gorge (Rayquaza), boulder-ring tomb (Ho-Oh), treetop lookouts
-  (Lugia). No legendary boss encounters yet. A real volcano / sea shrine needs
-  other Emerald tilesets (region tileset streaming).
+- **Lairs have no boss yet.** Each lair is enterable with a cache inside;
+  the legendary itself is not spawned. Boss encounters are the next
+  proposal (needs owner approval: third team in the Arena, budget below).
+- **Off-screen sprites** are hidden from the OAM build (GBA OAM coordinates
+  wrap, which made distant enemies flash on screen in the playtest).
 - **Island art seams.** Prefab borders and some river/coast edges still read as
   rectangles; generator polish pass pending.
 - **Practice balance.** V4 practice rivals are Lv15 versus a Lv60 squad, so
