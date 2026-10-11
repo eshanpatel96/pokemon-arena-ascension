@@ -296,6 +296,7 @@ new='''        if (obstacle>=0
             ArenaFeedback_Wall(shot->x/Q,shot->y/Q);
             PlaySE(SE_WALL_HIT);
             if(obstacle>=0)HitTerrain(obstacle,p,shot->vx,shot->vy);
+            else WildlandsWorld_RecordProjectileBlock();
             DestroyShot(shot);
             continue;
         }
@@ -395,10 +396,18 @@ s=s.replace('''            if(nx<12||nx>228||ny<30||ny>146||r->age>60)''',
 '''            if(nx<ARENA_MIN_X||nx>ARENA_MAX_X||ny<ARENA_MIN_Y||ny>ARENA_MAX_Y||r->age>60)''',1)
 # A thrown rock should hit static map cover even when no legacy prop exists.
 old='''            obstacle=ArenaNav_FirstObstacle(ox,oy,nx,ny,5);
-            if(obstacle>=0)'''
+            r->x+=r->vx;r->y+=r->vy;
+            if(obstacle>=0)
+            {ArenaPhysics_Hit(obstacle,r->vx,r->vy,3);gArenaPsychicTelemetry[5]++;PsychicImpact(i);continue;}'''
 new='''            obstacle=ArenaNav_FirstObstacle(ox,oy,nx,ny,5);
+            r->x+=r->vx;r->y+=r->vy;
             if(obstacle>=0 || (WildlandsWorld_Active()
-                && !WildlandsWorld_LineClear(ox,oy,nx,ny,5)))'''
+                && !WildlandsWorld_LineClear(ox,oy,nx,ny,5)))
+            {
+                if(obstacle>=0)ArenaPhysics_Hit(obstacle,r->vx,r->vy,3);
+                else WildlandsWorld_RecordProjectileBlock();
+                gArenaPsychicTelemetry[5]++;PsychicImpact(i);continue;
+            }'''
 if old not in s: raise SystemExit('psychic static cover anchor drift')
 s=s.replace(old,new,1)
 p.write_text(s)
