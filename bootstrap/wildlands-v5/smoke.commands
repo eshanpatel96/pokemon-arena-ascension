@@ -63,3 +63,18 @@ expectmax gWildlandsSquadTelemetry 60 4 0
 frames 900 1
 snap 09-duo-fight-attacking
 dump squad2 gWildlandsSquadTelemetry 16
+dump profile gWildlandsProfile 4
+# ---- Gate F pickups: spot 0 lies on the bridge lane walked above ----
+dump loot gWildlandsLootTelemetry 12
+expectmin gWildlandsLootTelemetry 0 4 1
+expect gWildlandsLootTelemetry 44 4 0
+# ---- Gate E closing zone: exploration ends, next circle announced ----
+dump zone0 gWildlandsZoneTelemetry 16
+frames 3000 0
+snap 10-zone-warning
+dump zone1 gWildlandsZoneTelemetry 16
+expectmin gWildlandsZoneTelemetry 0 4 1
+expectmin gWildlandsZoneTelemetry 56 4 1
+rate late-idle 300 0 90
+dump frame2 gArenaFrameTelemetry 10
+dump profile2 gWildlandsProfile 4

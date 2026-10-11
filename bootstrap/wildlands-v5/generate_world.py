@@ -119,6 +119,33 @@ nav_inc='\n'.join(
 )+'\n'
 (root/'include/wildlands_world_nav.inc').write_text(nav_inc)
 
+# Team-upgrade pickups: legal dry ground (not water, not solid, not concealed),
+# spread >= 6 metatiles apart, types cycling ATK/DEF/SPD. Spot 0 sits on the
+# bridge lane east of the player start so the runtime smoke test walks over it.
+def loot_ok(x,y):
+    if not walkable(x,y): return False
+    e=world[y*W+x]
+    b=attr(e)&0xff
+    return b not in (2,3,9)
+loot=[((BASE_X+14)*16+8, BASE_Y*16+PLAYER_Y_PX, 0)]
+assert walkable(14,16)
+taken=[(14,16)]
+types=[1,2,0]
+for gy in range(3,H-2,7):
+    for gx in range(3,W-2,7):
+        cand=None
+        for dy in range(0,5):
+            for dx in range(0,5):
+                if loot_ok(gx+dx,gy+dy): cand=(gx+dx,gy+dy); break
+            if cand: break
+        if not cand: continue
+        if any(abs(cand[0]-tx)+abs(cand[1]-ty)<6 for tx,ty in taken): continue
+        taken.append(cand)
+        loot.append(((BASE_X+cand[0])*16+8,(BASE_Y+cand[1])*16+8,types[len(loot)%3]))
+        if len(loot)>=12: break
+    if len(loot)>=12: break
+(root/'include/wildlands_loot.inc').write_text(''.join(f'    {{{x}, {y}, {t}}},\n' for x,y,t in loot))
+
 header=f'''#ifndef GUARD_WILDLANDS_WORLD_DATA_H
 #define GUARD_WILDLANDS_WORLD_DATA_H
 #define WL_WORLD_PIXEL_W 4096
@@ -162,7 +189,8 @@ manifest={
  'nav_points_world_pixels':nav_pixels,
  'player_start_local':PLAYER,
  'enemy_start_local':ENEMY,
- 'void_entry':void_entry
+ 'void_entry':void_entry,
+ 'loot_spots':loot
 }
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 print(json.dumps(manifest,indent=2))

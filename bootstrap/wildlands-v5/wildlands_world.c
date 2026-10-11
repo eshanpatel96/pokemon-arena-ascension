@@ -396,19 +396,37 @@ u8 WildlandsWorld_TerrainAt(s16 x, s16 y)
 
 static bool8 SolidCircle(s16 x, s16 y, u8 radius)
 {
-    static const s8 ox[9] = {0, 1,-1, 0, 0, 1, 1,-1,-1};
-    static const s8 oy[9] = {0, 0, 0, 1,-1, 1,-1, 1,-1};
-    u8 i;
-    for (i = 0; i < 9; i++)
+    // For radius <= 8 the footprint square spans at most 2x2 metatiles and
+    // its four corners touch exactly the metatiles the former 9-point probe
+    // touched, so 4 table reads are equivalent. Larger radii keep 9 points.
+    s16 x0, x1, y0, y1;
+    if (radius > 8)
     {
-        s16 sx = x + ox[i] * radius;
-        s16 sy = y + oy[i] * radius;
-        // Native Emerald map collision applies to the sampled metatile.
-        // This is an explicit footprint test, not an actor-centre-only check.
-        if (WildlandsWorld_TerrainAt(sx, sy) & WL_TERRAIN_SOLID)
-            return TRUE;
+        static const s8 ox[9] = {0, 1,-1, 0, 0, 1, 1,-1,-1};
+        static const s8 oy[9] = {0, 0, 0, 1,-1, 1,-1, 1,-1};
+        u8 i;
+        for (i = 0; i < 9; i++)
+            if (TerrainEntry((x + ox[i] * radius) >> 4, (y + oy[i] * radius) >> 4) & WL_TERRAIN_SOLID)
+                return TRUE;
+        return FALSE;
+    }
+    x0 = (x - radius) >> 4; x1 = (x + radius) >> 4;
+    y0 = (y - radius) >> 4; y1 = (y + radius) >> 4;
+    if (TerrainEntry(x0, y0) & WL_TERRAIN_SOLID) return TRUE;
+    if (x1 != x0 && (TerrainEntry(x1, y0) & WL_TERRAIN_SOLID)) return TRUE;
+    if (y1 != y0)
+    {
+        if (TerrainEntry(x0, y1) & WL_TERRAIN_SOLID) return TRUE;
+        if (x1 != x0 && (TerrainEntry(x1, y1) & WL_TERRAIN_SOLID)) return TRUE;
     }
     return FALSE;
+}
+
+// Sample spacing for a swept footprint: consecutive footprint squares of
+// half-size r overlap whenever spacing <= 2r, so the sweep stays continuous.
+static s32 SweepStep(u8 radius)
+{
+    return radius >= 3 ? radius * 2 - 2 : 4;
 }
 
 bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
@@ -418,7 +436,7 @@ bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
         return TRUE;
     dx = x2 - x1;
     dy = y2 - y1;
-    steps = max(Abs32(dx), Abs32(dy)) / 4 + 1;
+    steps = max(Abs32(dx), Abs32(dy)) / SweepStep(radius) + 1;
     fx = x1 << 8;
     fy = y1 << 8;
     sx = (dx << 8) / steps;
@@ -461,7 +479,9 @@ static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, 
         radius = WL_WORLD_BODY_RADIUS;
     dx = x2 - x1;
     dy = y2 - y1;
-    steps = max(Abs32(dx), Abs32(dy)) / 4 + 1;
+    // Footing (water) is checked at the centre, so keep centre samples <=8px
+    // apart: no 16px metatile can be skipped.
+    steps = max(Abs32(dx), Abs32(dy)) / min(8, SweepStep(radius)) + 1;
     fx = x1 << 8;
     fy = y1 << 8;
     sx = (dx << 8) / steps;
@@ -470,7 +490,7 @@ static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, 
     {
         if (SolidCircle(fx >> 8, fy >> 8, radius))
             return FALSE;
-        terrain = WildlandsWorld_TerrainAt(fx >> 8, fy >> 8);
+        terrain = TerrainEntry((fx >> 8) >> 4, (fy >> 8) >> 4);
         // Water is a footing/traversal rule, not a solid body-radius wall.
         // A land Pokemon may stand at a shoreline or on a one-metatile-wide
         // bridge even if its collision circle visually overlaps nearby water.
@@ -593,35 +613,47 @@ static u8 NextWaypoint(bool8 speciesMode, u16 mover, s16 x, s16 y,
     // through the route. This keeps pathing bounded while preserving native
     // body/water legality and never teleports an actor through cover.
     directDistance = PointDistance(x, y, goalX, goalY);
-    for (i = 0; i < WL_NAV_POINT_COUNT; i++)
     {
-        const struct ArenaPoint *p = &sNavPoints[i];
-
-        if (!MoverStand(speciesMode, mover, p->x, p->y))
-            continue;
-
-        d1 = PointDistance(x, y, p->x, p->y);
-        dg = PointDistance(p->x, p->y, goalX, goalY);
-
-        // Cheap geometry first. Only then pay for the swept terrain test.
-        score = d1 + dg;
-        if (score >= best + 256)
-            continue;
-        if (!MoverLine(speciesMode, mover, x, y, p->x, p->y))
-            continue;
-
-        // Anchors with a clean final leg are strongly preferred. Otherwise,
-        // favor real progress toward the destination but still allow a short
-        // lateral detour around cliffs/trees/river edges.
-        if (MoverLine(speciesMode, mover, p->x, p->y, goalX, goalY))
-            score -= 4096;
-        else if (dg >= directDistance && d1 > 64)
-            score += 1024;
-
-        if (score < best)
+        // Bounded work per call: rank anchors by cheap geometry, then pay for
+        // swept terrain tests on at most WL_NAV_SWEEPS of them.
+        #define WL_NAV_SWEEPS 4
+        u8 cand[WL_NAV_SWEEPS];
+        s32 candScore[WL_NAV_SWEEPS];
+        u8 n = 0, k, j;
+        for (i = 0; i < WL_NAV_POINT_COUNT; i++)
         {
-            best = score;
-            *next = *p;
+            const struct ArenaPoint *p = &sNavPoints[i];
+            d1 = PointDistance(x, y, p->x, p->y);
+            dg = PointDistance(p->x, p->y, goalX, goalY);
+            score = d1 + dg;
+            if (d1 < 4 || (dg >= directDistance && d1 > 160))
+                continue;
+            if (n < WL_NAV_SWEEPS) { cand[n] = i; candScore[n] = score; n++; }
+            else
+            {
+                for (k = 0, j = 0; k < WL_NAV_SWEEPS; k++) if (candScore[k] > candScore[j]) j = k;
+                if (score < candScore[j]) { cand[j] = i; candScore[j] = score; }
+            }
+        }
+        for (k = 0; k < n; k++)
+        {
+            const struct ArenaPoint *p = &sNavPoints[cand[k]];
+            score = candScore[k];
+            if (!MoverStand(speciesMode, mover, p->x, p->y))
+                continue;
+            if (!MoverLine(speciesMode, mover, x, y, p->x, p->y))
+                continue;
+            dg = PointDistance(p->x, p->y, goalX, goalY);
+            d1 = PointDistance(x, y, p->x, p->y);
+            if (MoverLine(speciesMode, mover, p->x, p->y, goalX, goalY))
+                score -= 4096;
+            else if (dg >= directDistance && d1 > 64)
+                score += 1024;
+            if (score < best)
+            {
+                best = score;
+                *next = *p;
+            }
         }
     }
 
