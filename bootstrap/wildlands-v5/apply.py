@@ -388,9 +388,14 @@ new='''    if(WildlandsWorld_Active() && (!(sArena.frame&7)
 if old not in s: raise SystemExit('partner navigation anchor drift')
 s=s.replace(old,new,1)
 
-# Initialize partner waypoint at its actual spawn.
+# Initialize partner waypoint at an actual legal Wildlands field position.
+# The V4 screen-relative offset lands inside solid Route120 scenery at the V5
+# validation spawn, so world mode uses the adjacent clear metatile instead.
 old='''    p->x=sArena.bodies[0].x-36*Q;p->y=sArena.bodies[0].y+28*Q;p->facing=FACE_DOWN;'''
-new='''    p->x=sArena.bodies[0].x-36*Q;p->y=sArena.bodies[0].y+28*Q;
+new='''    if(WildlandsWorld_Active())
+    {p->x=sArena.bodies[0].x+16*Q;p->y=sArena.bodies[0].y+16*Q;}
+    else
+    {p->x=sArena.bodies[0].x-36*Q;p->y=sArena.bodies[0].y+28*Q;}
     p->waypointX=p->x/Q;p->waypointY=p->y/Q;p->facing=FACE_DOWN;'''
 if old not in s: raise SystemExit('partner init waypoint anchor drift')
 s=s.replace(old,new,1)
