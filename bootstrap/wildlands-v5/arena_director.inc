@@ -661,7 +661,21 @@ static void DirSimOne(u8 i)
             }
         }
         else
+        {
+            // Blocked: most goal changes happen here, so this is also where a
+            // duo reconsiders a lair (one blocked tick in four).
+            s32 bossScore;
+            u8 lair = (DirRand() & 3) ? DIR_NONE : DirBossPick(d, d->x, d->y, &bossScore);
             DirRandomGoal(d);
+            if (lair != DIR_NONE)
+            {
+                s32 ox, oy;
+                DirLairDoor(&sDir->duo[lair], &ox, &oy);
+                d->plan = lair + 1;
+                d->gx = ox; d->gy = oy;
+                sDir->bossCooldown = max(sDir->bossCooldown, 600);
+            }
+        }
     }
 }
 
