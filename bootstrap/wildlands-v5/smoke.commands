@@ -37,12 +37,15 @@ frames 120 64
 snap 06-grass-probe
 
 # ---- Gate B cadence (wl_smoke): Arena updates per emulated frame ----
-rate idle 300 0 90
-rate right 300 16 90
-rate down 240 128 90
-rate left 300 32 90
-rate up 240 64 90
-rate attack 180 1 90
+# Render cadence is informational (min 0); the gate is simulation steps per
+# emulated frame (fixed-timestep catch-up keeps game time real-time).
+rate render-idle 300 0 0
+ratesym idle gWildlandsProfile 20 2 300 0 95
+ratesym right gWildlandsProfile 20 2 300 16 95
+ratesym down gWildlandsProfile 20 2 240 128 95
+ratesym left gWildlandsProfile 20 2 300 32 95
+ratesym up gWildlandsProfile 20 2 240 64 95
+ratesym attack gWildlandsProfile 20 2 180 1 95
 dump frame gArenaFrameTelemetry 10
 dump render gArenaRenderTelemetry 4
 dump world gWildlandsWorldTelemetry 16

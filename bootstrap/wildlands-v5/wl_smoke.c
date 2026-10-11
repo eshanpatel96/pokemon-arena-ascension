@@ -168,6 +168,18 @@ static void rate(const char *label,unsigned n,unsigned keys,unsigned minpct){
     char name[300];snprintf(name,sizeof(name),"cadence %s",label);
     check(name,ft && pct>=minpct);
 }
+/* ratesym LABEL SYM OFFSET WIDTH FRAMES KEYS MINPCT: counter delta per emulated frame */
+static void ratesym(const char *label,const char *sym,unsigned off,unsigned width,unsigned n,unsigned keys,unsigned minpct){
+    uint32_t a=symbol(sym);
+    unsigned v0=a?(width==2?rd16(a+off):rd32(a+off)):0,f0=core->frameCounter(core);
+    frames(n,keys);
+    unsigned v1=a?(width==2?rd16(a+off):rd32(a+off)):0,f1=core->frameCounter(core);
+    unsigned d=width==2?(unsigned)((v1-v0)&0xffff):v1-v0;
+    unsigned pct=f1>f0?d*100/(f1-f0):0;
+    printf("SIMRATE %s emu_frames=%u steps=%u pct=%u min=%u\n",label,f1-f0,d,pct,minpct);
+    char name[300];snprintf(name,sizeof(name),"sim cadence %s",label);
+    check(name,a && pct>=minpct);
+}
 static int commands(const char *path) {
     FILE *f=fopen(path,"r");if(!f){perror(path);return 2;}
     char line[1024],cmd[100],arg[240];unsigned n,k,offset,width,expected;
@@ -183,6 +195,7 @@ static int commands(const char *path) {
         else if(!strcmp(cmd,"reset")){core->reset(core);}
         else if(!strcmp(cmd,"native_save")){save_from_menu();}
         else if(sscanf(line,"map %u %u",&n,&k)==2)check("expected map",is_map(n,k));
+        else if(sscanf(line,"ratesym %99s %239s %u %u %u %u %u",cmd,arg,&offset,&width,&n,&k,&expected)==7)ratesym(cmd,arg,offset,width,n,k,expected);
         else if(sscanf(line,"rate %99s %u %u %u",cmd,&n,&k,&expected)==4)rate(cmd,n,k,expected);
         else if(sscanf(line,"expectmin %239s %u %u %u",arg,&offset,&width,&expected)==4) {
             uint32_t a=symbol(arg);unsigned value=width==1?rd8(a+offset):width==2?rd16(a+offset):rd32(a+offset);

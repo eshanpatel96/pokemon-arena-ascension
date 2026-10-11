@@ -18,7 +18,7 @@
 #define LOOT_SPD 2
 #define LOOT_CAP 2
 #define LOOT_TAG 0xA7C0
-#define LOOT_SPRITES 6
+#define LOOT_SPRITES 4
 
 struct LootSpot { s16 x, y; u8 type; };
 static const struct LootSpot sLootSpots[] = {
@@ -132,10 +132,11 @@ static void LootApply(u8 team, u8 type, s32 x, s32 y)
     sArena.hudDirty = TRUE;
 }
 
-static void LootTick(void)
+// Simulation step: atomic pickups.
+static void LootSim(void)
 {
-    u32 i, b, n = 0;
-    if (!sLoot.live)
+    u32 i, b;
+    if (!sLoot.live || sArena.paused || sArena.resultTimer)
         return;
     for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < 32; i++)
     {
@@ -144,40 +145,44 @@ static void LootTick(void)
         u32 best = 0xFFFF;
         if (sLoot.collected & (1u << i))
             continue;
-        if (!sArena.paused && !sArena.resultTimer)
+        for (b = 0; b < 4; b++)
         {
-            for (b = 0; b < 4; b++)
-            {
-                s32 x, y;
-                u16 d;
-                if (!SquadAlive(b))
-                    continue;
-                SquadPos(b, &x, &y);
-                d = ArenaNav_Distance(x / Q, y / Q, s->x, s->y);
-                if (d > 12)
-                    continue;
-                contenders++;
-                if (d < best) { best = d; winner = b; } // strict: lower id keeps ties
-            }
-            if (winner != 0xFF)
-            {
-                u8 team = winner & 1;
-                if (contenders > 1) gWildlandsLootTelemetry[10]++;
-                if (sLoot.boost[team][s->type] >= LOOT_CAP)
-                    gWildlandsLootTelemetry[7]++;
-                else
-                {
-                    if (sLoot.collected & (1u << i)) gWildlandsLootTelemetry[11]++;
-                    sLoot.collected |= 1u << i;   // atomic: removed before any effect
-                    gWildlandsLootTelemetry[0]++;
-                    gWildlandsLootTelemetry[9] = winner;
-                    LootApply(team, s->type, s->x, s->y);
-                    continue;
-                }
-            }
+            s32 x, y;
+            u16 d;
+            if (!SquadAlive(b))
+                continue;
+            SquadPos(b, &x, &y);
+            d = ArenaNav_Distance(x / Q, y / Q, s->x, s->y);
+            if (d > 12)
+                continue;
+            contenders++;
+            if (d < best) { best = d; winner = b; } // strict: lower id keeps ties
         }
-        // Draw: only orbs inside the camera use one of the pooled sprites.
-        if (n < LOOT_SPRITES && sLoot.sprite[n] != MAX_SPRITES
+        if (winner == 0xFF)
+            continue;
+        if (contenders > 1) gWildlandsLootTelemetry[10]++;
+        if (sLoot.boost[winner & 1][s->type] >= LOOT_CAP)
+        { gWildlandsLootTelemetry[7]++; continue; }
+        if (sLoot.collected & (1u << i)) gWildlandsLootTelemetry[11]++;
+        sLoot.collected |= 1u << i;   // atomic: removed before any effect
+        gWildlandsLootTelemetry[0]++;
+        gWildlandsLootTelemetry[9] = winner;
+        LootApply(winner & 1, s->type, s->x, s->y);
+    }
+}
+
+// Render step: only orbs inside the camera use one of the pooled sprites.
+static void LootTick(void)
+{
+    u32 i, n = 0;
+    if (!sLoot.live)
+        return;
+    for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < 32 && n < LOOT_SPRITES; i++)
+    {
+        const struct LootSpot *s = &sLootSpots[i];
+        if (sLoot.collected & (1u << i))
+            continue;
+        if (sLoot.sprite[n] != MAX_SPRITES
             && s->x > sArenaXLCameraX - 8 && s->x < sArenaXLCameraX + 248
             && s->y > sArenaXLCameraY - 8 && s->y < sArenaXLCameraY + 168)
         {

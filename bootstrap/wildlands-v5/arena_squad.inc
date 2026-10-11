@@ -442,6 +442,22 @@ static void SquadDraw(struct SquadWing *w)
 }
 
 #define WL_NOW() (gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228)
+static void ZoneSim(void);
+static void LootSim(void);
+// One fixed 60Hz simulation step for the Wildlands layer: storm clock and
+// exposure, pickups and wing AI. CB2_Arena runs it once per sim step, so a
+// render that misses a VBlank still advances game time correctly.
+static void SquadSimStep(void)
+{
+    u32 i;
+    ZoneSim();
+    LootSim();
+    if (sArena.paused || sArena.resultTimer)
+        return;
+    for (i = 0; i < 2; i++)
+        if (sSquadWings[i].active && sSquadWings[i].alive)
+            SquadThink(&sSquadWings[i]);
+}
 static void SquadTick(void)
 {
     u32 i, t0 = WL_NOW(), t1;
@@ -454,8 +470,6 @@ static void SquadTick(void)
         struct SquadWing *w = &sSquadWings[i];
         if (!w->active || !w->alive)
             continue;
-        if (!sArena.paused && !sArena.resultTimer)
-            SquadThink(w);
         t1 = WL_NOW(); gWildlandsProfile[2 + i * 2] = t1 - t0; t0 = t1;
         SquadDraw(w);
         t1 = WL_NOW(); gWildlandsProfile[3 + i * 2] = t1 - t0; t0 = t1;

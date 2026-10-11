@@ -34,6 +34,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void SquadEnemyRetarget(struct ArenaBody *body);\n'
       'extern EWRAM_DATA u32 gWildlandsSquadTelemetry[16];\n'
       'static EWRAM_DATA u8 sSquadShotOwner[SHOTS_COUNT] = {};\n'
+      'static void SquadSimStep(void);\n'
       'static void ZoneInit(void);\nstatic void ZoneTick(void);\nstatic void ZoneDestroy(void);\n'
       'static void ZoneSteerEnemy(struct ArenaBody *body);\nstatic void ZoneHudLine(void);\nstatic u32 ZoneHudKey(void);\n'
       'static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);\n'
@@ -86,6 +87,34 @@ patch(A, '                if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sA
       '                if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sArena.hudDirty=TRUE;}\n                if(sPauseChoice==4){sPausePage=4;sArena.hudDirty=TRUE;}')
 patch(A, '        else if(JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;',
       '        else if(sPausePage<3 && JOY_NEW(L_BUTTON|R_BUTTON))\n        {\n            sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;')
+
+# Fixed-timestep catch-up (Wildlands only): when the previous render overran
+# a VBlank, run the simulation block once per elapsed frame (max 3) and render
+# once, so movement, AI, cooldowns, projectiles and the storm advance in real
+# time. Edge-triggered input is consumed by the first step only.
+patch(A, '        sArena.frame++;\n        for(i=0;i<2;i++)\n',
+      '        {\n        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 3 ? 3 : gap >= 2 ? 2 : 1) : 1;\n'
+      '        u16 savedNewKeys = gMain.newKeys;\n'
+      '        gWildlandsProfile[10] += simSteps; gWildlandsProfile[11]++;\n'
+      '        for (simStep = 0; simStep < simSteps; simStep++)\n        {\n'
+      '        if (simStep) { if (sArena.resultTimer || !sArena.active) break; gMain.newKeys = 0; }\n'
+      '        sArena.frame++;\n        SquadSimStep();\n        for(i=0;i<2;i++)\n')
+patch(A, '''                        PlaySE(SE_M_MORNING_SUN);
+                    }
+                }
+            }
+        }
+    }
+    CaptureTick();''', '''                        PlaySE(SE_M_MORNING_SUN);
+                    }
+                }
+            }
+        }
+        }
+        gMain.newKeys = savedNewKeys;
+        }
+    }
+    CaptureTick();''')
 
 # Profiling: camera/stream, sprite animation, OAM build (scanlines).
 patch(A, '    ArenaXL_UpdateCamera();\n    AnimateSprites();\n    BuildOamBuffer();',
