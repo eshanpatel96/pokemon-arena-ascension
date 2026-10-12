@@ -315,6 +315,13 @@ dump profIdle gWildlandsProfile 6
 dumph loopIdle gWildlandsLoop 0 4
 ratesym idle gWildlandsProfile 20 2 300 0 95
 prof idle-fight 120 0
+# ---- FPS: 60 fps pacing in a fight (test hook) ----
+poke gWildlandsFastTest 0 1 2
+poke gWildlandsFastTelemetry 0 2 0
+poke gWildlandsFastTelemetry 2 2 0
+rate fight60 300 0 0
+dumph fight60 gWildlandsFastTelemetry 0 2
+poke gWildlandsFastTest 0 1 0
 # ---- PP regenerates in the world (1 per move every 2s) ----
 poke gBattleMons 36 1 1
 frames 300 0
