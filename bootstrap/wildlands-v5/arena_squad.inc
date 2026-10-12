@@ -926,10 +926,11 @@ static void WildlandsPaceUpdate(u32 gap)
     if (calm)
     { sWlFast = 1; sWlFastMiss = 0; }
 }
-// Off until a walking update fits one vblank: V6.2 measurement showed ~1.3
-// vblanks per walking update, so 60 fps attempts kept overrunning (14
-// fallbacks in one smoke run) and would hitch. Flip to 1 after optimising.
-#define WL_FAST_PACE 0
+// V6.4: on. After the FPS pass a walking update fits one vblank (forced 60
+// walk: 218 updates, 0 overruns). Fights still overrun ~29% at 60, so combat
+// keeps the steady 30 (the sim is vblank-timed either way: game speed is
+// identical at both rates).
+#define WL_FAST_PACE 1
 // TEST HOOK ONLY: nonzero runs the 60 fps pacing in a smoke window to measure
 // overruns before shipping it; 0 in play.
 EWRAM_DATA u8 gWildlandsFastTest = 0;

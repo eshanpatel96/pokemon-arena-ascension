@@ -450,6 +450,12 @@ dump coarse gWildlandsCoarseTelemetry 2
 dumph prof60 gWildlandsProfile 0 12
 prof walk60-prof 120 16
 poke gWildlandsFastTest 0 1 0
+# V6.4: shipped pacing (no test hook) must reach 60 while exploring.
+poke gWildlandsFastTelemetry 0 2 0
+poke gWildlandsFastTelemetry 2 2 0
+rate walk-auto 300 16 0
+dumph fastAuto gWildlandsFastTelemetry 0 2
+expectmin gWildlandsFastTelemetry 0 2 150
 prof walk-east 180 16
 prof walk-north 180 64
 dump hitchProf gWildlandsHitch 6
