@@ -66,10 +66,20 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static bool8 DirectorPopupActive(void);\nstatic void DirectorPauseLine(void);\n'
       'void Wildlands_ArenaLoadout(struct Pokemon *mon);\nvoid Wildlands_TrimParty(void);\n'
       'static const u16 *ArenaMonPalette(const struct ArenaSpriteSet *art, struct Pokemon *mon);\n'
+      'static void WildlandsSummaryDraw(void);\nstatic EWRAM_DATA bool8 sWildlandsSummary = FALSE;\n'
       'static u8 BrainWingTarget(u8 picked);\nstatic bool8 BrainWingFollows(void);\nstatic void BrainInit(void);\n')
 # Shiny Pokemon get a shiny arena palette (lead/enemy bodies at match start).
 patch(A, '            LoadPalette(body->art->palette, OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);\n',
       '            LoadPalette(ArenaMonPalette(body->art, i ? &gEnemyParty[gBattlerPartyIndexes[1]] : &gPlayerParty[gBattlerPartyIndexes[0]]), OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);\n')
+# End-of-match summary (V6 C4): the result holds ~4s on a summary card in the
+# world (A skips) before returning to the Lab.
+patch(A, '        if (sArena.resultTimer)\n        {\n            SpecialTick();GuardTick();\n',
+      '        if (sArena.resultTimer)\n        {\n'
+      '            if (WildlandsWorld_Active() && !sWildlandsSummary)\n'
+      '            { sWildlandsSummary = TRUE; sArena.resultTimer = 240; WildlandsSummaryDraw(); }\n'
+      '            if (sWildlandsSummary && sArena.resultTimer > 2 && JOY_NEW(A_BUTTON))\n'
+      '                sArena.resultTimer = 2;\n'
+      '            SpecialTick();GuardTick();\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    BrainInit();\n    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')
