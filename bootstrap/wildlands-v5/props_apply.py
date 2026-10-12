@@ -59,11 +59,11 @@ patch(T, '''void ArenaTerrain_Draw(bool8 paused,bool8 frozen)
 {
     u32 i;
 ''')
-patch(T, '''        const struct ArenaProp*p=&gArenaProps[i];
-        u8 frame=p->broken?2:p->hp<p->maxHp?1:0;''',
-      '''        const struct ArenaProp*p=&gArenaProps[i];
-        u8 frame=p->broken?2:p->hp<p->maxHp?1:0;
-        if(WildlandsWorld_Active()&&sPropSprite[i]==MAX_SPRITES)continue;''')
+patch(T, '''        u8 key=frame+(wet?3:0);
+        if(sPropFrame[i]!=key)''',
+      '''        u8 key=frame+(wet?3:0);
+        if(WildlandsWorld_Active()&&sPropSprite[i]==MAX_SPRITES)continue;   /* C89: after the declarations */
+        if(sPropFrame[i]!=key)''')
 patch(T, '''        const u8 *source=wet?(const u8*)sWetProps+gArenaBiome*7*3*512:(const u8*)sBiomeProps[gArenaBiome];''',
       '''        const u8 *source=wet?(const u8*)sWetProps+sPropSet[i]*7*3*512:(const u8*)sBiomeProps[sPropSet[i]];''')
 patch(T, '''            ArenaRender_Copy(source+(i*3+frame)*512,''',
