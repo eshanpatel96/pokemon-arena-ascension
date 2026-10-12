@@ -362,7 +362,7 @@ static void LootTick(void)
     u32 i, n = 0;
     if (!sLoot.live)
         return;
-    if (!(sArena.frame & 7))
+    if ((sArena.frame & 7) == 3)   // V6.4: periodic work staggered across frames
         LootAssertColors();
     for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX && n < LOOT_SPRITES; i++)
     {

@@ -688,7 +688,7 @@ static void WildlandsPartner_Update(void)
     // Replan the follower at a bounded 1/8 Arena-tick cadence. Replanning
     // again merely because it reached a waypoint caused almost one swept-route
     // query per gameplay update and starved the native realtime loop.
-    if(WildlandsWorld_Active() && !(sArena.frame&7))
+    if(WildlandsWorld_Active() && (sArena.frame&7)==7)
     {
         struct ArenaPoint wp;
         if(WildlandsWorld_NextWaypointSpecies(p->species,p->x/Q,p->y/Q,tx/Q,ty/Q,&wp))
@@ -2306,7 +2306,7 @@ static void TickEnemy(void)
         }
         gArenaAiTelemetry.decisions++;
         distance = ArenaNav_Distance(body->x/Q,body->y/Q,sArena.observed.x,sArena.observed.y);
-        if(!body->cooldown && (!WildlandsWorld_Active() || !(sArena.frame & 3)))AiChooseMove(distance);
+        if(!body->cooldown && (!WildlandsWorld_Active() || (sArena.frame & 3) == 2))AiChooseMove(distance);
         if (!AiTryEvade())
         {
             const struct ArenaMoveProfile *p=ArenaMoves_Get(ArenaMoveId(1,body->moveSlot));
@@ -2332,7 +2332,7 @@ static void TickEnemy(void)
         }
     }
     if (ArenaNav_Distance(body->x/Q,body->y/Q,sArena.waypoint.x,sArena.waypoint.y) < 3
-        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4 && !(sArena.frame & 7)) AiRoute();
+        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4 && (sArena.frame & 7) == 5) AiRoute();
     ZoneSteerEnemy(body);
     dx = sArena.waypoint.x * Q - body->x;
     dy = sArena.waypoint.y * Q - body->y;

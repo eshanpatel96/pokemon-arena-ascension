@@ -554,7 +554,7 @@ static void SquadThink(struct SquadWing *w)
         if (ld > 400 || (offscreen && (ld > 180 || (ld > 64 && w->stuckClock > 60))))
             SquadRegroup(w, lead);
     }
-    if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
+    if (((sArena.frame + (w - sSquadWings) * 8) & 15) == 9 || w->target == 0xFF || !SquadAlive(w->target))
     {
         w->target = SquadPickTarget(w->team, w->x, w->y);
         if (w->team && w->target != 0xFF)
@@ -956,7 +956,7 @@ static void SquadSimStep(void)
     LootSim();
     if (sArena.paused || sArena.resultTimer)
         return;
-    if (WildlandsWorld_Active() && !(sArena.frame % 120))
+    if (WildlandsWorld_Active() && (sArena.frame % 120) == 4)
         SquadPPRegen();
     if (WildlandsWorld_Active())
         SquadRestRegen();
