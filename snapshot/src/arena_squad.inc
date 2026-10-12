@@ -905,7 +905,10 @@ static void WildlandsPaceUpdate(u32 gap)
 // vblanks per walking update, so 60 fps attempts kept overrunning (14
 // fallbacks in one smoke run) and would hitch. Flip to 1 after optimising.
 #define WL_FAST_PACE 0
-static bool8 WildlandsFastPace(void) { return WL_FAST_PACE && sWlFast; }
+// TEST HOOK ONLY: nonzero runs the 60 fps pacing in a smoke window to measure
+// overruns before shipping it; 0 in play.
+EWRAM_DATA u8 gWildlandsFastTest = 0;
+static bool8 WildlandsFastPace(void) { return (WL_FAST_PACE || gWildlandsFastTest) && sWlFast; }
 
 static void SquadSimStep(void)
 {

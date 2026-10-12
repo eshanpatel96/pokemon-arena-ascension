@@ -2305,7 +2305,7 @@ static void TickEnemy(void)
         }
         gArenaAiTelemetry.decisions++;
         distance = ArenaNav_Distance(body->x/Q,body->y/Q,sArena.observed.x,sArena.observed.y);
-        if(!body->cooldown)AiChooseMove(distance);
+        if(!body->cooldown && (!WildlandsWorld_Active() || !(sArena.frame & 3)))AiChooseMove(distance);
         if (!AiTryEvade())
         {
             const struct ArenaMoveProfile *p=ArenaMoves_Get(ArenaMoveId(1,body->moveSlot));
