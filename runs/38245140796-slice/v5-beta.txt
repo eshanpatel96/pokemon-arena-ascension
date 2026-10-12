@@ -1,0 +1,2 @@
+Beta status/weather installed: squad-routed status KOs, HUD status tags, biome weather damage
+V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20

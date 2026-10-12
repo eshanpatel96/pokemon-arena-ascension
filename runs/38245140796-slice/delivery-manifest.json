@@ -1,0 +1,40 @@
+{
+  "name": "Pokemon WildLands Beta V6.3 (slice)",
+  "source_commit": "3496467dd3a14e662137b58f6feeebeac30ad809",
+  "rom_sha256": "d88610f853a1782876caf00dceda2ad37353b6dce9cf6d91b140ba62176a1912",
+  "rom_bytes": 33554432,
+  "world": "slice",
+  "world_coordinate_space_pixels": [
+    4096,
+    3072
+  ],
+  "terrain_source": "native Emerald metatiles: General primary + streamed Fortree/Mauville/Fallarbor/Lavaridge/Slateport secondaries per biome (island); collision/material from metatile data, never a floor bitmap; no invisible walls (audited)",
+  "controller": "native realtime Arena movement/dodge/attack/cooldown/hit path; fixed-timestep catch-up keeps game time real-time",
+  "true_2v2": "yes (first slice): player+AI partner vs enemy lead+wing; all four attack, take damage, KO; lead KO promotes the living wing",
+  "closing_zone": "world-coordinate circle, 90s explore / 45s warning / 75s shrink per phase, violet tint and edge markers, time-based exposure damage to all actors",
+  "loot": "team ATK/DEF/SPD stages, cap +3; capped pickups heal 40% and restore PP",
+  "live_map": "START -> MAP (storm shading, next circle, lair state)",
+  "move_editor": "Lab COACH: PICK DUO, MOVES (native relearner UI, arena-supported legal moves), CONTROLS, DEPLOY; all owned Pokemon swept to arena moves",
+  "title": "approved Charizard/Blastoise/Rayquaza concept at native 240x160",
+  "thirty_duo_simulation": true,
+  "legendary_boss_battles": true,
+  "shiny_palettes": "about 1 in 64 AI Pokemon (legendaries included), native shiny data and shiny arena palette",
+  "roaming_legendaries": "one dog, bird and Regi per match, staggered spawns inside the circle; beat one and it joins",
+  "weather": "desert sandstorm (Rock/Ground/Steel +20%), volcano ashfall (Fire +20%), storm rain (Water +20%, Fire -20%)",
+  "match_summary": "victory or eliminated, place, knockouts, time survived",
+  "memory": {
+    "EWRAM": {
+      "used_bytes": 261796,
+      "usage_percent": 99.87
+    },
+    "IWRAM": {
+      "used_bytes": 30892,
+      "usage_percent": 94.27
+    },
+    "ROM": {
+      "used_bytes": 32875797,
+      "usage_percent": 97.98
+    }
+  },
+  "verification": "mGBA automated runtime only; iPhone Delta requires owner playtest"
+}
