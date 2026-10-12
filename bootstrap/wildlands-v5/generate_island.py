@@ -70,8 +70,8 @@ model = models[bp.FORTREE]
 # ---- landmarks -------------------------------------------------------------
 # (layout, crop x, y, w, h, biome secondary)
 PREFABS = {
-    'lugia':    ('FortreeCity', 8, 0, 28, 8, bp.FORTREE),     # treetop lookouts + rope bridges + ladders
-    'kyogre':   ('Route120', 12, 12, 18, 16, bp.FORTREE),     # Scorched Slab mound in a bridged pond
+    'lugia':    ('OUTCROP', 0, 0, 7, 4, bp.FORTREE),          # Beta: free-standing rock outcrop on open ground, one cave mouth (huts snagged big Pokemon)
+    'kyogre':   ('OUTCROP', 0, 0, 8, 4, bp.FORTREE),          # Beta: open outcrop with a wide approach (old pond mound entrance was tight)
     'research': ('Route119', 0, 22, 16, 14, bp.FORTREE),      # Weather Institute -> research facility
     'tomb':     ('Route120', 1, 48, 12, 16, bp.FORTREE),      # Ancient Tomb boulder ring
     'house1':   ('Route119', 32, 106, 4, 4, bp.FORTREE),
@@ -96,6 +96,17 @@ for c in clearings:
     if not key:
         continue
     layout, sx, sy, sw, sh, sec = PREFABS[key]
+    if layout == 'OUTCROP':
+        # Natural rock mass (autotiled cliff art) in the middle of an open
+        # clearing; cave_mouth() opens its south face. 3-cell open apron.
+        ox, oy = c['cx'] - sw // 2, c['cy'] - sh // 2
+        for yy in range(oy - 3, oy + sh + 4):
+            for xx in range(ox - 3, ox + sw + 3):
+                if 0 <= xx < W and 0 <= yy < H and cls[yy * W + xx] != OCEAN:
+                    inside = ox <= xx < ox + sw and oy <= yy < oy + sh
+                    cls[yy * W + xx] = ROCK if inside else bp.FLOOR[sec]
+        stamped[key] = (ox, oy, sw, sh, 'OUTCROP', 0, 0, sec)
+        continue
     lay = next(l for l in LAYOUTS if l and l['name'] == layout + '_Layout')
     src = words(root / lay['blockdata_filepath'])
     ox, oy = c['cx'] - sw // 2, c['cy'] - sh // 2
@@ -465,6 +476,8 @@ DEST_ROOM = {
 }
 doors = []
 for key, (ox, oy, sw, sh, layout, sx, sy, sec) in stamped.items():
+    if layout == 'OUTCROP':
+        continue
     mj = json.load(open(root / f'data/maps/{layout}/map.json'))
     for w_ in mj.get('warp_events', []):
         dest = w_['dest_map'].replace('MAP_', '')
@@ -493,6 +506,7 @@ def cave_mouth(name, room):
     secmap[yy * W + xx] = 0
     doors.append(dict(cell=(xx, yy), room=room, kind='cave'))
 cave_mouth('kyogre', 'kyogre')
+cave_mouth('lugia', 'lugia')
 terrain = build_terrain(world)
 door_audit = {}
 for d in doors:

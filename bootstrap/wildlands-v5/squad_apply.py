@@ -497,6 +497,11 @@ patch(A, 'static bool8 SupportedBattler(u8 side)\n{\n    u32 i;\n',
       '        return gBattleMons[side].hp != 0;\n'
       '    }\n')
 
+# Swimming in deep water is 3/4 speed (fliers unaffected).
+patch(A, '    speed=speed*MonMassSpeedFactor(side)/256;\n',
+      '    speed=speed*MonMassSpeedFactor(side)/256;\n'
+      '    if(WildlandsWorld_Active())speed=speed*WildlandsWorld_SwimFactor(side,sArena.bodies[side].x/Q,sArena.bodies[side].y/Q)/256;\n')
+
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
       'SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);',

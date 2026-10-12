@@ -803,19 +803,41 @@ bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
     return TRUE;
 }
 
-// Deep water: only Water types swim. Nobody flies or hovers over it (a
-// Charizard or Gengar "walking" on the sea read as a bug); every water body
-// that separates land has a bridge, so no land Pokemon is ever cut off.
+// Deep water (Beta): Water types swim, Flying types and Levitate users fly
+// over it; everyone else uses fords and bridges (every water body that
+// separates land has one, so no land Pokemon is cut off). Swimmers are slower
+// in deep water (see WildlandsWorld_SwimFactor) so water is no free escape.
+static bool8 SideFlies(u8 side)
+{
+    return gBattleMons[side].types[0] == TYPE_FLYING || gBattleMons[side].types[1] == TYPE_FLYING
+        || gBattleMons[side].ability == ABILITY_LEVITATE;
+}
+
 static bool8 SideCanWater(u8 side)
 {
     return gBattleMons[side].types[0] == TYPE_WATER
-        || gBattleMons[side].types[1] == TYPE_WATER;
+        || gBattleMons[side].types[1] == TYPE_WATER || SideFlies(side);
 }
 
 static bool8 SpeciesCanWater(u16 species)
 {
     return gSpeciesInfo[species].types[0] == TYPE_WATER
-        || gSpeciesInfo[species].types[1] == TYPE_WATER;
+        || gSpeciesInfo[species].types[1] == TYPE_WATER
+        || gSpeciesInfo[species].types[0] == TYPE_FLYING
+        || gSpeciesInfo[species].types[1] == TYPE_FLYING
+        || gSpeciesInfo[species].abilities[0] == ABILITY_LEVITATE
+        || gSpeciesInfo[species].abilities[1] == ABILITY_LEVITATE;
+}
+
+// Movement speed factor (Q8) at a spot: swimming in deep water is 3/4 speed;
+// fliers keep full speed over water.
+u16 WildlandsWorld_SwimFactor(u8 side, s16 x, s16 y)
+{
+    if (!sActive || SideFlies(side))
+        return 256;
+    if ((WildlandsWorld_TerrainAt(x, y) & (WL_TERRAIN_DEEP_WATER | WL_TERRAIN_BRIDGE)) == WL_TERRAIN_DEEP_WATER)
+        return 192;
+    return 256;
 }
 
 #define WL_WORLD_BODY_RADIUS 6
