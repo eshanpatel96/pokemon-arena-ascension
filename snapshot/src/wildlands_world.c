@@ -943,20 +943,21 @@ bool8 WildlandsWorld_CanStandSpecies(u16 species, s16 x, s16 y, u8 radius)
 // a perpendicular nudge of up to 6px would line the body up with an opening
 // (one-metatile doorways, decks, bridges and ladders). 0 = no opening.
 static s8 SlideNudgeRaw(u8 side, s16 x, s16 y, s8 sx, s8 sy);
-static s16 sNudgeX = -1, sNudgeY = -1;
+static s16 sNudgeX, sNudgeY;
+static bool8 sNudgeValid;   /* no initialisers: .data is discarded for this object */
 static s8 sNudgeSx, sNudgeSy;
 static u32 sNudgeRoom;
 static u16 sNudgeSpecies;
 s8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy)
 {
     s8 n;
-    if (x == sNudgeX && y == sNudgeY && sx == sNudgeSx && sy == sNudgeSy && sNudgeRoom == gWildlandsRoomTelemetry[2] && sNudgeSpecies == gBattleMons[side].species)
+    if (sNudgeValid && x == sNudgeX && y == sNudgeY && sx == sNudgeSx && sy == sNudgeSy && sNudgeRoom == gWildlandsRoomTelemetry[2] && sNudgeSpecies == gBattleMons[side].species)
         return 0;
     n = SlideNudgeRaw(side, x, y, sx, sy);
     if (n)
-        sNudgeX = -1;
+        sNudgeValid = FALSE;
     else
-    { sNudgeX = x; sNudgeY = y; sNudgeSx = sx; sNudgeSy = sy; sNudgeRoom = gWildlandsRoomTelemetry[2]; sNudgeSpecies = gBattleMons[side].species; }
+    { sNudgeValid = TRUE; sNudgeX = x; sNudgeY = y; sNudgeSx = sx; sNudgeSy = sy; sNudgeRoom = gWildlandsRoomTelemetry[2]; sNudgeSpecies = gBattleMons[side].species; }
     return n;
 }
 static s8 SlideNudgeRaw(u8 side, s16 x, s16 y, s8 sx, s8 sy)
