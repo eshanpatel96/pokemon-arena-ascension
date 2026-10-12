@@ -148,7 +148,7 @@ patch(A, '    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Acti
 # FPS: the enemy's move choice (a type-chart walk per move) ran every frame
 # its cooldown was 0; in the world it re-picks every 4th frame.
 patch(A, '        if(!body->cooldown)AiChooseMove(distance);\n',
-      '        if(!body->cooldown && (!WildlandsWorld_Active() || !(sArena.frame & 3)))AiChooseMove(distance);\n')
+      '        if(!body->cooldown && (!WildlandsWorld_Active() || (sArena.frame & 3) == 2))AiChooseMove(distance);\n')
 # FPS: a coarse 32px "anything solid or deep water here?" bitmap lets line
 # and footprint checks over open ground return at once instead of marching
 # a body circle every few pixels (SolidCircle was the top walking cost).

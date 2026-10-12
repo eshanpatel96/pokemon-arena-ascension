@@ -166,7 +166,7 @@ patch(A, '    if(!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))Ca
 
 # A failed route leaves the waypoint on the body; never re-search every frame.
 patch(A, '        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4) AiRoute();',
-      '        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4 && !(sArena.frame & 7)) AiRoute();')
+      '        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4 && (sArena.frame & 7) == 5) AiRoute();')
 
 patch(A, 'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.bodies[1];\n    s32 dx, dy, len;\n    body->moving = FALSE;\n',
       'static void TickEnemy(void)\n{\n    struct ArenaBody *body = &sArena.bodies[1];\n    s32 dx, dy, len;\n    body->moving = FALSE;\n    if (gWildlandsTestPeace) return;\n')
