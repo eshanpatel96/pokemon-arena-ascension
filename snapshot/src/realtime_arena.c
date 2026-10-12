@@ -509,6 +509,9 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+static void PropsInit(void);
+static void PropsSim(void);
+static void PropsFree(void);
 static void SquadInit(void);
 static void SquadTick(void);
 static void SquadDestroy(void);
@@ -1619,6 +1622,7 @@ static void CB2_ArenaInit(void)
     LootInit();
     BrainInit();
     DirectorInit();
+    PropsInit();
     sWildlandsEncounterLive = WildlandsWorld_Active();
     sArena.cueSprite = CreateSprite(&sShotTemplate, 120, 32, 0);
     gSprites[sArena.cueSprite].oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG + 1);
@@ -2724,6 +2728,7 @@ static void DestroyShot(struct ArenaShot *shot)
 #include "arena_zone.inc"
 #include "arena_map.inc"
 #include "arena_brain.inc"
+#include "arena_props.inc"
 #include "arena_director.inc"
 
 static void TickShots(void)

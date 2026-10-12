@@ -795,6 +795,7 @@ static void SquadSimStep(void)
         sSwapCooldown--;
     SquadDoorSim();
     DirectorSim();
+    PropsSim();
     for (i = 0; i < 2; i++)
         if (sSquadWings[i].active && sSquadWings[i].alive)
             SquadThink(&sSquadWings[i]);

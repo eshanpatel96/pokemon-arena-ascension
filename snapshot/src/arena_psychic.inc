@@ -24,6 +24,8 @@ static bool8 PsychicStart(u8 side,s32 targetX,s32 targetY)
         struct ArenaProp *p=&gArenaProps[i];
         struct ArenaPsychicRock *r=&gArenaPsychicRocks[i];
         if(p->kind!=ARENA_PROP_ROCK||p->broken||p->reserved)continue;
+        if(WildlandsWorld_Active()&&(Abs((rect->left+rect->right)/2-sArena.bodies[side].x/Q)>200
+            ||Abs((rect->top+rect->bottom)/2-sArena.bodies[side].y/Q)>150))continue;
         r->x=(rect->left+rect->right)*Q/2;r->y=(rect->top+rect->bottom)*Q/2;
         r->state=1;r->side=side;r->order=n++;r->age=0;r->height=0;
         p->reserved=side+1;ArenaNav_SetObstacle(i,0);

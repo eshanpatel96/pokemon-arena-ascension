@@ -5,7 +5,7 @@
 #endif
 
 // Rendering, movement, projectiles and AI all use these exact solid rectangles.
-const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] =
+struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] =
 {
     {2024, 1520, 2049, 1537},
     {1976, 1490, 1997, 1507},

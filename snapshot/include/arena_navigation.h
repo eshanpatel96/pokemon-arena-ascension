@@ -27,7 +27,7 @@ typedef int32_t s32;
 
 struct ArenaRect { s16 left, top, right, bottom; };
 struct ArenaPoint { s16 x, y; };
-extern const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES];
+extern struct ArenaRect gArenaObstacles[ARENA_OBSTACLES];
 
 void ArenaNav_Init(void);
 void ArenaNav_SetObstacle(u8 index,u8 solid);
