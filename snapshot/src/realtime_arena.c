@@ -3712,6 +3712,25 @@ void Wildlands_MakeShiny(void)
     gSpecialVar_Result = IsMonShiny(mon) ? 1 : 0;
 }
 
+// V6.9 browse: quote the party Pokemon in VAR_0x8004 without buying.
+// STR_VAR_1 name, STR_VAR_2 wins still needed. VAR_RESULT: 1 affordable,
+// 2 legendary, 3 already shiny, 4 not enough wins, 0 nothing chosen.
+void Wildlands_ShopQuote(void)
+{
+    struct Pokemon *mon;
+    u16 sp, have = VarGet(VAR_WL_SHOP_WINS);
+    gSpecialVar_Result = 0;
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
+    mon = &gPlayerParty[gSpecialVar_0x8004];
+    sp = GetMonData(mon, MON_DATA_SPECIES);
+    if (!sp || GetMonData(mon, MON_DATA_IS_EGG))
+        return;
+    StringCopy(gStringVar1, gSpeciesNames[sp]);
+    ConvertIntToDecimalStringN(gStringVar2, have >= 10 ? 0 : 10 - have, STR_CONV_MODE_LEFT_ALIGN, 2);
+    gSpecialVar_Result = WlShopLegend(sp) ? 2 : IsMonShiny(mon) ? 3 : have < 10 ? 4 : 1;
+}
+
 // TEST HOOK ONLY: nonzero runs the shop core on party slot 1 at the next
 // match start; [0] result [1] shiny [2] species/level/move/nature/IV kept [3] balance after.
 EWRAM_DATA u8 gWildlandsShopTest = 0;
