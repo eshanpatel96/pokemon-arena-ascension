@@ -520,6 +520,7 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+static void WildlandsAnimateSprites(void);
 static bool8 WildlandsFastPace(void);
 static void WildlandsPaceUpdate(u32 gap);
 static s32 WildlandsStrafe(s32 bx, s32 by, s32 px, s32 py);
@@ -3327,7 +3328,7 @@ static void CB2_Arena(void)
     {u32 p0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,p1;
     ArenaXL_UpdateCamera();
     p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;
-    AnimateSprites();
+    WildlandsAnimateSprites();
     p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[7]=p1-p0;p0=p1;
     WildlandsBuildOam();
     p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;
