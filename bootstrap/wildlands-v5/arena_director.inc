@@ -40,6 +40,8 @@ struct DirState
     struct Pokemon savedPartner;
     u8 count, active, cursor, partnerSaved;
     u16 clock;
+    struct { u16 t; u8 text[20]; } log[12];   // Beta: pause-menu match log
+    u8 logHead, logCount, playerKOs, pad3;
     u16 bossCooldown, bossEvalStamp;
     u8 activePlan, bossDoor;
 };
@@ -292,6 +294,7 @@ static u8 DirLeft(void)
     return n;
 }
 
+static void DirectorLog(const u8 *text);
 static void DirPopup(const u8 *a, const u8 *b, u8 color)
 {
     u8 *end = StringCopy(sDirPopup.text, a);
@@ -300,6 +303,24 @@ static void DirPopup(const u8 *a, const u8 *b, u8 color)
     sDirPopup.timer = 150;
     sDirPopup.color = color;
     sArena.hudDirty = TRUE;
+    DirectorLog(sDirPopup.text);
+}
+
+// Match log: every announced event (eliminations, legendaries, pickups,
+// storm phases) with its match time, newest first on the LOG page.
+static void DirectorLog(const u8 *text)
+{
+    u32 k;
+    if (!sDir)
+        return;
+    k = sDir->logHead;
+    sDir->log[k].t = (sZone.active ? sZone.clock : sDir->clock) / 60;
+    for (k = 0; k < 19 && text[k] != EOS; k++)
+        sDir->log[sDir->logHead].text[k] = text[k];
+    sDir->log[sDir->logHead].text[k] = EOS;
+    sDir->logHead = (sDir->logHead + 1) % ARRAY_COUNT(sDir->log);
+    if (sDir->logCount < ARRAY_COUNT(sDir->log))
+        sDir->logCount++;
 }
 
 static bool8 DirectorPopupText(u8 *text, u8 *color)
@@ -547,7 +568,10 @@ static bool8 DirectorAdvance(void)
         if (d->legend)
             DirLegendJoins(d);
         else
+        {
+            sDir->playerKOs++;
             DirFeedOut(d);
+        }
     }
     gWildlandsDirectorTelemetry[0] = DirLeft();
     next = DirNearest(FALSE);
@@ -827,6 +851,29 @@ static void DirPolicy(void)
     }
 }
 
+// Map ring for the lair whose outdoor door is (x,y): 0 taken or beaten,
+// 1 legendary home, 2 under attack (a duo is fighting inside).
+static u8 DirectorLairState(s32 x, s32 y)
+{
+    u32 j, k;
+    if (!sDir)
+        return 1;
+    for (j = WL_DIRECTOR_DUOS; j < sDir->count; j++)
+    {
+        s32 ox, oy;
+        DirLairDoor(&sDir->duo[j], &ox, &oy);
+        if (ox != x || oy != y)
+            continue;
+        if (sDir->duo[j].state != DIR_LAIR && sDir->duo[j].state != DIR_ACTIVE)
+            return 0;
+        for (k = 1; k < WL_DIRECTOR_DUOS; k++)
+            if (sDir->duo[k].state == DIR_SIM && sDir->duo[k].room && sDir->duo[k].plan == j + 1)
+                return 2;
+        return 1;
+    }
+    return 1;
+}
+
 // A random lair door whose legendary is still home (storm hot zones).
 static bool8 DirectorLairAnchor(s32 *x, s32 *y)
 {
@@ -1101,6 +1148,121 @@ static void DirectorDestroy(void)
 }
 
 static u8 DirectorLeft(void) { return DirLeft(); }
+
+// ---- Pause pages: TEAM and LOG ----------------------------------------------
+static u8 *DirTimeString(u8 *end, u16 seconds)
+{
+    end = ConvertIntToDecimalStringN(end, seconds / 60, STR_CONV_MODE_LEFT_ALIGN, 2);
+    *end++ = CHAR_COLON;
+    return ConvertIntToDecimalStringN(end, seconds % 60, STR_CONV_MODE_LEADING_ZEROS, 2);
+}
+
+static void DirTeamMember(u8 battler, u32 y, bool8 lead)
+{
+    static const u8 sLv[] = _(" L");
+    static const u8 sHp[] = _("  HP ");
+    static const u8 sLeadMark[] = _("> ");
+    static const u8 sOut[] = _("  FAINTED");
+    static const u8 sNoMark[] = _("  ");
+    u8 text[40], *end;
+    u32 k;
+    const struct BattlePokemon *m = &gBattleMons[battler];
+    if (!SquadAlive(battler) || !m->species)
+    {
+        end = StringCopy(text, battler < 2 ? sLeadMark : sNoMark);
+        if (m->species) end = StringCopy(end, gSpeciesNames[m->species]);
+        StringCopy(end, sOut);
+        HudTinyWindow(1, 6, y, text, 7, 38);
+        return;
+    }
+    end = StringCopy(text, lead ? sLeadMark : sNoMark);
+    end = StringCopy(end, gSpeciesNames[m->species]);
+    end = StringCopy(end, sLv);
+    end = ConvertIntToDecimalStringN(end, m->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+    end = StringCopy(end, sHp);
+    end = ConvertIntToDecimalStringN(end, m->hp, STR_CONV_MODE_LEFT_ALIGN, 3);
+    *end++ = CHAR_SLASH;
+    end = ConvertIntToDecimalStringN(end, m->maxHP, STR_CONV_MODE_LEFT_ALIGN, 3);
+    *end = EOS;
+    HudTinyWindow(1, 6, y, text, lead ? 5 : 4, 38);
+    for (k = 0; k < MAX_MON_MOVES; k++)
+    {
+        if (!m->moves[k])
+            continue;
+        end = StringCopy(text, gMoveNames[m->moves[k]]);
+        *end++ = CHAR_SPACE;
+        end = ConvertIntToDecimalStringN(end, m->pp[k], STR_CONV_MODE_LEFT_ALIGN, 2);
+        *end = EOS;
+        HudTinyWindow(1, 12 + (k & 1) * 104, y + 7 + (k >> 1) * 7, text,
+            ArenaMoves_Get(m->moves[k]) ? (m->pp[k] ? 4 : 6) : 7, 18);
+    }
+}
+
+static void WildlandsTeamDraw(void)
+{
+    static const u8 sTitle[] = _("TEAM");
+    static const u8 sBoost[] = _("BOOSTS A+");
+    static const u8 sCap[] = _("  CAP 3   KO ");
+    static const u8 sLegend[] = _("LEGEND PARTNER: ");
+    static const u8 sFoe[] = _("FOES A+");
+    static const u8 sHelp[] = _("SELECT: SWAP LEAD   B: BACK");
+    u8 text[48], *end;
+    FillWindowPixelBuffer(1, PIXEL_FILL(9));
+    PrintPopup(6, 0, sTitle, 5);
+    HudTinyWindow(1, 64, 3, sHelp, 7, 30);
+    DirTeamMember(0, 14, TRUE);
+    DirTeamMember(2, 36, FALSE);
+    end = StringCopy(text, sBoost);
+    *end++ = CHAR_0 + sLoot.boost[0][0];
+    *end++ = CHAR_SPACE; *end++ = CHAR_D; *end++ = CHAR_PLUS; *end++ = CHAR_0 + sLoot.boost[0][1];
+    *end++ = CHAR_SPACE; *end++ = CHAR_S; *end++ = CHAR_PLUS; *end++ = CHAR_0 + sLoot.boost[0][2];
+    end = StringCopy(end, sCap);
+    end = ConvertIntToDecimalStringN(end, sDir ? sDir->playerKOs : 0, STR_CONV_MODE_LEFT_ALIGN, 2);
+    *end = EOS;
+    HudTinyWindow(1, 6, 58, text, 4, 44);
+    if (sDir && sDir->partnerSaved)
+    {
+        end = StringCopy(text, sLegend);
+        StringCopy(end, gSpeciesNames[gBattleMons[2].species]);
+        HudTinyWindow(1, 6, 65, text, 5, 40);
+    }
+    else
+    {
+        end = StringCopy(text, sFoe);
+        *end++ = CHAR_0 + sLoot.boost[1][0];
+        *end++ = CHAR_SPACE; *end++ = CHAR_D; *end++ = CHAR_PLUS; *end++ = CHAR_0 + sLoot.boost[1][1];
+        *end++ = CHAR_SPACE; *end++ = CHAR_S; *end++ = CHAR_PLUS; *end++ = CHAR_0 + sLoot.boost[1][2];
+        *end = EOS;
+        HudTinyWindow(1, 6, 65, text, 6, 30);
+    }
+    PutWindowTilemap(1);
+    CopyWindowToVram(1, COPYWIN_FULL);
+}
+
+static void WildlandsLogDraw(void)
+{
+    static const u8 sTitle[] = _("LOG");
+    static const u8 sEmpty[] = _("NOTHING YET");
+    static const u8 sHelp[] = _("NEWEST FIRST   B: BACK");
+    u8 text[32], *end;
+    u32 i;
+    FillWindowPixelBuffer(1, PIXEL_FILL(9));
+    PrintPopup(6, 0, sTitle, 5);
+    HudTinyWindow(1, 64, 3, sHelp, 7, 24);
+    if (!sDir || !sDir->logCount)
+        HudTinyWindow(1, 6, 16, sEmpty, 4, 12);
+    else
+        for (i = 0; i < sDir->logCount && i < 8; i++)
+        {
+            u32 k = (sDir->logHead + ARRAY_COUNT(sDir->log) - 1 - i) % ARRAY_COUNT(sDir->log);
+            end = DirTimeString(text, sDir->log[k].t);
+            *end++ = CHAR_SPACE; *end++ = CHAR_SPACE;
+            StringCopy(end, sDir->log[k].text);
+            HudTinyWindow(1, 6, 15 + i * 7, text, i ? 4 : 5, 30);
+        }
+    PutWindowTilemap(1);
+    CopyWindowToVram(1, COPYWIN_FULL);
+}
 static bool8 DirectorRunning(void) { return sDir != NULL; }
 static bool8 DirectorPopupActive(void) { return sDirPopup.timer != 0; }
 

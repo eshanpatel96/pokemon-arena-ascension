@@ -44,6 +44,27 @@ static void MapPlot(s32 wx, s32 wy, u32 size, u8 color)
     WindowRect(1, MAP_X0 + mx - size / 2, MAP_Y0 + my - size / 2, size, size, color);
 }
 
+// Storm shading: every other map pixel outside the safe circle turns red, so
+// the danger zone reads at a glance while the terrain stays visible.
+static void MapShadeStorm(u32 w, u32 h)
+{
+    u32 mx, my, s = MapScale() * 16;
+    s32 r = sZone.r >> 8;
+    u8 *dst = gWindows[1].tileData;
+    for (my = 0; my < h && MAP_Y0 + my < 72; my++)
+        for (mx = (my & 1); mx < w && MAP_X0 + mx < 224; mx += 2)
+        {
+            s32 wx = WL_SLICE_BASE_X * 16 + mx * s + s / 2 - sZone.cx;
+            s32 wy = WL_SLICE_BASE_Y * 16 + my * s + s / 2 - sZone.cy;
+            u32 px = MAP_X0 + mx, py = MAP_Y0 + my, off;
+            if (wx * wx + wy * wy <= r * r)
+                continue;
+            off = ((py / 8) * 28 + px / 8) * 32 + (py & 7) * 4 + (px & 7) / 2;
+            if (px & 1) dst[off] = (dst[off] & 0x0F) | (MAPC_FOE << 4);
+            else dst[off] = (dst[off] & 0xF0) | MAPC_FOE;
+        }
+}
+
 static void MapCircle(s32 cx, s32 cy, s32 r, u8 color, bool8 dotted)
 {
     u32 a;
@@ -80,6 +101,7 @@ static void MapDraw(void)
     // Overlays: zone first so actors draw on top.
     if (sZone.active)
     {
+        MapShadeStorm(w, h);
         MapCircle(sZone.cx, sZone.cy, sZone.r >> 8, MAPC_ZONE, FALSE);
         if (sZone.phase == ZONE_WARNING || sZone.phase == ZONE_SHRINKING)
             MapCircle(sZone.toX, sZone.toY, sZone.toR >> 8, MAPC_NEXT, TRUE);
@@ -95,7 +117,10 @@ static void MapDraw(void)
         WildlandsWorld_DoorInfo(i, &dx, &dy, &lair);
         if (lair)
         {
-            MapPlot(dx, dy, 5, MAPC_PLAYER);
+            // White ring: legendary home. Red ring: under attack.
+            // Dark ring: taken or beaten.
+            u8 state = DirectorLairState(dx, dy);
+            MapPlot(dx, dy, 5, state == 2 ? MAPC_FOE : state == 0 ? MAPC_SOLID : MAPC_PLAYER);
             MapPlot(dx, dy, 3, MAPC_GROUND);
         }
         else
@@ -113,6 +138,17 @@ static void MapDraw(void)
             continue; // the map does not reveal hidden enemies
         MapPlot(ax / Q, ay / Q, i == 0 ? 3 : 2, i == 0 ? MAPC_PLAYER : (i & 1) ? MAPC_FOE : MAPC_ALLY);
     }
+    // Outside the circle: a short dotted arrow from you toward safety.
+    if (sZone.active && ZoneOutside(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, 0))
+    {
+        s32 px = sArena.bodies[0].x / Q, py = sArena.bodies[0].y / Q, k;
+        s32 ax = sZone.cx - px, ay = sZone.cy - py, len;
+        { s32 ox = px, oy = py; WildlandsWorld_OutdoorPos(&ox, &oy); px = ox; py = oy; ax = sZone.cx - px; ay = sZone.cy - py; }
+        len = max(Abs(ax), Abs(ay));
+        if (len)
+            for (k = 1; k <= 6; k++)
+                MapPlot(px + ax * (s32)(k * 3 * MapScale() * 16) / len, py + ay * (s32)(k * 3 * MapScale() * 16) / len, 1, MAPC_ALLY);
+    }
     // Legend
     x = MAP_X0 + w + 10;
     PrintPopup(x, 2, sTitle, 5);
@@ -126,6 +162,22 @@ static void MapDraw(void)
     WindowRect(1, x, 44, 5, 5, MAPC_PLAYER); WindowRect(1, x + 1, 45, 3, 3, MAPC_GROUND);
     HudTinyWindow(1, x + 8, 44, sKeyLair, 4, 4);
     WindowRect(1, x + 37, 45, 2, 2, MAPC_HOUSE); HudTinyWindow(1, x + 42, 44, sKeyHouse, 4, 4);
+    // Storm phase and time left.
+    if (sZone.active)
+    {
+        static const u8 sPhase[4][8] = {_("CALM "), _("WARN "), _("SHRINK "), _("FINAL ")};
+        u8 text[16], *end;
+        u16 left = ZoneSecondsLeft();
+        end = StringCopy(text, sPhase[min(sZone.phase, 3)]);
+        if (sZone.phase != ZONE_SUDDEN_DEATH)
+        {
+            end = ConvertIntToDecimalStringN(end, left / 60, STR_CONV_MODE_LEFT_ALIGN, 1);
+            *end++ = CHAR_COLON;
+            end = ConvertIntToDecimalStringN(end, left % 60, STR_CONV_MODE_LEADING_ZEROS, 2);
+        }
+        *end = EOS;
+        HudTinyWindow(1, x, 52, text, sZone.phase >= ZONE_SHRINKING ? 6 : 4, 12);
+    }
     HudTinyWindow(1, x, 60, sHelp, 7, 8);
     PutWindowTilemap(1);
     CopyWindowToVram(1, COPYWIN_FULL);

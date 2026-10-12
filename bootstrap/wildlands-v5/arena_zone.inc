@@ -407,11 +407,19 @@ static void ZoneSim(void)
         {
         case ZONE_EXPLORING:
             if (sZone.phaseClock >= ZONE_EXPLORE)
-            { sZone.phase = ZONE_WARNING; sZone.phaseClock = 0; ZonePickNext(); }
+            {
+                static const u8 sWarn[] = _("STORM INCOMING");
+                sZone.phase = ZONE_WARNING; sZone.phaseClock = 0; ZonePickNext();
+                DirectorLog(sWarn);
+            }
             break;
         case ZONE_WARNING:
             if (sZone.phaseClock >= ZONE_WARN)
-            { sZone.phase = ZONE_SHRINKING; sZone.phaseClock = 0; }
+            {
+                static const u8 sShrink[] = _("STORM CLOSING IN");
+                sZone.phase = ZONE_SHRINKING; sZone.phaseClock = 0;
+                DirectorLog(sShrink);
+            }
             break;
         case ZONE_SHRINKING:
         {

@@ -185,6 +185,35 @@ poke gBattleMons 36 1 1
 frames 300 0
 dumph pp gBattleMons 36 2
 expectmin gBattleMons 36 1 2
+# ---- Rest regen: standing still and not attacking heals the duo ----
+poke gBattleMons 40 2 60
+frames 420 0
+dumph rest gWildlandsRestTelemetry 0 2
+expectmin gWildlandsRestTelemetry 0 2 1
+# ---- SELECT swaps lead and partner (and back after the cooldown) ----
+dumph leadBefore gBattleMons 0 1
+press 4
+frames 20 0
+dumph leadAfter gBattleMons 0 1
+expectmin gWildlandsSwapTelemetry 0 2 1
+snap 16-swapped
+frames 200 0
+press 4
+frames 20 0
+expectmin gWildlandsSwapTelemetry 0 2 2
+# ---- Pause pages: TEAM (first entry) and LOG ----
+press 8
+press 1
+frames 10 0
+snap 17-team-page
+press 2
+press 128
+press 1
+frames 10 0
+snap 18-log-page
+press 2
+press 2
+frames 20 0
 frames 120 16
 snap 03-east
 frames 1 16

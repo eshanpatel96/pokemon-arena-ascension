@@ -114,12 +114,13 @@ static bool8 BrainCanGo(s32 x, s32 y)
 // 24px; firing or fleeing spots against walls make a duo stand and camp.
 static u32 WildlandsCramp(s32 x, s32 y)
 {
-    static const s8 dx[8] = {3, 2, 0, -2, -3, -2, 0, 2};
-    static const s8 dy[8] = {0, 2, 3, 2, 0, -2, -3, -2};
+    // 4 probes (cost: this runs for every candidate spot the AI scores).
+    static const s8 dx[4] = {3, 0, -3, 0};
+    static const s8 dy[4] = {0, 3, 0, -3};
     u32 i, n = 0;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 4; i++)
         if (!WildlandsWorld_CanStandSide(1, x + dx[i] * 8, y + dy[i] * 8, 6))
-            n++;
+            n += 2;
     return n;
 }
 
