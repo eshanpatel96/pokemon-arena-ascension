@@ -145,4 +145,8 @@ patch(A, '    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Acti
       '    if (WildlandsWorld_Active())\n    {\n        u32 k;\n        for (k = 0; k < ARENA_OBSTACLES; k++)\n'
       '        { gArenaProps[k].broken = 1; gArenaProps[k].hp = 0; ArenaNav_SetObstacle(k, 0); }\n    }\n'
       '    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
+# FPS: the enemy's move choice (a type-chart walk per move) ran every frame
+# its cooldown was 0; in the world it re-picks every 4th frame.
+patch(A, '        if(!body->cooldown)AiChooseMove(distance);\n',
+      '        if(!body->cooldown && (!WildlandsWorld_Active() || !(sArena.frame & 3)))AiChooseMove(distance);\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')
