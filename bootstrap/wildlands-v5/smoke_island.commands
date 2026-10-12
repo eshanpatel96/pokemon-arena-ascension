@@ -43,6 +43,10 @@ press 768
 frames 700 0
 expect gWildlandsWorldAudit 0 4 1
 dump squad0 gWildlandsSquadTelemetry 16
+dumph bossAudit gWildlandsBossAudit 0 3
+expect gWildlandsBossAudit 0 2 5
+expect gWildlandsBossAudit 2 2 5
+expect gWildlandsBossAudit 4 2 0
 snap 02-island-start
 poke gWildlandsTestPeace 0 1 1
 poke gWildlandsZoneTestSpeed 0 2 65535
@@ -71,6 +75,9 @@ frames 60 0
 poke gWildlandsTestWarp 0 1 16
 frames 90 0
 snap 09-lair-mewtwo
+dumph boss-09-lair-mewtwo gWildlandsBossAudit 6 6
+expect gWildlandsBossAudit 8 2 1
+expect gWildlandsBossAudit 6 2 1
 dump rooms gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 8 4 1
 # ---- Director + legendary: Mewtwo is the active enemy in its lair; beat it
@@ -96,24 +103,36 @@ expect gWildlandsRoomTelemetry 8 4 0
 poke gWildlandsTestWarp 0 1 15
 frames 90 0
 snap 10-lair-rayquaza
+dumph boss-10-lair-rayquaza gWildlandsBossAudit 6 6
+expect gWildlandsBossAudit 8 2 5
+expect gWildlandsBossAudit 6 2 5
 expect gWildlandsRoomTelemetry 8 4 5
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 poke gWildlandsTestWarp 0 1 21
 frames 90 0
 snap 11-lair-lugia
+dumph boss-11-lair-lugia gWildlandsBossAudit 6 6
+expect gWildlandsBossAudit 8 2 2
+expect gWildlandsBossAudit 6 2 2
 expect gWildlandsRoomTelemetry 8 4 2
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 poke gWildlandsTestWarp 0 1 18
 frames 90 0
 snap 12-lair-hooh
+dumph boss-12-lair-hooh gWildlandsBossAudit 6 6
+expect gWildlandsBossAudit 8 2 3
+expect gWildlandsBossAudit 6 2 3
 expect gWildlandsRoomTelemetry 8 4 3
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 poke gWildlandsTestWarp 0 1 20
 frames 90 0
 snap 13-lair-kyogre
+dumph boss-13-lair-kyogre gWildlandsBossAudit 6 6
+expect gWildlandsBossAudit 8 2 4
+expect gWildlandsBossAudit 6 2 4
 expect gWildlandsRoomTelemetry 8 4 4
 # Kyogre boss: its moves, then beat it and check the joined partner's sprite.
 dumph kyogreLead gBattleMons 88 1
