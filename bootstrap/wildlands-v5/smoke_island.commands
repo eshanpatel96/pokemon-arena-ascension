@@ -493,13 +493,15 @@ dumph rainA gWildlandsRainVisible 0 1
 dumph rainDiagA gWildlandsRainDiag 0 4
 dumph rainSprite gSprites 2584 34
 dumph oamAll gMain 56 512
-expectmin gWildlandsRainVisible 0 1 4
 # ---- Storm tint: run the storm fast until the player is outside it ----
 poke gWildlandsTestPeace 0 1 1
 poke gWildlandsZoneTestSpeed 0 2 400
 frames 300 0
 snap 30-storm-outside
 dumph rain gWildlandsRainVisible 0 1
+# Rain is asserted once the player is surely outside the circle (the
+# storm-edge timing at the earlier snap depends on the match RNG).
+expectmin gWildlandsRainVisible 0 1 4
 dumph rainDiag gWildlandsRainDiag 0 4
 dump zoneEnd gWildlandsZoneTelemetry 16
 # ---- Roaming legendaries: spawn inside the circle (test hook: now) ----

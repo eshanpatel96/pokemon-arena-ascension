@@ -64,3 +64,11 @@ Open: 60 fps optimisation, biome-belt straight borders, spectate, partner-shot c
 - Cuts: one-pass world OAM build (27 -> 8 scanlines), lean sprite animation, coarse collision bitmap, route memo, periodic AI/route/loot/target work staggered across frames (was all on frame 0 mod 8), per-frame type-chart memo, direct move-profile index, aim LOS every 4th render, wing palettes blend only while flashing, corner-assist cache.
 - Smoke (run 38251237090): biome tour 1546 updates at 60 / 63 overruns; forced-60 fight 291/300 (9 overruns); heavy late-match walk 252/300 at 60 (auto pacing 256/42). Island 175/175, slice 45/45.
 Open: spectate, biome-belt straight borders, heavy late-match walk still ~16% overruns (SolidCircle, frame decode, CB2 inline).
+
+## V6.5 / V6.6 (2026-10-12)
+- V6.5: hit flash, Rollout squash, damage numbers and sparks advance at a steady 30/s (they ran double speed at 60 fps).
+- V6.6 bosses: legendaries hunt the nearest player Pokemon (no retreat, loot or wandering), press closer when hurt, never pick Teleport, healing or draining moves.
+- V6.6 loss: a lost match ends the battle directly (outcome LOST, like a capture), so no classic battle screen can appear before the Lab.
+- V6.6 wings: move choice by power x type value x range (cached, re-scored on target/range change and every 16 frames); sidestep incoming shots (odds by level); partner covers a hurt player (<40%); hurt wings fight from the edge of their range.
+- V6.6 map: sea islets removed, 1-6 cell specks on open desert/highland ground removed (35% of lone rocks kept), noise-driven bays and capes on long straight coasts.
+Open: spectate, boss/AI feel from playtests, "enemy team stuck" repro (no capture yet).
