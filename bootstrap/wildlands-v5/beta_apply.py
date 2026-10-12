@@ -356,6 +356,7 @@ patch(A, '    ArenaFeedback_Update(sArena.paused, frozen && !CaptureLocked() && 
 # Legendaries press instead of kiting when hurt, and never pick a move that
 # heals them or warps them away (bosses do not heal).
 patch(A, '    if (p->kind == ARENA_MOVE_PROJECTILE && gBattleMons[1].hp * 3 < gBattleMons[1].maxHP) preferred += 12;\n',
+      '    gWildlandsCost[4]++;\n'
       '    if (WildlandsWorld_Active() && DirectorSoloActive())\n'
       '    {\n        if (gBattleMons[1].hp * 2 < gBattleMons[1].maxHP)\n            preferred = preferred * 3 / 4;   /* V6.6: a hurt legend presses */\n    }\n'
       '    else if (p->kind == ARENA_MOVE_PROJECTILE && gBattleMons[1].hp * 3 < gBattleMons[1].maxHP) preferred += 12;\n')
@@ -577,4 +578,12 @@ WildlandsLab_Text_ShopAlready:
  .string "{STR_VAR_1} is already SHINY!$"
 """
 _sc.write_text(_t)
+# V6.8 diag: cost counters (see gWildlandsCost in arena_squad.inc).
+patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n', '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\nextern u32 gWildlandsCost[8];\n')
+patch(A, 'q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[0])gWildlandsSpikeSim[0]=q1-q0;}',
+      'q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; gWildlandsCost[0]+=q1-q0; if(q1-q0>gWildlandsSpikeSim[0])gWildlandsSpikeSim[0]=q1-q0;}')
+patch(A, 'q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}',
+      'q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; gWildlandsCost[1]+=q1-q0; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}')
+patch(A, '    sWildlandsHudDrew=FALSE;\n    DrawStatusHud();\n', '    sWildlandsHudDrew=FALSE;\n    gWildlandsCost[5]++;\n    DrawStatusHud();\n')
+patch(A, '    WildlandsPaceUpdate(gap);\n', '    WildlandsPaceUpdate(gap);\n    gWildlandsCost[7]++;\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')

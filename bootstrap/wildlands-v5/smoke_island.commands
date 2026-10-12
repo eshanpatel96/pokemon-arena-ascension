@@ -327,12 +327,20 @@ prof idle-fight 120 0
 poke gWildlandsTpTest 0 1 1
 frames 130 0
 dumph thirdParty gWildlandsTpTelemetry 0 3
-expectmin gWildlandsTpTelemetry 0 2 1
 poke gWildlandsFastTest 0 1 2
 poke gWildlandsFastTelemetry 0 2 0
 poke gWildlandsFastTelemetry 2 2 0
+poke gWildlandsCost 0 4 0
+poke gWildlandsCost 4 4 0
+poke gWildlandsCost 8 4 0
+poke gWildlandsCost 12 4 0
+poke gWildlandsCost 16 4 0
+poke gWildlandsCost 20 4 0
+poke gWildlandsCost 24 4 0
+poke gWildlandsCost 28 4 0
 rate fight60 300 0 0
 dumph fight60 gWildlandsFastTelemetry 0 2
+dump cost-fight60 gWildlandsCost 8
 poke gWildlandsFastTest 0 1 0
 # ---- PP regenerates in the world (1 per move every 2s) ----
 poke gBattleMons 36 1 1
@@ -451,6 +459,7 @@ expect gWildlandsRoomTelemetry 28 4 0
 dump brain gWildlandsBrainTelemetry 8
 dumph wingDodges gWildlandsWingDodges 0 2
 dumph thirdPartyEnd gWildlandsTpTelemetry 0 3
+expectmin gWildlandsTpTelemetry 0 2 1
 dumph shop gWildlandsShopTelemetry 0 4
 expect gWildlandsShopTelemetry 0 2 1
 expect gWildlandsShopTelemetry 2 2 1
@@ -463,8 +472,17 @@ expect gWildlandsBiomeTelemetry 12 4 0
 poke gWildlandsFastTest 0 1 2
 poke gWildlandsFastTelemetry 0 2 0
 poke gWildlandsFastTelemetry 2 2 0
+poke gWildlandsCost 0 4 0
+poke gWildlandsCost 4 4 0
+poke gWildlandsCost 8 4 0
+poke gWildlandsCost 12 4 0
+poke gWildlandsCost 16 4 0
+poke gWildlandsCost 20 4 0
+poke gWildlandsCost 24 4 0
+poke gWildlandsCost 28 4 0
 rate walk60-east 300 16 0
 dumph fast60 gWildlandsFastTelemetry 0 2
+dump cost-walk60 gWildlandsCost 8
 dump coarse gWildlandsCoarseTelemetry 2
 dumph prof60 gWildlandsProfile 0 12
 prof walk60-prof 120 16

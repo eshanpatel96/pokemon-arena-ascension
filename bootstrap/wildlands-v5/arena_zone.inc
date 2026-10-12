@@ -599,6 +599,7 @@ static void ZoneHudLine(void)
     bool8 out;
     if (!sZone.active)
         return;
+    gWildlandsCost[6]++;
     out = ZoneOutside(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, 0);
     s = ZoneSecondsLeft();
     if (sZone.phase == ZONE_SUDDEN_DEATH)
