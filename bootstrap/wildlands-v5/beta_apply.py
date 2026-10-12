@@ -125,4 +125,10 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\nstatic s32 WildlandsStrafe(s32 bx, s32 by, s32 px, s32 py);\nstatic bool8 DirectorBossWindup(void);\n')
 patch(A, '    body->moving = FALSE;\n    if (gWildlandsTestPeace) return;\n',
       '    body->moving = FALSE;\n    if (gWildlandsTestPeace) return;\n    if (DirectorBossWindup()) return;\n')
+# V6.2: 60 fps while exploring (adaptive, see WildlandsPaceUpdate).
+patch(A, '    if(WildlandsWorld_Active()&&gap<2){sWildlandsHeldNew|=gMain.newKeys;return;}\n',
+      '    if(WildlandsWorld_Active()&&gap<(WildlandsFastPace()?1:2)){sWildlandsHeldNew|=gMain.newKeys;return;}\n'
+      '    WildlandsPaceUpdate(gap);\n')
+patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
+      '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\nstatic bool8 WildlandsFastPace(void);\nstatic void WildlandsPaceUpdate(u32 gap);\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')

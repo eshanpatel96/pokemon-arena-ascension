@@ -809,6 +809,47 @@ static void SquadRestRegen(void)
     }
 }
 
+// V6.2 pacing: 60 fps while exploring. The world renders every vblank when
+// nothing is fighting on screen (no live shots, the active enemy far away,
+// not paused); any update that overruns its frame three times drops back to
+// the locked 30 fps for 4s. Combat always runs at the steady 30.
+static EWRAM_DATA u8 sWlFast = 0, sWlFastMiss = 0;
+static EWRAM_DATA u16 sWlFastHold = 0;
+EWRAM_DATA u16 gWildlandsFastTelemetry[2] = {0};   // [0] 60fps updates [1] fallbacks to 30
+static void WildlandsPaceUpdate(u32 gap)
+{
+    u32 i;
+    bool8 calm = !sArena.paused && !sArena.resultTimer;
+    if (!WildlandsWorld_Active())
+    { sWlFast = 0; return; }
+    for (i = 0; i < SHOTS_COUNT && calm; i++)
+        if (sArena.shots[i].life)
+            calm = FALSE;
+    if (calm && gBattleMons[1].hp
+        && ArenaNav_Distance(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, sArena.bodies[1].x / Q, sArena.bodies[1].y / Q) < 220)
+        calm = FALSE;
+    if (sWlFast)
+    {
+        gWildlandsFastTelemetry[0]++;
+        if (gap >= 2 && ++sWlFastMiss >= 3)
+        {
+            sWlFast = 0; sWlFastHold = 240;
+            gWildlandsFastTelemetry[1]++;
+            return;
+        }
+        if (!(gWildlandsFastTelemetry[0] & 63))
+            sWlFastMiss = 0;
+        if (!calm)
+            sWlFast = 0;
+        return;
+    }
+    if (sWlFastHold)
+    { sWlFastHold--; return; }
+    if (calm)
+    { sWlFast = 1; sWlFastMiss = 0; }
+}
+static bool8 WildlandsFastPace(void) { return sWlFast; }
+
 static void SquadSimStep(void)
 {
     u32 i;
