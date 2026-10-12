@@ -529,7 +529,7 @@ ROOMS = {
     'treehouse1': dict(layout='FortreeCity_House1', loot=[LOOT_HEAL]),
     'treehouse2': dict(layout='FortreeCity_House2', loot=[LOOT_HEAL]),
     'treehouse3': dict(layout='FortreeCity_House1', loot=[LOOT_HEAL]),
-    'mewtwo':  dict(layout='Route119_WeatherInstitute_1F', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='MEWTWO'),
+    'mewtwo':  dict(layout='TerraCave_End', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='MEWTWO'),
     'lugia':   dict(layout='FarawayIsland_Interior', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='LUGIA'),
     'hooh':    dict(layout='BirthIsland_Exterior', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='HO_OH'),
     'kyogre':  dict(layout='SeafloorCavern_Room9', loot=[LOOT_CACHE, LOOT_HEAL], lair=True, legend='KYOGRE'),
