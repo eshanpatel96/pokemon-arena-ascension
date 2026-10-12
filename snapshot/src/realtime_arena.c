@@ -520,6 +520,7 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+extern u32 gWildlandsCost[8];
 #define VAR_WL_SHOP_WINS VAR_UNUSED_0x404E
 #define VAR_WL_STREAK VAR_UNUSED_0x4083
 static bool8 DirectorTpFocus(void);
@@ -1206,6 +1207,7 @@ static void DrawHud(void)
     u8 text[64];
     u8 *end;
     sWildlandsHudDrew=FALSE;
+    gWildlandsCost[5]++;
     DrawStatusHud();
     if (sArena.paused)
     {
@@ -2088,6 +2090,7 @@ static void AiChooseGoal(void)
         : p->move == MOVE_FLAMETHROWER ? 76 : p->kind == ARENA_MOVE_CONE ? 40 : 70+sArena.style*8;
     s32 best = 0x7FFFFFFF;
     u32 i;
+    gWildlandsCost[4]++;
     if (WildlandsWorld_Active() && DirectorSoloActive())
     {
         if (gBattleMons[1].hp * 2 < gBattleMons[1].maxHP)
@@ -2950,6 +2953,7 @@ static void CB2_Arena(void)
     if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}
     if(WildlandsWorld_Active()&&gap<(WildlandsFastPace()?1:2)){sWildlandsHeldNew|=gMain.newKeys;return;}
     WildlandsPaceUpdate(gap);
+    gWildlandsCost[7]++;
     if (!WildlandsWorld_Active())
         sWlDrawTick = TRUE;
     else
@@ -3042,7 +3046,7 @@ static void CB2_Arena(void)
         if (simStep) { if (sArena.resultTimer || !sArena.active) break; gMain.newKeys = 0; }
         sArena.frame++;
         {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; SquadSimStep();
-         q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[0])gWildlandsSpikeSim[0]=q1-q0;}
+         q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; gWildlandsCost[0]+=q1-q0; if(q1-q0>gWildlandsSpikeSim[0])gWildlandsSpikeSim[0]=q1-q0;}
         for(i=0;i<2;i++)
             if(!sArena.bodies[i].shotTimer && !sArena.bodies[i].actionLife
                 && !ArenaMovePP(i,sArena.bodies[i].moveSlot))
@@ -3081,7 +3085,7 @@ static void CB2_Arena(void)
                 gArenaFrameTelemetry.scanlines[0]=now-phaseStamp;phaseStamp=now;
                 if(sCapture.state!=ARENA_CAPTURE_AIM)TickPlayer();
                 {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; TickEnemy();
-                 q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}
+                 q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; gWildlandsCost[1]+=q1-q0; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}
                 if(WildlandsWorld_Active())
                 {
                     WildlandsWorld_TickBody(0,sArena.bodies[0].x/Q,sArena.bodies[0].y/Q);

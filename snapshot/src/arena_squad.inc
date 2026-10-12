@@ -42,7 +42,10 @@ static EWRAM_DATA struct SquadWing sSquadWings[2] = {};
 // [11] wing KOs [12] enemy lead retargets to partner [13..14] wing0/1 target
 // [15] friendly hits (must stay 0)
 EWRAM_DATA u32 gWildlandsSquadTelemetry[16] = {};
-EWRAM_DATA u16 gWildlandsWingDodges[2] = {0};   // V6.6: sidesteps by partner / enemy wing
+EWRAM_DATA u16 gWildlandsWingDodges[2] = {0};
+// DIAG (cost, scanlines summed): [0] squad sim step [1] enemy tick [2] director
+// [3] wing think [4] AiChooseGoal calls [5] HUD redraws [6] zone HUD line redraws [7] updates
+EWRAM_DATA u32 gWildlandsCost[8] = {0};   // V6.6: sidesteps by partner / enemy wing
 // Status: [0] HUD status tags drawn [1] status KOs routed through the squad [2] cures by supplies [3] statuses inflicted on the player lead
 EWRAM_DATA u16 gWildlandsStatusTelemetry[4] = {0};
 static void StatusSim(void);
@@ -1045,10 +1048,15 @@ static void SquadSimStep(void)
     if (sSwapCooldown)
         sSwapCooldown--;
     SquadDoorSim();
-    DirectorSim();
-    for (i = 0; i < 2; i++)
-        if (sSquadWings[i].active && sSquadWings[i].alive)
-            SquadThink(&sSquadWings[i]);
+    {
+        u32 c0 = WL_NOW(), c1;
+        DirectorSim();
+        c1 = WL_NOW(); gWildlandsCost[2] += c1 - c0; c0 = c1;
+        for (i = 0; i < 2; i++)
+            if (sSquadWings[i].active && sSquadWings[i].alive)
+                SquadThink(&sSquadWings[i]);
+        gWildlandsCost[3] += WL_NOW() - c0;
+    }
 }
 static void SquadTick(void)
 {

@@ -332,8 +332,14 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
         BrainSetMode(BRAIN_FIGHT);
         sBrain.focus = t;
         gWildlandsBrainTelemetry[1] = t;
-        sArena.observed.x = (t ? x2 : x0) / Q;
-        sArena.observed.y = (t ? y2 : y0) / Q;
+        // Out of sight, the goal only moves when the target has moved a
+        // fair way (keeps route searches and goal picks from re-running
+        // every think while hunting through terrain).
+        {
+            s32 ox = (t ? x2 : x0) / Q, oy = (t ? y2 : y0) / Q;
+            if (seenMask || Abs(ox - sArena.observed.x) > 24 || Abs(oy - sArena.observed.y) > 24)
+            { sArena.observed.x = ox; sArena.observed.y = oy; }
+        }
         return;
     }
     ours = BrainPower(1);
