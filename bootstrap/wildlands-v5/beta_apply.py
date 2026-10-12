@@ -485,6 +485,25 @@ void Wildlands_MakeShiny(void)
     gSpecialVar_Result = IsMonShiny(mon) ? 1 : 0;
 }
 
+// V6.9 browse: quote the party Pokemon in VAR_0x8004 without buying.
+// STR_VAR_1 name, STR_VAR_2 wins still needed. VAR_RESULT: 1 affordable,
+// 2 legendary, 3 already shiny, 4 not enough wins, 0 nothing chosen.
+void Wildlands_ShopQuote(void)
+{
+    struct Pokemon *mon;
+    u16 sp, have = VarGet(VAR_WL_SHOP_WINS);
+    gSpecialVar_Result = 0;
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
+    mon = &gPlayerParty[gSpecialVar_0x8004];
+    sp = GetMonData(mon, MON_DATA_SPECIES);
+    if (!sp || GetMonData(mon, MON_DATA_IS_EGG))
+        return;
+    StringCopy(gStringVar1, gSpeciesNames[sp]);
+    ConvertIntToDecimalStringN(gStringVar2, have >= 10 ? 0 : 10 - have, STR_CONV_MODE_LEFT_ALIGN, 2);
+    gSpecialVar_Result = WlShopLegend(sp) ? 2 : IsMonShiny(mon) ? 3 : have < 10 ? 4 : 1;
+}
+
 // TEST HOOK ONLY: nonzero runs the shop core on party slot 1 at the next
 // match start; [0] result [1] shiny [2] species/level/move/nature/IV kept [3] balance after.
 EWRAM_DATA u8 gWildlandsShopTest = 0;
@@ -516,7 +535,7 @@ _t = _sp.read_text()
 if '\tdef_special Wildlands_BufferStats' not in _t:
     raise SystemExit('beta: specials anchor drift (shop)')
 _sp.write_text(_t.replace('\tdef_special Wildlands_BufferStats',
-    '\tdef_special Wildlands_BufferStats\n\tdef_special Wildlands_BufferShop\n\tdef_special Wildlands_MakeShiny', 1))
+    '\tdef_special Wildlands_BufferStats\n\tdef_special Wildlands_BufferShop\n\tdef_special Wildlands_MakeShiny\n\tdef_special Wildlands_ShopQuote', 1))
 _sc = root / 'data/maps/AscensionTeamLab/scripts.inc'
 _t = _sc.read_text()
 _old = ' special Wildlands_BufferStats\n msgbox WildlandsLab_Text_Professor, MSGBOX_DEFAULT\n release\n end\n'
@@ -527,29 +546,39 @@ _t += r"""
 WildlandsLab_EventScript_Shop::
  special Wildlands_BufferShop
  msgbox WildlandsLab_Text_ShopInfo, MSGBOX_DEFAULT
- special Wildlands_BufferShop
- goto_if_eq VAR_RESULT, 0, WildlandsLab_EventScript_ShopBye
- msgbox WildlandsLab_Text_ShopAsk, MSGBOX_YESNO
+ msgbox WildlandsLab_Text_ShopBrowse, MSGBOX_YESNO
  goto_if_eq VAR_RESULT, NO, WildlandsLab_EventScript_ShopBye
  msgbox WildlandsLab_Text_ShopPick, MSGBOX_DEFAULT
+WildlandsLab_EventScript_ShopLook::
  special ChoosePartyMon
  waitstate
  goto_if_eq VAR_0x8004, PARTY_NOTHING_CHOSEN, WildlandsLab_EventScript_ShopBye
- special Wildlands_MakeShiny
- goto_if_eq VAR_RESULT, 1, WildlandsLab_EventScript_ShopDone
+ special Wildlands_ShopQuote
+ goto_if_eq VAR_RESULT, 1, WildlandsLab_EventScript_ShopOffer
  goto_if_eq VAR_RESULT, 2, WildlandsLab_EventScript_ShopLegend
  goto_if_eq VAR_RESULT, 3, WildlandsLab_EventScript_ShopAlready
+ goto_if_eq VAR_RESULT, 4, WildlandsLab_EventScript_ShopShort
  goto WildlandsLab_EventScript_ShopBye
-WildlandsLab_EventScript_ShopDone::
+WildlandsLab_EventScript_ShopOffer::
+ msgbox WildlandsLab_Text_ShopAsk, MSGBOX_YESNO
+ goto_if_eq VAR_RESULT, NO, WildlandsLab_EventScript_ShopAgain
+ special Wildlands_MakeShiny
+ goto_if_ne VAR_RESULT, 1, WildlandsLab_EventScript_ShopAgain
  playse SE_SHINY
  waitse
  msgbox WildlandsLab_Text_ShopDone, MSGBOX_DEFAULT
  goto WildlandsLab_EventScript_ShopBye
+WildlandsLab_EventScript_ShopShort::
+ msgbox WildlandsLab_Text_ShopShort, MSGBOX_DEFAULT
+ goto WildlandsLab_EventScript_ShopAgain
 WildlandsLab_EventScript_ShopLegend::
  msgbox WildlandsLab_Text_ShopLegend, MSGBOX_DEFAULT
- goto WildlandsLab_EventScript_ShopBye
+ goto WildlandsLab_EventScript_ShopAgain
 WildlandsLab_EventScript_ShopAlready::
  msgbox WildlandsLab_Text_ShopAlready, MSGBOX_DEFAULT
+WildlandsLab_EventScript_ShopAgain::
+ msgbox WildlandsLab_Text_ShopMore, MSGBOX_YESNO
+ goto_if_eq VAR_RESULT, YES, WildlandsLab_EventScript_ShopLook
 WildlandsLab_EventScript_ShopBye::
  release
  end
@@ -559,13 +588,23 @@ WildlandsLab_Text_ShopInfo:
  .string "WINS {STR_VAR_1}   STREAK {STR_VAR_2}\p"
  .string "Win 5 in a row for 2 bonus WINS.$"
 
+WildlandsLab_Text_ShopBrowse:
+ .string "Want to browse the SHINY SHOP?$"
+
 WildlandsLab_Text_ShopAsk:
- .string "Spend 10 WINS to make one of\n"
- .string "your POKEMON shiny?$"
+ .string "A SHINY {STR_VAR_1} costs 10 WINS.\n"
+ .string "Buy it?$"
+
+WildlandsLab_Text_ShopShort:
+ .string "A SHINY {STR_VAR_1} costs 10 WINS.\n"
+ .string "You need {STR_VAR_2} more WINS.$"
+
+WildlandsLab_Text_ShopMore:
+ .string "Look at another POKEMON?$"
 
 WildlandsLab_Text_ShopPick:
- .string "Choose from your duo. To pick\n"
- .string "another, use the COACH first.$"
+ .string "Choose from your duo. To see\n"
+ .string "others, use the COACH first.$"
 
 WildlandsLab_Text_ShopDone:
  .string "{STR_VAR_1} is now SHINY!$"
