@@ -586,6 +586,7 @@ static void DirectorPauseLine(void);
 void Wildlands_ArenaLoadout(struct Pokemon *mon);
 void Wildlands_SweepAllMoves(void);
 void Wildlands_TrimParty(void);
+static const u16 *ArenaMonPalette(const struct ArenaSpriteSet *art, struct Pokemon *mon);
 static u8 BrainWingTarget(u8 picked);
 static bool8 BrainWingFollows(void);
 static void BrainInit(void);
@@ -1550,7 +1551,7 @@ static void CB2_ArenaInit(void)
             sheet.data = sMonFrameTiles[i];
             sheet.size = 2048; sheet.tag = MON_TAG + i * 2;
             LoadSpriteSheet(&sheet);
-            LoadPalette(body->art->palette, OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);
+            LoadPalette(ArenaMonPalette(body->art, i ? &gEnemyParty[gBattlerPartyIndexes[1]] : &gPlayerParty[gBattlerPartyIndexes[0]]), OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);
             template.tileTag = MON_TAG + i * 2;
         }
         else

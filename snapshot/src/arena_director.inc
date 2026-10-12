@@ -158,6 +158,18 @@ static void DirRandomGoal(struct DirDuo *d);
 static void DirPopup(const u8 *a, const u8 *b, u8 color);
 static void DirFeedOut(const struct DirDuo *d);
 
+// Beta shinies: about 1 in 64 AI Pokemon (legendaries included) is shiny.
+// pad2 holds a per-duo salt rolled at match start; shininess is a function
+// of salt and species, so it survives promotion and re-creation.
+EWRAM_DATA u8 gWildlandsShinyTest = 0;          // test hook: every AI mon shiny
+EWRAM_DATA u16 gWildlandsShinyTelemetry[2] = {0}; // shiny mons made, shiny palettes built
+static bool8 DirShiny(const struct DirDuo *d, u16 sp)
+{
+    if (gWildlandsShinyTest)
+        return TRUE;
+    return d->pad2 && !(((d->pad2 * 131u) ^ (sp * 37u)) & 63);
+}
+
 // Utility of attacking legendary `l` now (>= 0 means go). Never in the first
 // storm phase, never into a lair the storm will cover, rarely when the duo is
 // hurt, more likely with a good type matchup, when nearby, and when the duo
@@ -297,9 +309,11 @@ static u8 DirLeft(void)
 static void DirectorLog(const u8 *text);
 static void DirPopup(const u8 *a, const u8 *b, u8 color)
 {
-    u8 *end = StringCopy(sDirPopup.text, a);
+    u8 tmp[48], *end = StringCopy(tmp, a);
     if (b)
         StringCopy(end, b);
+    tmp[sizeof(sDirPopup.text) - 1] = EOS;   // long names never overrun the popup
+    StringCopy(sDirPopup.text, tmp);
     sDirPopup.timer = 150;
     sDirPopup.color = color;
     sArena.hudDirty = TRUE;
@@ -366,7 +380,7 @@ static void DirRandomGoal(struct DirDuo *d)
 
 // ---- Active slot -----------------------------------------------------------
 
-static void DirMakeMon(struct Pokemon *mon, u16 species, u8 level, u8 hpPct, bool8 legend)
+static void DirMakeMon(struct Pokemon *mon, u16 species, u8 level, u8 hpPct, bool8 legend, bool8 shiny)
 {
     u16 hp, maxHp;
     u32 exp;
@@ -374,7 +388,16 @@ static void DirMakeMon(struct Pokemon *mon, u16 species, u8 level, u8 hpPct, boo
     // whole level-up learnset through encrypted Get/Set calls (~9 frames per
     // mon on hardware timing, a visible hitch whenever a new duo swaps in).
     // The arena loadout replaces the moves anyway.
-    CreateMon(mon, species, 1, USE_RANDOM_IVS, FALSE, 0, OT_ID_PLAYER_ID, 0);
+    if (shiny)
+    {
+        // Personality and OT chosen so the shiny value is 0 (native shiny).
+        u32 pers = ((u32)Random() << 16) | Random();
+        u32 ot = ((pers >> 16) ^ (pers & 0xFFFF)) << 16;
+        CreateMon(mon, species, 1, USE_RANDOM_IVS, TRUE, pers, OT_ID_PRESET, ot);
+        gWildlandsShinyTelemetry[0]++;
+    }
+    else
+        CreateMon(mon, species, 1, USE_RANDOM_IVS, FALSE, 0, OT_ID_PLAYER_ID, 0);
     exp = gExperienceTables[gSpeciesInfo[species].growthRate][level];
     SetMonData(mon, MON_DATA_EXP, &exp);
     SetMonData(mon, MON_DATA_LEVEL, &level);
@@ -445,6 +468,7 @@ static void DirOffscreenEntry(struct DirDuo *d)
 
 static void DirLoadActive(u8 index)
 {
+    static const u8 sShinyPre[] = _("SHINY ");
     struct DirDuo *d = &sDir->duo[index];
     struct ArenaBody *body = &sArena.bodies[1];
     u8 lead, other;
@@ -453,10 +477,12 @@ static void DirLoadActive(u8 index)
     DirOffscreenEntry(d);
     lead = (d->species[0] && d->hp[0]) ? 0 : 1;
     other = lead ^ 1;
-    DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend);
+    DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend, DirShiny(d, d->species[lead]));
     t1 = WL_NOW(); gWildlandsHitch[6] = t1 - t0;
+    if (IsMonShiny(&gEnemyParty[0]))
+        DirPopup(sShinyPre, gSpeciesNames[d->species[lead]], 5);
     if (d->species[other] && d->hp[other])
-        DirMakeMon(&gEnemyParty[1], d->species[other], d->level, d->hp[other], FALSE);
+        DirMakeMon(&gEnemyParty[1], d->species[other], d->level, d->hp[other], FALSE, DirShiny(d, d->species[other]));
     else
         ZeroMonData(&gEnemyParty[1]);
     gBattlerPartyIndexes[1] = 0;
@@ -474,7 +500,7 @@ static void DirLoadActive(u8 index)
     body->cooldown = 30; body->knockX = body->knockY = 0;
     body->moveSlot = FirstMove(1, TRUE);
     if (body->art)
-        LoadPalette(body->art->palette, OBJ_PLTT_ID(1), PLTT_SIZE_4BPP);
+        LoadPalette(ArenaMonPalette(body->art, &gEnemyParty[0]), OBJ_PLTT_ID(1), PLTT_SIZE_4BPP);
     gSprites[body->shadow].invisible = FALSE;
     sArena.observed.x = sArena.goal.x = sArena.waypoint.x = d->x;
     sArena.observed.y = sArena.goal.y = sArena.waypoint.y = d->y;
@@ -531,7 +557,7 @@ static void DirLegendJoins(struct DirDuo *d)
         sDir->savedPartner = gPlayerParty[1];
         sDir->partnerSaved = TRUE;
     }
-    DirMakeMon(&gPlayerParty[1], d->species[0], gBattleMons[0].level ? gBattleMons[0].level : d->level, 100, FALSE);
+    DirMakeMon(&gPlayerParty[1], d->species[0], gBattleMons[0].level ? gBattleMons[0].level : d->level, 100, FALSE, DirShiny(d, d->species[0]));
     if (gPlayerPartyCount < 2) gPlayerPartyCount = 2;
     SquadHideWing(w);
     w->alive = FALSE;
@@ -1093,6 +1119,7 @@ static void DirectorInit(void)
             d->species[k] = sp;
             d->hp[k] = 100;
         }
+        d->pad2 = 1 + DirRand() % 255;
         d->level = level > 8 ? level - DirRand() % 9 : level;
         for (k = 0; k < 12; k++)
         {
@@ -1116,6 +1143,7 @@ static void DirectorInit(void)
             continue;
         d = &sDir->duo[sDir->count];
         d->species[0] = sp; d->hp[0] = 100;
+        d->pad2 = 1 + DirRand() % 255;
         d->level = min(100, level + 5);
         d->legend = TRUE;
         d->room = i;
@@ -1277,4 +1305,44 @@ static void DirectorPauseLine(void)
     end = StringCopy(text, sLeft);
     ConvertIntToDecimalStringN(end, DirLeft(), STR_CONV_MODE_LEFT_ALIGN, 2);
     HudTinyWindow(1, 120, 46, text, 5, 12);
+}
+
+// Shiny palettes for the arena sprites: each colour of the arena sprite is
+// matched to its nearest colour in the species' normal battle palette and
+// shifted by that colour's normal->shiny change, keeping the arena shading.
+static EWRAM_DATA u16 sWlShinyPal[16] = {0};
+static const u16 *ArenaMonPalette(const struct ArenaSpriteSet *art, struct Pokemon *mon)
+{
+    u16 normal[32], shiny[32];
+    u16 species;
+    u32 c, k;
+    if (!art)
+        return NULL;
+    if (!mon || !(species = GetMonData(mon, MON_DATA_SPECIES)) || !IsMonShiny(mon))
+        return art->palette;
+    LZDecompressWram(gMonPaletteTable[species].data, normal);
+    LZDecompressWram(gMonShinyPaletteTable[species].data, shiny);
+    sWlShinyPal[0] = art->palette[0];
+    for (c = 1; c < 16; c++)
+    {
+        u16 col = art->palette[c];
+        s32 r = col & 31, g = (col >> 5) & 31, b = (col >> 10) & 31;
+        s32 best = 0x7FFFFFFF;
+        u32 bk = 1;
+        for (k = 1; k < 16; k++)
+        {
+            s32 dr = r - (normal[k] & 31), dg = g - ((normal[k] >> 5) & 31), db = b - ((normal[k] >> 10) & 31);
+            s32 dist = dr * dr + dg * dg + db * db;
+            if (dist < best) { best = dist; bk = k; }
+        }
+        r += (shiny[bk] & 31) - (normal[bk] & 31);
+        g += ((shiny[bk] >> 5) & 31) - ((normal[bk] >> 5) & 31);
+        b += ((shiny[bk] >> 10) & 31) - ((normal[bk] >> 10) & 31);
+        r = r < 0 ? 0 : (r > 31 ? 31 : r);
+        g = g < 0 ? 0 : (g > 31 ? 31 : g);
+        b = b < 0 ? 0 : (b > 31 ? 31 : b);
+        sWlShinyPal[c] = r | (g << 5) | (b << 10);
+    }
+    gWildlandsShinyTelemetry[1]++;
+    return sWlShinyPal;
 }
