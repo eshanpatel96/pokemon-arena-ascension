@@ -108,6 +108,10 @@ static void ZonePickNext(void)
         s32 oy = (s32)(ZoneRand() % (2 * maxOff + 1)) - maxOff;
         if (ox * ox + oy * oy > maxOff * maxOff)
             continue;
+        // The first circle always lands well off centre (a different side
+        // of the island each match) so openings never feel the same.
+        if (sZone.stage == 0 && i < 10 && ox * ox + oy * oy < maxOff * maxOff / 4)
+            continue;
         if (ZoneGround(sZone.cx + ox, sZone.cy + oy))
         {
             sZone.toX = sZone.cx + ox; sZone.toY = sZone.cy + oy;

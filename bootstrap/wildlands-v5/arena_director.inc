@@ -957,6 +957,51 @@ static void DirRestorePartner(void)
     }
 }
 
+#ifdef WL_ISLAND
+// Beta: a fresh match drops the duo at a random legal spot (away from lair
+// doors), with the opening enemy duo a short walk away.
+EWRAM_DATA s16 gWildlandsSpawn[4] = {0};   // player x,y, enemy x,y
+static void DirRandomSpawn(void)
+{
+    u32 k, j;
+    s16 x = 0, y = 0;
+    bool8 ok = FALSE;
+    for (k = 0; k < 64 && !ok; k++)
+    {
+        WildlandsWorld_NavPoint(DirRand() % WildlandsWorld_NavPointCount(), &x, &y);
+        if (WildlandsWorld_InRoom(x, y) || !WildlandsWorld_CanStandSide(0, x, y, 8))
+            continue;
+        ok = TRUE;
+        for (j = 0; j < WildlandsWorld_DoorCount() && ok; j++)
+        {
+            s16 ox, oy;
+            bool8 lair;
+            WildlandsWorld_DoorInfo(j, &ox, &oy, &lair);
+            if (lair && ArenaNav_Distance(x, y, ox, oy) < 320)
+                ok = FALSE;
+        }
+    }
+    if (!ok)
+        return;
+    sArena.bodies[0].x = x * Q; sArena.bodies[0].y = y * Q;
+    gWildlandsSpawn[0] = x; gWildlandsSpawn[1] = y;
+    for (k = 0; k < 48; k++)
+    {
+        s16 ex, ey;
+        u32 d;
+        WildlandsWorld_NavPoint(DirRand() % WildlandsWorld_NavPointCount(), &ex, &ey);
+        d = ArenaNav_Distance(x, y, ex, ey);
+        if (d < 200 || d > 340 || WildlandsWorld_InRoom(ex, ey) || !WildlandsWorld_CanStandSide(1, ex, ey, 8))
+            continue;
+        sArena.bodies[1].x = ex * Q; sArena.bodies[1].y = ey * Q;
+        gWildlandsSpawn[2] = ex; gWildlandsSpawn[3] = ey;
+        break;
+    }
+    if (sSquadWings[0].active) SquadRegroup(&sSquadWings[0], &sArena.bodies[0]);
+    if (sSquadWings[1].active) SquadRegroup(&sSquadWings[1], &sArena.bodies[1]);
+}
+#endif
+
 static void DirectorInit(void)
 {
     u32 i, n = 0;
@@ -976,6 +1021,9 @@ static void DirectorInit(void)
         return;
     memset(gWildlandsDirectorTelemetry, 0, sizeof(gWildlandsDirectorTelemetry));
     memset(&sDirPopup, 0, sizeof(sDirPopup));
+#ifdef WL_ISLAND
+    DirRandomSpawn();
+#endif
     level = gBattleMons[0].level ? gBattleMons[0].level : 50;
     px = sArena.bodies[0].x / Q; py = sArena.bodies[0].y / Q;
     sDir->duo[0].state = DIR_PLAYER;

@@ -60,7 +60,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void BrainDecide(struct ArenaBody *body, u8 seenMask);\nstatic bool8 BrainAllowsFire(void);\n'
       'static void WildlandsBuildOam(void);\n'
       'static bool8 DirectorAdvance(void);\nstatic void DirectorInit(void);\nstatic void DirectorSim(void);\n'
-      'static u8 DirectorBossDoor(void);\nstatic void DirectorBossEnter(void);\nstatic bool8 DirectorLairAnchor(s32 *x, s32 *y);\n'
+      'static u8 DirectorBossDoor(void);\nstatic void DirectorBossEnter(void);\nstatic bool8 DirectorLairAnchor(s32 *x, s32 *y);\nstatic u32 WildlandsCramp(s32 x, s32 y);\n'
       'static void DirectorDestroy(void);\nstatic void DirRestorePartner(void);\nstatic bool8 DirectorSoloActive(void);\n'
       'static bool8 DirectorPopupText(u8 *text, u8 *color);\nstatic u8 DirectorLeft(void);\nstatic bool8 DirectorRunning(void);\n'
       'static bool8 DirectorPopupActive(void);\nstatic void DirectorPauseLine(void);\n'
@@ -216,7 +216,74 @@ patch('include/arena_navigation.h', '#define ARENA_MAX_Y 3040\n',
 p = root / 'src/ascension_career.c'
 t = p.read_text()
 if 'Wildlands_ArenaLoadout' not in t:
-    p.write_text(t + '\nvoid Wildlands_ArenaLoadout(struct Pokemon *mon)\n{\n    V111Loadout(mon, NULL);\n}\n')
+    p.write_text(t + r'''
+#include "arena_moves.h"
+// Wildlands loadout: species-legal moves (Ascension studio bank) that the
+// real-time Arena can actually perform. Keeps the current moves that qualify
+// (player choices survive), then fills by power + STAB + type coverage.
+static bool8 WildlandsRealtimeMove(u16 move)
+{
+    return move && ArenaMoves_Get(move) != NULL;
+}
+void Wildlands_ArenaLoadout(struct Pokemon *mon)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES), chosen[4] = {0}, i, j, n = 0;
+    const struct AscensionStudioEntry *e = V111LegalEntry(species);
+    bool8 damaging = FALSE;
+    if (!e || GetMonData(mon, MON_DATA_IS_EGG))
+    {
+        V111Loadout(mon, NULL);
+        return;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        u16 move = GetMonData(mon, MON_DATA_MOVE1 + i);
+        if (!V111LegalMove(e, move) || !WildlandsRealtimeMove(move))
+            continue;
+        for (j = 0; j < n; j++) if (chosen[j] == move) break;
+        if (j == n) chosen[n++] = move;
+    }
+    while (n < 4)
+    {
+        s16 best = -32767;
+        u16 pick = MOVE_NONE;
+        for (i = 0; i < e->count; i++)
+        {
+            u16 move = sAscensionStudioMoveBank[e->start + i];
+            u8 type = gBattleMoves[move].type;
+            s16 score = gBattleMoves[move].power;
+            if (!WildlandsRealtimeMove(move))
+                continue;
+            for (j = 0; j < n; j++) if (chosen[j] == move) break;
+            if (j < n) continue;
+            if (score > 120) score = 120;
+            if (score)
+            {
+                if (type == gSpeciesInfo[species].types[0] || type == gSpeciesInfo[species].types[1]) score += 35;
+                for (j = 0; j < n; j++) if (gBattleMoves[chosen[j]].power && gBattleMoves[chosen[j]].type == type) break;
+                if (j == n) score += 25;
+            }
+            else if (move == MOVE_PROTECT) score = 25;
+            if (score > best) { best = score; pick = move; }
+        }
+        if (!pick) break;
+        chosen[n++] = pick;
+    }
+    for (i = 0; i < n; i++)
+        if (gBattleMoves[chosen[i]].power) damaging = TRUE;
+    if (!damaging)
+    {
+        V111Loadout(mon, NULL);   // no real-time attack in the bank: legacy pick
+        return;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        u16 cur = GetMonData(mon, MON_DATA_MOVE1 + i);
+        if (cur != chosen[i])
+            SetMonMoveSlot(mon, chosen[i], i);
+    }
+}
+''')
 
 # HUD: thin partner / enemy-wing HP bars under the two main bars.
 H = 'src/arena_hud.inc'
@@ -400,6 +467,35 @@ patch(A, '                sArena.bodies[i].moveSlot=FirstMove(i,TRUE);\n',
 
 # Sprite size normalisation (playtest: Zapdos drawn tiny).
 patch(A, 'static u16 MonVisualScale(u8 side)\n{\n    switch (gBattleMons[side].species)\n    {\n    case SPECIES_MEWTWO:\n    case SPECIES_LUGIA:\n    case SPECIES_HO_OH:\n    case SPECIES_KYOGRE:\n    case SPECIES_RAYQUAZA: return 304;\n    case SPECIES_ARTICUNO:\n    case SPECIES_ZAPDOS:\n    case SPECIES_RAIKOU:\n    case SPECIES_ENTEI:\n    case SPECIES_SUICUNE:\n    case SPECIES_REGIROCK:\n    case SPECIES_REGICE:\n    case SPECIES_REGISTEEL: return 248;\n    case SPECIES_DRAGONITE:\n    case SPECIES_SNORLAX:\n    case SPECIES_BLASTOISE:\n    case SPECIES_CHARIZARD:\n    case SPECIES_SALAMENCE:\n    case SPECIES_METAGROSS: return 236;\n    default: return 230;\n    }\n}\n', '// Visual size from the art itself: the PMD frames vary a lot (Zapdos is\n// drawn 23px wide, Lapras 43px), so small art is scaled up toward a target\n// from the Pokedex height. Never shrinks below the old default; the five\n// lair legendaries keep their tuned boss size. Cached per side.\nextern const struct PokedexEntry gPokedexEntries[];\nstatic EWRAM_DATA u16 sScaleSpecies[2] = {0};\nstatic EWRAM_DATA u16 sScaleValue[2] = {0};\nstatic u32 MonArtExtent(const struct ArenaSpriteSet *art)\n{\n    const struct ArenaSpriteAnimation *anim = &art->animations[ARENA_ANIM_IDLE];\n    const u32 *header = (const u32 *)anim->tiles;\n    const u16 *map = (const u16 *)(anim->tiles + 8);\n    const u32 *dict = (const u32 *)(anim->tiles + header[0]);\n    s32 x0 = 64, x1 = -1, y0 = 64, y1 = -1;\n    u32 t, y, x;\n    for (t = 0; t < 64; t++)\n    {\n        const u32 *src;\n        if (map[t] >= header[1]) continue;\n        src = dict + map[t] * 8;\n        for (y = 0; y < 8; y++)\n        {\n            u32 row = src[y];\n            if (!row) continue;\n            for (x = 0; x < 8; x++)\n                if ((row >> (x * 4)) & 15)\n                {\n                    s32 px = (t % 8) * 8 + x, py = (t / 8) * 8 + y;\n                    if (px < x0) x0 = px;\n                    if (px > x1) x1 = px;\n                    if (py < y0) y0 = py;\n                    if (py > y1) y1 = py;\n                }\n        }\n    }\n    if (x1 < 0) return 0;\n    return max(x1 - x0, y1 - y0) + 1;\n}\nstatic u16 MonVisualScale(u8 side)\n{\n    u16 species = gBattleMons[side].species, h;\n    u32 extent, target, scale;\n    switch (species)\n    {\n    case SPECIES_MEWTWO:\n    case SPECIES_LUGIA:\n    case SPECIES_HO_OH:\n    case SPECIES_KYOGRE:\n    case SPECIES_RAYQUAZA: return 304;\n    }\n    if (sScaleSpecies[side] == species && sScaleValue[side])\n        return sScaleValue[side];\n    scale = 230;\n    if (sArena.bodies[side].art && (extent = MonArtExtent(sArena.bodies[side].art)) != 0)\n    {\n        h = gPokedexEntries[SpeciesToNationalPokedexNum(species)].height;\n        target = h <= 6 ? 21 : h <= 12 ? 24 : h <= 20 ? 27 : 30;\n        scale = target * 256 / extent;\n        if (scale < 230) scale = 230;\n        if (scale > 400) scale = 400;\n    }\n    sScaleSpecies[side] = species;\n    sScaleValue[side] = scale;\n    return scale;\n}\n')
+
+# Enemy positioning: firing spots are scored by how boxed-in they are, so the
+# AI keeps an exit instead of backing into a wall to stand and shoot.
+patch(A, '        score = Abs(ArenaNav_Distance(p.x,p.y,sArena.observed.x,sArena.observed.y) - preferred) * 3\n'
+         '            + ArenaNav_Distance(body->x/Q,body->y/Q,p.x,p.y) + AiRandom() % 24;\n',
+      '        score = Abs(ArenaNav_Distance(p.x,p.y,sArena.observed.x,sArena.observed.y) - preferred) * 3\n'
+      '            + ArenaNav_Distance(body->x/Q,body->y/Q,p.x,p.y) + AiRandom() % 24\n'
+      '            + (WildlandsWorld_Active() ? WildlandsCramp(p.x,p.y) * 18 : 0);\n')
+
+# Beta: a Wildlands match never falls back to the classic battle. A battler
+# without a real-time attack gets the Wildlands loadout first; held items and
+# abilities the arena does not model are tolerated instead of disqualifying.
+patch(A, 'static bool8 SupportedBattler(u8 side)\n{\n    u32 i;\n',
+      'static bool8 SupportedBattler(u8 side)\n{\n    u32 i;\n'
+      '    if (WildlandsWorld_Active())\n'
+      '    {\n'
+      '        struct Pokemon *mon = side ? &gEnemyParty[gBattlerPartyIndexes[side]] : &gPlayerParty[gBattlerPartyIndexes[side]];\n'
+      '        gArenaCompatibilityReason = ARENA_COMPAT_OK;\n'
+      '        if (FirstMove(side, FALSE) == ARENA_NO_MOVE || !gBattleMoves[ArenaMoveId(side, FirstMove(side, FALSE))].power)\n'
+      '        {\n'
+      '            Wildlands_ArenaLoadout(mon);\n'
+      '            for (i = 0; i < MAX_MON_MOVES; i++)\n'
+      '            {\n'
+      '                gBattleMons[side].moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i);\n'
+      '                gBattleMons[side].pp[i] = GetMonData(mon, MON_DATA_PP1 + i);\n'
+      '            }\n'
+      '        }\n'
+      '        return gBattleMons[side].hp != 0;\n'
+      '    }\n')
 
 # Native resolver: battler parity selects the party (battlers 2/3 exist now).
 patch('src/battle_script_commands.c',
