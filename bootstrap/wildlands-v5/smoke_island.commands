@@ -115,6 +115,21 @@ poke gWildlandsTestWarp 0 1 20
 frames 90 0
 snap 13-lair-kyogre
 expect gWildlandsRoomTelemetry 8 4 4
+# Kyogre boss: its moves, then beat it and check the joined partner's sprite.
+dumph kyogreLead gBattleMons 88 1
+dumph kyogreMoves gBattleMons 100 4
+dumph kyogrePP gBattleMons 124 2
+poke gWildlandsTestPeace 0 1 0
+frames 240 0
+snap 13b-kyogre-fight
+poke gWildlandsTestPeace 0 1 1
+dumph kyogreFightHP gBattleMons 40 1
+dump kyogreSquad gWildlandsSquadTelemetry 16
+poke gWildlandsTestWarp 0 1 4
+frames 40 0
+snap 13a-kyogre-joined
+dumph partnerJoin gWildlandsPartnerTelemetry 0 4
+dumph wingSprite gWildlandsWingSpriteDiag 0 6
 poke gWildlandsTestWarp 0 1 2
 frames 90 0
 poke gWildlandsTestWarp 0 1 12

@@ -122,6 +122,10 @@ static void SquadPos(u8 battler, s32 *x, s32 *y)
     else { *x = sSquadWings[battler - 2].x; *y = sSquadWings[battler - 2].y; }
 }
 
+// Partner wing sprite at creation: [0] sprite id [1] tile start [2] palette
+// [3] species [4] matrix [5] recoveries (rain dropped to make room)
+EWRAM_DATA u16 gWildlandsWingSpriteDiag[6] = {0};
+static void ZoneFreeRain(void);
 static void SquadCreateSprites(struct SquadWing *w)
 {
     struct SpriteTemplate t = sMonTemplate;
@@ -132,10 +136,23 @@ static void SquadCreateSprites(struct SquadWing *w)
     ArenaSprites_Decode(&w->art->animations[ARENA_ANIM_IDLE], FACE_DOWN, 0, (u32 *)buffer);
     sheet.data = buffer; sheet.size = 2048; sheet.tag = w->tag;
     LoadSpriteSheet(&sheet);
+    if (GetSpriteTileStartByTag(w->tag) == 0xFFFF)
+    {
+        // Sprite VRAM full (rain, loot, boss): rain is cosmetic, drop it.
+        ZoneFreeRain();
+        LoadSpriteSheet(&sheet);
+        gWildlandsWingSpriteDiag[5]++;
+    }
     pal.data = ArenaMonPalette(w->art, SquadPartyMon(w->battler)); pal.tag = w->tag;
     LoadSpritePalette(&pal);
     t.tileTag = w->tag; t.paletteTag = w->tag;
     w->sprite = CreateSprite(&t, w->x / Q, w->y / Q, 1);
+    if (w->sprite == MAX_SPRITES)
+    {
+        ZoneFreeRain();
+        w->sprite = CreateSprite(&t, w->x / Q, w->y / Q, 1);
+        gWildlandsWingSpriteDiag[5]++;
+    }
     w->shadow = CreateSprite(&sShadowTemplate, w->x / Q, w->y / Q + 8, 9);
     w->marker = CreateSprite(&sShotTemplate, w->x / Q, w->y / Q - 27, 0);
     spr = &gSprites[w->sprite];
@@ -147,6 +164,14 @@ static void SquadCreateSprites(struct SquadWing *w)
     gSprites[w->marker].oam.paletteNum = IndexOfSpritePaletteTag(w->team ? SHOT_TAG + 1 : SHOT_TAG);
     w->drawnFrame = w->drawnDirection = 255;
     w->active = TRUE;
+    if (!w->team)
+    {
+        gWildlandsWingSpriteDiag[0] = w->sprite;
+        gWildlandsWingSpriteDiag[1] = GetSpriteTileStartByTag(w->tag);
+        gWildlandsWingSpriteDiag[2] = IndexOfSpritePaletteTag(w->tag);
+        gWildlandsWingSpriteDiag[3] = w->species;
+        gWildlandsWingSpriteDiag[4] = spr->oam.matrixNum;
+    }
 }
 
 static void SquadSpawnWing(u8 team)

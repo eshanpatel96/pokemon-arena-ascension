@@ -230,6 +230,14 @@ static void ZoneInit(void)
     ZoneCreateMarkers();
 }
 
+static void ZoneFreeRain(void)
+{
+    u32 i;
+    for (i = 0; i < ZONE_RAIN; i++)
+        if (sZone.rain[i] != MAX_SPRITES)
+        { DestroySprite(&gSprites[sZone.rain[i]]); sZone.rain[i] = MAX_SPRITES; }
+}
+
 static void ZoneDestroy(void)
 {
     u32 i;
