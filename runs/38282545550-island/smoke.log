@@ -1,0 +1,1413 @@
+HOST ABI sizeof(mCore)=5480 savedataClone_offset=5408
+TEST FLASH BACKEND: fresh erased 131072-byte save attached; runtime save/export still must pass.
+CMD t=0.0s frame=0 frames 300 0
+CMD t=0.2s frame=300 snap 00-title
+STATE 00-title frame=300 pc=080008c8 callback2=080ce1e9 save_status=0 party=0 sb1=02025a28 map=0,0 pos=0,0 layout=0
+WORLD 00-title bgcnt=0700,0000,0000,0000 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL 00-title io=7192,7192/7192,7192/7192,7192 buf=0,0/0,0/0,0 dispcnt=0404 vcount=160
+INPUT 00-title heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.2s frame=300 press 8
+CMD t=0.3s frame=337 frames 120 0
+CMD t=0.3s frame=457 press 1
+CMD t=0.4s frame=494 frames 100 0
+CMD t=0.5s frame=594 snap t-newgame-00
+STATE t-newgame-00 frame=594 pc=0000001c callback2=080a9b89 save_status=0 party=2 sb1=02025a28 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-00 bgcnt=1e08,0000,0000,0000 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-00 io=65534,65534/65534,65534/65534,65534 buf=0,0/0,0/0,0 dispcnt=3140 vcount=160
+INPUT t-newgame-00 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.5s frame=594 frames 100 0
+CMD t=0.5s frame=694 snap t-newgame-01
+STATE t-newgame-01 frame=694 pc=08310848 callback2=080a9b89 save_status=0 party=2 sb1=02025a28 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-01 bgcnt=1e08,0000,0000,0000 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-01 io=53764,53764/53764,53764/53764,53764 buf=0,0/0,0/0,0 dispcnt=3140 vcount=160
+INPUT t-newgame-01 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.5s frame=694 frames 100 0
+CMD t=0.6s frame=794 snap t-newgame-02
+STATE t-newgame-02 frame=794 pc=0808dc8e callback2=080a9b89 save_status=0 party=2 sb1=02025a28 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-02 bgcnt=1e08,0000,0000,0000 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-02 io=57667,57667/57667,57667/57667,57667 buf=0,0/0,0/0,0 dispcnt=3140 vcount=160
+INPUT t-newgame-02 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.6s frame=794 frames 100 0
+CMD t=0.7s frame=894 snap t-newgame-03
+STATE t-newgame-03 frame=894 pc=0808c6c2 callback2=080a9b89 save_status=0 party=2 sb1=02025a28 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-03 bgcnt=1e08,0000,0000,0000 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-03 io=13570,13570/13570,13570/13570,13570 buf=0,0/0,0/0,0 dispcnt=3140 vcount=160
+INPUT t-newgame-03 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.7s frame=894 frames 100 0
+CMD t=0.8s frame=994 snap t-newgame-04
+STATE t-newgame-04 frame=994 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-04 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-04 io=7192,7192/7192,7192/7192,7192 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT t-newgame-04 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.8s frame=994 frames 100 0
+CMD t=0.9s frame=1094 snap t-newgame-05
+STATE t-newgame-05 frame=1094 pc=080008cc callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-05 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-05 io=10240,10240/10240,10240/10240,10240 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT t-newgame-05 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=0.9s frame=1094 frames 100 0
+CMD t=1.0s frame=1194 snap t-newgame-06
+STATE t-newgame-06 frame=1194 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-06 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-06 io=7192,7192/7192,7192/7192,7192 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT t-newgame-06 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.0s frame=1194 frames 100 0
+CMD t=1.0s frame=1294 snap t-newgame-07
+STATE t-newgame-07 frame=1294 pc=0000001c callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-07 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-07 io=65534,65534/65534,65534/65534,65534 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT t-newgame-07 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.0s frame=1294 frames 100 0
+CMD t=1.1s frame=1394 snap t-newgame-08
+STATE t-newgame-08 frame=1394 pc=080008ce callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-08 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-08 io=53498,53498/53498,53498/53498,53498 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT t-newgame-08 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.1s frame=1394 frames 100 0
+CMD t=1.2s frame=1494 snap t-newgame-09
+STATE t-newgame-09 frame=1494 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-09 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-09 io=7192,7192/7192,7192/7192,7192 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT t-newgame-09 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.2s frame=1494 frames 100 0
+CMD t=1.3s frame=1594 snap t-newgame-10
+STATE t-newgame-10 frame=1594 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD t-newgame-10 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-newgame-10 io=7192,7192/7192,7192/7192,7192 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT t-newgame-10 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.3s frame=1594 snap 01-lab
+STATE 01-lab frame=1594 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=6,10 layout=58
+WORLD 01-lab bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL 01-lab io=7192,7192/7192,7192/7192,7192 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT 01-lab heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.3s frame=1594 poke gWildlandsShopTest 0 1 1
+POKE gWildlandsShopTest+0=1 ok
+CHECK PASS poke target exists
+CMD t=1.3s frame=1594 frames 200 16
+CMD t=1.5s frame=1794 frames 10 32
+CMD t=1.5s frame=1804 frames 40 0
+CMD t=1.5s frame=1844 frames 120 64
+CMD t=1.6s frame=1964 snap 01a-at-coach
+STATE 01a-at-coach frame=1964 pc=080008ce callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=9,9 layout=58
+WORLD 01a-at-coach bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL 01a-at-coach io=53498,53498/53498,53498/53498,53498 buf=48,280/48,280/48,280 dispcnt=7f60 vcount=160
+INPUT 01a-at-coach heldRaw=0040 newRaw=0000 held=0040 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.6s frame=1964 press 1
+CMD t=1.7s frame=2001 frames 150 0
+CMD t=1.8s frame=2151 press 1
+CMD t=1.8s frame=2188 frames 90 0
+CMD t=1.9s frame=2278 snap 01b-coach-menu
+STATE 01b-coach-menu frame=2278 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=9,9 layout=58
+WORLD 01b-coach-menu bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL 01b-coach-menu io=7192,7192/7192,7192/7192,7192 buf=48,280/48,280/48,280 dispcnt=7f60 vcount=160
+INPUT 01b-coach-menu heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=1.9s frame=2278 press 128
+CMD t=1.9s frame=2315 press 128
+CMD t=2.0s frame=2352 press 1
+CMD t=2.0s frame=2389 frames 150 0
+CMD t=2.1s frame=2539 snap 01c-coach-controls
+STATE 01c-coach-controls frame=2539 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=9,9 layout=58
+WORLD 01c-coach-controls bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL 01c-coach-controls io=7192,7192/7192,7192/7192,7192 buf=48,280/48,280/48,280 dispcnt=7f60 vcount=160
+INPUT 01c-coach-controls heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=2.1s frame=2539 press 1
+CMD t=2.2s frame=2576 frames 120 0
+CMD t=2.3s frame=2696 press 1
+CMD t=2.3s frame=2733 frames 120 0
+CMD t=2.4s frame=2853 press 1
+CMD t=2.5s frame=2890 frames 120 0
+CMD t=2.6s frame=3010 press 1
+CMD t=2.6s frame=3047 frames 90 0
+CMD t=2.7s frame=3137 press 2
+CMD t=2.7s frame=3174 frames 90 0
+CMD t=2.8s frame=3264 press 1
+CMD t=2.8s frame=3301 frames 60 0
+CMD t=2.9s frame=3361 press 2
+CMD t=2.9s frame=3398 frames 30 0
+CMD t=2.9s frame=3428 press 2
+CMD t=3.0s frame=3465 frames 30 0
+CMD t=3.0s frame=3495 snap 01d-lab-after-coach
+STATE 01d-lab-after-coach frame=3495 pc=080008c8 callback2=080a9ae9 save_status=0 party=2 sb1=02025a58 map=26,110 pos=9,9 layout=58
+WORLD 01d-lab-after-coach bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL 01d-lab-after-coach io=7192,7192/7192,7192/7192,7192 buf=48,280/48,280/48,280 dispcnt=7f60 vcount=160
+INPUT 01d-lab-after-coach heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=3.0s frame=3495 press 768
+CMD t=3.0s frame=3532 frames 50 0
+CMD t=3.1s frame=3582 snap t-deploy-00
+STATE t-deploy-00 frame=3582 pc=08000826 callback2=080a9add save_status=0 party=2 sb1=02025a58 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-00 bgcnt=1f08,1d41,1c42,1e43 xl=0,0,0,0,0,0 audit=0,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SCROLL t-deploy-00 io=8450,8450/8450,8450/8450,8450 buf=48,280/48,280/48,280 dispcnt=7f60 vcount=160
+INPUT t-deploy-00 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=3.1s frame=3582 frames 50 0
+CMD t=3.1s frame=3632 snap t-deploy-01
+STATE t-deploy-01 frame=3632 pc=08060142 callback2=08048359 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-01 bgcnt=9800,1e06,1d05,1c07 xl=0,0,0,0,0,0 audit=1,0,0,0,0,0,0,0 tele=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
+SCROLL t-deploy-01 io=18184,18184/18184,18184/18184,18184 buf=0,0/0,0/0,0 dispcnt=0080 vcount=160
+INPUT t-deploy-01 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=0 rtPaused=0 aiDec=0 aiPaths=0 wall=0,0 capture=0 sendout=0/0 cbUpdates=0
+CMD t=3.1s frame=3632 frames 50 0
+CMD t=3.2s frame=3682 snap t-deploy-02
+STATE t-deploy-02 frame=3682 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-02 bgcnt=1f00,1e06,1d05,1c07 xl=792,936,672,856,672,856 audit=1,0,0,0,0,0,0,1 tele=3072,1,0,0,0,0,0,1024,3072,918,0,0,0,2,3,1
+SCROLL t-deploy-02 io=7192,7192/7192,7192/7192,7192 buf=160,88/160,88/160,88 dispcnt=1f40 vcount=160
+INPUT t-deploy-02 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=1 rtPaused=0 aiDec=1 aiPaths=0 wall=0,0 capture=0 sendout=1/9 cbUpdates=0
+CMD t=3.2s frame=3682 frames 50 0
+CMD t=3.2s frame=3732 snap t-deploy-03
+STATE t-deploy-03 frame=3732 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-03 bgcnt=1f00,1e06,1d05,1c07 xl=792,936,672,856,672,856 audit=1,0,0,0,0,0,0,1 tele=3072,1,0,0,0,0,0,1024,3072,918,0,0,0,2,3,1
+SCROLL t-deploy-03 io=7192,7192/7192,7192/7192,7192 buf=160,88/160,88/160,88 dispcnt=1f40 vcount=160
+INPUT t-deploy-03 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=1 rtPaused=0 aiDec=1 aiPaths=0 wall=0,0 capture=0 sendout=1/59 cbUpdates=0
+CMD t=3.2s frame=3732 frames 50 0
+CMD t=3.3s frame=3782 snap t-deploy-04
+STATE t-deploy-04 frame=3782 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-04 bgcnt=1f00,1e06,1d05,1c07 xl=792,936,672,856,672,856 audit=1,0,0,0,0,0,0,1 tele=3072,1,0,0,0,0,0,1024,3072,918,0,0,0,2,3,1
+SCROLL t-deploy-04 io=7192,7192/7192,7192/7192,7192 buf=160,88/160,88/160,88 dispcnt=1f40 vcount=160
+INPUT t-deploy-04 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=0 rtSpeed=0 rtActive=1 rtPaused=0 aiDec=1 aiPaths=0 wall=0,0 capture=0 sendout=1/109 cbUpdates=0
+CMD t=3.3s frame=3782 frames 50 0
+CMD t=3.3s frame=3832 snap t-deploy-05
+STATE t-deploy-05 frame=3832 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-05 bgcnt=1f00,1e06,1d05,1c07 xl=792,936,672,856,672,856 audit=1,0,0,0,0,2,0,1 tele=3072,1,0,0,2,0,0,1024,3072,918,1,0,0,2,3,1
+SCROLL t-deploy-05 io=7192,7192/7192,7192/7192,7192 buf=160,88/160,88/160,88 dispcnt=1f40 vcount=160
+INPUT t-deploy-05 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=15 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=2 aiPaths=0 wall=0,0 capture=0 sendout=0/144 cbUpdates=8
+CMD t=3.3s frame=3832 frames 50 0
+CMD t=3.4s frame=3882 snap t-deploy-06
+STATE t-deploy-06 frame=3882 pc=0000001c callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-06 bgcnt=1f00,1e06,1d05,1c07 xl=792,936,672,856,672,856 audit=1,0,0,0,0,2,0,1 tele=3072,1,0,0,5,0,0,1024,3072,918,6,0,5,2,3,1
+SCROLL t-deploy-06 io=65534,65534/65534,65534/65534,65534 buf=160,88/160,88/160,88 dispcnt=1f40 vcount=160
+INPUT t-deploy-06 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=65 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=9 aiPaths=0 wall=0,0 capture=0 sendout=0/144 cbUpdates=33
+CMD t=3.4s frame=3882 frames 50 0
+CMD t=3.4s frame=3932 snap t-deploy-07
+STATE t-deploy-07 frame=3932 pc=0000001c callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-07 bgcnt=1f00,1e06,1d05,1c07 xl=792,936,672,856,672,856 audit=1,0,0,0,0,2,0,1 tele=3072,1,0,0,5,0,0,1024,3072,918,10,0,5,2,3,1
+SCROLL t-deploy-07 io=65534,65534/65534,65534/65534,65534 buf=160,88/160,88/160,88 dispcnt=1f40 vcount=160
+INPUT t-deploy-07 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=114 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=11 aiPaths=0 wall=0,0 capture=0 sendout=0/144 cbUpdates=58
+CMD t=3.4s frame=3932 frames 50 0
+CMD t=3.5s frame=3982 snap t-deploy-08
+STATE t-deploy-08 frame=3982 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-08 bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,7,0,0,1024,3072,918,15,0,4,2,3,1
+SCROLL t-deploy-08 io=7192,7192/7192,7192/7192,7192 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT t-deploy-08 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=164 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=16 aiPaths=0 wall=5,0 capture=0 sendout=0/144 cbUpdates=82
+CMD t=3.5s frame=3982 frames 50 0
+CMD t=3.5s frame=4032 snap t-deploy-09
+STATE t-deploy-09 frame=4032 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-09 bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,8,0,0,1024,3072,918,19,0,4,2,3,1
+SCROLL t-deploy-09 io=7192,7192/7192,7192/7192,7192 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT t-deploy-09 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=215 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=21 aiPaths=0 wall=10,0 capture=0 sendout=0/144 cbUpdates=107
+CMD t=3.5s frame=4032 frames 50 0
+CMD t=3.6s frame=4082 snap t-deploy-10
+STATE t-deploy-10 frame=4082 pc=083108a4 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-10 bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,9,0,0,1024,3072,918,25,0,4,2,3,1
+SCROLL t-deploy-10 io=10240,10240/10240,10240/10240,10240 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT t-deploy-10 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=265 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=25 aiPaths=0 wall=10,0 capture=0 sendout=0/144 cbUpdates=132
+CMD t=3.6s frame=4082 frames 50 0
+CMD t=3.7s frame=4132 snap t-deploy-11
+STATE t-deploy-11 frame=4132 pc=080552ba callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-11 bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,10,0,0,1024,3072,918,30,0,4,2,3,1
+SCROLL t-deploy-11 io=55906,55906/55906,55906/55906,55906 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT t-deploy-11 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=315 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=31 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=157
+CMD t=3.7s frame=4132 frames 50 0
+CMD t=3.7s frame=4182 snap t-deploy-12
+STATE t-deploy-12 frame=4182 pc=0803ecda callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-12 bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,12,0,0,1024,3072,918,30,0,4,2,3,1
+SCROLL t-deploy-12 io=56578,56578/56578,56578/56578,56578 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT t-deploy-12 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=365 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=182
+CMD t=3.7s frame=4182 frames 50 0
+CMD t=3.8s frame=4232 snap t-deploy-13
+STATE t-deploy-13 frame=4232 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD t-deploy-13 bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,12,0,0,1024,3072,918,35,0,2,2,3,1
+SCROLL t-deploy-13 io=7192,7192/7192,7192/7192,7192 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT t-deploy-13 heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=415 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=207
+CMD t=3.8s frame=4232 expect gWildlandsWorldAudit 0 4 1
+CHECK PASS gWildlandsWorldAudit
+CMD t=3.8s frame=4232 dump squad0 gWildlandsSquadTelemetry 16
+DUMP squad0 gWildlandsSquadTelemetry 3 4 3 1 0 0 0 176 145 0 0 0 31 1 0 0
+CMD t=3.8s frame=4232 dumph bossAudit gWildlandsBossAudit 0 3
+DUMPH bossAudit gWildlandsBossAudit+0 5 5 0
+CMD t=3.8s frame=4232 dumph roamers gWildlandsRoamerTelemetry 0 9
+DUMPH roamers gWildlandsRoamerTelemetry+0 3 0 0 244 144 403 107 168 52
+CMD t=3.8s frame=4232 expect gWildlandsRoamerTelemetry 0 2 3
+CHECK PASS gWildlandsRoamerTelemetry
+CMD t=3.8s frame=4232 expect gWildlandsBossAudit 0 2 5
+CHECK PASS gWildlandsBossAudit
+CMD t=3.8s frame=4232 expect gWildlandsBossAudit 2 2 5
+CHECK PASS gWildlandsBossAudit
+CMD t=3.8s frame=4232 expect gWildlandsBossAudit 4 2 0
+CHECK PASS gWildlandsBossAudit
+CMD t=3.8s frame=4232 snap 02-island-start
+STATE 02-island-start frame=4232 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 02-island-start bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,12,0,0,1024,3072,918,35,0,2,2,3,1
+SCROLL 02-island-start io=7192,7192/7192,7192/7192,7192 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT 02-island-start heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=415 rtSpeed=472 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=207
+CMD t=3.8s frame=4232 poke gWildlandsTestPeace 0 1 1
+POKE gWildlandsTestPeace+0=1 ok
+CHECK PASS poke target exists
+CMD t=3.8s frame=4232 poke gWildlandsZoneTestSpeed 0 2 65535
+POKE gWildlandsZoneTestSpeed+0=65535 ok
+CHECK PASS poke target exists
+CMD t=3.8s frame=4232 frames 6 8
+CMD t=3.8s frame=4238 frames 30 0
+CMD t=3.8s frame=4268 frames 6 128
+CMD t=3.8s frame=4274 frames 30 0
+CMD t=3.8s frame=4304 frames 6 128
+CMD t=3.8s frame=4310 frames 30 0
+CMD t=3.9s frame=4340 frames 6 128
+CMD t=3.9s frame=4346 frames 30 0
+CMD t=3.9s frame=4376 frames 6 128
+CMD t=3.9s frame=4382 frames 30 0
+CMD t=3.9s frame=4412 frames 6 1
+CMD t=3.9s frame=4418 frames 30 0
+CMD t=3.9s frame=4448 frames 20 0
+CMD t=4.0s frame=4468 snap 08-island-map
+STATE 08-island-map frame=4468 pc=080008ce callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 08-island-map bgcnt=1f00,1e06,1d05,1c07 xl=790,935,670,855,670,855 audit=1,0,1,0,0,2,1,1 tele=3264,1,0,0,12,0,0,1024,3072,918,35,0,2,2,3,1
+SCROLL 08-island-map io=53498,53498/53498,53498/53498,53498 buf=158,87/158,87/158,87 dispcnt=1f40 vcount=160
+INPUT 08-island-map heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=415 rtSpeed=472 rtActive=1 rtPaused=1 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=321
+CMD t=4.0s frame=4468 dump map gWildlandsMapTelemetry 4
+DUMP map gWildlandsMapTelemetry 1 213078 0 0
+CMD t=4.0s frame=4468 expectmin gWildlandsMapTelemetry 0 4 1
+CHECK PASS gWildlandsMapTelemetry+0 >= 1 (got 1)
+CMD t=4.0s frame=4468 frames 6 2
+CMD t=4.0s frame=4474 frames 30 0
+CMD t=4.0s frame=4504 frames 6 2
+CMD t=4.0s frame=4510 frames 30 0
+CMD t=4.0s frame=4540 frames 60 0
+CMD t=4.1s frame=4600 poke gWildlandsTestWarp 0 1 16
+POKE gWildlandsTestWarp+0=16 ok
+CHECK PASS poke target exists
+CMD t=4.1s frame=4600 frames 90 0
+CMD t=4.2s frame=4690 snap 09-lair-mewtwo
+STATE 09-lair-mewtwo frame=4690 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 09-lair-mewtwo bgcnt=1f00,1e06,1d05,1c07 xl=108,3302,0,3232,0,3232 audit=1,1,1,0,0,2,1,1 tele=9408,3,1,1,30,0,0,3072,3072,1835,35,0,2,0,12,1
+SCROLL 09-lair-mewtwo io=7192,7192/7192,7192/7192,7192 buf=0,160/0,160/0,160 dispcnt=1f40 vcount=160
+INPUT 09-lair-mewtwo heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=594 rtSpeed=411 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=434
+CMD t=4.2s frame=4690 dumph boss-09-lair-mewtwo gWildlandsBossAudit 6 6
+DUMPH boss-09-lair-mewtwo gWildlandsBossAudit+6 1 1 150 101 200 3320
+CMD t=4.2s frame=4690 expectmax gWildlandsBossAudit 12 2 180
+CHECK PASS gWildlandsBossAudit+12 <= 180 (got 101)
+CMD t=4.2s frame=4690 expect gWildlandsBossAudit 8 2 1
+CHECK PASS gWildlandsBossAudit
+CMD t=4.2s frame=4690 expect gWildlandsBossAudit 6 2 1
+CHECK PASS gWildlandsBossAudit
+CMD t=4.2s frame=4690 dump rooms gWildlandsRoomTelemetry 8
+DUMP rooms gWildlandsRoomTelemetry 1 0 1 1 7 0 1 0
+CMD t=4.2s frame=4690 expect gWildlandsRoomTelemetry 8 4 1
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=4.2s frame=4690 dump director0 gWildlandsDirectorTelemetry 8
+DUMP director0 gWildlandsDirectorTelemetry 31 40 1 8 0 0 2 124
+CMD t=4.2s frame=4690 expectmin gWildlandsDirectorTelemetry 0 4 20
+CHECK PASS gWildlandsDirectorTelemetry+0 >= 20 (got 31)
+CMD t=4.2s frame=4690 expect gBattleMons 88 2 150
+CHECK PASS gBattleMons
+CMD t=4.2s frame=4690 poke gWildlandsShinyTest 0 1 1
+POKE gWildlandsShinyTest+0=1 ok
+CHECK PASS poke target exists
+CMD t=4.2s frame=4690 poke gWildlandsTestWarp 0 1 4
+POKE gWildlandsTestWarp+0=4 ok
+CHECK PASS poke target exists
+CMD t=4.2s frame=4690 frames 40 0
+CMD t=4.2s frame=4730 snap 09a-mewtwo-joined
+STATE 09a-mewtwo-joined frame=4730 pc=0000001c callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 09a-mewtwo-joined bgcnt=1f00,1e06,1d05,1c07 xl=108,3302,0,3232,0,3232 audit=1,1,1,0,0,2,1,1 tele=9408,3,1,1,32,0,0,3072,3072,1835,35,0,2,0,12,1
+SCROLL 09a-mewtwo-joined io=65534,65534/65534,65534/65534,65534 buf=0,160/0,160/0,160 dispcnt=1f40 vcount=160
+INPUT 09a-mewtwo-joined heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=619 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=444
+CMD t=4.2s frame=4730 poke gWildlandsShinyTest 0 1 0
+POKE gWildlandsShinyTest+0=0 ok
+CHECK PASS poke target exists
+CMD t=4.2s frame=4730 dumph shiny gWildlandsShinyTelemetry 0 2
+DUMPH shiny gWildlandsShinyTelemetry+0 4 5
+CMD t=4.2s frame=4730 expectmin gWildlandsShinyTelemetry 0 2 1
+CHECK PASS gWildlandsShinyTelemetry+0 >= 1 (got 4)
+CMD t=4.2s frame=4730 expectmin gWildlandsShinyTelemetry 2 2 1
+CHECK PASS gWildlandsShinyTelemetry+2 >= 1 (got 5)
+CMD t=4.2s frame=4730 dump director1 gWildlandsDirectorTelemetry 8
+DUMP director1 gWildlandsDirectorTelemetry 31 19 1 8 1 0 3 126
+CMD t=4.2s frame=4730 expectmin gWildlandsDirectorTelemetry 16 4 1
+CHECK PASS gWildlandsDirectorTelemetry+16 >= 1 (got 1)
+CMD t=4.2s frame=4730 expect gBattleMons 176 2 150
+CHECK PASS gBattleMons
+CMD t=4.2s frame=4730 poke gWildlandsTestWarp 0 1 2
+POKE gWildlandsTestWarp+0=2 ok
+CHECK PASS poke target exists
+CMD t=4.2s frame=4730 frames 90 0
+CMD t=4.3s frame=4820 expect gWildlandsRoomTelemetry 8 4 0
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=4.3s frame=4820 poke gWildlandsTestWarp 0 1 15
+POKE gWildlandsTestWarp+0=15 ok
+CHECK PASS poke target exists
+CMD t=4.3s frame=4820 frames 90 0
+CMD t=4.4s frame=4910 snap 10-lair-rayquaza
+STATE 10-lair-rayquaza frame=4910 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 10-lair-rayquaza bgcnt=1f00,1e06,1d05,1c07 xl=3128,3570,3008,3456,3008,3456 audit=1,1,1,0,0,2,1,1 tele=15552,5,3,1,35,0,0,5120,3072,2215,35,0,2,11,13,1
+SCROLL 10-lair-rayquaza io=7192,7192/7192,7192/7192,7192 buf=192,128/192,128/192,128 dispcnt=1f40 vcount=160
+INPUT 10-lair-rayquaza heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=791 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=552
+CMD t=4.4s frame=4910 dumph boss-10-lair-rayquaza gWildlandsBossAudit 6 6
+DUMPH boss-10-lair-rayquaza gWildlandsBossAudit+6 5 5 406 93 3192 3512
+CMD t=4.4s frame=4910 expectmax gWildlandsBossAudit 12 2 180
+CHECK PASS gWildlandsBossAudit+12 <= 180 (got 93)
+CMD t=4.4s frame=4910 expect gWildlandsBossAudit 8 2 5
+CHECK PASS gWildlandsBossAudit
+CMD t=4.4s frame=4910 expect gWildlandsBossAudit 6 2 5
+CHECK PASS gWildlandsBossAudit
+CMD t=4.4s frame=4910 expect gWildlandsRoomTelemetry 8 4 5
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=4.4s frame=4910 poke gWildlandsTestWarp 0 1 2
+POKE gWildlandsTestWarp+0=2 ok
+CHECK PASS poke target exists
+CMD t=4.4s frame=4910 frames 90 0
+CMD t=4.5s frame=5000 poke gWildlandsTestWarp 0 1 21
+POKE gWildlandsTestWarp+0=21 ok
+CHECK PASS poke target exists
+CMD t=4.5s frame=5000 frames 90 0
+CMD t=4.6s frame=5090 snap 11-lair-lugia
+STATE 11-lair-lugia frame=5090 pc=080008ca callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 11-lair-lugia bgcnt=1f00,1e06,1d05,1c07 xl=898,3532,778,3452,778,3452 audit=1,1,1,0,0,2,1,1 tele=21696,7,5,1,44,0,0,7168,3072,2215,35,0,2,3,13,1
+SCROLL 11-lair-lugia io=16392,16392/16392,16392/16392,16392 buf=10,124/10,124/10,124 dispcnt=1f40 vcount=160
+INPUT 11-lair-lugia heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=957 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=690
+CMD t=4.6s frame=5090 dumph boss-11-lair-lugia gWildlandsBossAudit 6 6
+DUMPH boss-11-lair-lugia gWildlandsBossAudit+6 2 2 249 112 984 3480
+CMD t=4.6s frame=5090 expectmax gWildlandsBossAudit 12 2 180
+CHECK PASS gWildlandsBossAudit+12 <= 180 (got 112)
+CMD t=4.6s frame=5090 expect gWildlandsBossAudit 8 2 2
+CHECK PASS gWildlandsBossAudit
+CMD t=4.6s frame=5090 expect gWildlandsBossAudit 6 2 2
+CHECK PASS gWildlandsBossAudit
+CMD t=4.6s frame=5090 expect gWildlandsRoomTelemetry 8 4 2
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=4.6s frame=5090 poke gWildlandsTestWarp 0 1 2
+POKE gWildlandsTestWarp+0=2 ok
+CHECK PASS poke target exists
+CMD t=4.6s frame=5090 frames 90 0
+CMD t=4.7s frame=5180 poke gWildlandsTestWarp 0 1 18
+POKE gWildlandsTestWarp+0=18 ok
+CHECK PASS poke target exists
+CMD t=4.7s frame=5180 frames 90 0
+CMD t=4.8s frame=5270 snap 12-lair-hooh
+STATE 12-lair-hooh frame=5270 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 12-lair-hooh bgcnt=1f00,1e06,1d05,1c07 xl=1646,3612,1526,3532,1526,3532 audit=1,1,1,0,0,2,1,1 tele=27840,9,7,1,52,0,0,9216,3072,2215,35,0,2,5,13,1
+SCROLL 12-lair-hooh io=7192,7192/7192,7192/7192,7192 buf=246,204/246,204/246,204 dispcnt=1f40 vcount=160
+INPUT 12-lair-hooh heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1122 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=764
+CMD t=4.8s frame=5270 dumph boss-12-lair-hooh gWildlandsBossAudit 6 6
+DUMPH boss-12-lair-hooh gWildlandsBossAudit+6 3 3 250 105 1656 3512
+CMD t=4.8s frame=5270 expectmax gWildlandsBossAudit 12 2 180
+CHECK PASS gWildlandsBossAudit+12 <= 180 (got 105)
+CMD t=4.8s frame=5270 expect gWildlandsBossAudit 8 2 3
+CHECK PASS gWildlandsBossAudit
+CMD t=4.8s frame=5270 expect gWildlandsBossAudit 6 2 3
+CHECK PASS gWildlandsBossAudit
+CMD t=4.8s frame=5270 expect gWildlandsRoomTelemetry 8 4 3
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=4.8s frame=5270 poke gWildlandsTestWarp 0 1 2
+POKE gWildlandsTestWarp+0=2 ok
+CHECK PASS poke target exists
+CMD t=4.8s frame=5270 frames 90 0
+CMD t=4.9s frame=5360 poke gWildlandsTestWarp 0 1 20
+POKE gWildlandsTestWarp+0=20 ok
+CHECK PASS poke target exists
+CMD t=4.9s frame=5360 frames 90 0
+CMD t=5.0s frame=5450 snap 13-lair-kyogre
+STATE 13-lair-kyogre frame=5450 pc=080008cc callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 13-lair-kyogre bgcnt=1f00,1e06,1d05,1c07 xl=2222,3292,2144,3232,2144,3232 audit=1,1,1,0,0,2,1,1 tele=33984,11,9,1,67,0,0,11264,3072,2215,35,0,2,8,12,1
+SCROLL 13-lair-kyogre io=10240,10240/10240,10240/10240,10240 buf=96,160/96,160/96,160 dispcnt=1f40 vcount=160
+INPUT 13-lair-kyogre heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1286 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=857
+CMD t=5.0s frame=5450 dumph boss-13-lair-kyogre gWildlandsBossAudit 6 6
+DUMPH boss-13-lair-kyogre gWildlandsBossAudit+6 4 4 404 100 2312 3272
+CMD t=5.0s frame=5450 expectmax gWildlandsBossAudit 12 2 180
+CHECK PASS gWildlandsBossAudit+12 <= 180 (got 100)
+CMD t=5.0s frame=5450 expect gWildlandsBossAudit 8 2 4
+CHECK PASS gWildlandsBossAudit
+CMD t=5.0s frame=5450 expect gWildlandsBossAudit 6 2 4
+CHECK PASS gWildlandsBossAudit
+CMD t=5.0s frame=5450 expect gWildlandsRoomTelemetry 8 4 4
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=5.0s frame=5450 dumph kyogreLead gBattleMons 88 1
+DUMPH kyogreLead gBattleMons+88 404
+CMD t=5.0s frame=5450 dumph kyogreMoves gBattleMons 100 4
+DUMPH kyogreMoves gBattleMons+100 56 59 63 57
+CMD t=5.0s frame=5450 dumph kyogrePP gBattleMons 124 2
+DUMPH kyogrePP gBattleMons+124 1285 3845
+CMD t=5.0s frame=5450 poke gWildlandsTestPeace 0 1 0
+POKE gWildlandsTestPeace+0=0 ok
+CHECK PASS poke target exists
+CMD t=5.0s frame=5450 poke gWildlandsBossTestSlam 0 1 1
+POKE gWildlandsBossTestSlam+0=1 ok
+CHECK PASS poke target exists
+CMD t=5.0s frame=5450 frames 20 0
+CMD t=5.0s frame=5470 snap 13c-kyogre-windup
+STATE 13c-kyogre-windup frame=5470 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 13c-kyogre-windup bgcnt=1f00,1e06,1d05,1c07 xl=2222,3292,2144,3232,2144,3232 audit=1,1,1,0,0,2,1,1 tele=33984,11,9,1,68,0,0,11264,3072,2215,36,1,2,8,12,1
+SCROLL 13c-kyogre-windup io=7192,7192/7192,7192/7192,7192 buf=96,160/96,160/96,160 dispcnt=1f40 vcount=160
+INPUT 13c-kyogre-windup heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1306 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=32 aiPaths=0 wall=22,0 capture=0 sendout=0/144 cbUpdates=876
+CMD t=5.0s frame=5470 frames 220 0
+CMD t=5.3s frame=5690 snap 13b-kyogre-fight
+STATE 13b-kyogre-fight frame=5690 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 13b-kyogre-fight bgcnt=1f00,1e06,1d05,1c07 xl=2222,3292,2144,3232,2144,3232 audit=1,1,1,0,0,2,1,1 tele=33984,11,9,1,73,0,0,11264,3072,2215,59,11,2,8,12,1
+SCROLL 13b-kyogre-fight io=7192,7192/7192,7192/7192,7192 buf=96,160/96,160/96,160 dispcnt=1f40 vcount=160
+INPUT 13b-kyogre-fight heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1526 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=22,0 capture=0 sendout=0/144 cbUpdates=1091
+CMD t=5.3s frame=5690 dumph bossAi gWildlandsBossAiTelemetry 0 3
+DUMPH bossAi gWildlandsBossAiTelemetry+0 1 0 1
+CMD t=5.3s frame=5690 expectmin gWildlandsBossAiTelemetry 4 2 1
+CHECK PASS gWildlandsBossAiTelemetry+4 >= 1 (got 1)
+CMD t=5.3s frame=5690 expectmin gWildlandsBossAiTelemetry 0 2 1
+CHECK PASS gWildlandsBossAiTelemetry+0 >= 1 (got 1)
+CMD t=5.3s frame=5690 poke gWildlandsTestPeace 0 1 1
+POKE gWildlandsTestPeace+0=1 ok
+CHECK PASS poke target exists
+CMD t=5.3s frame=5690 dumph kyogreFightHP gBattleMons 40 1
+DUMPH kyogreFightHP gBattleMons+40 176
+CMD t=5.3s frame=5690 dump kyogreSquad gWildlandsSquadTelemetry 16
+DUMP kyogreSquad gWildlandsSquadTelemetry 3 6 3 1 0 0 0 199 117 1 0 0 45 1 0 0
+CMD t=5.3s frame=5690 poke gWildlandsTestWarp 0 1 4
+POKE gWildlandsTestWarp+0=4 ok
+CHECK PASS poke target exists
+CMD t=5.3s frame=5690 frames 40 0
+CMD t=5.3s frame=5730 snap 13a-kyogre-joined
+STATE 13a-kyogre-joined frame=5730 pc=080008cc callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 13a-kyogre-joined bgcnt=1f00,1e06,1d05,1c07 xl=2222,3292,2144,3232,2144,3232 audit=1,1,1,0,0,2,1,1 tele=33984,11,9,1,78,0,0,11264,3072,2215,59,11,2,8,12,1
+SCROLL 13a-kyogre-joined io=10240,10240/10240,10240/10240,10240 buf=96,160/96,160/96,160 dispcnt=1f40 vcount=160
+INPUT 13a-kyogre-joined heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1554 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=22,0 capture=0 sendout=0/144 cbUpdates=1111
+CMD t=5.3s frame=5730 dumph partnerJoin gWildlandsPartnerTelemetry 0 4
+DUMPH partnerJoin gWildlandsPartnerTelemetry+0 1 0 404 0
+CMD t=5.3s frame=5730 dumph wingSprite gWildlandsWingSpriteDiag 0 6
+DUMPH wingSprite gWildlandsWingSpriteDiag+0 20 565 14 404 3 0
+CMD t=5.3s frame=5730 poke gWildlandsTestWarp 0 1 2
+POKE gWildlandsTestWarp+0=2 ok
+CHECK PASS poke target exists
+CMD t=5.3s frame=5730 frames 90 0
+CMD t=5.4s frame=5820 poke gWildlandsTestWarp 0 1 12
+POKE gWildlandsTestWarp+0=12 ok
+CHECK PASS poke target exists
+CMD t=5.4s frame=5820 frames 90 0
+CMD t=5.5s frame=5910 snap 14-house
+STATE 14-house frame=5910 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 14-house bgcnt=1f00,1e06,1d05,1c07 xl=1608,4242,1512,4120,1512,4120 audit=1,1,1,0,0,2,1,1 tele=40128,13,11,1,88,0,0,13312,3072,2215,59,11,2,5,16,1
+SCROLL 14-house io=7192,7192/7192,7192/7192,7192 buf=232,24/232,24/232,24 dispcnt=1f40 vcount=160
+INPUT 14-house heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1729 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=22,0 capture=0 sendout=0/144 cbUpdates=1273
+CMD t=5.5s frame=5910 expect gWildlandsRoomTelemetry 8 4 10
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=5.5s frame=5910 poke gWildlandsTestWarp 0 1 2
+POKE gWildlandsTestWarp+0=2 ok
+CHECK PASS poke target exists
+CMD t=5.5s frame=5910 frames 90 0
+CMD t=5.6s frame=6000 snap 15-house-door-outside
+STATE 15-house-door-outside frame=6000 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 15-house-door-outside bgcnt=1f00,1e06,1d05,1c07 xl=616,1950,496,1870,496,1870 audit=1,1,1,0,0,2,1,1 tele=43200,14,12,1,89,0,0,14336,3072,2215,59,11,2,1,7,1
+SCROLL 15-house-door-outside io=7192,7192/7192,7192/7192,7192 buf=240,78/240,78/240,78 dispcnt=1f40 vcount=160
+INPUT 15-house-door-outside heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1816 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=22,0 capture=0 sendout=0/144 cbUpdates=1354
+CMD t=5.6s frame=6000 dump rooms2 gWildlandsRoomTelemetry 8
+DUMP rooms2 gWildlandsRoomTelemetry 6 6 0 12 3 0 10 0
+CMD t=5.6s frame=6000 expectmin gWildlandsRoomTelemetry 4 4 6
+CHECK PASS gWildlandsRoomTelemetry+4 >= 6 (got 6)
+CMD t=5.6s frame=6000 expect gWildlandsRoomTelemetry 8 4 0
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=5.6s frame=6000 poke gWildlandsFastTelemetry 0 2 0
+POKE gWildlandsFastTelemetry+0=0 ok
+CHECK PASS poke target exists
+CMD t=5.6s frame=6000 poke gWildlandsFastTelemetry 2 2 0
+POKE gWildlandsFastTelemetry+2=0 ok
+CHECK PASS poke target exists
+CMD t=5.6s frame=6000 poke gWildlandsTestWarp 0 1 42
+POKE gWildlandsTestWarp+0=42 ok
+CHECK PASS poke target exists
+CMD t=5.6s frame=6000 frames 90 0
+CMD t=5.7s frame=6090 snap 20-woodland-research
+STATE 20-woodland-research frame=6090 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 20-woodland-research bgcnt=1f00,1e06,1d05,1c07 xl=1160,1560,1040,1480,1040,1480 audit=1,1,1,0,0,2,1,1 tele=46272,15,13,2,96,0,0,15360,3072,2215,59,11,2,4,5,1
+SCROLL 20-woodland-research io=7192,7192/7192,7192/7192,7192 buf=16,200/16,200/16,200 dispcnt=1f40 vcount=160
+INPUT 20-woodland-research heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=1906 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=22,0 capture=0 sendout=0/144 cbUpdates=1437
+CMD t=5.7s frame=6090 expect gWildlandsBiomeTelemetry 0 4 1
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=5.7s frame=6090 ratesym walk-woodland-research gWildlandsProfile 20 2 180 16 95
+SIMRATE walk-woodland-research emu_frames=180 steps=174 pct=96 min=95
+CHECK PASS sim cadence walk-woodland-research
+CMD t=5.9s frame=6270 snap 21-woodland-research-walked
+STATE 21-woodland-research-walked frame=6270 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 21-woodland-research-walked bgcnt=1f00,1e06,1d05,1c07 xl=1337,1560,1217,1480,1217,1480 audit=1,1,1,0,0,2,1,1 tele=48384,15,13,2,101,0,0,15360,3072,2215,59,11,2,4,5,1
+SCROLL 21-woodland-research-walked io=7192,7192/7192,7192/7192,7192 buf=193,200/193,200/193,200 dispcnt=1f40 vcount=160
+INPUT 21-woodland-research-walked heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=2080 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=95,0 capture=0 sendout=0/144 cbUpdates=1595
+CMD t=5.9s frame=6270 dump biome-woodland-research gWildlandsBiomeTelemetry 4
+DUMP biome-woodland-research gWildlandsBiomeTelemetry 1 5 3 0
+CMD t=5.9s frame=6270 dump hitch-woodland-research gWildlandsHitch 6
+DUMP hitch-woodland-research gWildlandsHitch 1638420 171247747 6619498 56558365 21430457 7
+CMD t=5.9s frame=6270 dump squad-woodland-research gWildlandsSquadTelemetry 16
+DUMP squad-woodland-research gWildlandsSquadTelemetry 3 6 3 1 0 0 0 201 112 1 0 0 45 1 0 0
+CMD t=5.9s frame=6270 poke gWildlandsTestWarp 0 1 44
+POKE gWildlandsTestWarp+0=44 ok
+CHECK PASS poke target exists
+CMD t=5.9s frame=6270 frames 90 0
+CMD t=6.0s frame=6360 snap 20-woodland-tempest
+STATE 20-woodland-tempest frame=6360 pc=080008d0 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 20-woodland-tempest bgcnt=1f00,1e06,1d05,1c07 xl=616,1960,496,1880,496,1880 audit=1,1,1,0,0,2,1,1 tele=51456,16,14,3,101,0,0,16384,3072,2215,59,11,2,1,7,1
+SCROLL 20-woodland-tempest io=48129,48129/48129,48129/48129,48129 buf=240,88/240,88/240,88 dispcnt=1f40 vcount=160
+INPUT 20-woodland-tempest heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=2170 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=95,0 capture=0 sendout=0/144 cbUpdates=1676
+CMD t=6.0s frame=6360 expect gWildlandsBiomeTelemetry 0 4 1
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=6.0s frame=6360 ratesym walk-woodland-tempest gWildlandsProfile 20 2 180 16 95
+SIMRATE walk-woodland-tempest emu_frames=180 steps=180 pct=100 min=95
+CHECK PASS sim cadence walk-woodland-tempest
+CMD t=6.2s frame=6540 snap 21-woodland-tempest-walked
+STATE 21-woodland-tempest-walked frame=6540 pc=0000001c callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 21-woodland-tempest-walked bgcnt=1f00,1e06,1d05,1c07 xl=745,1960,625,1880,625,1880 audit=1,1,1,1,1,2,1,1 tele=52992,16,15,3,113,118,49,16384,3072,2215,59,11,2,2,7,1
+SCROLL 21-woodland-tempest-walked io=65534,65534/65534,65534/65534,65534 buf=113,88/113,88/113,88 dispcnt=1f40 vcount=160
+INPUT 21-woodland-tempest-walked heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=2350 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=189,0 capture=0 sendout=0/144 cbUpdates=1848
+CMD t=6.2s frame=6540 dump biome-woodland-tempest gWildlandsBiomeTelemetry 4
+DUMP biome-woodland-tempest gWildlandsBiomeTelemetry 1 5 3 0
+CMD t=6.2s frame=6540 dump hitch-woodland-tempest gWildlandsHitch 6
+DUMP hitch-woodland-tempest gWildlandsHitch 1703956 171247747 6619498 56558365 21430457 7
+CMD t=6.2s frame=6540 dump squad-woodland-tempest gWildlandsSquadTelemetry 16
+DUMP squad-woodland-tempest gWildlandsSquadTelemetry 3 6 3 1 0 0 0 201 120 1 0 0 45 1 0 0
+CMD t=6.2s frame=6540 poke gWildlandsTestWarp 0 1 48
+POKE gWildlandsTestWarp+0=48 ok
+CHECK PASS poke target exists
+CMD t=6.2s frame=6540 frames 90 0
+CMD t=6.3s frame=6630 snap 20-desert-mewtwo
+STATE 20-desert-mewtwo frame=6630 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 20-desert-mewtwo bgcnt=1f00,1e06,1d05,1c07 xl=3464,760,3344,680,3344,680 audit=1,1,1,1,1,2,1,1 tele=56064,17,16,3,118,118,49,17408,3072,2215,59,11,2,13,2,1
+SCROLL 20-desert-mewtwo io=7192,7192/7192,7192/7192,7192 buf=16,168/16,168/16,168 dispcnt=1f40 vcount=160
+INPUT 20-desert-mewtwo heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=2431 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=189,0 capture=0 sendout=0/144 cbUpdates=1915
+CMD t=6.3s frame=6630 expect gWildlandsBiomeTelemetry 0 4 2
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=6.3s frame=6630 ratesym walk-desert-mewtwo gWildlandsProfile 20 2 180 16 95
+SIMRATE walk-desert-mewtwo emu_frames=180 steps=180 pct=100 min=95
+CHECK PASS sim cadence walk-desert-mewtwo
+CMD t=6.5s frame=6810 snap 21-desert-mewtwo-walked
+STATE 21-desert-mewtwo-walked frame=6810 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 21-desert-mewtwo-walked bgcnt=1f00,1e06,1d05,1c07 xl=3641,760,3521,680,3521,680 audit=1,1,1,1,1,2,1,1 tele=58176,17,16,3,121,118,49,17408,3072,2215,59,11,2,13,2,1
+SCROLL 21-desert-mewtwo-walked io=7192,7192/7192,7192/7192,7192 buf=193,168/193,168/193,168 dispcnt=1f40 vcount=160
+INPUT 21-desert-mewtwo-walked heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=2611 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=268,0 capture=0 sendout=0/144 cbUpdates=2094
+CMD t=6.5s frame=6810 dump biome-desert-mewtwo gWildlandsBiomeTelemetry 4
+DUMP biome-desert-mewtwo gWildlandsBiomeTelemetry 2 6 4 0
+CMD t=6.5s frame=6810 dump hitch-desert-mewtwo gWildlandsHitch 6
+DUMP hitch-desert-mewtwo gWildlandsHitch 1835028 171247912 7209330 59245478 20381884 6
+CMD t=6.5s frame=6810 dump squad-desert-mewtwo gWildlandsSquadTelemetry 16
+DUMP squad-desert-mewtwo gWildlandsSquadTelemetry 3 6 3 1 0 0 0 201 148 1 0 0 45 1 0 0
+CMD t=6.5s frame=6810 poke gWildlandsTestWarp 0 1 49
+POKE gWildlandsTestWarp+0=49 ok
+CHECK PASS poke target exists
+CMD t=6.5s frame=6810 frames 90 0
+CMD t=6.6s frame=6900 snap 20-desert-ruins
+STATE 20-desert-ruins frame=6900 pc=080008ce callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 20-desert-ruins bgcnt=1f00,1e06,1d05,1c07 xl=3720,1512,3600,1432,3600,1432 audit=1,1,1,1,1,2,1,1 tele=61248,18,17,4,124,118,49,18432,3072,2215,59,11,2,14,5,1
+SCROLL 20-desert-ruins io=53498,53498/53498,53498/53498,53498 buf=16,152/16,152/16,152 dispcnt=1f40 vcount=160
+INPUT 20-desert-ruins heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=2701 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=268,0 capture=0 sendout=0/144 cbUpdates=2178
+CMD t=6.6s frame=6900 expect gWildlandsBiomeTelemetry 0 4 2
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=6.6s frame=6900 ratesym walk-desert-ruins gWildlandsProfile 20 2 180 16 95
+SIMRATE walk-desert-ruins emu_frames=180 steps=180 pct=100 min=95
+CHECK PASS sim cadence walk-desert-ruins
+CMD t=6.8s frame=7080 snap 21-desert-ruins-walked
+STATE 21-desert-ruins-walked frame=7080 pc=080008ce callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 21-desert-ruins-walked bgcnt=1f00,1e06,1d05,1c07 xl=3998,1512,3856,1432,3856,1432 audit=1,1,1,1,1,2,1,1 tele=64320,18,18,4,138,118,134,18432,3072,2215,59,11,2,15,5,1
+SCROLL 21-desert-ruins-walked io=53498,53498/53498,53498/53498,53498 buf=16,152/16,152/16,152 dispcnt=1f40 vcount=160
+INPUT 21-desert-ruins-walked heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=2881 rtSpeed=336 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=268,0 capture=0 sendout=0/144 cbUpdates=2358
+CMD t=6.8s frame=7080 dump biome-desert-ruins gWildlandsBiomeTelemetry 4
+DUMP biome-desert-ruins gWildlandsBiomeTelemetry 2 6 4 0
+CMD t=6.8s frame=7080 dump hitch-desert-ruins gWildlandsHitch 6
+DUMP hitch-desert-ruins gWildlandsHitch 1900564 171247912 7209330 59245478 20381884 6
+CMD t=6.8s frame=7080 dump squad-desert-ruins gWildlandsSquadTelemetry 16
+DUMP squad-desert-ruins gWildlandsSquadTelemetry 3 6 3 1 0 0 0 201 148 1 0 0 45 1 0 0
+CMD t=6.8s frame=7080 poke gWildlandsTestWarp 0 1 47
+POKE gWildlandsTestWarp+0=47 ok
+CHECK PASS poke target exists
+CMD t=6.8s frame=7080 frames 90 0
+CMD t=6.9s frame=7170 snap 20-highlands-rayquaza
+STATE 20-highlands-rayquaza frame=7170 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 20-highlands-rayquaza bgcnt=1f00,1e06,1d05,1c07 xl=1928,488,1808,408,1808,408 audit=1,1,1,1,1,2,1,1 tele=67392,19,19,4,139,118,134,19456,3072,2215,59,11,2,7,1,1
+SCROLL 20-highlands-rayquaza io=7192,7192/7192,7192/7192,7192 buf=16,152/16,152/16,152 dispcnt=1f40 vcount=160
+INPUT 20-highlands-rayquaza heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=2970 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=268,0 capture=0 sendout=0/144 cbUpdates=2441
+CMD t=6.9s frame=7170 expect gWildlandsBiomeTelemetry 0 4 3
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=6.9s frame=7170 ratesym walk-highlands-rayquaza gWildlandsProfile 20 2 180 16 95
+SIMRATE walk-highlands-rayquaza emu_frames=180 steps=180 pct=100 min=95
+CHECK PASS sim cadence walk-highlands-rayquaza
+CMD t=7.1s frame=7350 snap 21-highlands-rayquaza-walked
+STATE 21-highlands-rayquaza-walked frame=7350 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 21-highlands-rayquaza-walked bgcnt=1f00,1e06,1d05,1c07 xl=2057,488,1937,408,1937,408 audit=1,1,1,1,1,2,1,1 tele=68928,19,19,4,142,118,134,19456,3072,2215,59,11,2,7,1,1
+SCROLL 21-highlands-rayquaza-walked io=7192,7192/7192,7192/7192,7192 buf=145,152/145,152/145,152 dispcnt=1f40 vcount=160
+INPUT 21-highlands-rayquaza-walked heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=3150 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=374,0 capture=0 sendout=0/144 cbUpdates=2620
+CMD t=7.1s frame=7350 dump biome-highlands-rayquaza gWildlandsBiomeTelemetry 4
+DUMP biome-highlands-rayquaza gWildlandsBiomeTelemetry 3 7 5 0
+CMD t=7.1s frame=7350 dump hitch-highlands-rayquaza gWildlandsHitch 6
+DUMP hitch-highlands-rayquaza gWildlandsHitch 1966100 171247912 7274866 59245478 20381884 6
+CMD t=7.1s frame=7350 dump squad-highlands-rayquaza gWildlandsSquadTelemetry 16
+DUMP squad-highlands-rayquaza gWildlandsSquadTelemetry 3 6 3 1 0 0 0 201 148 1 0 0 45 1 0 0
+CMD t=7.1s frame=7350 poke gWildlandsTestWarp 0 1 51
+POKE gWildlandsTestWarp+0=51 ok
+CHECK PASS poke target exists
+CMD t=7.1s frame=7350 frames 90 0
+CMD t=7.2s frame=7440 snap 20-volcano-hooh
+STATE 20-volcano-hooh frame=7440 pc=0000001c callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 20-volcano-hooh bgcnt=1f00,1e06,1d05,1c07 xl=3464,2792,3344,2712,3344,2712 audit=1,1,1,1,1,2,1,1 tele=72000,20,20,4,146,118,134,20480,3072,2215,59,11,2,13,10,1
+SCROLL 20-volcano-hooh io=65534,65534/65534,65534/65534,65534 buf=16,152/16,152/16,152 dispcnt=1f40 vcount=160
+INPUT 20-volcano-hooh heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=3231 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=374,0 capture=0 sendout=0/144 cbUpdates=2677
+CMD t=7.2s frame=7440 expect gWildlandsBiomeTelemetry 0 4 4
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=7.2s frame=7440 ratesym walk-volcano-hooh gWildlandsProfile 20 2 180 16 95
+SIMRATE walk-volcano-hooh emu_frames=180 steps=180 pct=100 min=95
+CHECK PASS sim cadence walk-volcano-hooh
+CMD t=7.4s frame=7620 snap 21-volcano-hooh-walked
+STATE 21-volcano-hooh-walked frame=7620 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 21-volcano-hooh-walked bgcnt=1f00,1e06,1d05,1c07 xl=3779,2792,3659,2712,3659,2712 audit=1,1,1,1,1,2,1,1 tele=75744,20,21,4,158,118,134,20480,3072,2215,59,11,2,14,10,1
+SCROLL 21-volcano-hooh-walked io=7192,7192/7192,7192/7192,7192 buf=75,152/75,152/75,152 dispcnt=1f40 vcount=160
+INPUT 21-volcano-hooh-walked heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=3411 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=374,0 capture=0 sendout=0/144 cbUpdates=2767
+CMD t=7.4s frame=7620 dump biome-volcano-hooh gWildlandsBiomeTelemetry 4
+DUMP biome-volcano-hooh gWildlandsBiomeTelemetry 4 8 6 0
+CMD t=7.4s frame=7620 dump hitch-volcano-hooh gWildlandsHitch 6
+DUMP hitch-volcano-hooh gWildlandsHitch 2097172 171247917 7799154 59704224 20906168 6
+CMD t=7.4s frame=7620 dump squad-volcano-hooh gWildlandsSquadTelemetry 16
+DUMP squad-volcano-hooh gWildlandsSquadTelemetry 3 6 3 1 0 0 0 201 125 1 0 0 45 1 0 0
+CMD t=7.4s frame=7620 poke gWildlandsTestWarp 0 1 52
+POKE gWildlandsTestWarp+0=52 ok
+CHECK PASS poke target exists
+CMD t=7.4s frame=7620 frames 90 0
+CMD t=7.4s frame=7710 snap 20-beach-seashore
+STATE 20-beach-seashore frame=7710 pc=080008ce callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 20-beach-seashore bgcnt=1f00,1e06,1d05,1c07 xl=1896,3000,1776,2912,1776,2912 audit=1,1,1,1,1,2,1,1 tele=78816,21,22,4,161,118,134,21504,3072,2215,59,11,2,6,11,1
+SCROLL 20-beach-seashore io=53498,53498/53498,53498/53498,53498 buf=240,96/240,96/240,96 dispcnt=1f40 vcount=160
+INPUT 20-beach-seashore heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=3501 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=374,0 capture=0 sendout=0/144 cbUpdates=2830
+CMD t=7.4s frame=7710 expect gWildlandsBiomeTelemetry 0 4 5
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=7.4s frame=7710 ratesym walk-beach-seashore gWildlandsProfile 20 2 180 16 95
+SIMRATE walk-beach-seashore emu_frames=180 steps=180 pct=100 min=95
+CHECK PASS sim cadence walk-beach-seashore
+CMD t=7.6s frame=7890 snap 21-beach-seashore-walked
+STATE 21-beach-seashore-walked frame=7890 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 21-beach-seashore-walked bgcnt=1f00,1e06,1d05,1c07 xl=2162,3000,2042,2912,2042,2912 audit=1,1,1,1,1,2,1,1 tele=81984,21,23,4,166,118,246,21504,3072,2215,59,11,2,7,11,1
+SCROLL 21-beach-seashore-walked io=7192,7192/7192,7192/7192,7192 buf=250,96/250,96/250,96 dispcnt=1f40 vcount=160
+INPUT 21-beach-seashore-walked heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=3681 rtSpeed=336 rtActive=1 rtPaused=0 aiDec=46 aiPaths=13 wall=374,0 capture=0 sendout=0/144 cbUpdates=3000
+CMD t=7.6s frame=7890 dump biome-beach-seashore gWildlandsBiomeTelemetry 4
+DUMP biome-beach-seashore gWildlandsBiomeTelemetry 5 9 7 0
+CMD t=7.6s frame=7890 dump hitch-beach-seashore gWildlandsHitch 6
+DUMP hitch-beach-seashore gWildlandsHitch 2162708 171247917 7864711 59704224 20906168 6
+CMD t=7.6s frame=7890 dump squad-beach-seashore gWildlandsSquadTelemetry 16
+DUMP squad-beach-seashore gWildlandsSquadTelemetry 3 6 3 1 0 0 0 201 133 1 0 0 45 1 0 0
+CMD t=7.6s frame=7890 expectmin gWildlandsSquadTelemetry 4 4 1
+CHECK PASS gWildlandsSquadTelemetry+4 >= 1 (got 6)
+CMD t=7.6s frame=7890 expect gWildlandsBiomeTelemetry 12 4 0
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=7.6s frame=7890 expectmin gWildlandsBiomeTelemetry 4 4 4
+CHECK PASS gWildlandsBiomeTelemetry+4 >= 4 (got 9)
+CMD t=7.6s frame=7890 dumph fastTour gWildlandsFastTelemetry 0 2
+DUMPH fastTour gWildlandsFastTelemetry+0 1525 55
+CMD t=7.6s frame=7890 expectmin gWildlandsFastTelemetry 0 2 1000
+CHECK PASS gWildlandsFastTelemetry+0 >= 1000 (got 1525)
+CMD t=7.6s frame=7890 poke gWildlandsTestWarp 0 1 1
+POKE gWildlandsTestWarp+0=1 ok
+CHECK PASS poke target exists
+CMD t=7.6s frame=7890 frames 60 0
+CMD t=7.7s frame=7950 poke gWildlandsZoneTestSpeed 0 2 0
+POKE gWildlandsZoneTestSpeed+0=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsTestPeace 0 1 0
+POKE gWildlandsTestPeace+0=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpike 0 2 0
+POKE gWildlandsSpike+0=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpike 2 2 0
+POKE gWildlandsSpike+2=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpike 4 2 0
+POKE gWildlandsSpike+4=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpike 6 2 0
+POKE gWildlandsSpike+6=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpike 8 2 0
+POKE gWildlandsSpike+8=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpike 10 2 0
+POKE gWildlandsSpike+10=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpikeSim 0 2 0
+POKE gWildlandsSpikeSim+0=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gWildlandsSpikeSim 2 2 0
+POKE gWildlandsSpikeSim+2=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gArenaRenderTelemetry 8 2 0
+POKE gArenaRenderTelemetry+8=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gArenaRenderTelemetry 10 2 0
+POKE gArenaRenderTelemetry+10=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gArenaRenderTelemetry 12 2 0
+POKE gArenaRenderTelemetry+12=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 poke gArenaRenderTelemetry 14 2 0
+POKE gArenaRenderTelemetry+14=0 ok
+CHECK PASS poke target exists
+CMD t=7.7s frame=7950 rate render-idle 300 0 0
+RATE render-idle emu_frames=300 arena_updates=140 missed_vblanks=160 pct=46 min=0
+PHASES render-idle s0=52 s1=6 s2=4 s3=23 s4=78 s5=163 p0=3505 p1=724 p2=215 p3=125 p4=2279 p5=4363 maxGap=20
+CHECK PASS cadence render-idle
+CMD t=8.0s frame=8250 dumph spikeIdle gWildlandsSpike 0 6
+DUMPH spikeIdle gWildlandsSpike+0 811 359 0 929 38 61
+CMD t=8.0s frame=8250 dumph spikeSimIdle gWildlandsSpikeSim 0 2
+DUMPH spikeSimIdle gWildlandsSpikeSim+0 78 719
+CMD t=8.0s frame=8250 dumph renderPeakIdle gArenaRenderTelemetry 8 4
+DUMPH renderPeakIdle gArenaRenderTelemetry+8 103 220 83 1
+CMD t=8.0s frame=8250 dump frameIdle gArenaFrameTelemetry 10
+DUMP frameIdle gArenaFrameTelemetry 3191 1242 20 8237 393268 1507332 10682446 47451569 8192215 285935847
+CMD t=8.0s frame=8250 dump renderIdle gArenaRenderTelemetry 4
+DUMP renderIdle gArenaRenderTelemetry 65588 24 14418023 65619
+CMD t=8.0s frame=8250 dump profIdle gWildlandsProfile 6
+DUMP profIdle gWildlandsProfile 196618 851968 851968 458756 3932168 200478664
+CMD t=8.0s frame=8250 dumph loopIdle gWildlandsLoop 0 4
+DUMPH loopIdle gWildlandsLoop+0 2263 841 87 100
+CMD t=8.0s frame=8250 ratesym idle gWildlandsProfile 20 2 300 0 95
+SIMRATE idle emu_frames=300 steps=300 pct=100 min=95
+CHECK PASS sim cadence idle
+CMD t=8.4s frame=8550 prof idle-fight 120 0
+PROF idle-fight frames=120 samples=561786 bios_or_halt=1.5%
+PROF idle-fight  24.5% WaitForVBlank
+PROF idle-fight   4.1% CB2_Arena
+PROF idle-fight   2.5% CoarseClear
+PROF idle-fight   2.4% ArenaSprites_Decode
+PROF idle-fight   2.3% WildlandsBuildOamFast
+PROF idle-fight   2.0% WindowRect
+PROF idle-fight   1.9% TraversalClear
+PROF idle-fight   1.5% LootSim
+PROF idle-fight   1.4% SolidCircle
+PROF idle-fight   1.3% Over5
+PROF idle-fight   1.3% BlendPalette
+PROF idle-fight   1.2% WildlandsAnimateSprites
+PROF idle-fight   1.1% Loop1
+PROF idle-fight   1.1% Over2
+PROF idle-fight   1.1% LootTick
+PROF idle-fight   1.1% Over4
+PROF idle-fight   1.0% NavNodeNear
+PROF idle-fight   1.0% Over3
+PROF idle-fight   0.9% ArenaPhysics_Update
+PROF idle-fight   0.9% ZoneDrawRain
+PROF idle-fight   0.9% BrainOffenseCalc
+PROF idle-fight   0.8% SquadThink
+PROF idle-fight   0.7% CopyMatricesToOamBuffer
+PROF idle-fight   0.7% Loop1
+PROF idle-fight   0.7% ArenaXL_UpdateCamera
+PROF idle-fight   0.7% WildlandsWorld_BodyLineClear
+PROF idle-fight   0.7% CalculateBoxMonChecksum
+PROF idle-fight   0.7% DirSimOne
+PROF idle-fight   0.7% Loop3
+PROF idle-fight   0.6% ArenaNav_Distance
+CMD t=8.6s frame=8670 poke gWildlandsTpTest 0 1 1
+POKE gWildlandsTpTest+0=1 ok
+CHECK PASS poke target exists
+CMD t=8.6s frame=8670 frames 130 0
+CMD t=8.8s frame=8800 dumph thirdParty gWildlandsTpTelemetry 0 3
+DUMPH thirdParty gWildlandsTpTelemetry+0 1 0 0
+CMD t=8.8s frame=8800 poke gWildlandsFastTest 0 1 2
+POKE gWildlandsFastTest+0=2 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsFastTelemetry 0 2 0
+POKE gWildlandsFastTelemetry+0=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsFastTelemetry 2 2 0
+POKE gWildlandsFastTelemetry+2=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 0 4 0
+POKE gWildlandsCost+0=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 4 4 0
+POKE gWildlandsCost+4=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 8 4 0
+POKE gWildlandsCost+8=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 12 4 0
+POKE gWildlandsCost+12=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 16 4 0
+POKE gWildlandsCost+16=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 20 4 0
+POKE gWildlandsCost+20=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 24 4 0
+POKE gWildlandsCost+24=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 poke gWildlandsCost 28 4 0
+POKE gWildlandsCost+28=0 ok
+CHECK PASS poke target exists
+CMD t=8.8s frame=8800 rate fight60 300 0 0
+RATE fight60 emu_frames=300 arena_updates=242 missed_vblanks=59 pct=80 min=0
+PHASES fight60 s0=44 s1=28 s2=4 s3=36 s4=113 s5=244 p0=3505 p1=724 p2=215 p3=125 p4=2279 p5=4363 maxGap=20
+CHECK PASS cadence fight60
+CMD t=9.1s frame=9100 dumph fight60 gWildlandsFastTelemetry 0 2
+DUMPH fight60 gWildlandsFastTelemetry+0 241 57
+CMD t=9.1s frame=9100 dump cost-fight60 gWildlandsCost 8
+DUMP cost-fight60 gWildlandsCost 9457 3351 1668 4947 8 10 7 242
+CMD t=9.1s frame=9100 poke gWildlandsFastTest 0 1 0
+POKE gWildlandsFastTest+0=0 ok
+CHECK PASS poke target exists
+CMD t=9.1s frame=9100 poke gBattleMons 36 1 1
+POKE gBattleMons+36=1 ok
+CHECK PASS poke target exists
+CMD t=9.1s frame=9100 frames 300 0
+CMD t=9.4s frame=9400 dumph pp gBattleMons 36 2
+DUMPH pp gBattleMons+36 1284 2585
+CMD t=9.4s frame=9400 expectmin gBattleMons 36 1 2
+CHECK PASS gBattleMons+36 >= 2 (got 4)
+CMD t=9.4s frame=9400 poke gWildlandsTestPeace 0 1 1
+POKE gWildlandsTestPeace+0=1 ok
+CHECK PASS poke target exists
+CMD t=9.4s frame=9400 poke gBattleMons 40 2 60
+POKE gBattleMons+40=60 ok
+CHECK PASS poke target exists
+CMD t=9.4s frame=9400 frames 420 0
+CMD t=9.8s frame=9820 dumph rest gWildlandsRestTelemetry 0 2
+DUMPH rest gWildlandsRestTelemetry+0 21 87
+CMD t=9.8s frame=9820 expectmin gWildlandsRestTelemetry 0 2 1
+CHECK PASS gWildlandsRestTelemetry+0 >= 1 (got 21)
+CMD t=9.8s frame=9820 dumph leadBefore gBattleMons 0 1
+DUMPH leadBefore gBattleMons+0 9
+CMD t=9.8s frame=9820 press 4
+CMD t=9.9s frame=9857 frames 20 0
+CMD t=9.9s frame=9877 dumph leadAfter gBattleMons 0 1
+DUMPH leadAfter gBattleMons+0 404
+CMD t=9.9s frame=9877 dumph swapReject gWildlandsSwapReject 0 1
+DUMPH swapReject gWildlandsSwapReject+0 0
+CMD t=9.9s frame=9877 dumph wingAtSwap gWildlandsPartnerTelemetry 0 4
+DUMPH wingAtSwap gWildlandsPartnerTelemetry+0 1 0 404 0
+CMD t=9.9s frame=9877 expectmin gWildlandsSwapTelemetry 0 2 1
+CHECK PASS gWildlandsSwapTelemetry+0 >= 1 (got 1)
+CMD t=9.9s frame=9877 snap 16-swapped
+STATE 16-swapped frame=9877 pc=080008ca callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 16-swapped bgcnt=1f00,1e06,1d05,1c07 xl=1976,1599,1856,1519,1856,1519 audit=1,1,1,1,1,2,1,1 tele=85440,22,24,5,239,2094,246,22528,3072,2215,505,181,2,7,5,1
+SCROLL 16-swapped io=16392,16392/16392,16392/16392,16392 buf=64,239/64,239/64,239 dispcnt=1f40 vcount=160
+INPUT 16-swapped heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=5657 rtSpeed=496 rtActive=1 rtPaused=0 aiDec=227 aiPaths=109 wall=374,0 capture=0 sendout=0/144 cbUpdates=4346
+CMD t=9.9s frame=9877 frames 200 0
+CMD t=10.1s frame=10077 press 4
+CMD t=10.1s frame=10114 frames 20 0
+CMD t=10.2s frame=10134 expectmin gWildlandsSwapTelemetry 0 2 2
+CHECK PASS gWildlandsSwapTelemetry+0 >= 2 (got 2)
+CMD t=10.2s frame=10134 press 8
+CMD t=10.2s frame=10171 press 1
+CMD t=10.2s frame=10208 frames 10 0
+CMD t=10.2s frame=10218 snap 17-team-page
+STATE 17-team-page frame=10218 pc=080008d0 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 17-team-page bgcnt=1f00,1e06,1d05,1c07 xl=1960,1608,1840,1528,1840,1528 audit=1,1,1,1,1,2,1,1 tele=85824,22,24,5,253,2351,246,22528,3072,2215,505,181,2,7,5,1
+SCROLL 17-team-page io=48129,48129/48129,48129/48129,48129 buf=48,248/48,248/48,248 dispcnt=1f40 vcount=160
+INPUT 17-team-page heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=5914 rtSpeed=449 rtActive=1 rtPaused=1 aiDec=227 aiPaths=109 wall=374,0 capture=0 sendout=0/144 cbUpdates=4625
+CMD t=10.2s frame=10218 press 2
+CMD t=10.3s frame=10255 press 128
+CMD t=10.3s frame=10292 press 1
+CMD t=10.3s frame=10329 frames 10 0
+CMD t=10.3s frame=10339 snap 18-log-page
+STATE 18-log-page frame=10339 pc=080008d0 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 18-log-page bgcnt=1f00,1e06,1d05,1c07 xl=1960,1608,1840,1528,1840,1528 audit=1,1,1,1,1,2,1,1 tele=85824,22,24,5,253,2351,246,22528,3072,2215,505,181,2,7,5,1
+SCROLL 18-log-page io=48129,48129/48129,48129/48129,48129 buf=48,248/48,248/48,248 dispcnt=1f40 vcount=160
+INPUT 18-log-page heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=5914 rtSpeed=449 rtActive=1 rtPaused=1 aiDec=227 aiPaths=109 wall=374,0 capture=0 sendout=0/144 cbUpdates=4683
+CMD t=10.3s frame=10339 press 2
+CMD t=10.4s frame=10376 press 2
+CMD t=10.4s frame=10413 frames 20 0
+CMD t=10.4s frame=10433 poke gWildlandsStatusTest 0 1 1
+POKE gWildlandsStatusTest+0=1 ok
+CHECK PASS poke target exists
+CMD t=10.4s frame=10433 frames 30 0
+CMD t=10.5s frame=10463 expect gWildlandsStatusNow 0 1 1
+CHECK PASS gWildlandsStatusNow
+CMD t=10.5s frame=10463 snap 19-status-par
+STATE 19-status-par frame=10463 pc=080008cc callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 19-status-par bgcnt=1f00,1e06,1d05,1c07 xl=1960,1608,1840,1528,1840,1528 audit=1,1,1,1,1,2,1,1 tele=85824,22,24,5,257,2439,246,22528,3072,2215,505,181,2,7,5,1
+SCROLL 19-status-par io=10240,10240/10240,10240/10240,10240 buf=48,248/48,248/48,248 dispcnt=1f40 vcount=160
+INPUT 19-status-par heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=6002 rtSpeed=112 rtActive=1 rtPaused=0 aiDec=227 aiPaths=109 wall=374,0 capture=0 sendout=0/144 cbUpdates=4784
+CMD t=10.5s frame=10463 frames 200 0
+CMD t=10.7s frame=10663 expect gWildlandsStatusNow 0 1 0
+CHECK PASS gWildlandsStatusNow
+CMD t=10.7s frame=10663 poke gWildlandsStatusTest 0 1 3
+POKE gWildlandsStatusTest+0=3 ok
+CHECK PASS poke target exists
+CMD t=10.7s frame=10663 frames 330 0
+CMD t=11.0s frame=10993 expect gWildlandsStatusNow 0 1 3
+CHECK PASS gWildlandsStatusNow
+CMD t=11.0s frame=10993 snap 19a-status-brn
+STATE 19a-status-brn frame=10993 pc=080008ca callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 19a-status-brn bgcnt=1f00,1e06,1d05,1c07 xl=1960,1608,1840,1528,1840,1528 audit=1,1,1,1,1,2,1,1 tele=85824,22,24,5,263,2969,246,22528,3072,2215,505,181,2,7,5,1
+SCROLL 19a-status-brn io=16392,16392/16392,16392/16392,16392 buf=48,248/48,248/48,248 dispcnt=1f40 vcount=160
+INPUT 19a-status-brn heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=6532 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=227 aiPaths=109 wall=374,0 capture=0 sendout=0/144 cbUpdates=5289
+CMD t=11.0s frame=10993 dumph status gWildlandsStatusTelemetry 0 4
+DUMPH status gWildlandsStatusTelemetry+0 9 0 0 2
+CMD t=11.0s frame=10993 expectmin gWildlandsStatusTelemetry 6 2 2
+CHECK PASS gWildlandsStatusTelemetry+6 >= 2 (got 2)
+CMD t=11.0s frame=10993 poke gWildlandsStatusTest 0 1 6
+POKE gWildlandsStatusTest+0=6 ok
+CHECK PASS poke target exists
+CMD t=11.0s frame=10993 frames 10 0
+CMD t=11.0s frame=11003 expect gWildlandsStatusNow 0 1 0
+CHECK PASS gWildlandsStatusNow
+CMD t=11.0s frame=11003 poke gBattleMons 40 2 150
+POKE gBattleMons+40=150 ok
+CHECK PASS poke target exists
+CMD t=11.0s frame=11003 poke gWildlandsTestPeace 0 1 0
+POKE gWildlandsTestPeace+0=0 ok
+CHECK PASS poke target exists
+CMD t=11.0s frame=11003 frames 120 16
+CMD t=11.1s frame=11123 snap 03-east
+STATE 03-east frame=11123 pc=080008ca callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03-east bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3098,246,22528,3072,2215,535,181,2,7,5,1
+SCROLL 03-east io=16392,16392/16392,16392/16392,16392 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03-east heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6661 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=242 aiPaths=124 wall=483,0 capture=0 sendout=0/144 cbUpdates=5361
+CMD t=11.1s frame=11123 frames 1 16
+CMD t=11.1s frame=11124 snap 03a-consec-0
+STATE 03a-consec-0 frame=11124 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-0 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3100,246,22528,3072,2215,535,181,2,7,5,1
+SCROLL 03a-consec-0 io=7192,7192/7192,7192/7192,7192 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-0 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6663 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=242 aiPaths=124 wall=485,0 capture=0 sendout=0/144 cbUpdates=5362
+CMD t=11.1s frame=11124 frames 1 16
+CMD t=11.1s frame=11125 snap 03a-consec-1
+STATE 03a-consec-1 frame=11125 pc=080008ca callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-1 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3100,246,22528,3072,2215,535,181,2,7,5,1
+SCROLL 03a-consec-1 io=16392,16392/16392,16392/16392,16392 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-1 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6663 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=242 aiPaths=124 wall=485,0 capture=0 sendout=0/144 cbUpdates=5362
+CMD t=11.1s frame=11125 frames 1 16
+CMD t=11.1s frame=11126 snap 03a-consec-2
+STATE 03a-consec-2 frame=11126 pc=0805f31a callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-2 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3102,246,22528,3072,2215,536,181,2,7,5,1
+SCROLL 03a-consec-2 io=18575,18575/18575,18575/18575,18575 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-2 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6665 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=242 aiPaths=124 wall=487,0 capture=0 sendout=0/144 cbUpdates=5363
+CMD t=11.1s frame=11126 frames 1 16
+CMD t=11.1s frame=11127 snap 03a-consec-3
+STATE 03a-consec-3 frame=11127 pc=080008cc callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-3 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3102,246,22528,3072,2215,536,181,2,7,5,1
+SCROLL 03a-consec-3 io=10240,10240/10240,10240/10240,10240 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-3 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6665 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=242 aiPaths=124 wall=487,0 capture=0 sendout=0/144 cbUpdates=5363
+CMD t=11.1s frame=11127 frames 1 16
+CMD t=11.1s frame=11128 snap 03a-consec-4
+STATE 03a-consec-4 frame=11128 pc=08310212 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-4 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3104,246,22528,3072,2215,537,181,2,7,5,1
+SCROLL 03a-consec-4 io=11264,11264/11264,11264/11264,11264 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-4 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6667 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=243 aiPaths=125 wall=489,0 capture=0 sendout=0/144 cbUpdates=5364
+CMD t=11.2s frame=11128 frames 1 16
+CMD t=11.2s frame=11129 snap 03a-consec-5
+STATE 03a-consec-5 frame=11129 pc=080008cc callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-5 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3104,246,22528,3072,2215,537,181,2,7,5,1
+SCROLL 03a-consec-5 io=10240,10240/10240,10240/10240,10240 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-5 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6667 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=243 aiPaths=125 wall=489,0 capture=0 sendout=0/144 cbUpdates=5364
+CMD t=11.2s frame=11129 frames 1 16
+CMD t=11.2s frame=11130 snap 03a-consec-6
+STATE 03a-consec-6 frame=11130 pc=0800110a callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-6 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3106,246,22528,3072,2215,537,181,2,7,5,1
+SCROLL 03a-consec-6 io=7189,7189/7189,7189/7189,7189 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-6 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6669 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=243 aiPaths=125 wall=491,0 capture=0 sendout=0/144 cbUpdates=5365
+CMD t=11.2s frame=11130 frames 1 16
+CMD t=11.2s frame=11131 snap 03a-consec-7
+STATE 03a-consec-7 frame=11131 pc=080008d0 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 03a-consec-7 bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,269,3106,246,22528,3072,2215,537,181,2,7,5,1
+SCROLL 03a-consec-7 io=48129,48129/48129,48129/48129,48129 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 03a-consec-7 heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=6669 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=243 aiPaths=125 wall=491,0 capture=0 sendout=0/144 cbUpdates=5365
+CMD t=11.2s frame=11131 dump loot gWildlandsLootTelemetry 14
+DUMP loot gWildlandsLootTelemetry 2 3 2 2 0 0 1 0 61 3 0 0 0 0
+CMD t=11.2s frame=11131 ratesym travel-east gWildlandsProfile 20 2 600 16 95
+SIMRATE travel-east emu_frames=600 steps=588 pct=98 min=95
+CHECK PASS sim cadence travel-east
+CMD t=11.8s frame=11731 dump frameTravel gArenaFrameTelemetry 10
+DUMP frameTravel gArenaFrameTelemetry 5674 2239 20 11717 852014 917507 16580711 50138545 8192215 285935847
+CMD t=11.8s frame=11731 dump renderTravel gArenaRenderTelemetry 4
+DUMP renderTravel gArenaRenderTelemetry 76 65561 45154182 4522238
+CMD t=11.8s frame=11731 poke gWildlandsSpike 0 2 0
+POKE gWildlandsSpike+0=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gWildlandsSpike 2 2 0
+POKE gWildlandsSpike+2=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gWildlandsSpike 4 2 0
+POKE gWildlandsSpike+4=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gWildlandsSpike 6 2 0
+POKE gWildlandsSpike+6=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gWildlandsSpike 8 2 0
+POKE gWildlandsSpike+8=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gWildlandsSpike 10 2 0
+POKE gWildlandsSpike+10=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gWildlandsSpikeSim 0 2 0
+POKE gWildlandsSpikeSim+0=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gWildlandsSpikeSim 2 2 0
+POKE gWildlandsSpikeSim+2=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gArenaRenderTelemetry 8 2 0
+POKE gArenaRenderTelemetry+8=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gArenaRenderTelemetry 10 2 0
+POKE gArenaRenderTelemetry+10=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gArenaRenderTelemetry 12 2 0
+POKE gArenaRenderTelemetry+12=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 poke gArenaRenderTelemetry 14 2 0
+POKE gArenaRenderTelemetry+14=0 ok
+CHECK PASS poke target exists
+CMD t=11.8s frame=11731 rate render-walk 300 16 0
+RATE render-walk emu_frames=300 arena_updates=139 missed_vblanks=162 pct=46 min=0
+PHASES render-walk s0=33 s1=12 s2=4 s3=14 s4=56 s5=171 p0=3505 p1=765 p2=215 p3=125 p4=2279 p5=4363 maxGap=20
+CHECK PASS cadence render-walk
+CMD t=12.1s frame=12031 dumph spikeWalk gWildlandsSpike 0 6
+DUMPH spikeWalk gWildlandsSpike+0 846 319 0 998 19 101
+CMD t=12.1s frame=12031 dumph spikeSimWalk gWildlandsSpikeSim 0 2
+DUMPH spikeSimWalk gWildlandsSpikeSim+0 74 742
+CMD t=12.1s frame=12031 dumph renderPeakWalk gArenaRenderTelemetry 8 4
+DUMPH renderPeakWalk gArenaRenderTelemetry+8 106 201 83 52
+CMD t=12.1s frame=12031 dumph loopWalk gWildlandsLoop 0 4
+DUMPH loopWalk gWildlandsLoop+0 3836 1840 137 158
+CMD t=12.1s frame=12031 dumph fastPace gWildlandsFastTelemetry 0 2
+DUMPH fastPace gWildlandsFastTelemetry+0 1457 144
+CMD t=12.1s frame=12031 snap 04-east-far
+STATE 04-east-far frame=12031 pc=080008d0 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 04-east-far bgcnt=1f00,1e06,1d05,1c07 xl=1977,1608,1857,1528,1857,1528 audit=1,1,1,1,1,2,1,1 tele=86016,22,24,5,348,3995,246,22528,3072,2215,759,181,137,7,5,1
+SCROLL 04-east-far io=48129,48129/48129,48129/48129,48129 buf=65,248/65,248/65,248 dispcnt=1f40 vcount=160
+INPUT 04-east-far heldRaw=0010 newRaw=0000 held=0010 new=0000 rtFrames=7558 rtSpeed=449 rtActive=1 rtPaused=0 aiDec=354 aiPaths=236 wall=1380,0 capture=0 sendout=0/144 cbUpdates=5813
+CMD t=12.1s frame=12031 dumph lootPal gWildlandsLootPalDiag 0 1
+DUMPH lootPal gWildlandsLootPalDiag+0 4278190083
+CMD t=12.1s frame=12031 ratesym travel-north gWildlandsProfile 20 2 600 64 95
+SIMRATE travel-north emu_frames=600 steps=578 pct=96 min=95
+CHECK PASS sim cadence travel-north
+CMD t=12.8s frame=12631 snap 05-north
+STATE 05-north frame=12631 pc=080088be callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 05-north bgcnt=1f00,1e06,1d05,1c07 xl=1977,1334,1857,1254,1857,1254 audit=1,1,1,1,1,2,1,1 tele=89376,22,25,5,423,4026,683,22528,3072,2215,838,181,320,7,4,1
+SCROLL 05-north io=30744,30744/30744,30744/30744,30744 buf=65,230/65,230/65,230 dispcnt=1f40 vcount=160
+INPUT 05-north heldRaw=0040 newRaw=0000 held=0040 new=0000 rtFrames=8136 rtSpeed=336 rtActive=1 rtPaused=0 aiDec=403 aiPaths=251 wall=1797,0 capture=0 sendout=0/144 cbUpdates=6045
+CMD t=12.8s frame=12631 ratesym travel-west gWildlandsProfile 20 2 900 32 95
+SIMRATE travel-west emu_frames=900 steps=884 pct=98 min=95
+CHECK PASS sim cadence travel-west
+CMD t=13.8s frame=13531 snap 06-west
+STATE 06-west frame=13531 pc=080008d0 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 06-west bgcnt=1f00,1e06,1d05,1c07 xl=1750,1405,1630,1325,1630,1325 audit=1,1,1,1,1,2,1,1 tele=94848,23,27,6,548,4026,690,23552,3072,2215,909,181,2,6,5,1
+SCROLL 06-west io=48129,48129/48129,48129/48129,48129 buf=94,45/94,45/94,45 dispcnt=1f40 vcount=160
+INPUT 06-west heldRaw=0020 newRaw=0000 held=0020 new=0000 rtFrames=9020 rtSpeed=496 rtActive=1 rtPaused=0 aiDec=468 aiPaths=251 wall=2594,0 capture=0 sendout=0/144 cbUpdates=6490
+CMD t=13.8s frame=13531 ratesym travel-south gWildlandsProfile 20 2 900 128 0
+SIMRATE travel-south emu_frames=900 steps=897 pct=99 min=0
+CHECK PASS sim cadence travel-south
+CMD t=14.8s frame=14431 snap 07-south
+STATE 07-south frame=14431 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 07-south bgcnt=1f00,1e06,1d05,1c07 xl=1750,1689,1630,1609,1630,1609 audit=1,1,1,1,1,2,1,1 tele=98304,23,28,6,592,4026,1537,23552,3072,2215,1021,181,2,6,6,1
+SCROLL 07-south io=7192,7192/7192,7192/7192,7192 buf=94,73/94,73/94,73 dispcnt=1f40 vcount=160
+INPUT 07-south heldRaw=0080 newRaw=0000 held=0080 new=0000 rtFrames=9917 rtSpeed=372 rtActive=1 rtPaused=0 aiDec=580 aiPaths=363 wall=3313,2 capture=0 sendout=0/144 cbUpdates=7349
+CMD t=14.8s frame=14431 dump hitchTravel gWildlandsHitch 6
+DUMP hitchTravel gWildlandsHitch 7208980 171246543 12059015 197391 458929 5
+CMD t=14.8s frame=14431 dump world gWildlandsWorldTelemetry 16
+DUMP world gWildlandsWorldTelemetry 98304 23 28 6 592 4026 1537 23552 3072 2215 1021 181 2 6 6 1
+CMD t=14.8s frame=14431 dump xl gArenaXLTelemetry 8
+DUMP xl gArenaXLTelemetry 1 1 1750 1689 4096 3072 1630 1609
+CMD t=14.8s frame=14431 dump profile gWildlandsProfile 6
+DUMP profile gWildlandsProfile 196618 851968 65536 327684 3604487 465315517
+CMD t=14.8s frame=14431 dump nav gWildlandsWorldTelemetry 16
+DUMP nav gWildlandsWorldTelemetry 98304 23 28 6 592 4026 1537 23552 3072 2215 1021 181 2 6 6 1
+CMD t=14.8s frame=14431 dump roomsEnd gWildlandsRoomTelemetry 8
+DUMP roomsEnd gWildlandsRoomTelemetry 6 6 0 12 3 0 10 0
+CMD t=14.8s frame=14431 expect gWildlandsRoomTelemetry 28 4 0
+CHECK PASS gWildlandsRoomTelemetry
+CMD t=14.8s frame=14431 dump brain gWildlandsBrainTelemetry 8
+DUMP brain gWildlandsBrainTelemetry 4 0 3 0 5 0 0 6
+CMD t=14.8s frame=14431 dumph wingDodges gWildlandsWingDodges 0 2
+DUMPH wingDodges gWildlandsWingDodges+0 0 0
+CMD t=14.8s frame=14431 dumph thirdPartyEnd gWildlandsTpTelemetry 0 3
+DUMPH thirdPartyEnd gWildlandsTpTelemetry+0 1 1 0
+CMD t=14.8s frame=14431 expectmin gWildlandsTpTelemetry 0 2 1
+CHECK PASS gWildlandsTpTelemetry+0 >= 1 (got 1)
+CMD t=14.8s frame=14431 dumph shop gWildlandsShopTelemetry 0 4
+DUMPH shop gWildlandsShopTelemetry+0 1 1 1 0
+CMD t=14.8s frame=14431 expect gWildlandsShopTelemetry 0 2 1
+CHECK PASS gWildlandsShopTelemetry
+CMD t=14.8s frame=14431 expect gWildlandsShopTelemetry 2 2 1
+CHECK PASS gWildlandsShopTelemetry
+CMD t=14.8s frame=14431 expect gWildlandsShopTelemetry 4 2 1
+CHECK PASS gWildlandsShopTelemetry
+CMD t=14.8s frame=14431 expect gWildlandsShopTelemetry 6 2 0
+CHECK PASS gWildlandsShopTelemetry
+CMD t=14.8s frame=14431 dump directorEnd gWildlandsDirectorTelemetry 8
+DUMP directorEnd gWildlandsDirectorTelemetry 11 34 15 29 2 0 18 299
+CMD t=14.8s frame=14431 dump biomeEnd gWildlandsBiomeTelemetry 4
+DUMP biomeEnd gWildlandsBiomeTelemetry 1 10 7 0
+CMD t=14.8s frame=14431 expect gWildlandsBiomeTelemetry 12 4 0
+CHECK PASS gWildlandsBiomeTelemetry
+CMD t=14.8s frame=14431 poke gWildlandsFastTest 0 1 2
+POKE gWildlandsFastTest+0=2 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsFastTelemetry 0 2 0
+POKE gWildlandsFastTelemetry+0=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsFastTelemetry 2 2 0
+POKE gWildlandsFastTelemetry+2=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 0 4 0
+POKE gWildlandsCost+0=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 4 4 0
+POKE gWildlandsCost+4=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 8 4 0
+POKE gWildlandsCost+8=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 12 4 0
+POKE gWildlandsCost+12=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 16 4 0
+POKE gWildlandsCost+16=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 20 4 0
+POKE gWildlandsCost+20=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 24 4 0
+POKE gWildlandsCost+24=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 poke gWildlandsCost 28 4 0
+POKE gWildlandsCost+28=0 ok
+CHECK PASS poke target exists
+CMD t=14.8s frame=14431 rate walk60-east 300 16 0
+RATE walk60-east emu_frames=300 arena_updates=292 missed_vblanks=8 pct=97 min=0
+PHASES walk60-east s0=14 s1=9 s2=4 s3=13 s4=50 s5=90 p0=3505 p1=765 p2=287 p3=125 p4=2279 p5=4363 maxGap=20
+CHECK PASS cadence walk60-east
+CMD t=15.1s frame=14731 dumph fast60 gWildlandsFastTelemetry 0 2
+DUMPH fast60 gWildlandsFastTelemetry+0 292 8
+CMD t=15.1s frame=14731 dump cost-walk60 gWildlandsCost 8
+DUMP cost-walk60 gWildlandsCost 3825 2569 1237 103 38 15 6 292
+CMD t=15.1s frame=14731 dump coarse gWildlandsCoarseTelemetry 2
+DUMP coarse gWildlandsCoarseTelemetry 34629 36833
+CMD t=15.1s frame=14731 dumph prof60 gWildlandsProfile 0 12
+DUMPH prof60 gWildlandsProfile+0 9 4 0 13 0 1 5 5 7 55 10217 7392
+CMD t=15.1s frame=14731 prof walk60-prof 120 16
+PROF walk60-prof frames=120 samples=556904 bios_or_halt=1.5%
+PROF walk60-prof  36.5% WaitForVBlank
+PROF walk60-prof   6.0% CB2_Arena
+PROF walk60-prof   3.0% WildlandsBuildOamFast
+PROF walk60-prof   2.1% WindowRect
+PROF walk60-prof   1.9% BlendPalette
+PROF walk60-prof   1.7% ArenaSprites_Decode
+PROF walk60-prof   1.7% WildlandsAnimateSprites
+PROF walk60-prof   1.7% LootTick
+PROF walk60-prof   1.3% ZoneDrawRain
+PROF walk60-prof   1.2% LootSim
+PROF walk60-prof   1.1% CopyMatricesToOamBuffer
+PROF walk60-prof   1.0% CoarseClear
+PROF walk60-prof   1.0% ArenaXL_UpdateCamera
+PROF walk60-prof   1.0% ArenaPhysics_Update
+PROF walk60-prof   0.9% BrainOffenseCalc
+PROF walk60-prof   0.9% StormDraw
+PROF walk60-prof   0.9% TraversalClear
+PROF walk60-prof   0.9% SolidCircle
+PROF walk60-prof   0.6% ZoneDrawMarkers
+PROF walk60-prof   0.6% HudTinyWindow
+PROF walk60-prof   0.6% DirSimOne
+PROF walk60-prof   0.6% IndexOfSpriteTileTag
+PROF walk60-prof   0.5% SetGpuReg
+PROF walk60-prof   0.5% ZoneDamage
+PROF walk60-prof   0.5% Over5
+PROF walk60-prof   0.4% Loop1
+PROF walk60-prof   0.4% Speed
+PROF walk60-prof   0.4% Over4
+PROF walk60-prof   0.4% Over3
+PROF walk60-prof   0.4% ElementsDraw
+CMD t=15.3s frame=14851 poke gWildlandsFastTest 0 1 0
+POKE gWildlandsFastTest+0=0 ok
+CHECK PASS poke target exists
+CMD t=15.3s frame=14851 poke gWildlandsFastTelemetry 0 2 0
+POKE gWildlandsFastTelemetry+0=0 ok
+CHECK PASS poke target exists
+CMD t=15.3s frame=14851 poke gWildlandsFastTelemetry 2 2 0
+POKE gWildlandsFastTelemetry+2=0 ok
+CHECK PASS poke target exists
+CMD t=15.3s frame=14851 rate walk-auto 300 16 0
+RATE walk-auto emu_frames=300 arena_updates=291 missed_vblanks=9 pct=97 min=0
+PHASES walk-auto s0=14 s1=9 s2=4 s3=13 s4=51 s5=91 p0=3505 p1=765 p2=287 p3=125 p4=2279 p5=4363 maxGap=20
+CHECK PASS cadence walk-auto
+CMD t=15.6s frame=15151 dumph fastAuto gWildlandsFastTelemetry 0 2
+DUMPH fastAuto gWildlandsFastTelemetry+0 291 9
+CMD t=15.6s frame=15151 expectmin gWildlandsFastTelemetry 0 2 200
+CHECK PASS gWildlandsFastTelemetry+0 >= 200 (got 291)
+CMD t=15.6s frame=15151 prof walk-east 180 16
+PROF walk-east frames=180 samples=833082 bios_or_halt=1.5%
+PROF walk-east  38.0% WaitForVBlank
+PROF walk-east   6.2% CB2_Arena
+PROF walk-east   3.1% WildlandsBuildOamFast
+PROF walk-east   1.9% BlendPalette
+PROF walk-east   1.8% WildlandsAnimateSprites
+PROF walk-east   1.7% LootTick
+PROF walk-east   1.4% ArenaSprites_Decode
+PROF walk-east   1.3% ZoneDrawRain
+PROF walk-east   1.2% LootSim
+PROF walk-east   1.2% WindowRect
+PROF walk-east   1.1% CopyMatricesToOamBuffer
+PROF walk-east   1.1% ArenaXL_UpdateCamera
+PROF walk-east   1.1% CoarseClear
+PROF walk-east   1.0% ArenaPhysics_Update
+PROF walk-east   0.9% StormDraw
+PROF walk-east   0.9% SolidCircle
+PROF walk-east   0.9% TraversalClear
+PROF walk-east   0.7% ZoneDrawMarkers
+PROF walk-east   0.6% IndexOfSpriteTileTag
+PROF walk-east   0.5% SetGpuReg
+PROF walk-east   0.5% DirSimOne
+PROF walk-east   0.5% Over5
+PROF walk-east   0.5% ZoneDamage
+PROF walk-east   0.5% Loop1
+PROF walk-east   0.5% Speed
+PROF walk-east   0.5% Over4
+PROF walk-east   0.4% Over3
+PROF walk-east   0.4% Over2
+PROF walk-east   0.4% ElementsDraw
+PROF walk-east   0.4% ArenaFeedback_Update
+CMD t=15.9s frame=15331 prof walk-north 180 64
+PROF walk-north frames=180 samples=835537 bios_or_halt=1.4%
+PROF walk-north  34.8% WaitForVBlank
+PROF walk-north   6.0% CB2_Arena
+PROF walk-north   3.0% WildlandsBuildOamFast
+PROF walk-north   1.9% BlendPalette
+PROF walk-north   1.7% ArenaSprites_Decode
+PROF walk-north   1.7% WildlandsAnimateSprites
+PROF walk-north   1.7% LootTick
+PROF walk-north   1.3% ZoneDrawRain
+PROF walk-north   1.2% WindowRect
+PROF walk-north   1.2% LootSim
+PROF walk-north   1.2% BiomeCheck
+PROF walk-north   1.1% CopyMatricesToOamBuffer
+PROF walk-north   1.0% ArenaXL_UpdateCamera
+PROF walk-north   1.0% CoarseClear
+PROF walk-north   1.0% ArenaPhysics_Update
+PROF walk-north   0.9% StormDraw
+PROF walk-north   0.9% SolidCircle
+PROF walk-north   0.8% TraversalClear
+PROF walk-north   0.7% GetWorldTile
+PROF walk-north   0.7% ZoneDrawMarkers
+PROF walk-north   0.6% IndexOfSpriteTileTag
+PROF walk-north   0.6% DirSimOne
+PROF walk-north   0.5% SetGpuReg
+PROF walk-north   0.5% ZoneDamage
+PROF walk-north   0.5% Over5
+PROF walk-north   0.5% InSlice
+PROF walk-north   0.5% Over4
+PROF walk-north   0.4% Loop1
+PROF walk-north   0.4% Speed
+PROF walk-north   0.4% WildlandsWorld_VBlank
+CMD t=16.2s frame=15511 dump hitchProf gWildlandsHitch 6
+DUMP hitchProf gWildlandsHitch 7208980 171246543 12059015 197391 458929 5
+CMD t=16.2s frame=15511 poke gWildlandsTestPeace 0 1 1
+POKE gWildlandsTestPeace+0=1 ok
+CHECK PASS poke target exists
+CMD t=16.2s frame=15511 poke gWildlandsZoneTestSpeed 0 2 65534
+POKE gWildlandsZoneTestSpeed+0=65534 ok
+CHECK PASS poke target exists
+CMD t=16.2s frame=15511 frames 4 0
+CMD t=16.2s frame=15515 poke gWildlandsZoneTestSpeed 0 2 65535
+POKE gWildlandsZoneTestSpeed+0=65535 ok
+CHECK PASS poke target exists
+CMD t=16.2s frame=15515 poke gWildlandsBossTestBias 0 1 120
+POKE gWildlandsBossTestBias+0=120 ok
+CHECK PASS poke target exists
+CMD t=16.2s frame=15515 frames 7200 0
+CMD t=22.9s frame=22715 dumph boss gWildlandsBossTelemetry 0 16
+DUMPH boss gWildlandsBossTelemetry+0 3 0 2 1 1 3 0 0 656 158 1120 1 6 0 29 72
+CMD t=22.9s frame=22715 dump bossDirector gWildlandsDirectorTelemetry 8
+DUMP bossDirector gWildlandsDirectorTelemetry 5 26 16 36 2 0 19 334
+CMD t=22.9s frame=22715 expectmin gWildlandsBossTelemetry 0 2 1
+CHECK PASS gWildlandsBossTelemetry+0 >= 1 (got 3)
+CMD t=22.9s frame=22715 poke gWildlandsBossTestBias 0 1 0
+POKE gWildlandsBossTestBias+0=0 ok
+CHECK PASS poke target exists
+CMD t=22.9s frame=22715 poke gWildlandsZoneTestSpeed 0 2 0
+POKE gWildlandsZoneTestSpeed+0=0 ok
+CHECK PASS poke target exists
+CMD t=22.9s frame=22715 poke gWildlandsTestPeace 0 1 1
+POKE gWildlandsTestPeace+0=1 ok
+CHECK PASS poke target exists
+CMD t=22.9s frame=22715 poke gWildlandsTestWarp 0 1 21
+POKE gWildlandsTestWarp+0=21 ok
+CHECK PASS poke target exists
+CMD t=22.9s frame=22715 frames 30 0
+CMD t=23.0s frame=22745 poke gWildlandsTestWarp 0 1 2
+POKE gWildlandsTestWarp+0=2 ok
+CHECK PASS poke target exists
+CMD t=23.0s frame=22745 frames 40 0
+CMD t=23.0s frame=22785 poke gWildlandsZoneTestSpeed 0 2 400
+POKE gWildlandsZoneTestSpeed+0=400 ok
+CHECK PASS poke target exists
+CMD t=23.0s frame=22785 frames 46 0
+CMD t=23.1s frame=22831 poke gWildlandsZoneTestSpeed 0 2 65535
+POKE gWildlandsZoneTestSpeed+0=65535 ok
+CHECK PASS poke target exists
+CMD t=23.1s frame=22831 frames 30 0
+CMD t=23.1s frame=22861 snap 29-storm-rain
+STATE 29-storm-rain frame=22861 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 29-storm-rain bgcnt=1f00,1e06,1d05,1c07 xl=392,686,272,606,272,606 audit=1,1,1,1,1,2,1,1 tele=108288,25,31,6,796,4026,2563,25600,3072,2215,1188,184,6,1,2,1
+SCROLL 29-storm-rain io=7192,7192/7192,7192/7192,7192 buf=16,94/16,94/16,94 dispcnt=1f40 vcount=160
+INPUT 29-storm-rain heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=18334 rtSpeed=496 rtActive=1 rtPaused=0 aiDec=715 aiPaths=498 wall=4210,2 capture=0 sendout=0/144 cbUpdates=15620
+CMD t=23.1s frame=22861 dump zoneRain gWildlandsZoneTelemetry 16
+DUMP zoneRain gWildlandsZoneTelemetry 1 1 1306 1565 1500 1293 1953 850 0 0 0 0 18109 0 2 0
+CMD t=23.1s frame=22861 dumph rainA gWildlandsRainVisible 0 1
+DUMPH rainA gWildlandsRainVisible+0 0
+CMD t=23.1s frame=22861 dumph rainDiagA gWildlandsRainDiag 0 4
+DUMPH rainDiagA gWildlandsRainDiag+0 693 57 713 32
+CMD t=23.1s frame=22861 dumph rainSprite gSprites 2584 34
+DUMPH rainSprite gSprites+2584 241 16528 9909 0 21232 2097 0 0 21244 2097 7584 2114 0 0 29737 2048 424 599 0 0 63736 0 64 0 0 0 0 0 0 0 0 19459 693 768
+CMD t=23.1s frame=22861 dumph oamAll gMain 56 512
+DUMPH oamAll gMain+56 1010 49720 1461 256 49 16416 9913 0 241 16528 9909 0 16468 112 9217 256 160 304 3072 215 160 304 3072 0 160 304 3072 0 160 304 3072 215 160 304 3072 273 160 304 3072 0 160 304 3072 0 160 304 3072 273 160 304 3072 284 160 304 3072 0 160 304 3072 0 160 304 3072 284 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256 160 304 3072 256 160 304 3072 0 160 304 3072 0 160 304 3072 256
+CMD t=23.1s frame=22861 poke gWildlandsTestPeace 0 1 1
+POKE gWildlandsTestPeace+0=1 ok
+CHECK PASS poke target exists
+CMD t=23.1s frame=22861 poke gWildlandsZoneTestSpeed 0 2 400
+POKE gWildlandsZoneTestSpeed+0=400 ok
+CHECK PASS poke target exists
+CMD t=23.1s frame=22861 frames 300 0
+CMD t=23.4s frame=23161 snap 30-storm-outside
+STATE 30-storm-outside frame=23161 pc=08008bd8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 30-storm-outside bgcnt=1f00,1e06,1d05,1c07 xl=392,686,272,606,272,606 audit=1,1,1,1,1,2,1,1 tele=108288,25,31,6,797,4026,2563,25600,3072,2215,1188,184,6,1,2,1
+SCROLL 30-storm-outside io=12355,12355/12355,12355/12355,12355 buf=16,94/16,94/16,94 dispcnt=1f40 vcount=160
+INPUT 30-storm-outside heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=18635 rtSpeed=496 rtActive=1 rtPaused=0 aiDec=715 aiPaths=498 wall=4210,2 capture=0 sendout=0/144 cbUpdates=15766
+CMD t=23.4s frame=23161 dumph rain gWildlandsRainVisible 0 1
+DUMPH rain gWildlandsRainVisible+0 7
+CMD t=23.4s frame=23161 expectmin gWildlandsRainVisible 0 1 4
+CHECK PASS gWildlandsRainVisible+0 >= 4 (got 7)
+CMD t=23.4s frame=23161 dumph rainDiag gWildlandsRainDiag 0 4
+DUMPH rainDiag gWildlandsRainDiag+0 693 57 713 32
+CMD t=23.4s frame=23161 dump zoneEnd gWildlandsZoneTelemetry 16
+DUMP zoneEnd gWildlandsZoneTelemetry 3 4 1314 1584 180 1314 1584 180 70 49 0 26 138810 821 4 0
+CMD t=23.4s frame=23161 poke gWildlandsRoamerTest 0 1 1
+POKE gWildlandsRoamerTest+0=1 ok
+CHECK PASS poke target exists
+CMD t=23.4s frame=23161 frames 220 0
+CMD t=23.7s frame=23381 poke gWildlandsRoamerTest 0 1 0
+POKE gWildlandsRoamerTest+0=0 ok
+CHECK PASS poke target exists
+CMD t=23.7s frame=23381 dumph roamersSpawned gWildlandsRoamerTelemetry 0 9
+DUMPH roamersSpawned gWildlandsRoamerTelemetry+0 3 3 0 244 144 403 107 168 52
+CMD t=23.7s frame=23381 expectmin gWildlandsRoamerTelemetry 2 2 1
+CHECK PASS gWildlandsRoamerTelemetry+2 >= 1 (got 3)
+CMD t=23.7s frame=23381 frames 300 0
+CMD t=24.0s frame=23681 snap 30a-summary
+STATE 30a-summary frame=23681 pc=080008c8 callback2=0805d4c1 save_status=0 party=2 sb1=02025a64 map=26,110 pos=9,9 layout=58
+WORLD 30a-summary bgcnt=1f00,1e06,1d05,1c07 xl=392,686,272,606,272,606 audit=1,1,1,1,1,2,1,1 tele=108288,25,31,6,797,4026,2563,25600,3072,2215,1188,184,6,1,2,1
+SCROLL 30a-summary io=7192,7192/7192,7192/7192,7192 buf=16,94/16,94/16,94 dispcnt=1f40 vcount=160
+INPUT 30a-summary heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=19138 rtSpeed=496 rtActive=1 rtPaused=0 aiDec=715 aiPaths=498 wall=4210,2 capture=0 sendout=0/144 cbUpdates=16019
+CMD t=24.0s frame=23681 press 1
+CMD t=24.1s frame=23718 press 1
+CMD t=24.1s frame=23755 press 1
+CMD t=24.1s frame=23792 press 1
+CMD t=24.2s frame=23829 press 1
+CMD t=24.2s frame=23866 press 1
+CMD t=24.2s frame=23903 press 1
+CMD t=24.3s frame=23940 press 1
+CMD t=24.3s frame=23977 frames 600 0
+CMD t=24.8s frame=24577 snap 31-after-loss
+STATE 31-after-loss frame=24577 pc=080008ce callback2=080a9ae9 save_status=0 party=2 sb1=02025a2c map=26,110 pos=6,10 layout=58
+WORLD 31-after-loss bgcnt=1f08,1d41,1c42,1e43 xl=392,686,272,606,272,606 audit=1,1,1,1,1,2,1,1 tele=108288,25,31,6,797,4026,2563,25600,3072,2215,1188,184,6,1,2,1
+SCROLL 31-after-loss io=53498,53498/53498,53498/53498,53498 buf=0,40/0,40/0,40 dispcnt=7f60 vcount=160
+INPUT 31-after-loss heldRaw=0000 newRaw=0000 held=0000 new=0000 rtFrames=19140 rtSpeed=496 rtActive=0 rtPaused=0 aiDec=715 aiPaths=498 wall=4210,2 capture=0 sendout=0/144 cbUpdates=16021
+CMD t=24.8s frame=24577 map 26 110
+CHECK PASS expected map
+CMD t=24.8s frame=24577 dumph summary gWildlandsSummaryTelemetry 0 4
+DUMPH summary gWildlandsSummaryTelemetry+0 1 0 3 0
+CMD t=24.8s frame=24577 expectmin gWildlandsSummaryTelemetry 0 2 1
+CHECK PASS gWildlandsSummaryTelemetry+0 >= 1 (got 1)
+CMD t=24.8s frame=24577 dumph partyHP gPlayerParty 86 1
+DUMPH partyHP gPlayerParty+86 175
+CMD t=24.8s frame=24577 expectmin gPlayerParty 86 2 1
+CHECK PASS gPlayerParty+86 >= 1 (got 175)
+CMD t=24.8s frame=24577 expectmin gPlayerParty 186 2 1
+CHECK PASS gPlayerParty+186 >= 1 (got 176)
+CMD t=24.8s frame=24577 dumph status gWildlandsStatusTelemetry 0 4
+DUMPH status gWildlandsStatusTelemetry+0 9 0 0 2
+CMD t=24.8s frame=24577 dumph weather gWildlandsWeather 0 1
+DUMPH weather gWildlandsWeather+0 771
+CMD t=24.8s frame=24577 dumph matrix gWildlandsMatrixTelemetry 0 2
+DUMPH matrix gWildlandsMatrixTelemetry+0 0 0
