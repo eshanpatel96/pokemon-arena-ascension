@@ -302,4 +302,24 @@ patch(A, '    return value;\n}\n\n#include "ascension_ai_tactics.inc"\n',
 patch(A, '    gArenaCombatTelemetry.aimBlocked = !ArenaNav_LineClear(sArena.bodies[0].x/Q,\n        sArena.bodies[0].y/Q, DecoyAim(1,FALSE)/Q, DecoyAim(1,TRUE)/Q, 2);\n',
       '    {\n        static u8 sAimTick;\n        if (!WildlandsWorld_Active() || !(++sAimTick & 3))\n'
       '            gArenaCombatTelemetry.aimBlocked = !ArenaNav_LineClear(sArena.bodies[0].x/Q,\n        sArena.bodies[0].y/Q, DecoyAim(1,FALSE)/Q, DecoyAim(1,TRUE)/Q, 2);\n    }\n')
+# V6.4 FPS: move profile lookup is a direct ROM index (move id -> profile),
+# replacing the 8-slot memo that thrashed with a full duo's moves.
+import re as _re
+_mp = root / 'src/arena_moves.c'
+_mt = _mp.read_text()
+_body = _mt[_mt.index('static const struct ArenaMoveProfile sProfiles[] =\n{'):]
+_body = _body[:_body.index('\n};')]
+_seen, _rows = set(), []
+for _k, _m in enumerate(_re.findall(r'^\s*\{(MOVE_[A-Z0-9_]+),', _body, _re.M)):
+    if _m not in _seen:
+        _seen.add(_m); _rows.append('    [%s] = %d,' % (_m, _k + 1))
+_start = _mt.index('const struct ArenaMoveProfile *ArenaMoves_Get(u16 move)\n{')
+_end = _mt.index('\n}\n', _start) + 3
+_mt = (_mt[:_start] + 'static const u8 sProfileIndex[MOVES_COUNT] =\n{\n' + '\n'.join(_rows) + '\n};\n'
+       'const struct ArenaMoveProfile *ArenaMoves_Get(u16 move)\n{\n'
+       '    if (move >= MOVES_COUNT || !sProfileIndex[move])\n        return 0;\n'
+       '    return &sProfiles[sProfileIndex[move] - 1];\n}\n' + _mt[_end:])
+_mt = _mt.replace('static EWRAM_DATA u16 sProfileMemoMove[8] = {0};\n', '').replace('static EWRAM_DATA u8 sProfileMemoIdx[8] = {0};\n', '')
+_mp.write_text(_mt)
+print('move profile index:', len(_rows), 'moves')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')
