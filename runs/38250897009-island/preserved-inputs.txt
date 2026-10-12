@@ -1,0 +1,1 @@
+Verified three unchanged embedded programs; native flag macro and actual-room capture assertions corrected.
