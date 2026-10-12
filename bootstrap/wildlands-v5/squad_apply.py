@@ -65,7 +65,11 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static bool8 DirectorPopupText(u8 *text, u8 *color);\nstatic u8 DirectorLeft(void);\nstatic bool8 DirectorRunning(void);\n'
       'static bool8 DirectorPopupActive(void);\nstatic void DirectorPauseLine(void);\n'
       'void Wildlands_ArenaLoadout(struct Pokemon *mon);\nvoid Wildlands_TrimParty(void);\n'
+      'static const u16 *ArenaMonPalette(const struct ArenaSpriteSet *art, struct Pokemon *mon);\n'
       'static u8 BrainWingTarget(u8 picked);\nstatic bool8 BrainWingFollows(void);\nstatic void BrainInit(void);\n')
+# Shiny Pokemon get a shiny arena palette (lead/enemy bodies at match start).
+patch(A, '            LoadPalette(body->art->palette, OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);\n',
+      '            LoadPalette(ArenaMonPalette(body->art, i ? &gEnemyParty[gBattlerPartyIndexes[1]] : &gPlayerParty[gBattlerPartyIndexes[0]]), OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    BrainInit();\n    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 patch(A, '    WildlandsPartner_Update();\n', '    SquadTick();\n')

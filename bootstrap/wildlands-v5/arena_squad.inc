@@ -132,7 +132,7 @@ static void SquadCreateSprites(struct SquadWing *w)
     ArenaSprites_Decode(&w->art->animations[ARENA_ANIM_IDLE], FACE_DOWN, 0, (u32 *)buffer);
     sheet.data = buffer; sheet.size = 2048; sheet.tag = w->tag;
     LoadSpriteSheet(&sheet);
-    pal.data = w->art->palette; pal.tag = w->tag;
+    pal.data = ArenaMonPalette(w->art, SquadPartyMon(w->battler)); pal.tag = w->tag;
     LoadSpritePalette(&pal);
     t.tileTag = w->tag; t.paletteTag = w->tag;
     w->sprite = CreateSprite(&t, w->x / Q, w->y / Q, 1);
@@ -450,7 +450,7 @@ static void SquadRegroup(struct SquadWing *w, struct ArenaBody *lead)
 
 static void SquadThink(struct SquadWing *w)
 {
-    if (gWildlandsTestPeace) { w->moving = FALSE; return; }
+    if (gWildlandsTestPeace) { w->moving = FALSE; w->shotTimer = 0; return; }
     {
     struct ArenaBody *lead = &sArena.bodies[w->team];
     s32 tx, ty, goalX, goalY, step;
@@ -813,7 +813,7 @@ static bool8 SquadPromote(u8 side)
     body->shotTimer = body->actionLife = body->dash = 0;
     body->cooldown = 20; body->knockX = body->knockY = 0;
     body->moveSlot = FirstMove(side, TRUE);
-    LoadPalette(body->art->palette, OBJ_PLTT_ID(side), PLTT_SIZE_4BPP);
+    LoadPalette(ArenaMonPalette(body->art, SquadPartyMon(side)), OBJ_PLTT_ID(side), PLTT_SIZE_4BPP);
     gSprites[body->shadow].invisible = FALSE;
     w->alive = FALSE;
     SquadHideWing(w);
@@ -850,7 +850,7 @@ static void SquadSwapLead(void)
     body->shotTimer = body->actionLife = body->dash = 0;
     body->cooldown = 10; body->knockX = body->knockY = 0;
     body->moveSlot = FirstMove(0, TRUE);
-    LoadPalette(body->art->palette, OBJ_PLTT_ID(0), PLTT_SIZE_4BPP);
+    LoadPalette(ArenaMonPalette(body->art, SquadPartyMon(0)), OBJ_PLTT_ID(0), PLTT_SIZE_4BPP);
     SquadHideWing(w);
     gBattleMons[w->battler] = lead;
     gBattlerPartyIndexes[w->battler] = leadIndex;

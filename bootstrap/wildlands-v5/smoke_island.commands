@@ -6,6 +6,39 @@ frames 120 0
 press 1
 frames 1100 0
 snap 01-lab
+# ---- Lab COACH (9,8): walk east to the counter, one step west, up to face him ----
+frames 200 16
+frames 10 32
+frames 40 0
+frames 120 64
+snap 01a-at-coach
+press 1
+frames 150 0
+press 1
+frames 90 0
+snap 01b-coach-menu
+press 128
+press 128
+press 1
+frames 150 0
+snap 01c-coach-controls
+press 1
+frames 120 0
+press 1
+frames 120 0
+press 1
+frames 120 0
+press 1
+frames 90 0
+press 2
+frames 90 0
+press 1
+frames 60 0
+press 2
+frames 30 0
+press 2
+frames 30 0
+snap 01d-lab-after-coach
 press 768
 frames 700 0
 expect gWildlandsWorldAudit 0 4 1
@@ -45,9 +78,15 @@ expect gWildlandsRoomTelemetry 8 4 1
 dump director0 gWildlandsDirectorTelemetry 8
 expectmin gWildlandsDirectorTelemetry 0 4 20
 expect gBattleMons 88 2 150
+# Shiny hook: the joining legendary is made shiny and gets a shiny arena palette.
+poke gWildlandsShinyTest 0 1 1
 poke gWildlandsTestWarp 0 1 4
 frames 40 0
 snap 09a-mewtwo-joined
+poke gWildlandsShinyTest 0 1 0
+dumph shiny gWildlandsShinyTelemetry 0 2
+expectmin gWildlandsShinyTelemetry 0 2 1
+expectmin gWildlandsShinyTelemetry 2 2 1
 dump director1 gWildlandsDirectorTelemetry 8
 expectmin gWildlandsDirectorTelemetry 16 4 1
 expect gBattleMons 176 2 150
