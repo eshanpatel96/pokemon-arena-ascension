@@ -53,12 +53,13 @@ g = min_blocks(g, {WATER, TREE, ROCK})
 # masses, ponds and rock fields (thin rivers/ridges/tree lines untouched), and
 # scatter irregular tall-grass patches in the woodland, so the island reads
 # like an overworld route instead of a grid of blocks.
-from organic import organic_edges, tall_blobs
-_oc = dict(TREE=TREE, WATER=WATER, ROCK=ROCK, OCEAN=OCEAN, LAIR=LAIR, BRIDGE=BRIDGE, GRASS=GRASS, TALL=TALL, FORTREE=bp.FORTREE)
+from organic import organic_edges, tall_blobs, organic_coast
+_oc = dict(TREE=TREE, WATER=WATER, ROCK=ROCK, OCEAN=OCEAN, LAIR=LAIR, BRIDGE=BRIDGE, GRASS=GRASS, TALL=TALL, SAND=SAND, FORTREE=bp.FORTREE)
 _before = g[:]
 g = organic_edges(g, W, H, _oc, random.Random(31))
+g = organic_coast(g, W, H, _oc, random.Random(41))
 g = tall_blobs(g, W, H, des, _oc, random.Random(37))
-g = min_blocks(g, {WATER, TREE, ROCK})
+g = min_blocks(g, {WATER, TREE, ROCK, OCEAN})
 organic_changed = sum(1 for i in range(W * H) if _before[i] != g[i])
 g = connect_land(g, rng)
 plan = g

@@ -46,6 +46,8 @@ struct DirState
     u16 clock;
     struct { u16 t; u8 text[20]; } log[12];   // Beta: pause-menu match log
     u8 logHead, logCount, playerKOs, pad3;
+    u16 slamClock;                  // V6.2 boss AI: frames toward the next telegraphed slam
+    u8 slamWindup, enraged;         // windup frames left; enraged at half HP
     u16 bossCooldown, bossEvalStamp;
     u8 activePlan, bossDoor;
 };
@@ -1126,6 +1128,111 @@ static void DirRoamersSpawn(void)
     }
 }
 
+// ---- V6.2 boss AI: telegraphed slam, enrage at half HP ----------------------
+// A legendary (lair boss or roamer) stops, flashes and roars, then slams:
+// every player Pokemon within 64px takes its strongest move and is knocked
+// back. Lair bosses slam every 7s (5s enraged), roamers every 9s. At half HP
+// a boss enrages once (+1 Speed, Attack, Sp. Atk).
+// [0] slams [1] enrages [2] windups started
+EWRAM_DATA u16 gWildlandsBossAiTelemetry[3] = {0};
+// TEST HOOK ONLY: nonzero starts a slam windup now; 0 in play.
+EWRAM_DATA u8 gWildlandsBossTestSlam = 0;
+
+static bool8 DirectorBossWindup(void)
+{
+    return sDir && sDir->slamWindup;
+}
+
+static void DirBossSlam(void)
+{
+    struct ArenaBody *boss = &sArena.bodies[1];
+    u16 move = MOVE_NONE, best = 0;
+    u32 k, t;
+    for (k = 0; k < MAX_MON_MOVES; k++)
+    {
+        u16 m = gBattleMons[1].moves[k];
+        if (m && ArenaMoves_Get(m) && gBattleMoves[m].power > best)
+        { best = gBattleMoves[m].power; move = m; }
+    }
+    PlaySE(SE_M_EARTHQUAKE);
+    ArenaFeedback_Dust(boss->x / Q, boss->y / Q, TRUE);
+    gWildlandsBossAiTelemetry[0]++;
+    if (!move)
+        return;
+    for (t = 0; t < 4; t += 2)
+    {
+        s32 x, y, dx, dy, len;
+        if (!SquadAlive(t))
+            continue;
+        SquadPos(t, &x, &y);
+        dx = x / Q - boss->x / Q; dy = y / Q - boss->y / Q;
+        if (ArenaNav_Distance(boss->x / Q, boss->y / Q, x / Q, y / Q) > 64)
+            continue;
+        SquadApplyHit(1, t, move);
+        if (t == 0 && gBattleMons[0].hp)
+        {
+            len = max(1, max(Abs(dx), Abs(dy)));
+            sArena.bodies[0].knockX = dx * 1400 / len;
+            sArena.bodies[0].knockY = dy * 1400 / len;
+        }
+        if (sArena.resultTimer)
+            return;
+    }
+}
+
+static void DirBossTick(void)
+{
+    static const u8 sEnraged[] = _(" ENRAGED");
+    struct ArenaBody *boss = &sArena.bodies[1];
+    struct DirDuo *d;
+    u16 period;
+    s32 px, py;
+    if (!sDir || sDir->active == DIR_NONE || !gBattleMons[1].hp)
+    { if (sDir) sDir->slamWindup = 0; return; }
+    d = &sDir->duo[sDir->active];
+    if (!d->legend)
+    { sDir->slamWindup = 0; sDir->slamClock = 0; sDir->enraged = 0; return; }
+    if (!sDir->enraged && gBattleMons[1].hp * 2 < gBattleMons[1].maxHP)
+    {
+        u32 s;
+        static const u8 sStats[3] = {STAT_SPEED, STAT_ATK, STAT_SPATK};
+        sDir->enraged = 1;
+        for (s = 0; s < 3; s++)
+            if (gBattleMons[1].statStages[sStats[s]] < MAX_STAT_STAGE)
+                gBattleMons[1].statStages[sStats[s]]++;
+        DirPopup(gSpeciesNames[gBattleMons[1].species], sEnraged, 6);
+        PlayCry_Normal(gBattleMons[1].species, 0);
+        gWildlandsBossAiTelemetry[1]++;
+    }
+    if (sDir->slamWindup)
+    {
+        boss->flash = (sDir->slamWindup & 4) ? 3 : 0;
+        if (!--sDir->slamWindup)
+        {
+            DirBossSlam();
+            sDir->slamClock = 0;
+        }
+        return;
+    }
+    if (gWildlandsTestPeace && !gWildlandsBossTestSlam)
+        return;
+    sDir->slamClock++;
+    period = d->legend == DIR_ROAMER ? 540 : sDir->enraged ? 300 : 420;
+    if (sDir->slamClock < period && !gWildlandsBossTestSlam)
+        return;
+    px = sArena.bodies[0].x / Q; py = sArena.bodies[0].y / Q;
+    if (!gWildlandsBossTestSlam && ArenaNav_Distance(boss->x / Q, boss->y / Q, px, py) > 96)
+    {
+        sDir->slamClock = period - 30;   // check again soon
+        return;
+    }
+    gWildlandsBossTestSlam = 0;
+    sDir->slamWindup = 40;               // ~2/3 s tell: stops, flashes, roars
+    boss->shotTimer = boss->actionLife = 0;
+    PlayCry_Normal(gBattleMons[1].species, 0);
+    gWildlandsBossAiTelemetry[2]++;
+}
+
 static void DirectorSim(void)
 {
     if (!sDir || !WildlandsWorld_Active() || sArena.paused || sArena.resultTimer)
@@ -1133,6 +1240,7 @@ static void DirectorSim(void)
     if (sDirPopup.timer && !--sDirPopup.timer)
         sArena.hudDirty = TRUE;
     sDir->clock++;
+    DirBossTick();
     if (sDir->active != DIR_NONE && sDir->duo[sDir->active].legend == DIR_LAIR_BOSS)
     {
         // Live boss check: [3] player room+1 [4] boss room+1 [5] boss species

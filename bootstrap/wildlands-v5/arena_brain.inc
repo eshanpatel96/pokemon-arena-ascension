@@ -124,6 +124,19 @@ static u32 WildlandsCramp(s32 x, s32 y)
     return n;
 }
 
+// Sideways travel around the target for a firing spot (0..40): duos strafe
+// around their target instead of standing and shooting from one spot.
+static s32 WildlandsStrafe(s32 bx, s32 by, s32 px, s32 py)
+{
+    s32 ox = sArena.observed.x, oy = sArena.observed.y;
+    s32 ax = bx - ox, ay = by - oy, cx = px - ox, cy = py - oy;
+    s32 len = Abs(ax) + Abs(ay), lat;
+    if (len < 8)
+        return 0;
+    lat = Abs(ax * cy - ay * cx) / len;
+    return lat > 40 ? 40 : lat;
+}
+
 // Flee point: 12 headings at ~110px, scored by distance from the threat,
 // concealment and staying inside the circle; must be directly reachable.
 static bool8 BrainFleePoint(struct ArenaBody *body, s32 tx, s32 ty, s32 *gx, s32 *gy)
@@ -316,7 +329,8 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
         // supplies), sooner when the matchup is bad.
         // Legendary bosses hold their lair and never run.
         bool8 losing = !DirectorSoloActive()
-            && ((BrainHpPct(1) < 35 && adv < 140) || (adv < 60 && BrainHpPct(1) < 60));
+            && ((BrainHpPct(1) < 35 && adv < 140) || (adv < 60 && BrainHpPct(1) < 60)
+                || (!SquadAlive(3) && SquadAlive(0) && SquadAlive(2) && BrainHpPct(1) < 55 && adv < 120));   // outnumbered
         u16 inMode = sArena.frame - sBrain.modeStart;
         u16 sinceRetreat = sArena.frame - sBrain.retreatEnd;
         bool8 cornered = FALSE;
@@ -429,9 +443,10 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
 }
 
 // Native enemy aim gate: only fire at a visible target while fighting.
+static bool8 DirectorBossWindup(void);
 static bool8 BrainAllowsFire(void)
 {
-    return sBrain.mode == BRAIN_FIGHT;
+    return sBrain.mode == BRAIN_FIGHT && !DirectorBossWindup();
 }
 
 // Enemy wing: focus the brain's target; hold formation unless fighting.

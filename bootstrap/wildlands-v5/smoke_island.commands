@@ -194,8 +194,14 @@ dumph kyogreLead gBattleMons 88 1
 dumph kyogreMoves gBattleMons 100 4
 dumph kyogrePP gBattleMons 124 2
 poke gWildlandsTestPeace 0 1 0
-frames 240 0
+poke gWildlandsBossTestSlam 0 1 1
+frames 20 0
+snap 13c-kyogre-windup
+frames 220 0
 snap 13b-kyogre-fight
+dumph bossAi gWildlandsBossAiTelemetry 0 3
+expectmin gWildlandsBossAiTelemetry 4 2 1
+expectmin gWildlandsBossAiTelemetry 0 2 1
 poke gWildlandsTestPeace 0 1 1
 dumph kyogreFightHP gBattleMons 40 1
 dump kyogreSquad gWildlandsSquadTelemetry 16
@@ -347,6 +353,22 @@ snap 18-log-page
 press 2
 press 2
 frames 20 0
+# ---- Status: paralysis is a ~3s stun, burn ticks every 5s ----
+poke gWildlandsStatusTest 0 1 1
+frames 30 0
+expect gWildlandsStatusNow 0 1 1
+snap 19-status-par
+frames 200 0
+expect gWildlandsStatusNow 0 1 0
+poke gWildlandsStatusTest 0 1 3
+frames 330 0
+expect gWildlandsStatusNow 0 1 3
+snap 19a-status-brn
+dumph status gWildlandsStatusTelemetry 0 4
+expectmin gWildlandsStatusTelemetry 6 2 2
+poke gWildlandsStatusTest 0 1 6
+frames 10 0
+expect gWildlandsStatusNow 0 1 0
 poke gBattleMons 40 2 150
 poke gWildlandsTestPeace 0 1 0
 frames 120 16

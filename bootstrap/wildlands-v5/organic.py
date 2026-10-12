@@ -5,7 +5,8 @@ def organic_edges(g, W, H, C, rng):
     hard = (OCEAN, WATER, LAIR, BRIDGE, TREE, ROCK)
     def n3(g, x, y, c):
         return sum(1 for dy in (-1, 0, 1) for dx in (-1, 0, 1) if g[(y + dy) * W + x + dx] == c)
-    for c, passes in ((TREE, ((4, .85), (5, .4), (6, .07))), (WATER, ((4, .9), (5, .45), (6, .06))), (ROCK, ((4, .7), (5, .3)))):
+    for c, passes in ((TREE, ((4, .85), (5, .4), (6, .07))), (WATER, ((4, .9), (5, .45), (6, .06))), (ROCK, ((4, .7), (5, .3))),
+                      (TALL, ((4, .85), (5, .4)))):
         for limit, p in passes:
             out = g[:]
             core = [False] * (W * H)
@@ -44,4 +45,34 @@ def tall_blobs(g, W, H, des, C, rng, n=160):
                 if (i * i + j * j) ** .5 <= r + rng.uniform(-.5, .5):
                     g[(y + j) * W + x + i] = TALL
         n -= 1
+    return g
+
+
+def organic_coast(g, W, H, C, rng):
+    """Round the coastline: fill the ocean's convex corners (land notches) and
+    trim the land's convex corners into the sea, two passes, so the shore
+    reads as a curve instead of 2-cell stairs. Thin channels are kept."""
+    OCEAN, SAND, LAIR, BRIDGE = C['OCEAN'], C['SAND'], C['LAIR'], C['BRIDGE']
+    def n3(g, x, y, c):
+        return sum(1 for dy in (-1, 0, 1) for dx in (-1, 0, 1) if g[(y + dy) * W + x + dx] == c)
+    for limit, p in ((4, .85), (5, .4)):
+        core = [False] * (W * H)
+        for yy in range(1, H - 1):
+            for xx in range(1, W - 1):
+                if g[yy * W + xx] == OCEAN and n3(g, xx, yy, OCEAN) == 9:
+                    core[yy * W + xx] = True
+        out = g[:]
+        for y in range(2, H - 2):
+            for x in range(2, W - 2):
+                c = g[y * W + x]
+                if c == OCEAN:
+                    if n3(g, x, y, OCEAN) <= limit and rng.random() < p and not any(
+                            g[(y + dy) * W + x + dx] in (LAIR, BRIDGE) for dy in (-1, 0, 1) for dx in (-1, 0, 1)):
+                        # Only a notch in an open-sea edge (not a channel).
+                        if any(core[(y + dy) * W + x + dx] for dy in range(-2, 3) for dx in range(-2, 3)):
+                            out[y * W + x] = SAND
+                elif c == SAND:
+                    if n3(g, x, y, OCEAN) >= 9 - limit and rng.random() < p:
+                        out[y * W + x] = OCEAN
+        g = out
     return g

@@ -171,7 +171,7 @@ def texture_fields(g, des, rng):
     """Break up big uniform fields: grassy patches and small outcrops on
     the highland / volcano stone, scattered outcrops and oasis grass in the
     desert. Only on open ground with a margin, never on routes."""
-    for _ in range(900):
+    for _ in range(1600):   # V6.2: denser features on the open stone and sand
         x, y = rng.randrange(4, W - 8), rng.randrange(4, H - 8)
         b = des[y * W + x]
         base = g[y * W + x]
@@ -180,7 +180,7 @@ def texture_fields(g, des, rng):
             # tree pairs and outcrops read cleanly on the stone.
             cl, w, h = (TREE, 2, 2) if rng.random() < 0.35 else (ROCK, 2, 2)
         elif b == MAUVILLE and base == SAND:
-            cl, w, h = (ROCK, rng.choice((2, 3)), 2) if rng.random() < 0.7 else (GRASS, 3, 2)
+            cl, w, h = (ROCK, rng.choice((2, 3)), 2) if rng.random() < 0.7 else (GRASS, 4, 3)
         else:
             continue
         box = [(x + i, y + j) for j in range(-2, h + 2) for i in range(-2, w + 2)]
@@ -188,6 +188,9 @@ def texture_fields(g, des, rng):
             continue
         for j in range(h):
             for i in range(w):
+                # Oasis grass is an oval (corners left as sand), not a box.
+                if cl == GRASS and (i in (0, w - 1)) and (j in (0, h - 1)):
+                    continue
                 g[(y + j) * W + x + i] = cl
     return g
 
