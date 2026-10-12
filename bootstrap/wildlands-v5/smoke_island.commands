@@ -439,6 +439,8 @@ poke gWildlandsFastTelemetry 0 2 0
 poke gWildlandsFastTelemetry 2 2 0
 rate walk60-east 300 16 0
 dumph fast60 gWildlandsFastTelemetry 0 2
+dump coarse gWildlandsCoarseTelemetry 2
+dumph prof60 gWildlandsProfile 0 12
 prof walk60-prof 120 16
 poke gWildlandsFastTest 0 1 0
 prof walk-east 180 16
