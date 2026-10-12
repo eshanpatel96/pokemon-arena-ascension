@@ -195,8 +195,18 @@ static void ZoneDrawRain(void)
     if (gWildlandsWeather != sShownWeather && (gWildlandsWeather == 1 || gWildlandsWeather == 2))
         DirPopup(gWildlandsWeather == 1 ? sSandName : sAshName, gWildlandsWeather == 1 ? sRockUp : sFireUp, 7);
     sShownWeather = gWildlandsWeather;
-    if (sZone.rain[0] == MAX_SPRITES && show && !(sArena.frame & 31))
-        ZoneCreateRain();
+    {
+        // Streak sprites exist only while something can show: the storm edge
+        // in view or biome weather. Otherwise they are freed (FPS: 10 fewer
+        // sprites to animate and sort every frame).
+        s32 cdx = camX + 120 - sZone.cx, cdy = camY + 80 - sZone.cy;
+        s32 d2 = cdx * cdx + cdy * cdy, rin = r > 170 ? r - 170 : 0;
+        bool8 needed = show && (biome || r <= 0 || d2 >= rin * rin);
+        if (sZone.rain[0] == MAX_SPRITES && needed && !(sArena.frame & 31))
+            ZoneCreateRain();
+        else if (sZone.rain[0] != MAX_SPRITES && !needed && !(sArena.frame & 63))
+            ZoneFreeRain();
+    }
     for (i = 0; i < ZONE_RAIN; i++)
     {
         struct Sprite *spr;

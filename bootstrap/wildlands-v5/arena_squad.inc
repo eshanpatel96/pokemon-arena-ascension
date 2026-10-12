@@ -718,6 +718,27 @@ static void LootSim(void);
 // around and appears on the far side (the "enemy appears when it is not
 // near me" playtest report). Hide every world sprite well outside the view
 // for the OAM build only, then restore it, so no gameplay flag changes.
+// World sprite animation: parked pool sprites (hidden, no callback: rain,
+// loot, markers, shot pools) skip the per-frame callback + animation step.
+static void WildlandsAnimateSprites(void)
+{
+    u32 i;
+    if (!WildlandsWorld_Active())
+    {
+        AnimateSprites();
+        return;
+    }
+    for (i = 0; i < MAX_SPRITES; i++)
+    {
+        struct Sprite *s = &gSprites[i];
+        if (!s->inUse || (s->invisible && s->callback == SpriteCallbackDummy))
+            continue;
+        s->callback(s);
+        if (s->inUse)
+            AnimateSprite(s);
+    }
+}
+
 static void WildlandsBuildOam(void)
 {
     u32 hidden[2] = {0, 0}, i;

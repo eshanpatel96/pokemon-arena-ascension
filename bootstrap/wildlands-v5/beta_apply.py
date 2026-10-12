@@ -227,4 +227,8 @@ patch(WW, '''    if (!sActive)
         return distance;
     if (SolidCircle(x, y, radius))
         return 0;''')
+# FPS: lean sprite animation in the world (parked sprites skipped).
+patch(A, '    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;\n    AnimateSprites();\n',
+      '    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;\n    WildlandsAnimateSprites();\n')
+patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n', '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\nstatic void WildlandsAnimateSprites(void);\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')
