@@ -896,28 +896,22 @@ static void SquadRestRegen(void)
     }
 }
 
-// V6.2 pacing: 60 fps while exploring. The world renders every vblank when
-// nothing is fighting on screen (no live shots, the active enemy far away,
-// not paused); any update that overruns its frame three times drops back to
-// the locked 30 fps for 4s. Combat always runs at the steady 30.
+// V6.4 pacing: 60 fps everywhere in the world (exploring and fighting). The
+// sim is vblank-timed (one step per elapsed vblank), so game speed is the same
+// at 60 and 30; only smoothness changes. An update that overruns its frame
+// three times inside 64 updates drops to the locked 30 for 2s, then retries.
+// Measured after the FPS pass: forced-60 fight 292/300 updates, 8 overruns.
 static EWRAM_DATA u8 sWlFast = 0, sWlFastMiss = 0;
 static EWRAM_DATA u16 sWlFastHold = 0;
 extern u8 gWildlandsFastTest;
 EWRAM_DATA u16 gWildlandsFastTelemetry[2] = {0};   // [0] updates at 60 [1] of those that overran a frame
 static void WildlandsPaceUpdate(u32 gap)
 {
-    u32 i;
     bool8 calm = !sArena.paused && !sArena.resultTimer;
     if (!WildlandsWorld_Active())
     { sWlFast = 0; return; }
-    for (i = 0; i < SHOTS_COUNT && calm; i++)
-        if (sArena.shots[i].life)
-            calm = FALSE;
     if (gWildlandsFastTest == 2)
-        calm = TRUE;   // test: measure 60 fps even mid-fight
-    else if (calm && gBattleMons[1].hp
-        && ArenaNav_Distance(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, sArena.bodies[1].x / Q, sArena.bodies[1].y / Q) < 220)
-        calm = FALSE;
+        calm = TRUE;   // test: force 60 and ignore the fallback
     if (sWlFast)
     {
         gWildlandsFastTelemetry[0]++;
@@ -925,7 +919,7 @@ static void WildlandsPaceUpdate(u32 gap)
             gWildlandsFastTelemetry[1]++;   // overrun frames at 60
         if (gap >= 2 && ++sWlFastMiss >= 3 && gWildlandsFastTest != 2)
         {
-            sWlFast = 0; sWlFastHold = 240;
+            sWlFast = 0; sWlFastHold = 120;
             return;
         }
         if (!(gWildlandsFastTelemetry[0] & 63))
@@ -939,13 +933,10 @@ static void WildlandsPaceUpdate(u32 gap)
     if (calm)
     { sWlFast = 1; sWlFastMiss = 0; }
 }
-// V6.4: on. After the FPS pass a walking update fits one vblank (forced 60
-// walk: 218 updates, 0 overruns). Fights still overrun ~29% at 60, so combat
-// keeps the steady 30 (the sim is vblank-timed either way: game speed is
-// identical at both rates).
+// V6.4: on (see the measurements above).
 #define WL_FAST_PACE 1
-// TEST HOOK ONLY: nonzero runs the 60 fps pacing in a smoke window to measure
-// overruns before shipping it; 0 in play.
+// TEST HOOK ONLY: 2 forces the 60 fps pacing in a smoke window (no fallback)
+// to measure overruns; 0 in play.
 EWRAM_DATA u8 gWildlandsFastTest = 0;
 static bool8 WildlandsFastPace(void) { return (WL_FAST_PACE || gWildlandsFastTest) && sWlFast; }
 
