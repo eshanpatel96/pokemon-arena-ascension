@@ -28,6 +28,7 @@ static const struct ArenaPoint sNavPoints[] =
 #include "wildlands_nav_graph.inc"
 #include "wildlands_rooms.inc"
 #include "wildlands_biomes.inc"
+#include "wildlands_coarse.inc"
 #include "malloc.h"
 
 #define WL_BLANK_TILE 1023
@@ -728,6 +729,30 @@ u8 WildlandsWorld_TerrainAt(s16 x, s16 y)
         ? sWorldTerrain[((my) - WL_SLICE_BASE_Y) * WL_SLICE_W + ((mx) - WL_SLICE_BASE_X)] \
         : (WL_TERRAIN_SOLID | WL_TERRAIN_DEEP_WATER | WL_TERRAIN_WET))
 
+// TRUE when the segment's bounding box (grown by r) touches no solid or
+// deep-water metatile: any sweep along it would pass.
+EWRAM_DATA u32 gWildlandsCoarseTelemetry[2] = {0};   // [0] fast passes [1] full sweeps
+static bool8 CoarseClear(s32 x1, s32 y1, s32 x2, s32 y2, s32 r)
+{
+    s32 bx0 = (((x1 < x2 ? x1 : x2) - r) >> 4) - WL_SLICE_BASE_X, bx1 = (((x1 > x2 ? x1 : x2) + r) >> 4) - WL_SLICE_BASE_X;
+    s32 by0 = (((y1 < y2 ? y1 : y2) - r) >> 4) - WL_SLICE_BASE_Y, by1 = (((y1 > y2 ? y1 : y2) + r) >> 4) - WL_SLICE_BASE_Y;
+    s32 bx, by;
+    if (bx0 < 0 || by0 < 0 || bx1 >= WL_SLICE_W || by1 >= WL_SLICE_H)
+        return FALSE;
+    bx0 >>= 1; bx1 >>= 1; by0 >>= 1; by1 >>= 1;
+    if ((bx1 - bx0 + 1) * (by1 - by0 + 1) > 64)
+        return FALSE;
+    for (by = by0; by <= by1; by++)
+        for (bx = bx0; bx <= bx1; bx++)
+        {
+            u32 k = by * WL_COARSE_W + bx;
+            if (sWlCoarse[k >> 3] & (1 << (k & 7)))
+            { gWildlandsCoarseTelemetry[1]++; return FALSE; }
+        }
+    gWildlandsCoarseTelemetry[0]++;
+    return TRUE;
+}
+
 static bool8 SolidCircle(s16 x, s16 y, u8 radius)
 {
     // Exact square footprint: every metatile the 2r x 2r box touches. This
@@ -787,6 +812,8 @@ bool8 WildlandsWorld_LineClear(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
 {
     s32 dx, dy, steps, i, fx, fy, sx, sy;
     if (!sActive)
+        return TRUE;
+    if (CoarseClear(x1, y1, x2, y2, radius))
         return TRUE;
     if (radius <= 2)
         return RayClear(x1, y1, x2, y2);
@@ -854,6 +881,8 @@ static bool8 TraversalClear(bool8 waterAllowed, s16 x1, s16 y1, s16 x2, s16 y2, 
     // footprint so legal 16px paths and bridges remain traversable.
     if (radius > WL_WORLD_BODY_RADIUS)
         radius = WL_WORLD_BODY_RADIUS;
+    if (CoarseClear(x1, y1, x2, y2, radius))
+        return TRUE;
     // A land mover that somehow stands in deep water (knock-back into a
     // shoreline corner, a spawn) may always move: it can only walk out.
     if (!waterAllowed)
@@ -963,6 +992,8 @@ u16 WildlandsWorld_ClipRay(s16 x, s16 y, s16 dx, s16 dy, u16 distance, u8 radius
     // origin at every 4px step (quadratic in range).
     u16 d;
     if (!sActive)
+        return distance;
+    if (CoarseClear(x, y, x + dx * distance / 256, y + dy * distance / 256, radius))
         return distance;
     if (SolidCircle(x, y, radius))
         return 0;
