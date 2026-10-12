@@ -29,6 +29,7 @@ struct SquadWing
     s32 lastX, lastY;
     u16 scale;          // visual size (same art-based rule as the leads)
 };
+static EWRAM_DATA u16 sSwapCooldown = 0;   // Beta: SELECT lead/partner swap
 
 static EWRAM_DATA struct SquadWing sSquadWings[2] = {};
 // sSquadShotOwner[SHOTS_COUNT] is defined beside the prototypes (squad_apply.py).
@@ -825,7 +826,6 @@ static bool8 SquadPromote(u8 side)
 // Beta: SELECT swaps you into your partner. Both keep their own HP, PP and
 // stat stages; you take over the partner's body where it stands and the AI
 // takes your old body. 3s cooldown; not mid-attack.
-static EWRAM_DATA u16 sSwapCooldown = 0;
 EWRAM_DATA u16 gWildlandsSwapTelemetry = 0;   // swaps performed
 static void SquadSwapLead(void)
 {

@@ -584,6 +584,7 @@ static bool8 DirectorRunning(void);
 static bool8 DirectorPopupActive(void);
 static void DirectorPauseLine(void);
 void Wildlands_ArenaLoadout(struct Pokemon *mon);
+void Wildlands_TrimParty(void);
 static u8 BrainWingTarget(u8 picked);
 static bool8 BrainWingFollows(void);
 static void BrainInit(void);
@@ -862,7 +863,7 @@ static u8 FirstMove(u8 side, bool8 needsPP)
 static bool8 SupportedBattler(u8 side)
 {
     u32 i;
-    if (WildlandsWorld_Active())
+    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE))   /* eligibility runs before the world is initialised */
     {
         struct Pokemon *mon = side ? &gEnemyParty[gBattlerPartyIndexes[side]] : &gPlayerParty[gBattlerPartyIndexes[side]];
         gArenaCompatibilityReason = ARENA_COMPAT_OK;

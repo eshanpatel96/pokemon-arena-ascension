@@ -1113,6 +1113,31 @@ void Ascension_V11EnsureSafeEntry(void)
 #include "ascension_v111_services.inc"
 
 #include "arena_moves.h"
+// Beta: a Wildlands match is a duo. Anything beyond the first two party
+// slots goes back to the PC before the match (the PC's move mode could
+// place a third).
+#include "pokemon_storage_system.h"
+void Wildlands_TrimParty(void)
+{
+    u32 k, box;
+    for (k = 2; k < PARTY_SIZE; k++)
+    {
+        if (!GetMonData(&gPlayerParty[k], MON_DATA_SPECIES))
+            continue;
+        for (box = 0; box < TOTAL_BOXES_COUNT; box++)
+        {
+            s16 pos = GetFirstFreeBoxSpot(box);
+            if (pos >= 0)
+            {
+                SetBoxMonAt(box, pos, &gPlayerParty[k].box);
+                break;
+            }
+        }
+        ZeroMonData(&gPlayerParty[k]);
+    }
+    CompactPartySlots();
+    CalculatePlayerPartyCount();
+}
 // Wildlands loadout: species-legal moves (Ascension studio bank) that the
 // real-time Arena can actually perform. Keeps the current moves that qualify
 // (player choices survive), then fills by power + STAB + type coverage.
