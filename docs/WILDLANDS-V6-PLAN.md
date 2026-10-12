@@ -85,3 +85,7 @@ Open: spectate, boss/AI feel from playtests, "enemy team stuck" repro (no captur
 - Hunting enemies (legendaries, third parties) only re-goal when the target moved 24+ px while out of sight.
 - Diagnostics: gWildlandsCost (sim/enemy/director/wing scanlines, goal picks, HUD redraws) around the 60 fps windows.
 - Build: run 38282545550, commit be2c248, island ROM sha256 ec1109fb...1697. Island 198/198, slice 45/45. Shop core self-test PASS (shiny, traits kept, 10 wins spent); third party armed 1, arrived 1.
+
+## V6.9 Beta (2026-10-12)
+- Shiny Shop browse: the professor always offers the shop; pick a duo Pokemon for a quote ("A SHINY X costs 10 WINS"), see how many wins are still needed, look at another. Buying needs 10 wins and a confirm. Legendary and already-shiny replies.
+- Build: run 38283869303, commit 8bf2037.
