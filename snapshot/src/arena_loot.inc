@@ -79,6 +79,24 @@ static u8 LootPaletteNum(void)
 {
     return sLootPal != 0xFF ? sLootPal : IndexOfSpritePaletteTag(SHOT_TAG);
 }
+// The gem colours live in the shared shot palette (entries 5..14). Anything
+// that reloads that palette wipes them, so they are re-asserted whenever they
+// differ (cheap compare of ten colours, done while loot is drawn).
+static void LootAssertColors(void)
+{
+    u8 pal = IndexOfSpritePaletteTag(SHOT_TAG);
+    u32 k, base;
+    if (pal == 0xFF)
+        return;
+    base = OBJ_PLTT_ID(pal) + 5;
+    for (k = 0; k < ARRAY_COUNT(sLootColors); k++)
+        if (gPlttBufferUnfaded[base + k] != sLootColors[k])
+            break;
+    if (k == ARRAY_COUNT(sLootColors))
+        return;
+    LoadPalette(sLootColors, base, sizeof(sLootColors));
+    gWildlandsLootPalDiag++;
+}
 static void LootLoadGraphics(void)
 {
     static const u16 sLootPalette[16] = {
@@ -123,12 +141,10 @@ static void LootLoadGraphics(void)
             }
     memcpy(&tiles[LOOT_TYPES * 32], sRainStreak, sizeof(sRainStreak));
     LoadSpriteSheet(&sheet);
-    sLootPal = IndexOfSpritePaletteTag(LOOT_TAG);
-    if (sLootPal == 0xFF)
-        sLootPal = LoadSpritePalette(&ownPal);
-    gWildlandsLootPalDiag = sLootPal;   // own palette slot (0xFF = shared)
-    if (sLootPal == 0xFF && IndexOfSpritePaletteTag(SHOT_TAG) != 0xFF)
-        LoadPalette(sLootColors, OBJ_PLTT_ID(IndexOfSpritePaletteTag(SHOT_TAG)) + 5, sizeof(sLootColors));
+    (void)ownPal;   // OBJ palette slots are all needed by move effects: share
+    sLootPal = 0xFF;
+    gWildlandsLootPalDiag = IndexOfSpritePaletteTag(SHOT_TAG);
+    LootAssertColors();
 }
 
 static void LootInit(void)
@@ -327,6 +343,8 @@ static void LootTick(void)
     u32 i, n = 0;
     if (!sLoot.live)
         return;
+    if (!(sArena.frame & 7))
+        LootAssertColors();
     for (i = 0; i < ARRAY_COUNT(sLootSpots) && i < LOOT_MAX && n < LOOT_SPRITES; i++)
     {
         const struct LootSpot *s = &sLootSpots[i];
