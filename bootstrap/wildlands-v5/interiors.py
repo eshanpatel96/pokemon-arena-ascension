@@ -177,6 +177,19 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
         bx, by = (ax, ay)
         if picked:
             bx, by = near_stand(picked[0][0], picked[0][1] - 24, picked[0], 20, rect=rect)
+        # Beta: the boss waits within sight of the arrival (big rooms put the
+        # farthest cache 700+ px away, so the legendary never engaged).
+        if r['lair'] and abs(bx - ax) + abs(by - ay) > 300:
+            cands = []
+            for (xx, yy) in floor:
+                px, py = (r['x'] + xx) * 16 + 8, (r['y'] + yy) * 16 + 8
+                d = abs(px - ax) + abs(py - ay)
+                if 150 <= d <= 260:
+                    cands.append((d, px, py))
+            if cands:
+                cands.sort()
+                d, cx_, cy_ = cands[-1]
+                bx, by = near_stand(cx_, cy_, (ax, ay), 20, rect=rect)
         room_rows.append((r['x'], r['y'], r['w'], r['h'], r['pair'], ex, ey, 1 if down else 0, 1 if r['lair'] else 0, ax, ay, r['legend'], bx, by))
         for (px, py), t in zip(picked, r['loot']):
             loot_px.append(((base[0] * 16) + px, (base[1] * 16) + py, t))

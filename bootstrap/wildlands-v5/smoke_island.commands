@@ -271,6 +271,8 @@ dumph leadBefore gBattleMons 0 1
 press 4
 frames 20 0
 dumph leadAfter gBattleMons 0 1
+dumph swapReject gWildlandsSwapReject 0 1
+dumph wingAtSwap gWildlandsPartnerTelemetry 0 4
 expectmin gWildlandsSwapTelemetry 0 2 1
 snap 16-swapped
 frames 200 0
