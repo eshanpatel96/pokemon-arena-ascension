@@ -1,0 +1,37 @@
+{
+  "name": "Pokemon WildLands Beta (island)",
+  "source_commit": "ee42f9994b0a35cfe6e712e37a1388ac70f59d85",
+  "rom_sha256": "478ea032b48c50562dde6f3d78ec296b4239499bac66108b1b758059a61ebaf7",
+  "rom_bytes": 33554432,
+  "world": "island",
+  "world_coordinate_space_pixels": [
+    4096,
+    3072
+  ],
+  "terrain_source": "native Emerald metatiles: General primary + streamed Fortree/Mauville/Fallarbor/Lavaridge/Slateport secondaries per biome (island); collision/material from metatile data, never a floor bitmap; no invisible walls (audited)",
+  "controller": "native realtime Arena movement/dodge/attack/cooldown/hit path; fixed-timestep catch-up keeps game time real-time",
+  "true_2v2": "yes (first slice): player+AI partner vs enemy lead+wing; all four attack, take damage, KO; lead KO promotes the living wing",
+  "closing_zone": "world-coordinate circle, 90s explore / 45s warning / 75s shrink per phase, violet tint and edge markers, time-based exposure damage to all actors",
+  "loot": "team ATK/DEF/SPD stages, cap +3; capped pickups heal 40% and restore PP",
+  "live_map": "START -> MAP (storm shading, next circle, lair state)",
+  "move_editor": "Lab COACH: PICK DUO, MOVES (native relearner UI, arena-supported legal moves), CONTROLS, DEPLOY; all owned Pokemon swept to arena moves",
+  "title": "approved Charizard/Blastoise/Rayquaza concept at native 240x160",
+  "thirty_duo_simulation": true,
+  "legendary_boss_battles": true,
+  "shiny_palettes": "audited feasible; not implemented",
+  "memory": {
+    "EWRAM": {
+      "used_bytes": 261972,
+      "usage_percent": 99.93
+    },
+    "IWRAM": {
+      "used_bytes": 30892,
+      "usage_percent": 94.27
+    },
+    "ROM": {
+      "used_bytes": 33167520,
+      "usage_percent": 98.85
+    }
+  },
+  "verification": "mGBA automated runtime only; iPhone Delta requires owner playtest"
+}
