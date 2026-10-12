@@ -37,7 +37,7 @@ struct DirDuo
 struct DirState
 {
     struct DirDuo duo[DIR_MAX];
-    struct Pokemon savedPartner;
+    struct Pokemon savedPartner, savedLead;
     u8 count, active, cursor, partnerSaved;
     u16 clock;
     struct { u16 t; u8 text[20]; } log[12];   // Beta: pause-menu match log
@@ -552,12 +552,14 @@ static void DirLegendJoins(struct DirDuo *d)
     struct SquadWing *w = &sSquadWings[0];
     u16 hp;
     u32 t;
-    if (!sDir->partnerSaved && GetMonData(&gPlayerParty[1], MON_DATA_SPECIES))
+    u8 slot = gBattlerPartyIndexes[0] == 1 ? 0 : 1;   // never the current lead's slot
+    if (!sDir->partnerSaved)
     {
+        sDir->savedLead = gPlayerParty[0];
         sDir->savedPartner = gPlayerParty[1];
         sDir->partnerSaved = TRUE;
     }
-    DirMakeMon(&gPlayerParty[1], d->species[0], gBattleMons[0].level ? gBattleMons[0].level : d->level, 100, FALSE, DirShiny(d, d->species[0]));
+    DirMakeMon(&gPlayerParty[slot], d->species[0], gBattleMons[0].level ? gBattleMons[0].level : d->level, 100, FALSE, DirShiny(d, d->species[0]));
     if (gPlayerPartyCount < 2) gPlayerPartyCount = 2;
     SquadHideWing(w);
     w->alive = FALSE;
@@ -1026,6 +1028,7 @@ static void DirRestorePartner(void)
 {
     if (sDir && sDir->partnerSaved)
     {
+        gPlayerParty[0] = sDir->savedLead;
         gPlayerParty[1] = sDir->savedPartner;
         sDir->partnerSaved = FALSE;
     }
