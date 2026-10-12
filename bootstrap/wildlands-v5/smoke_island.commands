@@ -434,7 +434,7 @@ dump directorEnd gWildlandsDirectorTelemetry 8
 dump biomeEnd gWildlandsBiomeTelemetry 4
 expect gWildlandsBiomeTelemetry 12 4 0
 # ---- FPS: measure the 60 fps pacing while walking (test hook) ----
-poke gWildlandsFastTest 0 1 1
+poke gWildlandsFastTest 0 1 2
 poke gWildlandsFastTelemetry 0 2 0
 poke gWildlandsFastTelemetry 2 2 0
 rate walk60-east 300 16 0

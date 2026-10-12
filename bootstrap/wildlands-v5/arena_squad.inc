@@ -868,7 +868,8 @@ static void SquadRestRegen(void)
 // the locked 30 fps for 4s. Combat always runs at the steady 30.
 static EWRAM_DATA u8 sWlFast = 0, sWlFastMiss = 0;
 static EWRAM_DATA u16 sWlFastHold = 0;
-EWRAM_DATA u16 gWildlandsFastTelemetry[2] = {0};   // [0] 60fps updates [1] fallbacks to 30
+extern u8 gWildlandsFastTest;
+EWRAM_DATA u16 gWildlandsFastTelemetry[2] = {0};   // [0] updates at 60 [1] of those that overran a frame
 static void WildlandsPaceUpdate(u32 gap)
 {
     u32 i;
@@ -878,16 +879,19 @@ static void WildlandsPaceUpdate(u32 gap)
     for (i = 0; i < SHOTS_COUNT && calm; i++)
         if (sArena.shots[i].life)
             calm = FALSE;
-    if (calm && gBattleMons[1].hp
+    if (gWildlandsFastTest == 2)
+        calm = TRUE;   // test: measure 60 fps even mid-fight
+    else if (calm && gBattleMons[1].hp
         && ArenaNav_Distance(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, sArena.bodies[1].x / Q, sArena.bodies[1].y / Q) < 220)
         calm = FALSE;
     if (sWlFast)
     {
         gWildlandsFastTelemetry[0]++;
-        if (gap >= 2 && ++sWlFastMiss >= 3)
+        if (gap >= 2)
+            gWildlandsFastTelemetry[1]++;   // overrun frames at 60
+        if (gap >= 2 && ++sWlFastMiss >= 3 && gWildlandsFastTest != 2)
         {
             sWlFast = 0; sWlFastHold = 240;
-            gWildlandsFastTelemetry[1]++;
             return;
         }
         if (!(gWildlandsFastTelemetry[0] & 63))
