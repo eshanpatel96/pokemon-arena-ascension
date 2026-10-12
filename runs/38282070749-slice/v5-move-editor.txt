@@ -1,0 +1,1 @@
+Wildlands move editor installed: native relearner UI, legal + Arena-supported moves only, no items
