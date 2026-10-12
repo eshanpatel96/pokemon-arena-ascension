@@ -44,13 +44,13 @@ static void CaptureHud(void)
 {
     u8 text[20];
     bool8 visible=!sArena.paused;
-    bool8 notice=sCapture.notice!=0;
+    bool8 notice=sCapture.notice!=0 && !WildlandsWorld_Active();
     u16 stock=CountTotalItemQuantityInBag(ITEM_POKE_BALL);
     u16 move=ArenaMoveId(0,sArena.bodies[0].moveSlot);
     u8 pp=ArenaMovePP(0,sArena.bodies[0].moveSlot);
     if(sCapture.hudReady && sCapture.hudVisible==visible && sCapture.hudNotice==notice
         && sCapture.hudMessage==sCapture.message && sCapture.hudStock==stock
-        && sCapture.hudMove==move && sCapture.hudPP==pp)return;
+        && sCapture.hudMove==move && sCapture.hudPP==pp && sZoneHudKeyShown==ZoneHudKey())return;
     sCapture.hudMove=move;sCapture.hudPP=pp;sCapture.hudNotice=notice;
     sCapture.hudReady=TRUE;sCapture.hudVisible=visible;
     sCapture.hudMessage=sCapture.message;sCapture.hudStock=stock;
@@ -74,6 +74,7 @@ static void CaptureHud(void)
             else ConvertIntToDecimalStringN(StringCopy(text,sHudPPLabel),ArenaMovePP(0,sArena.bodies[0].moveSlot),STR_CONV_MODE_LEFT_ALIGN,2);
             HudTinyWindow(2,81,10,text,4,5);
         }
+        ZoneHudLine();sZoneHudKeyShown=ZoneHudKey();
         PutWindowTilemap(2);
     }
     CopyWindowToVram(2,COPYWIN_FULL);

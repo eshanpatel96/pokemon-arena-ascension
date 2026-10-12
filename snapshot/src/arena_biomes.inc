@@ -92,6 +92,8 @@ static void LoadArenaBiome(void)
         gArenaBiome=(gArenaStage==15)?1:(gArenaStage==16?2:4);
     }
     if(gArenaStage>=8&&gArenaStage<16)gArenaBiome=4;
+    if(WildlandsWorld_Active())
+        return;
     LoadPalette(sStagePalettes[gArenaStage],0,512);
     StormBiome(sStageTiles[gArenaStage],sStagePalettes[gArenaStage]);
     LoadBgTiles(1,sStageTiles[gArenaStage],38400,0);

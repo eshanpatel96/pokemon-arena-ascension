@@ -36,6 +36,8 @@
 #include "trainer_hill.h"
 #include "util.h"
 #include "constants/abilities.h"
+#include "arena_moves.h"
+#include "constants/party_menu.h"
 #include "constants/battle_frontier.h"
 #include "constants/battle_move_effects.h"
 #include "constants/battle_script_commands.h"
@@ -6300,8 +6302,51 @@ u32 CanSpeciesLearnTMHM(u16 species, u8 tm)
     }
 }
 
+
+// ---- Wildlands move editor list (native Move Relearner UI) -------------
+#define WILDLANDS_EDITOR_MAX 48
+bool8 Wildlands_CanLearnTutor(u16 species, u8 tutor);
+
+static bool8 WildlandsEditor_Add(u16 *moves, u8 *n, u16 move, const u16 *known)
+{
+    u32 i;
+    if (!move || move >= MOVES_COUNT || *n >= WILDLANDS_EDITOR_MAX || !ArenaMoves_Get(move))
+        return FALSE;
+    for (i = 0; i < MAX_MON_MOVES; i++)
+        if (known[i] == move)
+            return FALSE;
+    for (i = 0; i < *n; i++)
+        if (moves[i] == move)
+            return FALSE;
+    moves[(*n)++] = move;
+    return TRUE;
+}
+
+static u8 Wildlands_EditorMoves(struct Pokemon *mon, u16 *moves)
+{
+    u16 known[MAX_MON_MOVES];
+    u16 species = GetMonData(mon, MON_DATA_SPECIES, 0);
+    u8 n = 0;
+    u32 i;
+    for (i = 0; i < MAX_MON_MOVES; i++)
+        known[i] = GetMonData(mon, MON_DATA_MOVE1 + i, 0);
+    // Level-up moves at ANY level: every squad member deploys at match level.
+    for (i = 0; i < MAX_LEVEL_UP_MOVES && gLevelUpLearnsets[species][i] != LEVEL_UP_END; i++)
+        WildlandsEditor_Add(moves, &n, gLevelUpLearnsets[species][i] & LEVEL_UP_MOVE_ID, known);
+    for (i = 0; i < NUM_TECHNICAL_MACHINES + NUM_HIDDEN_MACHINES; i++)
+        if (CanMonLearnTMHM(mon, i))
+            WildlandsEditor_Add(moves, &n, ItemIdToBattleMoveId(ITEM_TM01 + i), known);
+    for (i = 0; i < TUTOR_MOVE_COUNT; i++)
+        if (Wildlands_CanLearnTutor(species, i))
+            WildlandsEditor_Add(moves, &n, gTutorMoves[i], known);
+    return n;
+}
+
 u8 GetMoveRelearnerMoves(struct Pokemon *mon, u16 *moves)
 {
+    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1)
+        return Wildlands_EditorMoves(mon, moves);
+    {
     u16 learnedMoves[MAX_MON_MOVES];
     u8 numMoves = 0;
     u16 species = GetMonData(mon, MON_DATA_SPECIES, 0);
@@ -6337,6 +6382,7 @@ u8 GetMoveRelearnerMoves(struct Pokemon *mon, u16 *moves)
     }
 
     return numMoves;
+    }
 }
 
 u8 GetLevelUpMovesBySpecies(u16 species, u16 *moves)
@@ -6352,6 +6398,13 @@ u8 GetLevelUpMovesBySpecies(u16 species, u16 *moves)
 
 u8 GetNumberOfRelearnableMoves(struct Pokemon *mon)
 {
+    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1
+        && GetMonData(mon, MON_DATA_SPECIES_OR_EGG, 0) != SPECIES_EGG)
+    {
+        u16 buffer[WILDLANDS_EDITOR_MAX];
+        return Wildlands_EditorMoves(mon, buffer);
+    }
+    {
     u16 learnedMoves[MAX_MON_MOVES];
     u16 moves[MAX_LEVEL_UP_MOVES];
     u8 numMoves = 0;
@@ -6391,6 +6444,7 @@ u8 GetNumberOfRelearnableMoves(struct Pokemon *mon)
     }
 
     return numMoves;
+    }
 }
 
 u16 SpeciesToPokedexNum(u16 species)

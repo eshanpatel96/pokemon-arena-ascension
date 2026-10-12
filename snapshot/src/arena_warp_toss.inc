@@ -41,7 +41,7 @@ static void SpecialHide(void)
     sWarp[0].active=sWarp[1].active=FALSE;
     sDive[0].active=sDive[1].active=FALSE;
     BlendPalette(16,240,0,RGB_BLACK);sSpecialShade=0;
-    SetGpuReg(REG_OFFSET_BG1HOFS,0);SetGpuReg(REG_OFFSET_BG1VOFS,0);
+    WL_BG1(REG_OFFSET_BG1HOFS,0);WL_BG1(REG_OFFSET_BG1VOFS,0);
 }
 static void SpecialFx(u8 side,u8 kind,s16 x,s16 y)
 {
@@ -160,7 +160,7 @@ static void SpecialDraw(void)
             sWarpFx[side].frame=f;
         }
     }
-    SetGpuReg(REG_OFFSET_BG1HOFS,shake);SetGpuReg(REG_OFFSET_BG1VOFS,shake/2);
+    WL_BG1(REG_OFFSET_BG1HOFS,shake);WL_BG1(REG_OFFSET_BG1VOFS,shake/2);
     DiveDraw();
     if(TossActive())
         for(side=0;side<2;side++)

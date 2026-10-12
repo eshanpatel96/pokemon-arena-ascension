@@ -24,6 +24,8 @@ static bool8 PsychicStart(u8 side,s32 targetX,s32 targetY)
         struct ArenaProp *p=&gArenaProps[i];
         struct ArenaPsychicRock *r=&gArenaPsychicRocks[i];
         if(p->kind!=ARENA_PROP_ROCK||p->broken||p->reserved)continue;
+        if(WildlandsWorld_Active()&&(Abs((rect->left+rect->right)/2-sArena.bodies[side].x/Q)>200
+            ||Abs((rect->top+rect->bottom)/2-sArena.bodies[side].y/Q)>150))continue;
         r->x=(rect->left+rect->right)*Q/2;r->y=(rect->top+rect->bottom)*Q/2;
         r->state=1;r->side=side;r->order=n++;r->age=0;r->height=0;
         p->reserved=side+1;ArenaNav_SetObstacle(i,0);
@@ -94,8 +96,13 @@ static void TickPsychic(void)
             ox=r->x/Q;oy=r->y/Q;nx=(r->x+r->vx)/Q;ny=(r->y+r->vy)/Q;
             obstacle=ArenaNav_FirstObstacle(ox,oy,nx,ny,5);
             r->x+=r->vx;r->y+=r->vy;
-            if(obstacle>=0)
-            {ArenaPhysics_Hit(obstacle,r->vx,r->vy,3);gArenaPsychicTelemetry[5]++;PsychicImpact(i);continue;}
+            if(obstacle>=0 || (WildlandsWorld_Active()
+                && !WildlandsWorld_LineClear(ox,oy,nx,ny,5)))
+            {
+                if(obstacle>=0)ArenaPhysics_Hit(obstacle,r->vx,r->vy,3);
+                else WildlandsWorld_RecordProjectileBlock();
+                gArenaPsychicTelemetry[5]++;PsychicImpact(i);continue;
+            }
             if(DecoySegment(side^1,ox,oy,nx,ny,14))
             {sPsychic[side].connected=TRUE;PsychicImpact(i);continue;}
             if(!sPsychic[side].connected&&CoverSegment(side,MOVE_PSYCHIC,ox,oy,nx,ny,14))
@@ -106,7 +113,7 @@ static void TickPsychic(void)
                 {sPsychic[side].connected=TRUE;gArenaPsychicTelemetry[4]++;ApplyMoveHit(side,MOVE_PSYCHIC);}
                 PsychicImpact(i);continue;
             }
-            if(nx<12||nx>228||ny<30||ny>146||r->age>60)
+            if(nx<ARENA_MIN_X||nx>ARENA_MAX_X||ny<ARENA_MIN_Y||ny>ARENA_MAX_Y||r->age>60)
             {gArenaPsychicTelemetry[6]++;PsychicImpact(i);}
         }
         if(!count)sPsychic[side].active=FALSE;
