@@ -385,4 +385,196 @@ patch(A, '        gMain.callback1=sArena.savedCB1;\n        RealtimeArena_Resume
       '        {\n            gRealtimeArenaRestoringFaint=FALSE;\n            RealtimeArena_FinishLoss();   /* V6.6: straight to the whiteout */\n        }\n'
       '        else\n            RealtimeArena_ResumeBattle(TRUE);\n'
       '        SetMainCallback2(BattleMainCB2);\n')
+# ---- V6.8 -----------------------------------------------------------------
+patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
+      '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\nstatic bool8 DirectorTpFocus(void);\nvoid Wildlands_ShopSelfTest(void);\n')
+# Wins pay into the Shiny Shop balance; every 5th straight win pays 2 more.
+# A loss resets the streak. (Saved vars: two unused Emerald slots.)
+patch(A, '            VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCENSION_MASTERS_BEST)+1));\n',
+      '            VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCENSION_MASTERS_BEST)+1));\n'
+      '            if(gBattleMons[0].hp)\n            {\n'
+      '                u16 streak=min(9999,VarGet(VAR_WL_STREAK)+1);\n'
+      '                VarSet(VAR_WL_STREAK,streak);\n'
+      '                VarSet(VAR_WL_SHOP_WINS,min(9999,VarGet(VAR_WL_SHOP_WINS)+1+(streak%5==0?2:0)));\n'
+      '            }\n')
+patch(A, '            u16 zero=0; u32 k;\n',
+      '            u16 zero=0; u32 k;\n            VarSet(VAR_WL_STREAK,0);\n')
+patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
+      '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n#define VAR_WL_SHOP_WINS VAR_UNUSED_0x404E\n#define VAR_WL_STREAK VAR_UNUSED_0x4083\n')
+_mt = (root / A).read_text()
+_mt += r"""
+// ---- V6.8 Shiny Shop (Lab professor) -------------------------------------
+// STR_VAR_1 balance, STR_VAR_2 streak; VAR_RESULT = can buy (10 wins).
+void Wildlands_BufferShop(void)
+{
+    ConvertIntToDecimalStringN(gStringVar1, VarGet(VAR_WL_SHOP_WINS), STR_CONV_MODE_LEFT_ALIGN, 4);
+    ConvertIntToDecimalStringN(gStringVar2, VarGet(VAR_WL_STREAK), STR_CONV_MODE_LEFT_ALIGN, 4);
+    gSpecialVar_Result = VarGet(VAR_WL_SHOP_WINS) >= 10;
+}
+
+static bool8 WlShopLegend(u16 sp)
+{
+    switch (sp)
+    {
+    case SPECIES_ARTICUNO: case SPECIES_ZAPDOS: case SPECIES_MOLTRES: case SPECIES_MEWTWO: case SPECIES_MEW:
+    case SPECIES_RAIKOU: case SPECIES_ENTEI: case SPECIES_SUICUNE: case SPECIES_LUGIA: case SPECIES_HO_OH:
+    case SPECIES_CELEBI: case SPECIES_REGIROCK: case SPECIES_REGICE: case SPECIES_REGISTEEL:
+    case SPECIES_LATIAS: case SPECIES_LATIOS: case SPECIES_KYOGRE: case SPECIES_GROUDON:
+    case SPECIES_RAYQUAZA: case SPECIES_JIRACHI: case SPECIES_DEOXYS:
+        return TRUE;
+    }
+    return FALSE;
+}
+
+// The party Pokemon in VAR_0x8004 becomes shiny for 10 wins. Its nature,
+// gender, ability, IVs, EVs, moves, level, nickname and OT are kept (a new
+// personality with the same nature and low byte is chosen).
+// VAR_RESULT: 1 done, 2 legendary, 3 already shiny, 4 not enough wins, 0 none.
+void Wildlands_MakeShiny(void)
+{
+    static const u8 sKeep[] = {
+        MON_DATA_LANGUAGE, MON_DATA_OT_GENDER, MON_DATA_EXP, MON_DATA_FRIENDSHIP, MON_DATA_HELD_ITEM,
+        MON_DATA_MOVE1, MON_DATA_MOVE2, MON_DATA_MOVE3, MON_DATA_MOVE4,
+        MON_DATA_PP1, MON_DATA_PP2, MON_DATA_PP3, MON_DATA_PP4, MON_DATA_PP_BONUSES,
+        MON_DATA_HP_EV, MON_DATA_ATK_EV, MON_DATA_DEF_EV, MON_DATA_SPEED_EV, MON_DATA_SPATK_EV, MON_DATA_SPDEF_EV,
+        MON_DATA_HP_IV, MON_DATA_ATK_IV, MON_DATA_DEF_IV, MON_DATA_SPEED_IV, MON_DATA_SPATK_IV, MON_DATA_SPDEF_IV,
+        MON_DATA_ABILITY_NUM, MON_DATA_POKEBALL, MON_DATA_MET_LOCATION, MON_DATA_MET_LEVEL, MON_DATA_MET_GAME,
+        MON_DATA_MARKINGS,
+    };
+    struct Pokemon old, *mon;
+    u8 buf[POKEMON_NAME_LENGTH + 2];
+    u16 sp, hp;
+    u32 p, otId, lo, hi, np = 0, b, k, v;
+    gSpecialVar_Result = 0;
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
+    mon = &gPlayerParty[gSpecialVar_0x8004];
+    sp = GetMonData(mon, MON_DATA_SPECIES);
+    if (!sp || GetMonData(mon, MON_DATA_IS_EGG))
+        return;
+    StringCopy(gStringVar1, gSpeciesNames[sp]);
+    if (WlShopLegend(sp)) { gSpecialVar_Result = 2; return; }
+    if (IsMonShiny(mon)) { gSpecialVar_Result = 3; return; }
+    if (VarGet(VAR_WL_SHOP_WINS) < 10) { gSpecialVar_Result = 4; return; }
+    p = GetMonData(mon, MON_DATA_PERSONALITY);
+    otId = GetMonData(mon, MON_DATA_OT_ID);
+    for (b = 0; b < 256 && !np; b++)
+        for (k = 0; k < 8; k++)
+        {
+            lo = (p & 0xFF) | (b << 8);
+            hi = ((otId >> 16) ^ (otId & 0xFFFF) ^ lo ^ k) & 0xFFFF;
+            if (((hi << 16) | lo) % 25 == p % 25)
+            { np = (hi << 16) | lo; break; }
+        }
+    if (!np)
+        return;
+    old = *mon;
+    CreateMon(mon, sp, GetMonData(&old, MON_DATA_LEVEL), 0, TRUE, np, OT_ID_PRESET, otId);
+    GetMonData(&old, MON_DATA_NICKNAME, buf); SetMonData(mon, MON_DATA_NICKNAME, buf);
+    GetMonData(&old, MON_DATA_OT_NAME, buf); SetMonData(mon, MON_DATA_OT_NAME, buf);
+    for (k = 0; k < ARRAY_COUNT(sKeep); k++)
+    {
+        v = GetMonData(&old, sKeep[k]);
+        SetMonData(mon, sKeep[k], &v);
+    }
+    CalculateMonStats(mon);
+    hp = GetMonData(mon, MON_DATA_MAX_HP);
+    SetMonData(mon, MON_DATA_HP, &hp);
+    VarSet(VAR_WL_SHOP_WINS, VarGet(VAR_WL_SHOP_WINS) - 10);
+    gSpecialVar_Result = IsMonShiny(mon) ? 1 : 0;
+}
+
+// TEST HOOK ONLY: nonzero runs the shop core on party slot 1 at the next
+// match start; [0] result [1] shiny [2] species/level/move/nature/IV kept [3] balance after.
+EWRAM_DATA u8 gWildlandsShopTest = 0;
+EWRAM_DATA u16 gWildlandsShopTelemetry[4] = {0};
+void Wildlands_ShopSelfTest(void)
+{
+    struct Pokemon *mon = &gPlayerParty[1];
+    u32 sp, lv, mv, nat, iv;
+    if (!gWildlandsShopTest)
+        return;
+    gWildlandsShopTest = 0;
+    sp = GetMonData(mon, MON_DATA_SPECIES); lv = GetMonData(mon, MON_DATA_LEVEL);
+    mv = GetMonData(mon, MON_DATA_MOVE1); nat = GetMonData(mon, MON_DATA_PERSONALITY) % 25;
+    iv = GetMonData(mon, MON_DATA_ATK_IV);
+    VarSet(VAR_WL_SHOP_WINS, 10);
+    gSpecialVar_0x8004 = 1;
+    Wildlands_MakeShiny();
+    gWildlandsShopTelemetry[0] = gSpecialVar_Result;
+    gWildlandsShopTelemetry[1] = IsMonShiny(mon);
+    gWildlandsShopTelemetry[2] = sp == GetMonData(mon, MON_DATA_SPECIES) && lv == GetMonData(mon, MON_DATA_LEVEL)
+        && mv == GetMonData(mon, MON_DATA_MOVE1) && nat == GetMonData(mon, MON_DATA_PERSONALITY) % 25
+        && iv == GetMonData(mon, MON_DATA_ATK_IV);
+    gWildlandsShopTelemetry[3] = VarGet(VAR_WL_SHOP_WINS);
+}
+"""
+(root / A).write_text(_mt)
+_sp = root / 'data/specials.inc'
+_t = _sp.read_text()
+if '\tdef_special Wildlands_BufferStats' not in _t:
+    raise SystemExit('beta: specials anchor drift (shop)')
+_sp.write_text(_t.replace('\tdef_special Wildlands_BufferStats',
+    '\tdef_special Wildlands_BufferStats\n\tdef_special Wildlands_BufferShop\n\tdef_special Wildlands_MakeShiny', 1))
+_sc = root / 'data/maps/AscensionTeamLab/scripts.inc'
+_t = _sc.read_text()
+_old = ' special Wildlands_BufferStats\n msgbox WildlandsLab_Text_Professor, MSGBOX_DEFAULT\n release\n end\n'
+if _t.count(_old) != 1:
+    raise SystemExit('beta: professor script anchor drift (shop)')
+_t = _t.replace(_old, ' special Wildlands_BufferStats\n msgbox WildlandsLab_Text_Professor, MSGBOX_DEFAULT\n goto WildlandsLab_EventScript_Shop\n', 1)
+_t += r"""
+WildlandsLab_EventScript_Shop::
+ special Wildlands_BufferShop
+ msgbox WildlandsLab_Text_ShopInfo, MSGBOX_DEFAULT
+ special Wildlands_BufferShop
+ goto_if_eq VAR_RESULT, 0, WildlandsLab_EventScript_ShopBye
+ msgbox WildlandsLab_Text_ShopAsk, MSGBOX_YESNO
+ goto_if_eq VAR_RESULT, NO, WildlandsLab_EventScript_ShopBye
+ msgbox WildlandsLab_Text_ShopPick, MSGBOX_DEFAULT
+ special ChoosePartyMon
+ waitstate
+ goto_if_eq VAR_0x8004, PARTY_NOTHING_CHOSEN, WildlandsLab_EventScript_ShopBye
+ special Wildlands_MakeShiny
+ goto_if_eq VAR_RESULT, 1, WildlandsLab_EventScript_ShopDone
+ goto_if_eq VAR_RESULT, 2, WildlandsLab_EventScript_ShopLegend
+ goto_if_eq VAR_RESULT, 3, WildlandsLab_EventScript_ShopAlready
+ goto WildlandsLab_EventScript_ShopBye
+WildlandsLab_EventScript_ShopDone::
+ playse SE_SHINY
+ waitse
+ msgbox WildlandsLab_Text_ShopDone, MSGBOX_DEFAULT
+ goto WildlandsLab_EventScript_ShopBye
+WildlandsLab_EventScript_ShopLegend::
+ msgbox WildlandsLab_Text_ShopLegend, MSGBOX_DEFAULT
+ goto WildlandsLab_EventScript_ShopBye
+WildlandsLab_EventScript_ShopAlready::
+ msgbox WildlandsLab_Text_ShopAlready, MSGBOX_DEFAULT
+WildlandsLab_EventScript_ShopBye::
+ release
+ end
+
+WildlandsLab_Text_ShopInfo:
+ .string "SHINY SHOP: 10 WINS = 1 SHINY.\n"
+ .string "WINS {STR_VAR_1}   STREAK {STR_VAR_2}\p"
+ .string "Win 5 in a row for 2 bonus WINS.$"
+
+WildlandsLab_Text_ShopAsk:
+ .string "Spend 10 WINS to make one of\n"
+ .string "your POKEMON shiny?$"
+
+WildlandsLab_Text_ShopPick:
+ .string "Choose from your duo. To pick\n"
+ .string "another, use the COACH first.$"
+
+WildlandsLab_Text_ShopDone:
+ .string "{STR_VAR_1} is now SHINY!$"
+
+WildlandsLab_Text_ShopLegend:
+ .string "Legendary POKEMON can't be\n"
+ .string "changed. Try another one.$"
+
+WildlandsLab_Text_ShopAlready:
+ .string "{STR_VAR_1} is already SHINY!$"
+"""
+_sc.write_text(_t)
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')

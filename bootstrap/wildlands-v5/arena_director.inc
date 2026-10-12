@@ -50,9 +50,23 @@ struct DirState
     u8 slamWindup, enraged;         // windup frames left; enraged at half HP
     u16 bossCooldown, bossEvalStamp;
     u8 activePlan, bossDoor;
+    // V6.8 third party: a duo drawn in by a fight. It closes in from its own
+    // side, waits just off screen, and takes the field when the current foe
+    // falls (never where that foe died); then it goes for the weaker of the
+    // player's two Pokemon.
+    u8 tp, tpPad;
+    u16 tpCooldown, tpFocus;
+    s16 deadX, deadY;
 };
 
 static EWRAM_DATA struct DirState *sDir = NULL;
+// V6.8: [0] third parties armed [1] arrived [2] entries moved away from a KO spot
+EWRAM_DATA u16 gWildlandsTpTelemetry[3] = {0};
+// TEST HOOK ONLY: nonzero arms a third party at the next check; 0 in play.
+EWRAM_DATA u8 gWildlandsTpTest = 0;
+// Off-screen pace: each duo advances once per `count` frames, so steps scale
+// with the field size (tuned at 38 = 30 duos + 5 lairs + 3 roamers).
+#define DIR_STEP(s) ((s32)(s) * max(sDir->count, 38) / 38)
 static EWRAM_DATA struct { u8 timer, color; u8 text[18]; } sDirPopup = {};
 // [0] AI duos alive [1] active index [2] swaps [3] sim eliminations
 // [4] legendaries joined [5] legendaries taken by AI [6] duos loaded
@@ -177,7 +191,8 @@ static bool8 DirShiny(const struct DirDuo *d, u16 sp)
 {
     if (gWildlandsShinyTest)
         return TRUE;
-    return d->pad2 && !(((d->pad2 * 131u) ^ (sp * 37u)) & 63);
+    // V6.8: legendaries (lair bosses, roamers) are shiny 1 in 16, others 1 in 64.
+    return d->pad2 && !(((d->pad2 * 131u) ^ (sp * 37u)) & (d->legend ? 15 : 63));
 }
 
 // Utility of attacking legendary `l` now (>= 0 means go). Never in the first
@@ -456,10 +471,15 @@ static void DirOffscreenEntry(struct DirDuo *d)
 {
     s32 cx = sArenaXLCameraX, cy = sArenaXLCameraY, px, py;
     u32 k;
+    bool8 nearKO;
     if (d->legend == DIR_LAIR_BOSS || WildlandsWorld_InRoom(d->x, d->y) || !gWildlandsDirectorTelemetry[6])
         return;   // (the opening practice duo starts where the match placed it)
-    if (d->x < cx - 40 || d->x > cx + 280 || d->y < cy - 40 || d->y > cy + 200)
+    // V6.8: never take the field where the last foe fell either.
+    nearKO = (sDir->deadX || sDir->deadY) && ArenaNav_Distance(d->x, d->y, sDir->deadX, sDir->deadY) < 200;
+    if (!nearKO && (d->x < cx - 40 || d->x > cx + 280 || d->y < cy - 40 || d->y > cy + 200))
         return;
+    if (nearKO)
+        gWildlandsTpTelemetry[2]++;
     DirPlayerPos(&px, &py);
     for (k = 0; k < 48; k++)
     {
@@ -470,6 +490,8 @@ static void DirOffscreenEntry(struct DirDuo *d)
             continue;
         dist = ArenaNav_Distance(px, py, x, y);
         if (dist < 200 || dist > 420 || (sZone.active && ZoneOutside(x, y, 24)))
+            continue;
+        if ((sDir->deadX || sDir->deadY) && ArenaNav_Distance(x, y, sDir->deadX, sDir->deadY) < 240)
             continue;
         d->x = x; d->y = y;
         return;
@@ -485,7 +507,9 @@ static void DirLoadActive(u8 index)
     u8 lead, other;
     u32 t0 = WL_NOW();
     u32 t1;
+    bool8 thirdParty = index == sDir->tp;
     DirOffscreenEntry(d);
+    sDir->deadX = sDir->deadY = 0;
     lead = (d->species[0] && d->hp[0]) ? 0 : 1;
     other = lead ^ 1;
     DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend == DIR_LAIR_BOSS, DirShiny(d, d->species[lead]));
@@ -533,6 +557,18 @@ static void DirLoadActive(u8 index)
     gWildlandsDirectorTelemetry[6]++;
     ArenaFeedback_Dust(d->x, d->y, TRUE);
     sArena.hudDirty = TRUE;
+    if (thirdParty)
+    {
+        static const u8 sThird[] = _("THIRD PARTY!");
+        s32 tx, ty;
+        sDir->tp = DIR_NONE;
+        sDir->tpFocus = 900;   // 15 s on the weaker player Pokemon
+        gWildlandsTpTelemetry[1]++;
+        DirPopup(sThird, NULL, 6);
+        SquadPos((SquadAlive(2) && (!SquadAlive(0) || BrainHpPct(2) < BrainHpPct(0))) ? 2 : 0, &tx, &ty);
+        sArena.observed.x = sArena.goal.x = tx / Q;
+        sArena.observed.y = sArena.goal.y = ty / Q;
+    }
     gWildlandsHitch[10] = WL_NOW() - t1;
     gWildlandsHitch[2] = WL_NOW() - t0;
     if (gWildlandsHitch[2] > gWildlandsHitch[3]) gWildlandsHitch[3] = gWildlandsHitch[2];
@@ -603,6 +639,9 @@ static bool8 DirectorAdvance(void)
     if (sDir->active != DIR_NONE)
     {
         struct DirDuo *d = &sDir->duo[sDir->active];
+        s32 kx = sArena.bodies[1].x / Q, ky = sArena.bodies[1].y / Q;
+        WildlandsWorld_OutdoorPos(&kx, &ky);
+        sDir->deadX = kx; sDir->deadY = ky;
         d->hp[0] = d->hp[1] = 0;
         d->state = DIR_DEAD;
         sDir->active = DIR_NONE;
@@ -620,6 +659,8 @@ static bool8 DirectorAdvance(void)
     }
     gWildlandsDirectorTelemetry[0] = DirLeft();
     next = DirLeft() ? DirNearest(FALSE) : DIR_NONE;   // roaming legendaries never keep a won match going
+    if (next != DIR_NONE && sDir->tp != DIR_NONE && sDir->duo[sDir->tp].state == DIR_SIM && DirAlive(&sDir->duo[sDir->tp]))
+        next = sDir->tp;   // V6.8: the third party that was closing in
     if (next == DIR_NONE)
     {
         DirRestorePartner();
@@ -660,7 +701,7 @@ static void DirSimOne(u8 i)
     // Storm.
     if (sZone.active && ZoneOutside(d->x, d->y, 0))
     {
-        u8 pct = (sZonePctPerSec[min(sZone.stage, ZONE_STAGES)] + 1) / 2 + 1;
+        u8 pct = DIR_STEP((sZonePctPerSec[min(sZone.stage, ZONE_STAGES)] + 1) / 2 + 1);
         if (d->hp[0]) d->hp[0] = d->hp[0] > pct ? d->hp[0] - pct : 0;
         if (d->hp[1]) d->hp[1] = d->hp[1] > pct ? d->hp[1] - pct : 0;
         if (!DirAlive(d))
@@ -714,16 +755,26 @@ static void DirSimOne(u8 i)
             d->gx = ox; d->gy = oy;
         }
     }
+    // V6.8 third party: close in on the player from this duo's own side and
+    // wait just off screen; it does not get drawn into other skirmishes.
+    if (i == sDir->tp)
+    {
+        s32 px, py;
+        DirPlayerPos(&px, &py);
+        d->gx = px; d->gy = py;
+        if (ArenaNav_Distance(d->x, d->y, px, py) <= 280)
+            return;
+    }
     // Skirmish with another simulated duo in range.
     for (j = 1; j < sDir->count; j++)
     {
         struct DirDuo *o = &sDir->duo[j];
         u32 pa, pb;
-        if (j == i || o->state != DIR_SIM || o->room || ArenaNav_Distance(d->x, d->y, o->x, o->y) > 140)
+        if (j == i || j == sDir->tp || i == sDir->tp || o->state != DIR_SIM || o->room || ArenaNav_Distance(d->x, d->y, o->x, o->y) > 140)
             continue;
         pa = DirPower(d); pb = DirPower(o);
-        DirSimDamage(d, 3 + 14 * pb / (pa + pb));
-        DirSimDamage(o, 3 + 14 * pa / (pa + pb));
+        DirSimDamage(d, DIR_STEP(3 + 14 * pb / (pa + pb)));
+        DirSimDamage(o, DIR_STEP(3 + 14 * pa / (pa + pb)));
         gWildlandsDirectorTelemetry[7]++;
         if (!DirAlive(o)) { o->state = DIR_DEAD; d->kills++; gWildlandsDirectorTelemetry[3]++; DirFeedOut(o); }
         if (!DirAlive(d)) { if (d->plan) gWildlandsBossTelemetry[13]++; d->state = DIR_DEAD; o->kills++; gWildlandsDirectorTelemetry[3]++; DirFeedOut(d); }
@@ -738,7 +789,7 @@ static void DirSimOne(u8 i)
     {
         struct ArenaPoint wp;
         u16 sp = d->species[d->hp[0] ? 0 : 1];
-        s32 sx = dist > 48 ? dx * 48 / dist : dx, sy = dist > 48 ? dy * 48 / dist : dy;
+        s32 st = DIR_STEP(48), sx = dist > st ? dx * st / dist : dx, sy = dist > st ? dy * st / dist : dy;
         if (dist && WildlandsWorld_SpeciesLineClear(sp, d->x, d->y, d->x + sx, d->y + sy, 6))
         {
             d->x += sx; d->y += sy;
@@ -747,7 +798,7 @@ static void DirSimOne(u8 i)
         if (WildlandsWorld_NextWaypointSpecies(sp, d->x, d->y, d->gx, d->gy, &wp))
         {
             s32 wx = wp.x - d->x, wy = wp.y - d->y, wd = max(Abs(wx), Abs(wy));
-            if (wd > 48) { wx = wx * 48 / wd; wy = wy * 48 / wd; }
+            if (wd > DIR_STEP(48)) { wx = wx * DIR_STEP(48) / wd; wy = wy * DIR_STEP(48) / wd; }
             if (wd)
             {
                 d->x += wx; d->y += wy;
@@ -806,7 +857,7 @@ static void DirSimOne(u8 i)
         return;
     }
     {
-        s32 step = d->legend == DIR_ROAMER ? 56 : 40;
+        s32 step = DIR_STEP(d->legend == DIR_ROAMER ? 56 : 40);
         s32 nx = d->x + dx * step / dist, ny = d->y + dy * step / dist;
         if (WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y, nx, ny, 6))
         { d->x = nx; d->y = ny; }
@@ -1228,6 +1279,57 @@ static void DirBossTick(void)
     gWildlandsBossAiTelemetry[2]++;
 }
 
+// V6.8: arm a third party now and then during a real fight (6% per ~1s
+// check, 90 s cooldown, not in the first minute): the nearest healthy duo
+// 320-1100 px away on a different side from the current foe.
+static void DirThirdPartyTick(void)
+{
+    s32 px, py, ax, ay;
+    u32 j, best = 0xFFFFFFFF, la;
+    u8 pick = DIR_NONE;
+    if (sDir->tp != DIR_NONE)
+    {
+        struct DirDuo *t = &sDir->duo[sDir->tp];
+        if (t->state != DIR_SIM || !DirAlive(t) || t->room || t->plan)
+            sDir->tp = DIR_NONE;
+        return;
+    }
+    if (sDir->active == DIR_NONE || DirectorSoloActive() || !SquadAlive(0) || !gBattleMons[1].hp
+        || WildlandsWorld_InRoom(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q))
+        return;
+    if (!gWildlandsTpTest && (sDir->tpCooldown || sDir->clock < 3600 || DirRand() % 100 >= 6))
+        return;
+    DirPlayerPos(&px, &py);
+    ax = sArena.bodies[1].x / Q - sArena.bodies[0].x / Q;
+    ay = sArena.bodies[1].y / Q - sArena.bodies[0].y / Q;
+    la = ArenaNav_Distance(0, 0, ax, ay);
+    if (la > 240)
+        return;   // only while the foe is right there
+    for (j = 1; j < sDir->count; j++)
+    {
+        struct DirDuo *d = &sDir->duo[j];
+        s32 dx, dy;
+        u32 dist;
+        if (d->state != DIR_SIM || d->legend || d->room || d->plan || !DirAlive(d))
+            continue;
+        dx = d->x - px; dy = d->y - py;
+        dist = ArenaNav_Distance(px, py, d->x, d->y);
+        if (dist < 320 || dist > (gWildlandsTpTest ? 2400u : 1100u))
+            continue;
+        if (la && (dx * ax + dy * ay) * 2 > (s32)(dist * la))
+            continue;   // same side as the current foe (within ~60 degrees)
+        if (dist < best) { best = dist; pick = j; }
+    }
+    if (pick == DIR_NONE)
+        return;
+    gWildlandsTpTest = 0;
+    sDir->tp = pick;
+    sDir->tpCooldown = 5400;
+    gWildlandsTpTelemetry[0]++;
+}
+
+static bool8 DirectorTpFocus(void) { return sDir && sDir->tpFocus && !DirectorSoloActive(); }
+
 static void DirectorSim(void)
 {
     if (!sDir || !WildlandsWorld_Active() || sArena.paused || sArena.resultTimer)
@@ -1249,15 +1351,20 @@ static void DirectorSim(void)
     }
     if (sDir->bossCooldown)
         sDir->bossCooldown--;
+    if (sDir->tpCooldown)
+        sDir->tpCooldown--;
+    if (sDir->tpFocus)
+        sDir->tpFocus--;
     if (sDir->count > 1)
     {
         sDir->cursor = sDir->cursor + 1 >= sDir->count ? 1 : sDir->cursor + 1;
-        // Each duo advances every `count` frames: scale so 30 duos move ~80px/s.
+        // Each duo advances every `count` frames (steps scale with DIR_STEP).
         DirSimOne(sDir->cursor);
     }
     if (!(sDir->clock & 63))
     {
         DirRoamersSpawn();
+        DirThirdPartyTick();
         DirPolicy();
         gWildlandsDirectorTelemetry[0] = DirLeft();
     }
@@ -1339,6 +1446,9 @@ static void DirectorInit(void)
     sDir = AllocZeroed(sizeof(struct DirState));
     if (!sDir)
         return;
+    sDir->tp = DIR_NONE;
+    memset(gWildlandsTpTelemetry, 0, sizeof(gWildlandsTpTelemetry));
+    Wildlands_ShopSelfTest();
     memset(gWildlandsDirectorTelemetry, 0, sizeof(gWildlandsDirectorTelemetry));
     memset(&sDirPopup, 0, sizeof(sDirPopup));
 #ifdef WL_ISLAND

@@ -313,13 +313,17 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
     sBrain.modeClock++;
     // V6.6: legendaries (lair bosses and roamers) never retreat, loot or
     // wander off: they hunt the nearest living player Pokemon, seen or not.
-    if (DirectorSoloActive())
+    // V6.8: a third party that just arrived hunts the weaker player Pokemon
+    // the same way for 15 s.
+    if (DirectorSoloActive() || DirectorTpFocus())
     {
         s32 x0, y0, x2, y2;
         u8 t = SquadAlive(0) ? 0 : 2;
         SquadPos(0, &x0, &y0);
         SquadPos(2, &x2, &y2);
-        if (SquadAlive(0) && SquadAlive(2)
+        if (SquadAlive(0) && SquadAlive(2) && !DirectorSoloActive())
+            t = BrainHpPct(2) < BrainHpPct(0) ? 2 : 0;
+        else if (SquadAlive(0) && SquadAlive(2)
             && (seenMask == 2 || (seenMask != 1
                 && ArenaNav_Distance(body->x / Q, body->y / Q, x2 / Q, y2 / Q)
                  < ArenaNav_Distance(body->x / Q, body->y / Q, x0 / Q, y0 / Q))))

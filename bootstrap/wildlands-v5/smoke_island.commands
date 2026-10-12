@@ -27,6 +27,8 @@ snap t-newgame-09
 frames 100 0
 snap t-newgame-10
 snap 01-lab
+# V6.8 Shiny Shop core: runs on party slot 1 at match start (test hook)
+poke gWildlandsShopTest 0 1 1
 # ---- Lab COACH (9,8): walk east to the counter, one step west, up to face him ----
 frames 200 16
 frames 10 32
@@ -321,6 +323,11 @@ dumph loopIdle gWildlandsLoop 0 4
 ratesym idle gWildlandsProfile 20 2 300 0 95
 prof idle-fight 120 0
 # ---- FPS: 60 fps pacing in a fight (test hook) ----
+# V6.8 third party: arm one mid-fight (test hook bypasses odds/cooldown)
+poke gWildlandsTpTest 0 1 1
+frames 130 0
+dumph thirdParty gWildlandsTpTelemetry 0 3
+expectmin gWildlandsTpTelemetry 0 2 1
 poke gWildlandsFastTest 0 1 2
 poke gWildlandsFastTelemetry 0 2 0
 poke gWildlandsFastTelemetry 2 2 0
@@ -443,6 +450,12 @@ dump roomsEnd gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 28 4 0
 dump brain gWildlandsBrainTelemetry 8
 dumph wingDodges gWildlandsWingDodges 0 2
+dumph thirdPartyEnd gWildlandsTpTelemetry 0 3
+dumph shop gWildlandsShopTelemetry 0 4
+expect gWildlandsShopTelemetry 0 2 1
+expect gWildlandsShopTelemetry 2 2 1
+expect gWildlandsShopTelemetry 4 2 1
+expect gWildlandsShopTelemetry 6 2 0
 dump directorEnd gWildlandsDirectorTelemetry 8
 dump biomeEnd gWildlandsBiomeTelemetry 4
 expect gWildlandsBiomeTelemetry 12 4 0
