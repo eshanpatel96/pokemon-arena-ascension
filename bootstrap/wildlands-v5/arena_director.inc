@@ -19,10 +19,14 @@
 // State lives on the heap for the whole encounter (menus keep it).
 
 #define DIR_LEGENDS 5
-#define DIR_MAX (WL_DIRECTOR_DUOS + DIR_LEGENDS)
+#define DIR_ROAMERS 3
+#define DIR_MAX (WL_DIRECTOR_DUOS + DIR_LEGENDS + DIR_ROAMERS)
+// legend: 0 duo, 1 lair boss, 2 roaming legendary (dog / bird / regi)
+#define DIR_LAIR_BOSS 1
+#define DIR_ROAMER 2
 #define DIR_NONE 0xFF
 
-enum { DIR_DEAD, DIR_SIM, DIR_ACTIVE, DIR_PLAYER, DIR_LAIR };
+enum { DIR_DEAD, DIR_SIM, DIR_ACTIVE, DIR_PLAYER, DIR_LAIR, DIR_WAIT };   // WAIT: roamer not spawned yet (planBest = spawn second)
 
 struct DirDuo
 {
@@ -157,6 +161,8 @@ static u8 DirLeft(void);
 static void DirRandomGoal(struct DirDuo *d);
 static void DirPopup(const u8 *a, const u8 *b, u8 color);
 static void DirFeedOut(const struct DirDuo *d);
+static void DirRoamersInit(u8 level);
+extern u16 gWildlandsRoamerTelemetry[9];
 
 // Beta shinies: about 1 in 64 AI Pokemon (legendaries included) is shiny.
 // pad2 holds a per-duo salt rolled at match start; shininess is a function
@@ -434,11 +440,11 @@ static void DirStoreActive(void)
         d->hp[1] = 0;
     {
         s32 x = sArena.bodies[1].x / Q, y = sArena.bodies[1].y / Q;
-        if (!d->legend)
+        if (d->legend != DIR_LAIR_BOSS)
             WildlandsWorld_OutdoorPos(&x, &y);
         d->x = x; d->y = y;
     }
-    d->state = DirAlive(d) ? (d->legend ? DIR_LAIR : DIR_SIM) : DIR_DEAD;
+    d->state = DirAlive(d) ? (d->legend == DIR_LAIR_BOSS ? DIR_LAIR : DIR_SIM) : DIR_DEAD;
     sDir->active = DIR_NONE;
 }
 
@@ -448,7 +454,7 @@ static void DirOffscreenEntry(struct DirDuo *d)
 {
     s32 cx = sArenaXLCameraX, cy = sArenaXLCameraY, px, py;
     u32 k;
-    if (d->legend || WildlandsWorld_InRoom(d->x, d->y) || !gWildlandsDirectorTelemetry[6])
+    if (d->legend == DIR_LAIR_BOSS || WildlandsWorld_InRoom(d->x, d->y) || !gWildlandsDirectorTelemetry[6])
         return;   // (the opening practice duo starts where the match placed it)
     if (d->x < cx - 40 || d->x > cx + 280 || d->y < cy - 40 || d->y > cy + 200)
         return;
@@ -471,6 +477,7 @@ static void DirOffscreenEntry(struct DirDuo *d)
 static void DirLoadActive(u8 index)
 {
     static const u8 sShinyPre[] = _("SHINY ");
+    static const u8 sRoamerHunts[] = _(" ATTACKS!");
     struct DirDuo *d = &sDir->duo[index];
     struct ArenaBody *body = &sArena.bodies[1];
     u8 lead, other;
@@ -479,7 +486,7 @@ static void DirLoadActive(u8 index)
     DirOffscreenEntry(d);
     lead = (d->species[0] && d->hp[0]) ? 0 : 1;
     other = lead ^ 1;
-    DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend, DirShiny(d, d->species[lead]));
+    DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend == DIR_LAIR_BOSS, DirShiny(d, d->species[lead]));
     t1 = WL_NOW(); gWildlandsHitch[6] = t1 - t0;
     if (IsMonShiny(&gEnemyParty[0]))
         DirPopup(sShinyPre, gSpeciesNames[d->species[lead]], 5);
@@ -490,7 +497,9 @@ static void DirLoadActive(u8 index)
     gBattlerPartyIndexes[1] = 0;
     gWildlandsHitch[7] = WL_NOW() - t1; t1 = WL_NOW();
     SquadFillBattleMon(1, &gEnemyParty[0]);
-    if (d->legend)
+    if (d->legend == DIR_ROAMER)
+        DirPopup(gSpeciesNames[d->species[0]], sRoamerHunts, 6);
+    if (d->legend == DIR_LAIR_BOSS)
     {
         gBattleMons[1].statStages[STAT_DEF]++;
         gBattleMons[1].statStages[STAT_SPDEF]++;
@@ -596,7 +605,11 @@ static bool8 DirectorAdvance(void)
         d->state = DIR_DEAD;
         sDir->active = DIR_NONE;
         if (d->legend)
+        {
+            if (d->legend == DIR_ROAMER)
+                gWildlandsRoamerTelemetry[2]++;
             DirLegendJoins(d);
+        }
         else
         {
             sDir->playerKOs++;
@@ -604,7 +617,7 @@ static bool8 DirectorAdvance(void)
         }
     }
     gWildlandsDirectorTelemetry[0] = DirLeft();
-    next = DirNearest(FALSE);
+    next = DirLeft() ? DirNearest(FALSE) : DIR_NONE;   // roaming legendaries never keep a won match going
     if (next == DIR_NONE)
     {
         DirRestorePartner();
@@ -614,6 +627,12 @@ static bool8 DirectorAdvance(void)
     return TRUE;
 }
 
+// Lair boss is the active enemy (it stays home when you leave its room).
+static bool8 DirLairBossActive(void)
+{
+    return sDir && sDir->active != DIR_NONE && sDir->duo[sDir->active].legend == DIR_LAIR_BOSS;
+}
+// Any legendary is the active enemy: it never retreats and is never swapped out.
 static bool8 DirectorSoloActive(void)
 {
     return sDir && sDir->active != DIR_NONE && sDir->duo[sDir->active].legend;
@@ -756,8 +775,16 @@ static void DirSimOne(u8 i)
         // otherwise mostly inside the circle, sometimes toward the player.
         u32 r = DirRand() & 15;
         s32 bossScore;
-        u8 lair = d->plan ? DIR_NONE : DirBossPick(d, d->x, d->y, &bossScore);
+        u8 lair = (d->plan || d->legend) ? DIR_NONE : DirBossPick(d, d->x, d->y, &bossScore);
         DirRandomGoal(d);
+        if (d->legend == DIR_ROAMER && r < 11)
+        {
+            // Roaming legendaries are hunters: mostly they come for you.
+            s32 px, py;
+            DirPlayerPos(&px, &py);
+            d->gx = px; d->gy = py;
+            return;
+        }
         if (lair != DIR_NONE)
         {
             s32 ox, oy;
@@ -777,7 +804,8 @@ static void DirSimOne(u8 i)
         return;
     }
     {
-        s32 nx = d->x + dx * 40 / dist, ny = d->y + dy * 40 / dist;
+        s32 step = d->legend == DIR_ROAMER ? 56 : 40;
+        s32 nx = d->x + dx * step / dist, ny = d->y + dy * step / dist;
         if (WildlandsWorld_SpeciesLineClear(d->species[d->hp[0] ? 0 : 1], d->x, d->y, nx, ny, 6))
         { d->x = nx; d->y = ny; }
         else if (d->plan)
@@ -851,7 +879,7 @@ static void DirPolicy(void)
         return;
     }
     // Leaving a lair with the legendary still alive: it stays home.
-    if (DirectorSoloActive() && room < 0)
+    if (DirLairBossActive() && room < 0)
     {
         DirStoreActive();
         near = DirNearest(FALSE);
@@ -1002,6 +1030,102 @@ static void DirectorBossEnter(void)
         DirLoadActive(next);
 }
 
+
+// ---- Roaming legendaries ------------------------------------------------------
+// One legendary dog, bird and Regi per match (species picked at random in each
+// family). Each appears at its own random time inside the safe circle, hunts
+// the player, is bigger than normal Pokemon and stronger than a duo but weaker
+// than a lair boss (no HP doubling or defence boost). Beat it and it joins you.
+static const u16 sRoamerFamily[3][3] = {
+    {SPECIES_RAIKOU, SPECIES_ENTEI, SPECIES_SUICUNE},
+    {SPECIES_ARTICUNO, SPECIES_ZAPDOS, SPECIES_MOLTRES},
+    {SPECIES_REGIROCK, SPECIES_REGICE, SPECIES_REGISTEEL},
+};
+// [0] roamers set up [1] spawned [2] joined the player [3..5] species [6..8] spawn second
+EWRAM_DATA u16 gWildlandsRoamerTelemetry[9] = {0};
+// TEST HOOK ONLY: nonzero spawns every waiting roamer now; 0 in play.
+EWRAM_DATA u8 gWildlandsRoamerTest = 0;
+
+static void DirRoamersInit(u8 level)
+{
+    u32 f, k, order[3] = {0, 1, 2};
+    u16 t = 30 + DirRand() % 31;
+    for (k = 0; k < 3; k++)
+    {
+        u32 j = k + DirRand() % (3 - k), tmp = order[k];
+        order[k] = order[j]; order[j] = tmp;
+    }
+    for (k = 0; k < 3 && sDir->count < DIR_MAX; k++)
+    {
+        struct DirDuo *d = &sDir->duo[sDir->count];
+        u16 sp = 0;
+        u32 tries;
+        f = order[k];
+        for (tries = 0; tries < 6 && !sp; tries++)
+        {
+            u16 c = sRoamerFamily[f][DirRand() % 3];
+            if (ArenaSprites_Get(c))
+                sp = c;
+        }
+        for (tries = 0; tries < 3 && !sp; tries++)
+            if (ArenaSprites_Get(sRoamerFamily[f][tries]))
+                sp = sRoamerFamily[f][tries];
+        if (!sp)
+            continue;
+        memset(d, 0, sizeof(*d));
+        d->species[0] = sp; d->hp[0] = 100;
+        d->level = min(100, level + 2);
+        d->legend = DIR_ROAMER;
+        d->pad2 = 1 + DirRand() % 255;
+        d->state = DIR_WAIT;
+        d->planBest = t;                     // spawn second
+        gWildlandsRoamerTelemetry[3 + f] = sp;
+        gWildlandsRoamerTelemetry[6 + f] = t;
+        gWildlandsRoamerTelemetry[0]++;
+        t += 45 + DirRand() % 46;            // the next family comes later
+        sDir->count++;
+    }
+}
+
+static void DirRoamersSpawn(void)
+{
+    static const u8 sAppears[] = _(" APPEARS");
+    u32 i, k;
+    u16 now = sDir->clock / 60;
+    s32 px, py;
+    DirPlayerPos(&px, &py);
+    for (i = WL_DIRECTOR_DUOS; i < sDir->count; i++)
+    {
+        struct DirDuo *d = &sDir->duo[i];
+        bool8 placed = FALSE;
+        if (d->state != DIR_WAIT || (now < d->planBest && !gWildlandsRoamerTest))
+            continue;
+        // Inside the safe circle, outdoors, a short hunt away from the player.
+        for (k = 0; k < 96 && !placed; k++)
+        {
+            s16 x, y;
+            u32 dist;
+            WildlandsWorld_NavPoint(DirRand() % WildlandsWorld_NavPointCount(), &x, &y);
+            dist = ArenaNav_Distance(px, py, x, y);
+            if (WildlandsWorld_InRoom(x, y) || (sZone.active && ZoneOutside(x, y, 96))
+                || !WildlandsWorld_CanStandSpecies(d->species[0], x, y, 8))
+                continue;
+            if (k < 64 && (dist < 260 || dist > 760))
+                continue;
+            d->x = x; d->y = y;
+            placed = TRUE;
+        }
+        if (!placed)
+            continue;                        // try again next check
+        d->gx = px; d->gy = py;
+        d->state = DIR_SIM;
+        gWildlandsRoamerTelemetry[1]++;
+        DirPopup(gSpeciesNames[d->species[0]], sAppears, 6);
+        PlayCry_Normal(d->species[0], 0);
+        return;                              // one announcement at a time
+    }
+}
+
 static void DirectorSim(void)
 {
     if (!sDir || !WildlandsWorld_Active() || sArena.paused || sArena.resultTimer)
@@ -1009,7 +1133,7 @@ static void DirectorSim(void)
     if (sDirPopup.timer && !--sDirPopup.timer)
         sArena.hudDirty = TRUE;
     sDir->clock++;
-    if (sDir->active != DIR_NONE && sDir->duo[sDir->active].legend)
+    if (sDir->active != DIR_NONE && sDir->duo[sDir->active].legend == DIR_LAIR_BOSS)
     {
         // Live boss check: [3] player room+1 [4] boss room+1 [5] boss species
         // [6] distance to the player [7] boss x [8] boss y
@@ -1030,6 +1154,7 @@ static void DirectorSim(void)
     }
     if (!(sDir->clock & 63))
     {
+        DirRoamersSpawn();
         DirPolicy();
         gWildlandsDirectorTelemetry[0] = DirLeft();
     }
@@ -1177,6 +1302,7 @@ static void DirectorInit(void)
             gWildlandsBossAudit[2] |= 1 << i;
         sDir->count++;
     }
+    DirRoamersInit(level);
     // The practice duo already on the field becomes AI duo 1 at its spawn,
     // re-rolled to the lobby's level band.
     sDir->duo[1].x = sArena.bodies[1].x / Q;

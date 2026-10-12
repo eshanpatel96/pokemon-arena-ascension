@@ -92,6 +92,8 @@ snap t-deploy-13
 expect gWildlandsWorldAudit 0 4 1
 dump squad0 gWildlandsSquadTelemetry 16
 dumph bossAudit gWildlandsBossAudit 0 3
+dumph roamers gWildlandsRoamerTelemetry 0 9
+expect gWildlandsRoamerTelemetry 0 2 3
 expect gWildlandsBossAudit 0 2 5
 expect gWildlandsBossAudit 2 2 5
 expect gWildlandsBossAudit 4 2 0
@@ -446,6 +448,12 @@ snap 30-storm-outside
 dumph rain gWildlandsRainVisible 0 1
 dumph rainDiag gWildlandsRainDiag 0 4
 dump zoneEnd gWildlandsZoneTelemetry 16
+# ---- Roaming legendaries: spawn inside the circle (test hook: now) ----
+poke gWildlandsRoamerTest 0 1 1
+frames 220 0
+poke gWildlandsRoamerTest 0 1 0
+dumph roamersSpawned gWildlandsRoamerTelemetry 0 9
+expectmin gWildlandsRoamerTelemetry 2 2 1
 # ---- A lost match returns to the Team Lab (never Ascension City) ----
 frames 300 0
 snap 30a-summary

@@ -77,6 +77,13 @@ patch(A, 'void Wildlands_ArenaLoadout(struct Pokemon *mon);\n',
       'void Wildlands_ArenaLoadout(struct Pokemon *mon);\nvoid Wildlands_SweepAllMoves(void);\n')
 patch(A, '    AddBagItem(ITEM_X_SPEED,10);\n#endif\n    return TRUE;\n}',
       '    AddBagItem(ITEM_X_SPEED,10);\n    Wildlands_SweepAllMoves();   // Beta: every owned Pokemon starts arena-ready\n#endif\n    return TRUE;\n}')
+# Roaming legendaries (dogs, birds, Regis) are earned in a match, not
+# handed out: they leave the PC roster.
+patch(A, '        if(species==SPECIES_CHARIZARD || species==SPECIES_BLASTOISE) continue;\n',
+      '        if(species==SPECIES_CHARIZARD || species==SPECIES_BLASTOISE) continue;\n'
+      '        if(species==SPECIES_RAIKOU || species==SPECIES_ENTEI || species==SPECIES_SUICUNE\n'
+      '           || species==SPECIES_ARTICUNO || species==SPECIES_ZAPDOS || species==SPECIES_MOLTRES\n'
+      '           || species==SPECIES_REGIROCK || species==SPECIES_REGICE || species==SPECIES_REGISTEEL) continue;\n')
 # Deploy from the coach also sweeps the duo.
 patch(A, '    VarSet(VAR_ASCENSION_FLOOR, sWildlandsPracticeGround);\n',
       '    {\n        u32 k;\n        for (k = 0; k < 2; k++)\n            Wildlands_ArenaLoadout(&gPlayerParty[k]);\n    }\n'
