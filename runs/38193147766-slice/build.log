@@ -1,0 +1,515 @@
+rk.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/libisagbprn.o src/libisagbprn.c
+tools/agbcc/bin/agbcc_arm <flags> -o build/emerald/src/librfu_intr.o src/librfu_intr.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/librfu_rfu.o src/librfu_rfu.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/librfu_sio32id.o src/librfu_sio32id.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/librfu_stwi.o src/librfu_stwi.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/lilycove_lady.o src/lilycove_lady.c
+tools/gbagfx/gbagfx graphics/link/comm_error_bg.png build/assets/graphics/link/comm_error_bg.png.4bpp 
+tools/gbagfx/gbagfx graphics/link/test_digits.png build/assets/graphics/link/test_digits.png.4bpp 
+tools/gbagfx/gbagfx graphics/link/test_digits.png build/assets/graphics/link/test_digits.png.gbapal 
+tools/gbagfx/gbagfx graphics/link/wireless_display.bin build/assets/graphics/link/wireless_display.bin.lz 
+tools/gbagfx/gbagfx graphics/link/wireless_display.png build/assets/graphics/link/wireless_display.png.4bpp 
+tools/gbagfx/gbagfx graphics/link/wireless_display.png build/assets/graphics/link/wireless_display.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/link_rfu_2.o src/link_rfu_2.c
+tools/gbagfx/gbagfx graphics/link/wireless_icon.png build/assets/graphics/link/wireless_icon.png.4bpp 
+tools/gbagfx/gbagfx graphics/link/wireless_icon.png build/assets/graphics/link/wireless_icon.png.gbapal 
+tools/gbagfx/gbagfx graphics/interface/arrow_cursor.png build/assets/graphics/interface/arrow_cursor.png.4bpp 
+tools/gbagfx/gbagfx graphics/interface/outline_cursor.png build/assets/graphics/interface/outline_cursor.png_num_tiles_8__Wnum_tiles.4bpp -num_tiles 8 -Wnum_tiles
+tools/gbagfx/gbagfx graphics/interface/red.pal build/assets/graphics/interface/red.pal.gbapal 
+tools/gbagfx/gbagfx graphics/interface/scroll_indicator.png build/assets/graphics/interface/scroll_indicator.png.4bpp 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/load_save.o src/load_save.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/lottery_corner.o src/lottery_corner.c
+tools/agbcc/bin/old_agbcc <flags> -o build/emerald/src/m4a.o src/m4a.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/m4a_tables.o src/m4a_tables.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mail.o src/mail.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mail_data.o src/mail_data.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/main.o src/main.c
+tools/gbagfx/gbagfx graphics/birch_speech/bg0.pal build/assets/graphics/birch_speech/bg0.pal.gbapal 
+tools/gbagfx/gbagfx graphics/birch_speech/bg1.pal build/assets/graphics/birch_speech/bg1.pal.gbapal 
+tools/gbagfx/gbagfx graphics/birch_speech/bg2.pal build/assets/graphics/birch_speech/bg2.pal.gbapal 
+tools/gbagfx/gbagfx graphics/birch_speech/map.bin build/assets/graphics/birch_speech/map.bin.lz 
+tools/gbagfx/gbagfx graphics/birch_speech/shadow.png build/assets/graphics/birch_speech/shadow.png.4bpp 
+tools/gbagfx/gbagfx graphics/interface/main_menu_bg.pal build/assets/graphics/interface/main_menu_bg.pal.gbapal 
+tools/gbagfx/gbagfx graphics/interface/main_menu_text.pal build/assets/graphics/interface/main_menu_text.pal.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/malloc.o src/malloc.c
+tools/gbagfx/gbagfx graphics/map_popup/brick.png build/assets/graphics/map_popup/brick.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/brick_outline.png build/assets/graphics/map_popup/brick_outline.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/brick_outline.png build/assets/graphics/map_popup/brick_outline.png.gbapal 
+tools/gbagfx/gbagfx graphics/map_popup/marble.png build/assets/graphics/map_popup/marble.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/marble_outline.png build/assets/graphics/map_popup/marble_outline.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/marble_outline.png build/assets/graphics/map_popup/marble_outline.png.gbapal 
+tools/gbagfx/gbagfx graphics/map_popup/stone.png build/assets/graphics/map_popup/stone.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/stone2.png build/assets/graphics/map_popup/stone2.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/stone2_outline.png build/assets/graphics/map_popup/stone2_outline.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/stone2_outline.png build/assets/graphics/map_popup/stone2_outline.png.gbapal 
+tools/gbagfx/gbagfx graphics/map_popup/stone_outline.png build/assets/graphics/map_popup/stone_outline.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/stone_outline.png build/assets/graphics/map_popup/stone_outline.png.gbapal 
+tools/gbagfx/gbagfx graphics/map_popup/underwater.pal build/assets/graphics/map_popup/underwater.pal.gbapal 
+tools/gbagfx/gbagfx graphics/map_popup/underwater.png build/assets/graphics/map_popup/underwater.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/underwater_outline.png build/assets/graphics/map_popup/underwater_outline.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/underwater_outline.png build/assets/graphics/map_popup/underwater_outline.png.gbapal 
+tools/gbagfx/gbagfx graphics/map_popup/wood.png build/assets/graphics/map_popup/wood.png.4bpp 
+tools/gbagfx/gbagfx graphics/map_popup/wood.png build/assets/graphics/map_popup/wood.png.gbapal 
+tools/gbagfx/gbagfx graphics/map_popup/wood_outline.png build/assets/graphics/map_popup/wood_outline.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/nav_icon.png build/assets/graphics/pokenav/match_call/nav_icon.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/nav_icon.png build/assets/graphics/pokenav/match_call/nav_icon.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/window.png build/assets/graphics/pokenav/match_call/window.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/window.png build/assets/graphics/pokenav/match_call/window.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/math_util.o src/math_util.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mauville_old_man.o src/mauville_old_man.c
+tools/gbagfx/gbagfx graphics/interface/hof_pc_topbar.pal build/assets/graphics/interface/hof_pc_topbar.pal.gbapal 
+tools/gbagfx/gbagfx graphics/interface/std_menu.pal build/assets/graphics/interface/std_menu.pal.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/menu_helpers.o src/menu_helpers.c
+tools/gbagfx/gbagfx graphics/pokenav/condition/pokeball.png build/assets/graphics/pokenav/condition/pokeball.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/condition/pokeball_placeholder.png build/assets/graphics/pokenav/condition/pokeball_placeholder.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/condition/sparkle.png build/assets/graphics/pokenav/condition/sparkle.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/condition/sparkle.png build/assets/graphics/pokenav/condition/sparkle.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/metatile_behavior.o src/metatile_behavior.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mini_printf.o src/mini_printf.c
+tools/gbagfx/gbagfx graphics/link/321start.png build/assets/graphics/link/321start.png.4bpp 
+tools/gbagfx/gbagfx graphics/link/321start.png build/assets/graphics/link/321start.png.gbapal 
+tools/gbagfx/gbagfx graphics/link/321start_static.png build/assets/graphics/link/321start_static.png.4bpp 
+tools/gbagfx/gbagfx graphics/link/321start_static.png build/assets/graphics/link/321start_static.png.gbapal 
+tools/gbagfx/gbagfx graphics/misc/mirage_tower.png build/assets/graphics/misc/mirage_tower.png_num_tiles_73__Wnum_tiles.4bpp -num_tiles 73 -Wnum_tiles
+tools/gbagfx/gbagfx graphics/misc/mirage_tower_crumbles.png build/assets/graphics/misc/mirage_tower_crumbles.png.4bpp 
+tools/gbagfx/gbagfx graphics/misc/mirage_tower_crumbles.png build/assets/graphics/misc/mirage_tower_crumbles.png.gbapal 
+tools/gbagfx/gbagfx graphics/object_events/pics/misc/fossil.png build/assets/graphics/object_events/pics/misc/fossil.png.gbapal 
+tools/gbagfx/gbagfx graphics/interface/mon_markings.png build/assets/graphics/interface/mon_markings.png.4bpp 
+tools/gbagfx/gbagfx graphics/interface/mon_markings.png build/assets/graphics/interface/mon_markings.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/money.o src/money.c
+tools/gbagfx/gbagfx graphics/interface/ui_learn_move.png build/assets/graphics/interface/ui_learn_move.png.4bpp 
+tools/gbagfx/gbagfx graphics/interface/ui_learn_move.png build/assets/graphics/interface/ui_learn_move.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/multiboot.o src/multiboot.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_event_menu.o src/mystery_event_menu.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_event_msg.o src/mystery_event_msg.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_event_script.o src/mystery_event_script.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_gift.o src/mystery_gift.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_gift_client.o src/mystery_gift_client.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_gift_link.o src/mystery_gift_link.c
+tools/gbagfx/gbagfx graphics/interface/mystery_gift_textbox_border.png build/assets/graphics/interface/mystery_gift_textbox_border.png.4bpp 
+tools/gbagfx/gbagfx graphics/interface/mystery_gift_textbox_border.png build/assets/graphics/interface/mystery_gift_textbox_border.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_gift_scripts.o src/mystery_gift_scripts.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/mystery_gift_server.o src/mystery_gift_server.c
+tools/gbagfx/gbagfx graphics/wonder_card/bg1.bin build/assets/graphics/wonder_card/bg1.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_card/bg1.png build/assets/graphics/wonder_card/bg1.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_card/bg1.png build/assets/graphics/wonder_card/bg1.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/bg2.bin build/assets/graphics/wonder_card/bg2.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_card/bg2.png build/assets/graphics/wonder_card/bg2.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_card/bg2.png build/assets/graphics/wonder_card/bg2.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/bg3.bin build/assets/graphics/wonder_card/bg3.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_card/bg3.png build/assets/graphics/wonder_card/bg3.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_card/bg3.png build/assets/graphics/wonder_card/bg3.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/bg4.png build/assets/graphics/wonder_card/bg4.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/bg5.png build/assets/graphics/wonder_card/bg5.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/bg6.png build/assets/graphics/wonder_card/bg6.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/bg7.bin build/assets/graphics/wonder_card/bg7.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_card/bg7.png build/assets/graphics/wonder_card/bg7.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_card/bg7.png build/assets/graphics/wonder_card/bg7.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/bg8.bin build/assets/graphics/wonder_card/bg8.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_card/bg8.png build/assets/graphics/wonder_card/bg8.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_card/bg8.png build/assets/graphics/wonder_card/bg8.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow.png build/assets/graphics/wonder_card/stamp_shadow.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_1.pal build/assets/graphics/wonder_card/stamp_shadow_1.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_2.pal build/assets/graphics/wonder_card/stamp_shadow_2.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_3.pal build/assets/graphics/wonder_card/stamp_shadow_3.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_4.pal build/assets/graphics/wonder_card/stamp_shadow_4.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_5.pal build/assets/graphics/wonder_card/stamp_shadow_5.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_6.pal build/assets/graphics/wonder_card/stamp_shadow_6.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_7.pal build/assets/graphics/wonder_card/stamp_shadow_7.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_card/stamp_shadow_8.pal build/assets/graphics/wonder_card/stamp_shadow_8.pal.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_news/bg1.bin build/assets/graphics/wonder_news/bg1.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_news/bg1.png build/assets/graphics/wonder_news/bg1.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_news/bg1.png build/assets/graphics/wonder_news/bg1.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_news/bg2.bin build/assets/graphics/wonder_news/bg2.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_news/bg2.png build/assets/graphics/wonder_news/bg2.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_news/bg3.bin build/assets/graphics/wonder_news/bg3.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_news/bg3.png build/assets/graphics/wonder_news/bg3.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_news/bg7.bin build/assets/graphics/wonder_news/bg7.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_news/bg7.png build/assets/graphics/wonder_news/bg7.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_news/bg7.png build/assets/graphics/wonder_news/bg7.png.gbapal 
+tools/gbagfx/gbagfx graphics/wonder_news/bg8.bin build/assets/graphics/wonder_news/bg8.bin.lz 
+tools/gbagfx/gbagfx graphics/wonder_news/bg8.png build/assets/graphics/wonder_news/bg8.png.4bpp 
+tools/gbagfx/gbagfx graphics/wonder_news/bg8.png build/assets/graphics/wonder_news/bg8.png.gbapal 
+tools/gbagfx/gbagfx graphics/naming_screen/keyboard.pal build/assets/graphics/naming_screen/keyboard.pal.gbapal 
+tools/gbagfx/gbagfx graphics/naming_screen/pc_icon_off.png build/assets/graphics/naming_screen/pc_icon_off.png.4bpp 
+tools/gbagfx/gbagfx graphics/naming_screen/pc_icon_on.png build/assets/graphics/naming_screen/pc_icon_on.png.4bpp 
+tools/gbagfx/gbagfx graphics/naming_screen/rival.pal build/assets/graphics/naming_screen/rival.pal.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/new_game.o src/new_game.c
+tools/gbagfx/gbagfx graphics/interface/option_menu_equals_sign.png build/assets/graphics/interface/option_menu_equals_sign.png.4bpp 
+tools/gbagfx/gbagfx graphics/interface/option_menu_text.pal build/assets/graphics/interface/option_menu_text.pal.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/overworld.o src/overworld.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/palette.o src/palette.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/palette_util.o src/palette_util.c
+tools/gbagfx/gbagfx graphics/party_menu/hold_icons.png build/assets/graphics/party_menu/hold_icons.png.4bpp 
+tools/gbagfx/gbagfx graphics/party_menu/hold_icons.png build/assets/graphics/party_menu/hold_icons.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/play_time.o src/play_time.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/player_pc.o src/player_pc.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokeball.o src/pokeball.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokeblock.o src/pokeblock.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokeblock_feed.o src/pokeblock_feed.c
+tools/gbagfx/gbagfx graphics/pokedex/caught_ball.png build/assets/graphics/pokedex/caught_ball.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokedex/size_silhouette.pal build/assets/graphics/pokedex/size_silhouette.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokedex/region_map.bin build/assets/graphics/pokedex/region_map.bin.lz 
+tools/gbagfx/gbagfx graphics/pokedex/region_map.pal build/assets/graphics/pokedex/region_map.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokedex/region_map.png build/assets/graphics/pokedex/region_map.png_num_tiles_232__Wnum_tiles.8bpp -num_tiles 232 -Wnum_tiles
+tools/gbagfx/gbagfx graphics/pokedex/region_map_affine.bin build/assets/graphics/pokedex/region_map_affine.bin.lz 
+tools/gbagfx/gbagfx graphics/pokedex/region_map_affine.png build/assets/graphics/pokedex/region_map_affine.png_num_tiles_233__Wnum_tiles.8bpp -num_tiles 233 -Wnum_tiles
+tools/gbagfx/gbagfx graphics/pokedex/area_glow.png build/assets/graphics/pokedex/area_glow.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokedex/area_glow.png build/assets/graphics/pokedex/area_glow.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokedex/area_marker.png build/assets/graphics/pokedex/area_marker.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokedex/area_marker.png build/assets/graphics/pokedex/area_marker.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokedex/cry_meter.png build/assets/graphics/pokedex/cry_meter.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokedex/cry_meter.png build/assets/graphics/pokedex/cry_meter.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokedex/cry_meter_needle.png build/assets/graphics/pokedex/cry_meter_needle.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokedex/cry_meter_needle.png build/assets/graphics/pokedex/cry_meter_needle.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokedex/cry_screen_bg.png build/assets/graphics/pokedex/cry_screen_bg.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokedex/cry_screen_bg.png build/assets/graphics/pokedex/cry_screen_bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon/spinda/spots/spot_0.png build/assets/graphics/pokemon/spinda/spots/spot_0.png_plain__data_width_2.1bpp -plain -data_width 2
+tools/gbagfx/gbagfx graphics/pokemon/spinda/spots/spot_1.png build/assets/graphics/pokemon/spinda/spots/spot_1.png_plain__data_width_2.1bpp -plain -data_width 2
+tools/gbagfx/gbagfx graphics/pokemon/spinda/spots/spot_2.png build/assets/graphics/pokemon/spinda/spots/spot_2.png_plain__data_width_2.1bpp -plain -data_width 2
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokemon_animation.o src/pokemon_animation.c
+tools/gbagfx/gbagfx graphics/pokemon/spinda/spots/spot_3.png build/assets/graphics/pokemon/spinda/spots/spot_3.png_plain__data_width_2.1bpp -plain -data_width 2
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokemon_icon.o src/pokemon_icon.c
+tools/gbagfx/gbagfx graphics/pokemon_jump/bg.bin build/assets/graphics/pokemon_jump/bg.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_jump/bg.png build/assets/graphics/pokemon_jump/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_jump/bg.png build/assets/graphics/pokemon_jump/bg.png_num_tiles_63__Wnum_tiles.4bpp -num_tiles 63 -Wnum_tiles
+tools/gbagfx/gbagfx graphics/pokemon_jump/bonuses.bin build/assets/graphics/pokemon_jump/bonuses.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_jump/bonuses.png build/assets/graphics/pokemon_jump/bonuses.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_jump/bonuses.png build/assets/graphics/pokemon_jump/bonuses.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_jump/interface.pal build/assets/graphics/pokemon_jump/interface.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_jump/pal1.pal build/assets/graphics/pokemon_jump/pal1.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_jump/pal2.pal build/assets/graphics/pokemon_jump/pal2.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_jump/star.png build/assets/graphics/pokemon_jump/star.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_jump/venusaur.bin build/assets/graphics/pokemon_jump/venusaur.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_jump/venusaur.png build/assets/graphics/pokemon_jump/venusaur.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_jump/venusaur.png build/assets/graphics/pokemon_jump/venusaur.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_jump/vine1.png build/assets/graphics/pokemon_jump/vine1.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_jump/vine2.png build/assets/graphics/pokemon_jump/vine2.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_jump/vine3.png build/assets/graphics/pokemon_jump/vine3.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_jump/vine4.png build/assets/graphics/pokemon_jump/vine4.png.4bpp 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokemon_size_record.o src/pokemon_size_record.c
+tools/gbagfx/gbagfx graphics/pokemon_storage/arrow.png build/assets/graphics/pokemon_storage/arrow.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/box_selection_popup.pal build/assets/graphics/pokemon_storage/box_selection_popup.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/box_selection_popup_center.png build/assets/graphics/pokemon_storage/box_selection_popup_center.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/box_selection_popup_sides.png build/assets/graphics/pokemon_storage/box_selection_popup_sides.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/display_menu.bin build/assets/graphics/pokemon_storage/display_menu.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/display_menu.pal build/assets/graphics/pokemon_storage/display_menu.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/hand_cursor.png build/assets/graphics/pokemon_storage/hand_cursor.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/hand_cursor.png build/assets/graphics/pokemon_storage/hand_cursor.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/hand_cursor_shadow.png build/assets/graphics/pokemon_storage/hand_cursor_shadow.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/interface.pal build/assets/graphics/pokemon_storage/interface.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/item_info_frame.png build/assets/graphics/pokemon_storage/item_info_frame.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/pkmn_data_gray.pal build/assets/graphics/pokemon_storage/pkmn_data_gray.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/scrolling_bg.bin build/assets/graphics/pokemon_storage/scrolling_bg.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/scrolling_bg.pal build/assets/graphics/pokemon_storage/scrolling_bg.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/scrolling_bg.png build/assets/graphics/pokemon_storage/scrolling_bg.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/scrolling_bg_move_items.pal build/assets/graphics/pokemon_storage/scrolling_bg_move_items.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/text_windows.pal build/assets/graphics/pokemon_storage/text_windows.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/unused.pal build/assets/graphics/pokemon_storage/unused.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/azumarill/bg.png build/assets/graphics/pokemon_storage/wallpapers/azumarill/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/azumarill/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/azumarill/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/azumarill/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/azumarill/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/beach/bg.png build/assets/graphics/pokemon_storage/wallpapers/beach/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/beach/frame.png build/assets/graphics/pokemon_storage/wallpapers/beach/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/beach/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/beach/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/beach/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/beach/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/blank/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/blank/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/blank/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/blank/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/block/bg.png build/assets/graphics/pokemon_storage/wallpapers/block/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/block/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/block/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/block/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/block/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/cave/bg.png build/assets/graphics/pokemon_storage/wallpapers/cave/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/cave/frame.png build/assets/graphics/pokemon_storage/wallpapers/cave/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/cave/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/cave/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/cave/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/cave/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/circles/bg.png build/assets/graphics/pokemon_storage/wallpapers/circles/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/circles/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/circles/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/circles/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/circles/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/city/bg.png build/assets/graphics/pokemon_storage/wallpapers/city/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/city/frame.png build/assets/graphics/pokemon_storage/wallpapers/city/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/city/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/city/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/city/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/city/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/crag/bg.png build/assets/graphics/pokemon_storage/wallpapers/crag/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/crag/frame.png build/assets/graphics/pokemon_storage/wallpapers/crag/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/crag/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/crag/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/crag/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/crag/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/desert/bg.png build/assets/graphics/pokemon_storage/wallpapers/desert/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/desert/frame.png build/assets/graphics/pokemon_storage/wallpapers/desert/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/desert/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/desert/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/desert/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/desert/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/diagonal/bg.png build/assets/graphics/pokemon_storage/wallpapers/diagonal/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/diagonal/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/diagonal/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/diagonal/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/diagonal/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/dusclops/bg.png build/assets/graphics/pokemon_storage/wallpapers/dusclops/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/dusclops/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/dusclops/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/dusclops/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/dusclops/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/forest/bg.png build/assets/graphics/pokemon_storage/wallpapers/forest/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/forest/frame.png build/assets/graphics/pokemon_storage/wallpapers/forest/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/forest/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/forest/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/forest/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/forest/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/frame/bg.png build/assets/graphics/pokemon_storage/wallpapers/frame/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/frame/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/frame/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/frame/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/frame/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/friends_frame1.png build/assets/graphics/pokemon_storage/wallpapers/friends_frame1.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/aqua.png build/assets/graphics/pokemon_storage/wallpapers/icons/aqua.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/asterisk.png build/assets/graphics/pokemon_storage/wallpapers/icons/asterisk.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/big_asterisk.png build/assets/graphics/pokemon_storage/wallpapers/icons/big_asterisk.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/brick.png build/assets/graphics/pokemon_storage/wallpapers/icons/brick.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/circle.png build/assets/graphics/pokemon_storage/wallpapers/icons/circle.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/crystal.png build/assets/graphics/pokemon_storage/wallpapers/icons/crystal.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/diglett.png build/assets/graphics/pokemon_storage/wallpapers/icons/diglett.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/dot.png build/assets/graphics/pokemon_storage/wallpapers/icons/dot.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/five_star.png build/assets/graphics/pokemon_storage/wallpapers/icons/five_star.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/footprint.png build/assets/graphics/pokemon_storage/wallpapers/icons/footprint.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/four_circles.png build/assets/graphics/pokemon_storage/wallpapers/icons/four_circles.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/four_star.png build/assets/graphics/pokemon_storage/wallpapers/icons/four_star.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/heart.png build/assets/graphics/pokemon_storage/wallpapers/icons/heart.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/koffing.png build/assets/graphics/pokemon_storage/wallpapers/icons/koffing.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/latis.png build/assets/graphics/pokemon_storage/wallpapers/icons/latis.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/line_circle.png build/assets/graphics/pokemon_storage/wallpapers/icons/line_circle.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/lotad.png build/assets/graphics/pokemon_storage/wallpapers/icons/lotad.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/luvdisc.png build/assets/graphics/pokemon_storage/wallpapers/icons/luvdisc.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/magma.png build/assets/graphics/pokemon_storage/wallpapers/icons/magma.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/maze.png build/assets/graphics/pokemon_storage/wallpapers/icons/maze.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/minun.png build/assets/graphics/pokemon_storage/wallpapers/icons/minun.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/pichu.png build/assets/graphics/pokemon_storage/wallpapers/icons/pichu.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/pokeball.png build/assets/graphics/pokemon_storage/wallpapers/icons/pokeball.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/ribbon.png build/assets/graphics/pokemon_storage/wallpapers/icons/ribbon.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/spinda.png build/assets/graphics/pokemon_storage/wallpapers/icons/spinda.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/star_in_circle.png build/assets/graphics/pokemon_storage/wallpapers/icons/star_in_circle.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/icons/togepi.png build/assets/graphics/pokemon_storage/wallpapers/icons/togepi.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/legendary/bg.png build/assets/graphics/pokemon_storage/wallpapers/legendary/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/legendary/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/legendary/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/legendary/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/legendary/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/ludicolo/bg.png build/assets/graphics/pokemon_storage/wallpapers/ludicolo/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/ludicolo/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/ludicolo/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/ludicolo/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/ludicolo/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/machine/bg.png build/assets/graphics/pokemon_storage/wallpapers/machine/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/machine/frame.png build/assets/graphics/pokemon_storage/wallpapers/machine/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/machine/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/machine/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/machine/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/machine/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pikachu/bg.png build/assets/graphics/pokemon_storage/wallpapers/pikachu/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pikachu/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/pikachu/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pikachu/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/pikachu/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/plain/bg.png build/assets/graphics/pokemon_storage/wallpapers/plain/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/plain/frame.png build/assets/graphics/pokemon_storage/wallpapers/plain/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/plain/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/plain/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/plain/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/plain/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pokecenter/bg.png build/assets/graphics/pokemon_storage/wallpapers/pokecenter/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pokecenter/frame.png build/assets/graphics/pokemon_storage/wallpapers/pokecenter/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pokecenter/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/pokecenter/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pokecenter/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/pokecenter/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pokecenter2/bg.png build/assets/graphics/pokemon_storage/wallpapers/pokecenter2/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pokecenter2/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/pokecenter2/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/pokecenter2/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/pokecenter2/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/polkadot/bg.png build/assets/graphics/pokemon_storage/wallpapers/polkadot/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/polkadot/frame.png build/assets/graphics/pokemon_storage/wallpapers/polkadot/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/polkadot/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/polkadot/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/polkadot/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/polkadot/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/river/bg.png build/assets/graphics/pokemon_storage/wallpapers/river/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/river/frame.png build/assets/graphics/pokemon_storage/wallpapers/river/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/river/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/river/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/river/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/river/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/savanna/bg.png build/assets/graphics/pokemon_storage/wallpapers/savanna/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/savanna/frame.png build/assets/graphics/pokemon_storage/wallpapers/savanna/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/savanna/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/savanna/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/savanna/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/savanna/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/screen/bg.png build/assets/graphics/pokemon_storage/wallpapers/screen/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/screen/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/screen/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/screen/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/screen/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/seafloor/bg.png build/assets/graphics/pokemon_storage/wallpapers/seafloor/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/seafloor/frame.png build/assets/graphics/pokemon_storage/wallpapers/seafloor/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/seafloor/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/seafloor/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/seafloor/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/seafloor/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/sky/bg.png build/assets/graphics/pokemon_storage/wallpapers/sky/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/sky/frame.png build/assets/graphics/pokemon_storage/wallpapers/sky/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/sky/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/sky/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/sky/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/sky/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/snow/bg.png build/assets/graphics/pokemon_storage/wallpapers/snow/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/snow/frame.png build/assets/graphics/pokemon_storage/wallpapers/snow/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/snow/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/snow/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/snow/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/snow/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/volcano/bg.png build/assets/graphics/pokemon_storage/wallpapers/volcano/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/volcano/frame.png build/assets/graphics/pokemon_storage/wallpapers/volcano/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/volcano/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/volcano/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/volcano/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/volcano/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/whiscash/bg.png build/assets/graphics/pokemon_storage/wallpapers/whiscash/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/whiscash/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/whiscash/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/whiscash/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/whiscash/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/zigzagoon/bg.png build/assets/graphics/pokemon_storage/wallpapers/zigzagoon/bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/zigzagoon/tilemap.bin build/assets/graphics/pokemon_storage/wallpapers/zigzagoon/tilemap.bin.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/wallpapers/zigzagoon/tiles.4bpp build/assets/graphics/pokemon_storage/wallpapers/zigzagoon/tiles.4bpp.lz 
+tools/gbagfx/gbagfx graphics/pokemon_storage/waveform.png build/assets/graphics/pokemon_storage/waveform.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokemon_storage/waveform.png build/assets/graphics/pokemon_storage/waveform.png.gbapal 
+tools/gbagfx/gbagfx graphics/summary_screen/a_button.png build/assets/graphics/summary_screen/a_button.png.4bpp 
+tools/gbagfx/gbagfx graphics/summary_screen/b_button.png build/assets/graphics/summary_screen/b_button.png.4bpp 
+tools/gbagfx/gbagfx graphics/summary_screen/markings.pal build/assets/graphics/summary_screen/markings.pal.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokenav.o src/pokenav.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokenav_conditions.o src/pokenav_conditions.c
+tools/gbagfx/gbagfx graphics/pokenav/condition/graph_data.bin build/assets/graphics/pokenav/condition/graph_data.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/condition/graph_data.pal build/assets/graphics/pokenav/condition/graph_data.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/condition/graph_data.png build/assets/graphics/pokenav/condition/graph_data.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/condition/mon_markings.pal build/assets/graphics/pokenav/condition/mon_markings.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/condition/text.pal build/assets/graphics/pokenav/condition/text.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/condition/search_results.bin build/assets/graphics/pokenav/condition/search_results.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/condition/search_results.png build/assets/graphics/pokenav/condition/search_results.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/condition/search_results.png build/assets/graphics/pokenav/condition/search_results.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/condition/search_results_list.pal build/assets/graphics/pokenav/condition/search_results_list.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/list_arrows.png build/assets/graphics/pokenav/list_arrows.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/list_arrows.png build/assets/graphics/pokenav/list_arrows.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/blue_light.png build/assets/graphics/pokenav/blue_light.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/nav_icon.png build/assets/graphics/pokenav/nav_icon.png.4bpp 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokenav_match_call_data.o src/pokenav_match_call_data.c
+tools/gbagfx/gbagfx graphics/pokenav/nav_icon.png build/assets/graphics/pokenav/nav_icon.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/call_window.pal build/assets/graphics/pokenav/match_call/call_window.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/list_window.pal build/assets/graphics/pokenav/match_call/list_window.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/options_cursor.png build/assets/graphics/pokenav/match_call/options_cursor.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/options_cursor.png build/assets/graphics/pokenav/match_call/options_cursor.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/pokeball.pal build/assets/graphics/pokenav/match_call/pokeball.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/pokeball.png build/assets/graphics/pokenav/match_call/pokeball.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/ui.bin build/assets/graphics/pokenav/match_call/ui.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/ui.png build/assets/graphics/pokenav/match_call/ui.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/match_call/ui.png build/assets/graphics/pokenav/match_call/ui.png_num_tiles_13__Wnum_tiles.4bpp -num_tiles 13 -Wnum_tiles
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokenav_match_call_list.o src/pokenav_match_call_list.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/pokenav_menu_handler.o src/pokenav_menu_handler.c
+tools/gbagfx/gbagfx graphics/pokenav/bg_dots.bin build/assets/graphics/pokenav/bg_dots.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/bg_dots.png build/assets/graphics/pokenav/bg_dots.png.4bpp 
+tools/gbagfx/gbagfx build/assets/graphics/pokenav/blue_light.png.4bpp build/assets/graphics/pokenav/blue_light.png.4bpp.lz
+tools/gbagfx/gbagfx graphics/pokenav/bg_dots.png build/assets/graphics/pokenav/bg_dots.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/blue_light.png build/assets/graphics/pokenav/blue_light.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/device_outline.png build/assets/graphics/pokenav/device_outline.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/device_outline.png build/assets/graphics/pokenav/device_outline.png_num_tiles_53__Wnum_tiles.4bpp -num_tiles 53 -Wnum_tiles
+tools/gbagfx/gbagfx graphics/pokenav/device_outline_map.bin build/assets/graphics/pokenav/device_outline_map.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/dewford_0.bin build/assets/graphics/pokenav/region_map/city_maps/dewford_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/ever_grande_0.bin build/assets/graphics/pokenav/region_map/city_maps/ever_grande_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/ever_grande_1.bin build/assets/graphics/pokenav/region_map/city_maps/ever_grande_1.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/fallarbor_0.bin build/assets/graphics/pokenav/region_map/city_maps/fallarbor_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/fortree_0.bin build/assets/graphics/pokenav/region_map/city_maps/fortree_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/lavaridge_0.bin build/assets/graphics/pokenav/region_map/city_maps/lavaridge_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/lilycove_0.bin build/assets/graphics/pokenav/region_map/city_maps/lilycove_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/lilycove_1.bin build/assets/graphics/pokenav/region_map/city_maps/lilycove_1.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/littleroot_0.bin build/assets/graphics/pokenav/region_map/city_maps/littleroot_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/mauville_0.bin build/assets/graphics/pokenav/region_map/city_maps/mauville_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/mauville_1.bin build/assets/graphics/pokenav/region_map/city_maps/mauville_1.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/mossdeep_0.bin build/assets/graphics/pokenav/region_map/city_maps/mossdeep_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/mossdeep_1.bin build/assets/graphics/pokenav/region_map/city_maps/mossdeep_1.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/oldale_0.bin build/assets/graphics/pokenav/region_map/city_maps/oldale_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/pacifidlog_0.bin build/assets/graphics/pokenav/region_map/city_maps/pacifidlog_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/petalburg_0.bin build/assets/graphics/pokenav/region_map/city_maps/petalburg_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/rustboro_0.bin build/assets/graphics/pokenav/region_map/city_maps/rustboro_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/rustboro_1.bin build/assets/graphics/pokenav/region_map/city_maps/rustboro_1.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/slateport_0.bin build/assets/graphics/pokenav/region_map/city_maps/slateport_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/slateport_1.bin build/assets/graphics/pokenav/region_map/city_maps/slateport_1.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/sootopolis_0.bin build/assets/graphics/pokenav/region_map/city_maps/sootopolis_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/city_maps/verdanturf_0.bin build/assets/graphics/pokenav/region_map/city_maps/verdanturf_0.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/info_window.pal build/assets/graphics/pokenav/region_map/info_window.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/zoom_tiles.png build/assets/graphics/pokenav/region_map/zoom_tiles.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/list_bg.bin build/assets/graphics/pokenav/ribbons/list_bg.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/list_bg.png build/assets/graphics/pokenav/ribbons/list_bg.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/list_bg.png build/assets/graphics/pokenav/ribbons/list_bg.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/list_ui.pal build/assets/graphics/pokenav/ribbons/list_ui.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/icons.png build/assets/graphics/pokenav/ribbons/icons.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/icons1.pal build/assets/graphics/pokenav/ribbons/icons1.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/icons2.pal build/assets/graphics/pokenav/ribbons/icons2.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/icons3.pal build/assets/graphics/pokenav/ribbons/icons3.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/icons4.pal build/assets/graphics/pokenav/ribbons/icons4.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/icons5.pal build/assets/graphics/pokenav/ribbons/icons5.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/icons_big.png build/assets/graphics/pokenav/ribbons/icons_big.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/ribbons/mon_info.pal build/assets/graphics/pokenav/ribbons/mon_info.pal.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/post_battle_event_funcs.o src/post_battle_event_funcs.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/random.o src/random.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/rayquaza_scene.o src/rayquaza_scene.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/realtime_arena.o src/realtime_arena.c
+In file included from src/realtime_arena.c:2727:
+src/arena_director.inc:23: warning: "DIR_NONE" redefined
+   23 | #define DIR_NONE 0xFF
+      | 
+In file included from include/global.h:9,
+                 from src/realtime_arena.c:1:
+include/constants/global.h:137: note: this is the location of the previous definition
+  137 | #define DIR_NONE        0
+      | 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/record_mixing.o src/record_mixing.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/recorded_battle.o src/recorded_battle.c
+tools/gbagfx/gbagfx graphics/pokenav/region_map/brendan_icon.png build/assets/graphics/pokenav/region_map/brendan_icon.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/brendan_icon.png build/assets/graphics/pokenav/region_map/brendan_icon.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/cursor.pal build/assets/graphics/pokenav/region_map/cursor.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/cursor_large.png build/assets/graphics/pokenav/region_map/cursor_large.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/cursor_small.png build/assets/graphics/pokenav/region_map/cursor_small.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/fly_target_icons.png build/assets/graphics/pokenav/region_map/fly_target_icons.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/fly_target_icons.png build/assets/graphics/pokenav/region_map/fly_target_icons.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/frame.bin build/assets/graphics/pokenav/region_map/frame.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/frame.png build/assets/graphics/pokenav/region_map/frame.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/frame.png build/assets/graphics/pokenav/region_map/frame.png.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/map.bin build/assets/graphics/pokenav/region_map/map.bin.lz 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/map.pal build/assets/graphics/pokenav/region_map/map.pal.gbapal 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/map.png build/assets/graphics/pokenav/region_map/map.png_num_tiles_233__Wnum_tiles.8bpp -num_tiles 233 -Wnum_tiles
+tools/gbagfx/gbagfx graphics/pokenav/region_map/may_icon.png build/assets/graphics/pokenav/region_map/may_icon.png.4bpp 
+tools/gbagfx/gbagfx graphics/pokenav/region_map/may_icon.png build/assets/graphics/pokenav/region_map/may_icon.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/reload_save.o src/reload_save.c
+tools/gbagfx/gbagfx graphics/reset_rtc_screen/arrow.pal build/assets/graphics/reset_rtc_screen/arrow.pal.gbapal 
+tools/gbagfx/gbagfx graphics/reset_rtc_screen/arrow_down.png build/assets/graphics/reset_rtc_screen/arrow_down.png.4bpp 
+tools/gbagfx/gbagfx graphics/reset_rtc_screen/arrow_right.png build/assets/graphics/reset_rtc_screen/arrow_right.png.4bpp 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/reshow_battle_screen.o src/reshow_battle_screen.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/roamer.o src/roamer.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/rom_header_gf.o src/rom_header_gf.c
+tools/gbagfx/gbagfx graphics/rotating_gates/l1.png build/assets/graphics/rotating_gates/l1.png.4bpp 
+tools/gbagfx/gbagfx graphics/rotating_gates/l2.png build/assets/graphics/rotating_gates/l2.png.4bpp 
+tools/gbagfx/gbagfx graphics/rotating_gates/l3.png build/assets/graphics/rotating_gates/l3.png.4bpp 
+tools/gbagfx/gbagfx graphics/rotating_gates/l4.png build/assets/graphics/rotating_gates/l4.png.4bpp 
+tools/gbagfx/gbagfx graphics/rotating_gates/t1.png build/assets/graphics/rotating_gates/t1.png.4bpp 
+tools/gbagfx/gbagfx graphics/rotating_gates/t2.png build/assets/graphics/rotating_gates/t2.png.4bpp 
+tools/gbagfx/gbagfx graphics/rotating_gates/t3.png build/assets/graphics/rotating_gates/t3.png.4bpp 
+tools/gbagfx/gbagfx graphics/rotating_gates/t4.png build/assets/graphics/rotating_gates/t4.png.4bpp 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/rotating_tile_puzzle.o src/rotating_tile_puzzle.c
+tools/gbagfx/gbagfx graphics/roulette/azurill.png build/assets/graphics/roulette/azurill.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/ball.png build/assets/graphics/roulette/ball.png.4bpp 
+tools/gbagfx/gbagfx graphics/roulette/ball.png build/assets/graphics/roulette/ball.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/ball_counter.png build/assets/graphics/roulette/ball_counter.png.4bpp 
+tools/gbagfx/gbagfx graphics/roulette/ball_counter.png build/assets/graphics/roulette/ball_counter.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/credit.png build/assets/graphics/roulette/credit.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/cursor.png build/assets/graphics/roulette/cursor.png.4bpp 
+tools/gbagfx/gbagfx graphics/roulette/cursor.png build/assets/graphics/roulette/cursor.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/grid.bin build/assets/graphics/roulette/grid.bin.lz 
+tools/gbagfx/gbagfx graphics/roulette/grid_icons.png build/assets/graphics/roulette/grid_icons.png.4bpp 
+tools/gbagfx/gbagfx graphics/roulette/grid_icons.png build/assets/graphics/roulette/grid_icons.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/makuhita.png build/assets/graphics/roulette/makuhita.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/roulette_tilt.4bpp build/assets/graphics/roulette/roulette_tilt.4bpp.lz 
+tools/gbagfx/gbagfx graphics/roulette/shadow.png build/assets/graphics/roulette/shadow.png.4bpp 
+tools/gbagfx/gbagfx graphics/roulette/shadow.png build/assets/graphics/roulette/shadow.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/shroomish.png build/assets/graphics/roulette/shroomish.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/skitty.png build/assets/graphics/roulette/skitty.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/tailow.png build/assets/graphics/roulette/tailow.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/unused_1.pal build/assets/graphics/roulette/unused_1.pal.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/unused_2.pal build/assets/graphics/roulette/unused_2.pal.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/unused_3.pal build/assets/graphics/roulette/unused_3.pal.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/unused_4.pal build/assets/graphics/roulette/unused_4.pal.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/wheel.bin build/assets/graphics/roulette/wheel.bin.lz 
+tools/gbagfx/gbagfx graphics/roulette/wheel.png build/assets/graphics/roulette/wheel.png.gbapal 
+tools/gbagfx/gbagfx graphics/roulette/wheel_icons.4bpp build/assets/graphics/roulette/wheel_icons.4bpp.lz 
+tools/gbagfx/gbagfx graphics/roulette/wynaut.png build/assets/graphics/roulette/wynaut.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/rtc.o src/rtc.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/safari_zone.o src/safari_zone.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/save.o src/save.c
+tools/gbagfx/gbagfx graphics/misc/clock_small.png build/assets/graphics/misc/clock_small.png.4bpp 
+tools/gbagfx/gbagfx graphics/misc/clock_small.png build/assets/graphics/misc/clock_small.png.gbapal 
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/save_location.o src/save_location.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/scanline_effect.o src/scanline_effect.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/scrcmd.o src/scrcmd.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/script.o src/script.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/script_menu.o src/script_menu.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/script_movement.o src/script_movement.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/script_pokemon_util.o src/script_pokemon_util.c
+src/arena_director.inc:1357: error: unknown character U+23 before '");
+    st'
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/secret_base.o src/secret_base.c
+tools/agbcc/bin/agbcc <flags> -o build/emerald/src/shop.o src/shop.c
+src/arena_director.inc: In function `WildlandsSummaryDraw':
+In file included from src/realtime_arena.c:2727:
+src/arena_director.inc:1357: syntax error at end of input
+agbcc: warnings being treated as errors
+src/realtime_arena.c:391: warning: `CB2_Arena' used but never defined
+make: *** [Makefile:317: build/emerald/src/realtime_arena.o] Error 1
+make: *** Deleting file 'build/emerald/src/realtime_arena.o'
+make: *** Waiting for unfinished jobs....
