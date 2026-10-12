@@ -587,6 +587,8 @@ void Wildlands_ArenaLoadout(struct Pokemon *mon);
 void Wildlands_SweepAllMoves(void);
 void Wildlands_TrimParty(void);
 static const u16 *ArenaMonPalette(const struct ArenaSpriteSet *art, struct Pokemon *mon);
+static void WildlandsSummaryDraw(void);
+static EWRAM_DATA bool8 sWildlandsSummary = FALSE;
 static u8 BrainWingTarget(u8 picked);
 static bool8 BrainWingFollows(void);
 static void BrainInit(void);
@@ -2974,6 +2976,10 @@ static void CB2_Arena(void)
         gRealtimeArenaTelemetry.frames++;
         if (sArena.resultTimer)
         {
+            if (WildlandsWorld_Active() && !sWildlandsSummary)
+            { sWildlandsSummary = TRUE; sArena.resultTimer = 240; WildlandsSummaryDraw(); }
+            if (sWildlandsSummary && sArena.resultTimer > 2 && JOY_NEW(A_BUTTON))
+                sArena.resultTimer = 2;
             SpecialTick();GuardTick();
             for(i=0;i<2;i++)if(sArena.bodies[i].actionLife)
             {

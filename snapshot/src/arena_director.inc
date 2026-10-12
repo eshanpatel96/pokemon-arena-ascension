@@ -1085,6 +1085,7 @@ static void DirectorInit(void)
         return;
     if (sWildlandsEncounterLive && sDir)
         return;   // menu round trip: same lobby
+    sWildlandsSummary = FALSE;
     if (sDir)
     {
         DirRestorePartner();
@@ -1345,4 +1346,42 @@ static const u16 *ArenaMonPalette(const struct ArenaSpriteSet *art, struct Pokem
     }
     gWildlandsShinyTelemetry[1]++;
     return sWlShinyPal;
+}
+
+// End-of-match summary card (pause window), shown while the result holds.
+EWRAM_DATA u16 gWildlandsSummaryTelemetry[4] = {0};   // shown, won, place, KOs
+static void WildlandsSummaryDraw(void)
+{
+    static const u8 sWin[] = _("VICTORY! LAST DUO STANDING");
+    static const u8 sLose[] = _("ELIMINATED");
+    static const u8 sPlace[] = _("PLACE  #");
+    static const u8 sOf[] = _(" OF ");
+    static const u8 sKOs[] = _("KNOCKOUTS  ");
+    static const u8 sTime[] = _("SURVIVED  ");
+    static const u8 sHelp[] = _("A: BACK TO THE LAB");
+    u8 text[32], *end;
+    bool8 won = gBattleMons[0].hp != 0;
+    u32 place = won ? 1 : DirLeft() + 1;
+    u32 kos = sDir ? sDir->playerKOs : 0;
+    u32 secs = sZone.active ? sZone.clock / 60 : (sDir ? sDir->clock / 60 : 0);
+    gWildlandsSummaryTelemetry[0]++;
+    gWildlandsSummaryTelemetry[1] = won;
+    gWildlandsSummaryTelemetry[2] = place;
+    gWildlandsSummaryTelemetry[3] = kos;
+    FillWindowPixelBuffer(1, PIXEL_FILL(9));
+    PrintPopup(8, 3, won ? sWin : sLose, won ? 5 : 6);
+    end = StringCopy(text, sPlace);
+    end = ConvertIntToDecimalStringN(end, place, STR_CONV_MODE_LEFT_ALIGN, 2);
+    end = StringCopy(end, sOf);
+    ConvertIntToDecimalStringN(end, WL_DIRECTOR_DUOS, STR_CONV_MODE_LEFT_ALIGN, 2);
+    PrintPopup(8, 20, text, 4);
+    end = StringCopy(text, sKOs);
+    ConvertIntToDecimalStringN(end, kos, STR_CONV_MODE_LEFT_ALIGN, 2);
+    PrintPopup(8, 34, text, 4);
+    end = StringCopy(text, sTime);
+    DirTimeString(end, secs > 5999 ? 5999 : secs);
+    PrintPopup(8, 48, text, 4);
+    HudTinyWindow(1, 8, 67, sHelp, 7, 52);
+    PutWindowTilemap(1);
+    CopyWindowToVram(1, COPYWIN_FULL);
 }
