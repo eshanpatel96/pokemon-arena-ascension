@@ -1295,7 +1295,7 @@ static void DirThirdPartyTick(void)
         return;
     }
     if (sDir->active == DIR_NONE || DirectorSoloActive() || !SquadAlive(0) || !gBattleMons[1].hp
-        || WildlandsWorld_InRoom(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q))
+        || (WildlandsWorld_InRoom(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q) && !gWildlandsTpTest))
         return;
     if (!gWildlandsTpTest && (sDir->tpCooldown || sDir->clock < 3600 || DirRand() % 100 >= 6))
         return;
@@ -1303,7 +1303,7 @@ static void DirThirdPartyTick(void)
     ax = sArena.bodies[1].x / Q - sArena.bodies[0].x / Q;
     ay = sArena.bodies[1].y / Q - sArena.bodies[0].y / Q;
     la = ArenaNav_Distance(0, 0, ax, ay);
-    if (la > 240)
+    if (la > 240 && !gWildlandsTpTest)
         return;   // only while the foe is right there
     for (j = 1; j < sDir->count; j++)
     {
