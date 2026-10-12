@@ -113,7 +113,9 @@ static void PropsSim(void)
         if (!ArenaTerrain_WorldSlot(slot, site->x, site->y, site->set, site->art, sPropKind[site->art],
                                     hp ? hp : 1, sPropStrength[site->art]))
         {
+            // Out of sprites: storm rain is cosmetic, cover is gameplay.
             gWildlandsPropTelemetry[5]++;
+            ZoneFreeRain();
             return;
         }
         if (!hp)
