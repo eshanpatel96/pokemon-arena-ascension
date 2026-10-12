@@ -154,7 +154,9 @@ jobs:
             'title':'approved Charizard/Blastoise/Rayquaza concept at native 240x160',
             'thirty_duo_simulation':True,
             'legendary_boss_battles':True,
-            'shiny_palettes':'audited feasible; not implemented',
+            'shiny_palettes':'about 1 in 64 AI Pokemon (legendaries included), native shiny data and shiny arena palette',
+            'breakable_cover':'arena props streamed over ~190 island sites; Psychic throws nearby rocks',
+            'match_summary':'victory or eliminated, place, knockouts, time survived',
             'memory':mem,
             'verification':'mGBA automated runtime only; iPhone Delta requires owner playtest'
           }

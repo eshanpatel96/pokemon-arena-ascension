@@ -4,7 +4,28 @@ snap 00-title
 press 8
 frames 120 0
 press 1
-frames 1100 0
+frames 100 0
+snap t-newgame-00
+frames 100 0
+snap t-newgame-01
+frames 100 0
+snap t-newgame-02
+frames 100 0
+snap t-newgame-03
+frames 100 0
+snap t-newgame-04
+frames 100 0
+snap t-newgame-05
+frames 100 0
+snap t-newgame-06
+frames 100 0
+snap t-newgame-07
+frames 100 0
+snap t-newgame-08
+frames 100 0
+snap t-newgame-09
+frames 100 0
+snap t-newgame-10
 snap 01-lab
 # ---- Lab COACH (9,8): walk east to the counter, one step west, up to face him ----
 frames 200 16
@@ -40,7 +61,34 @@ press 2
 frames 30 0
 snap 01d-lab-after-coach
 press 768
-frames 700 0
+frames 50 0
+snap t-deploy-00
+frames 50 0
+snap t-deploy-01
+frames 50 0
+snap t-deploy-02
+frames 50 0
+snap t-deploy-03
+frames 50 0
+snap t-deploy-04
+frames 50 0
+snap t-deploy-05
+frames 50 0
+snap t-deploy-06
+frames 50 0
+snap t-deploy-07
+frames 50 0
+snap t-deploy-08
+frames 50 0
+snap t-deploy-09
+frames 50 0
+snap t-deploy-10
+frames 50 0
+snap t-deploy-11
+frames 50 0
+snap t-deploy-12
+frames 50 0
+snap t-deploy-13
 expect gWildlandsWorldAudit 0 4 1
 dump squad0 gWildlandsSquadTelemetry 16
 dumph bossAudit gWildlandsBossAudit 0 3
