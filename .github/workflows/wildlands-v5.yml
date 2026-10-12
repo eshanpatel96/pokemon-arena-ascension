@@ -29,7 +29,7 @@ jobs:
       WORLD: ${{ matrix.world }}
       # Single source of the beta version: ROM file, artifact names, manifest,
       # and the Lab sign in game. Bump this for every build sent to testers.
-      WL_VERSION: '6.5'
+      WL_VERSION: '6.6'
     steps:
       - uses: actions/checkout@v4
 

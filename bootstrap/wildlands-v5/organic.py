@@ -76,3 +76,123 @@ def organic_coast(g, W, H, C, rng):
                         out[y * W + x] = OCEAN
         g = out
     return g
+
+
+def _comps(g, W, H, want):
+    """4-connected components of cells where want(class) is true."""
+    seen = bytearray(W * H)
+    out = []
+    for s in range(W * H):
+        if seen[s] or not want(g[s]):
+            continue
+        stack, comp = [s], []
+        seen[s] = 1
+        while stack:
+            i = stack.pop()
+            comp.append(i)
+            x, y = i % W, i // W
+            for j in ((i - 1) if x else -1, (i + 1) if x + 1 < W else -1, i - W, i + W):
+                if 0 <= j < W * H and not seen[j] and want(g[j]):
+                    seen[j] = 1
+                    stack.append(j)
+        out.append(comp)
+    return out
+
+
+def _vnoise(W, H, cell, rng):
+    gw, gh = W // cell + 2, H // cell + 2
+    grid = [rng.random() for _ in range(gw * gh)]
+    def at(x, y):
+        fx, fy = x / cell, y / cell
+        x0, y0 = int(fx), int(fy)
+        tx, ty = fx - x0, fy - y0
+        tx, ty = tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty)
+        a = grid[y0 * gw + x0]; b = grid[y0 * gw + x0 + 1]
+        c = grid[(y0 + 1) * gw + x0]; d = grid[(y0 + 1) * gw + x0 + 1]
+        return (a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty
+    return at
+
+
+def map_cleanup(g, W, H, des, clearings, C, rng):
+    """V6.6 map pass:
+    1. stray sea islets and sea rocks (small land specks in the ocean) go;
+    2. specks on open desert/highland ground (1-6 cell trees, grass, ponds,
+       most lone rocks) go, so cover reads as deliberate outcrops;
+    3. long straight coasts get coherent bays and capes from smooth noise."""
+    OCEAN, SAND, LAIR, BRIDGE = C['OCEAN'], C['SAND'], C['LAIR'], C['BRIDGE']
+    TREE, ROCK, GRASS, TALL, WATER, STONE = C['TREE'], C['ROCK'], C['GRASS'], C['TALL'], C['WATER'], C['STONE']
+    g = g[:]
+    log = {}
+    def near_clearing(x, y, pad):
+        return any((x - c['cx']) ** 2 + (y - c['cy']) ** 2 <= (c['r'] + pad) ** 2 for c in clearings)
+    # 1. islets
+    n = 0
+    for comp in _comps(g, W, H, lambda c: c != OCEAN):
+        if len(comp) >= 40 or any(g[i] in (LAIR, BRIDGE) for i in comp):
+            continue
+        if any(near_clearing(i % W, i // W, 0) for i in comp[:1]):
+            continue
+        for i in comp:
+            g[i] = OCEAN
+        n += len(comp)
+    log['islet_cells'] = n
+    # 2. specks on open ground
+    ground = (SAND, STONE)
+    n = kept = 0
+    for cls_ in (TREE, GRASS, TALL, WATER, ROCK):
+        for comp in _comps(g, W, H, lambda c, k=cls_: c == k):
+            if len(comp) > 6:
+                continue
+            nb = []
+            cs = set(comp)
+            for i in comp:
+                x, y = i % W, i // W
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)):
+                    if 0 <= x + dx < W and 0 <= y + dy < H and (y + dy) * W + x + dx not in cs:
+                        nb.append(g[(y + dy) * W + x + dx])
+            if not nb or any(c not in ground for c in nb):
+                continue
+            if cls_ == ROCK and rng.random() < 0.35:
+                kept += 1
+                continue
+            fill = max(set(nb), key=nb.count)
+            for i in comp:
+                g[i] = fill
+            n += len(comp)
+    log['speck_cells'] = n
+    log['rocks_kept'] = kept
+    # 3. coast bays and capes
+    noise = _vnoise(W, H, 9, rng)
+    def ring(x, y, r):
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if 0 <= x + dx < W and 0 <= y + dy < H:
+                    yield g[(y + dy) * W + x + dx]
+    out = g[:]
+    bays = capes = 0
+    for y in range(3, H - 3):
+        for x in range(3, W - 3):
+            c = g[y * W + x]
+            if c == SAND:
+                if noise(x, y) < 0.70:
+                    continue
+                r2 = list(ring(x, y, 2))
+                if OCEAN not in r2:
+                    continue
+                if any(v not in (SAND, OCEAN) for v in ring(x, y, 3)) or near_clearing(x, y, 4):
+                    continue
+                out[y * W + x] = OCEAN; bays += 1
+            elif c == OCEAN:
+                if noise(x, y) > 0.30 or x < 4 or y < 4 or x >= W - 4 or y >= H - 4:
+                    continue
+                r1 = list(ring(x, y, 1))
+                if SAND not in r1 or any(v not in (SAND, OCEAN) for v in r1):
+                    continue
+                # open sea only: the cell two steps further out is still sea
+                if sum(1 for v in ring(x, y, 2) if v == OCEAN) < 14:
+                    continue
+                out[y * W + x] = SAND; capes += 1
+    g = out
+    log['bays'] = bays
+    log['capes'] = capes
+    return g, log

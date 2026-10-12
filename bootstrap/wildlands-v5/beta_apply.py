@@ -352,4 +352,37 @@ patch(A, '        if (body->flash && !sArena.paused && !frozen) body->flash--;\n
       '        if (body->flash && !sArena.paused && !frozen && sWlDrawTick) body->flash--;\n')
 patch(A, '    ArenaFeedback_Update(sArena.paused, frozen && !CaptureLocked() && !ClashBusy());\n',
       '    ArenaFeedback_Update(sArena.paused, (frozen && !CaptureLocked() && !ClashBusy()) || !sWlDrawTick);\n')
+# ---- V6.6 -----------------------------------------------------------------
+# Legendaries press instead of kiting when hurt, and never pick a move that
+# heals them or warps them away (bosses do not heal).
+patch(A, '    if (p->kind == ARENA_MOVE_PROJECTILE && gBattleMons[1].hp * 3 < gBattleMons[1].maxHP) preferred += 12;\n',
+      '    if (WildlandsWorld_Active() && DirectorSoloActive())\n'
+      '    {\n        if (gBattleMons[1].hp * 2 < gBattleMons[1].maxHP)\n            preferred = preferred * 3 / 4;   /* V6.6: a hurt legend presses */\n    }\n'
+      '    else if (p->kind == ARENA_MOVE_PROJECTILE && gBattleMons[1].hp * 3 < gBattleMons[1].maxHP) preferred += 12;\n')
+patch(A, '        if(ArenaMovePP(1,i)<=2)score-=12;\n',
+      '        if(ArenaMovePP(1,i)<=2)score-=12;\n'
+      '        if(WildlandsWorld_Active()&&DirectorSoloActive()&&(move==MOVE_TELEPORT||move==MOVE_RECOVER||move==MOVE_REST\n'
+      '            ||move==MOVE_SOFT_BOILED||move==MOVE_MILK_DRINK||move==MOVE_SYNTHESIS||move==MOVE_MOONLIGHT\n'
+      '            ||move==MOVE_MORNING_SUN||move==MOVE_SLACK_OFF||move==MOVE_ABSORB||move==MOVE_MEGA_DRAIN\n'
+      '            ||move==MOVE_GIGA_DRAIN||move==MOVE_LEECH_LIFE))score=-1000;\n')
+patch(A, '                gBattleMons[1].hp*2<gBattleMons[1].maxHP,sArena.style);\n',
+      '                gBattleMons[1].hp*2<gBattleMons[1].maxHP&&!(WildlandsWorld_Active()&&DirectorSoloActive()),sArena.style);\n')
+# A lost Wildlands match ends the battle directly (like a capture does):
+# no native faint/whiteout scripts, so no classic battle screen can appear
+# (any unexpected battle text used to rebuild the original UI).
+patch('src/battle_main.c', 'void RealtimeArena_FinishCapture(void)\n{',
+      'void RealtimeArena_FinishLoss(void)\n{\n'
+      '    gBattleOutcome = B_OUTCOME_LOST;\n'
+      '    gCurrentActionFuncId = B_ACTION_FINISHED;\n'
+      '    gBattleMainFunc = HandleEndTurn_FinishBattle;\n'
+      '}\n\n'
+      'void RealtimeArena_FinishCapture(void)\n{')
+patch('include/arena_capture.h', 'void RealtimeArena_FinishCapture(void);\n',
+      'void RealtimeArena_FinishCapture(void);\nvoid RealtimeArena_FinishLoss(void);\n')
+patch(A, '        gMain.callback1=sArena.savedCB1;\n        RealtimeArena_ResumeBattle(TRUE);\n        SetMainCallback2(BattleMainCB2);\n',
+      '        gMain.callback1=sArena.savedCB1;\n'
+      '        if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1 && FlagGet(FLAG_ARENA_PRACTICE) && gBattleMons[0].hp==0)\n'
+      '        {\n            gRealtimeArenaRestoringFaint=FALSE;\n            RealtimeArena_FinishLoss();   /* V6.6: straight to the whiteout */\n        }\n'
+      '        else\n            RealtimeArena_ResumeBattle(TRUE);\n'
+      '        SetMainCallback2(BattleMainCB2);\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')

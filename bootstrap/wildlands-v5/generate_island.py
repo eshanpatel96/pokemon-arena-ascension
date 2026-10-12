@@ -60,6 +60,12 @@ g = organic_edges(g, W, H, _oc, random.Random(31))
 g = organic_coast(g, W, H, _oc, random.Random(41))
 g = tall_blobs(g, W, H, des, _oc, random.Random(37))
 g = min_blocks(g, {WATER, TREE, ROCK, OCEAN})
+# V6.6 map pass: no stray sea islets, no specks on open desert/highland
+# ground, bays and capes along long straight coasts.
+from organic import map_cleanup
+_oc.update(STONE=STONE, PATH=PATH)
+g, cleanup_log = map_cleanup(g, W, H, des, clearings, _oc, random.Random(53))
+print('map cleanup:', cleanup_log)
 organic_changed = sum(1 for i in range(W * H) if _before[i] != g[i])
 g = connect_land(g, rng)
 plan = g

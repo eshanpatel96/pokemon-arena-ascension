@@ -442,6 +442,7 @@ dump nav gWildlandsWorldTelemetry 16
 dump roomsEnd gWildlandsRoomTelemetry 8
 expect gWildlandsRoomTelemetry 28 4 0
 dump brain gWildlandsBrainTelemetry 8
+dumph wingDodges gWildlandsWingDodges 0 2
 dump directorEnd gWildlandsDirectorTelemetry 8
 dump biomeEnd gWildlandsBiomeTelemetry 4
 expect gWildlandsBiomeTelemetry 12 4 0

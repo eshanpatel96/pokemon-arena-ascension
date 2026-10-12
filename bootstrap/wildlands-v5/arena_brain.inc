@@ -311,6 +311,27 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
     if (!WildlandsWorld_Active())
         return;
     sBrain.modeClock++;
+    // V6.6: legendaries (lair bosses and roamers) never retreat, loot or
+    // wander off: they hunt the nearest living player Pokemon, seen or not.
+    if (DirectorSoloActive())
+    {
+        s32 x0, y0, x2, y2;
+        u8 t = SquadAlive(0) ? 0 : 2;
+        SquadPos(0, &x0, &y0);
+        SquadPos(2, &x2, &y2);
+        if (SquadAlive(0) && SquadAlive(2)
+            && (seenMask == 2 || (seenMask != 1
+                && ArenaNav_Distance(body->x / Q, body->y / Q, x2 / Q, y2 / Q)
+                 < ArenaNav_Distance(body->x / Q, body->y / Q, x0 / Q, y0 / Q))))
+            t = 2;
+        if (sBrain.mode != BRAIN_FIGHT) gWildlandsBrainTelemetry[2]++;
+        BrainSetMode(BRAIN_FIGHT);
+        sBrain.focus = t;
+        gWildlandsBrainTelemetry[1] = t;
+        sArena.observed.x = (t ? x2 : x0) / Q;
+        sArena.observed.y = (t ? y2 : y0) / Q;
+        return;
+    }
     ours = BrainPower(1);
     theirs = BrainPower(0);
     adv = ours * 100 / max(1, theirs);

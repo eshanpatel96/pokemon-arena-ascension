@@ -30,6 +30,8 @@ struct SquadWing
     u16 scale;          // visual size (same art-based rule as the leads)
     bool8 ownMatrix;    // its OAM matrix is its own (never shared)
     u8 blended;         // its palette carries a flash (restore once; fits the padding)
+    u8 pick, pickKey;   // V6.6: cached best move slot and the (target, range) it was scored for
+    u8 dodge, pad2;     // V6.6: frames left of a sidestep (goal in aimX/aimY)
 };
 static EWRAM_DATA u16 sSwapCooldown = 0;   // Beta: SELECT lead/partner swap
 
@@ -40,6 +42,7 @@ static EWRAM_DATA struct SquadWing sSquadWings[2] = {};
 // [11] wing KOs [12] enemy lead retargets to partner [13..14] wing0/1 target
 // [15] friendly hits (must stay 0)
 EWRAM_DATA u32 gWildlandsSquadTelemetry[16] = {};
+EWRAM_DATA u16 gWildlandsWingDodges[2] = {0};   // V6.6: sidesteps by partner / enemy wing
 // Status: [0] HUD status tags drawn [1] status KOs routed through the squad [2] cures by supplies [3] statuses inflicted on the player lead
 EWRAM_DATA u16 gWildlandsStatusTelemetry[4] = {0};
 static void StatusSim(void);
@@ -370,28 +373,121 @@ static u16 SquadMoveAt(struct SquadWing *w, u8 slot)
     return slot == SQUAD_FALLBACK_SLOT ? w->fallbackMove : gBattleMons[w->battler].moves[slot];
 }
 
-static u8 SquadChooseMove(struct SquadWing *w)
+// V6.6: type value of battler atk's move against battler def (x100; STAB,
+// Levitate, absorb abilities and Wonder Guard included).
+static s32 WlTypeValue(u8 atk, u8 def, u16 move)
 {
     u32 i;
-    u8 battler = w->battler;
-    u8 fallback = 0xFF;
+    u8 type = gBattleMoves[move].type;
+    const struct BattlePokemon *t = &gBattleMons[def];
+    s32 value = 100;
+    if (t->ability == ABILITY_LEVITATE && type == TYPE_GROUND)
+        return 0;
+    if ((type == TYPE_WATER && t->ability == ABILITY_WATER_ABSORB)
+        || (type == TYPE_ELECTRIC && t->ability == ABILITY_VOLT_ABSORB)
+        || (type == TYPE_FIRE && t->ability == ABILITY_FLASH_FIRE))
+        return 0;
+    for (i = 0; i < sizeof(gTypeEffectiveness); i += 3)
+    {
+        u8 a = TYPE_EFFECT_ATK_TYPE(i), d = TYPE_EFFECT_DEF_TYPE(i);
+        if (a == TYPE_ENDTABLE)
+            break;
+        if (a == TYPE_FORESIGHT)
+        {
+            if (t->status2 & STATUS2_FORESIGHT)
+                break;
+            continue;
+        }
+        if (a == type && (d == t->types[0] || d == t->types[1]))
+            value = value * TYPE_EFFECT_MULTIPLIER(i) / 10;
+    }
+    if (t->ability == ABILITY_WONDER_GUARD && value <= 100)
+        return 0;
+    if (type == gBattleMons[atk].types[0] || type == gBattleMons[atk].types[1])
+        value = value * 3 / 2;
+    return value;
+}
+
+// V6.6: best move for the current target and range: power x type value,
+// projectiles preferred at range, contact moves up close. Re-scored when the
+// target or range band changes, and every 16 frames.
+static u8 SquadChooseMove(struct SquadWing *w, u16 dist)
+{
+    u32 i;
+    u8 battler = w->battler, tgt = w->target, best = 0xFF;
+    u8 key = (u8)(tgt + 1) | (dist > 30 ? 0x80 : 0);
+    s32 bestScore = -1;
+    if (w->pickKey == key && ((sArena.frame + w->team * 8) & 15) != 3
+        && (w->pick == SQUAD_FALLBACK_SLOT || (w->pick < MAX_MON_MOVES && gBattleMons[battler].pp[w->pick])))
+        return w->pick;
     for (i = 0; i < MAX_MON_MOVES; i++)
     {
         u16 move = gBattleMons[battler].moves[i];
         const struct ArenaMoveProfile *p;
+        s32 score;
         if (!move || !gBattleMons[battler].pp[i] || !SupportedMove(move) || !gBattleMoves[move].power)
             continue;
         p = ArenaMoves_Get(move);
         if (!p)
             continue;
+        score = gBattleMoves[move].power;
+        if (tgt != 0xFF && SquadAlive(tgt))
+            score = score * WlTypeValue(battler, tgt, move) / 100;
         if (p->kind == ARENA_MOVE_PROJECTILE && !ArenaMoves_Beam(move))
-            return i;
-        if (fallback == 0xFF)
-            fallback = i;
+        { if (dist > 30) score = score * 3 / 2; }
+        else if (dist > 30)
+            score /= 2;
+        score += Random() % 12;
+        if (score > bestScore) { bestScore = score; best = i; }
     }
-    if (fallback == 0xFF && w->fallbackMove)
-        return SQUAD_FALLBACK_SLOT;
-    return fallback;
+    if (best == 0xFF && w->fallbackMove)
+        best = SQUAD_FALLBACK_SLOT;
+    w->pick = best;
+    w->pickKey = key;
+    return best;
+}
+
+// V6.6: a wing sidesteps an incoming enemy shot it can see coming (checked
+// every 4th frame; reaction odds grow with level).
+static bool8 SquadTryDodge(struct SquadWing *w)
+{
+    u32 i;
+    if (((sArena.frame + w->team * 2) & 3) != 1)
+        return FALSE;
+    for (i = 0; i < SHOTS_COUNT; i++)
+    {
+        struct ArenaShot *shot = &sArena.shots[i];
+        s32 dx, dy, t, px, py, len, sign, vv;
+        if (!shot->life || shot->side == w->team)
+            continue;
+        vv = shot->vx * shot->vx + shot->vy * shot->vy;
+        if (!vv)
+            continue;
+        dx = shot->x - w->x; dy = shot->y - w->y;
+        t = -(dx * shot->vx + dy * shot->vy) / vv;
+        if (t < 1 || t > 18)
+            continue;
+        px = (dx + shot->vx * t) / Q; py = (dy + shot->vy * t) / Q;
+        if (px * px + py * py > 196)
+            continue;
+        if (Random() % 100 >= min(70, 30 + gBattleMons[w->battler].level / 2))
+            return FALSE;
+        len = max(Abs(shot->vx), Abs(shot->vy));
+        if (!len)
+            continue;
+        for (sign = -1; sign <= 1; sign += 2)
+        {
+            s32 gx = w->x / Q + sign * -shot->vy * 26 / len, gy = w->y / Q + sign * shot->vx * 26 / len;
+            if (WildlandsWorld_Active() && (!WildlandsWorld_CanStandSpecies(w->species, gx, gy, 6)
+                || !WildlandsWorld_SpeciesLineClear(w->species, w->x / Q, w->y / Q, gx, gy, 6)))
+                continue;
+            w->aimX = gx * Q; w->aimY = gy * Q;
+            w->dodge = 14;
+            gWildlandsWingDodges[w->team]++;
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 static void SquadApplyHit(u8 attacker, u8 target, u16 move);
@@ -561,7 +657,7 @@ static void SquadThink(struct SquadWing *w)
             w->target = BrainWingTarget(w->target);   // enemy duo focuses fire
         // Partner: focus whatever the player is fighting (the enemy lead the
         // player is aiming at) when it is in sight.
-        if (!w->team && SquadAlive(1) && (sArena.bodies[0].shotTimer || sArena.bodies[0].cooldown))
+        if (!w->team && SquadAlive(1) && (sArena.bodies[0].shotTimer || sArena.bodies[0].cooldown || BrainHpPct(0) < 40))
         {
             s32 ex, ey;
             SquadPos(1, &ex, &ey);
@@ -598,7 +694,15 @@ static void SquadThink(struct SquadWing *w)
             return;
         }
     }
-    slot = SquadChooseMove(w);
+    if (w->dodge)
+    {
+        w->dodge--;
+        SquadMoveWing(w, w->aimX, w->aimY, step * 3 / 2);
+        return;
+    }
+    if (SquadTryDodge(w))
+        return;
+    slot = SquadChooseMove(w, dist);
     if (slot != 0xFF)
         p = ArenaMoves_Get(SquadMoveAt(w, slot));
     if (p && w->target != 0xFF && !w->cooldown
@@ -627,6 +731,9 @@ static void SquadThink(struct SquadWing *w)
     {
         // Engage: close to ~2/3 of range, never closer than 24px.
         u16 want = p ? max(24, (p->kind == ARENA_MOVE_PROJECTILE ? p->range : 26) * 2 / 3) : 40;
+        // V6.6: a hurt wing with a ranged move fights from the edge of its range.
+        if (p && p->kind == ARENA_MOVE_PROJECTILE && BrainHpPct(w->battler) < 30)
+            want = p->range * 9 / 10;
         if (dist > want) { goalX = tx; goalY = ty; }
         else { goalX = w->x + (w->x - tx) / 4; goalY = w->y + (w->y - ty) / 4; }
         // Partner: never stand in the player's line of fire; step aside
