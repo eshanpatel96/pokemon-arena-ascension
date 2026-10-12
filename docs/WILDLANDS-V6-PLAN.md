@@ -72,3 +72,7 @@ Open: spectate, biome-belt straight borders, heavy late-match walk still ~16% ov
 - V6.6 wings: move choice by power x type value x range (cached, re-scored on target/range change and every 16 frames); sidestep incoming shots (odds by level); partner covers a hurt player (<40%); hurt wings fight from the edge of their range.
 - V6.6 map: sea islets removed, 1-6 cell specks on open desert/highland ground removed (35% of lone rocks kept), noise-driven bays and capes on long straight coasts.
 Open: spectate, boss/AI feel from playtests, "enemy team stuck" repro (no capture yet).
+
+## V6.7 Beta (2026-10-12): ready for testing
+- Backend cleanup only, no gameplay change: CI now fails on any failed smoke check (ROM/evidence still upload); dead breakable-prop pipeline removed (props_apply, arena_props, render_props, prop-site table); OAM wrapper simplified; stray .pyc untracked.
+- Build: run 38259663834, commit b42e7ad, island ROM sha256 261aefb7...d37e. Island 175/175, slice 45/45.
