@@ -1354,7 +1354,7 @@ static void WildlandsSummaryDraw(void)
 {
     static const u8 sWin[] = _("VICTORY! LAST DUO STANDING");
     static const u8 sLose[] = _("ELIMINATED");
-    static const u8 sPlace[] = _("PLACE  #");
+    static const u8 sPlace[] = _("PLACE ");
     static const u8 sOf[] = _(" OF ");
     static const u8 sKOs[] = _("KNOCKOUTS  ");
     static const u8 sTime[] = _("SURVIVED  ");
