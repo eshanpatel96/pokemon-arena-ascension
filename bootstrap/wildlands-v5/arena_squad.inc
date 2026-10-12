@@ -29,6 +29,7 @@ struct SquadWing
     s32 lastX, lastY;
     u16 scale;          // visual size (same art-based rule as the leads)
     bool8 ownMatrix;    // its OAM matrix is its own (never shared)
+    u8 blended;         // its palette carries a flash (restore once; fits the padding)
 };
 static EWRAM_DATA u16 sSwapCooldown = 0;   // Beta: SELECT lead/partner swap
 
@@ -701,13 +702,18 @@ static void SquadDrawWing(struct SquadWing *w)
         w->drawnFrame = frame; w->drawnDirection = w->facing;
     }
     if (!sArena.paused) w->animClock += (animation == ARENA_ANIM_WALK ? 300 : Q) * sWildlandsSimSteps;
+    // V6.4: blend only while flashing, plus once to restore (was every frame).
     if (w->flash)
     {
         BlendPalette(OBJ_PLTT_ID(IndexOfSpritePaletteTag(w->tag)), 16, w->flash + 3, RGB_WHITE);
         w->flash--;
+        w->blended = TRUE;
     }
-    else
+    else if (w->blended)
+    {
         BlendPalette(OBJ_PLTT_ID(IndexOfSpritePaletteTag(w->tag)), 16, 0, RGB_WHITE);
+        w->blended = FALSE;
+    }
 }
 
 #define WL_NOW() (gMain.vblankCounter1 * 228 + (REG_VCOUNT + 68) % 228)
@@ -739,9 +745,16 @@ static void WildlandsAnimateSprites(void)
     }
 }
 
+void WildlandsBuildOamFast(void);
 static void WildlandsBuildOam(void)
 {
     u32 hidden[2] = {0, 0}, i;
+    // V6.4: one pass (cull + coords + key) and a sort over visible sprites only.
+    if (WildlandsWorld_Active())
+    {
+        WildlandsBuildOamFast();
+        return;
+    }
     if (WildlandsWorld_Active())
         for (i = 0; i < MAX_SPRITES; i++)
         {
