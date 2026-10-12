@@ -1663,6 +1663,7 @@ static u16 Speed(u8 side)
     speed=speed*gStatStageRatios[stage][0]/gStatStageRatios[stage][1];
     speed=StormSpeed(side,256 + Clamp(speed, 1, 120) * 2);
     speed=speed*MonMassSpeedFactor(side)/256;
+    if(WildlandsWorld_Active())speed=speed*WildlandsWorld_SwimFactor(side,sArena.bodies[side].x/Q,sArena.bodies[side].y/Q)/256;
     return (gBattleMons[side].status1&STATUS1_PARALYSIS)?max(64,speed/4):speed;
 }
 

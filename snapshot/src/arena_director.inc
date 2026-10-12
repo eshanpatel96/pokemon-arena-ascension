@@ -425,12 +425,13 @@ static void DirOffscreenEntry(struct DirDuo *d)
 static void DirLoadActive(u8 index)
 {
     struct DirDuo *d = &sDir->duo[index];
-    DirOffscreenEntry(d);
     struct ArenaBody *body = &sArena.bodies[1];
-    u8 lead = (d->species[0] && d->hp[0]) ? 0 : 1;
-    u8 other = lead ^ 1;
+    u8 lead, other;
     u32 t0 = WL_NOW();
     u32 t1;
+    DirOffscreenEntry(d);
+    lead = (d->species[0] && d->hp[0]) ? 0 : 1;
+    other = lead ^ 1;
     DirMakeMon(&gEnemyParty[0], d->species[lead], d->level, d->hp[lead], d->legend);
     t1 = WL_NOW(); gWildlandsHitch[6] = t1 - t0;
     if (d->species[other] && d->hp[other])
