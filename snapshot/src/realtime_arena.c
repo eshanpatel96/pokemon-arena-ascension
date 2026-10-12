@@ -2084,7 +2084,12 @@ static void AiChooseGoal(void)
         : p->move == MOVE_FLAMETHROWER ? 76 : p->kind == ARENA_MOVE_CONE ? 40 : 70+sArena.style*8;
     s32 best = 0x7FFFFFFF;
     u32 i;
-    if (p->kind == ARENA_MOVE_PROJECTILE && gBattleMons[1].hp * 3 < gBattleMons[1].maxHP) preferred += 12;
+    if (WildlandsWorld_Active() && DirectorSoloActive())
+    {
+        if (gBattleMons[1].hp * 2 < gBattleMons[1].maxHP)
+            preferred = preferred * 3 / 4;   /* V6.6: a hurt legend presses */
+    }
+    else if (p->kind == ARENA_MOVE_PROJECTILE && gBattleMons[1].hp * 3 < gBattleMons[1].maxHP) preferred += 12;
     for (i = 0; i < 8 + ARENA_CORNERS; i++)
     {
         struct ArenaPoint p;
@@ -2271,10 +2276,14 @@ static void AiChooseMove(s32 distance)
         }
         if(p->kind!=ARENA_MOVE_SELF && distance>p->range)score-=(distance-p->range)*2;
         if(ArenaMovePP(1,i)<=2)score-=12;
+        if(WildlandsWorld_Active()&&DirectorSoloActive()&&(move==MOVE_TELEPORT||move==MOVE_RECOVER||move==MOVE_REST
+            ||move==MOVE_SOFT_BOILED||move==MOVE_MILK_DRINK||move==MOVE_SYNTHESIS||move==MOVE_MOONLIGHT
+            ||move==MOVE_MORNING_SUN||move==MOVE_SLACK_OFF||move==MOVE_ABSORB||move==MOVE_MEGA_DRAIN
+            ||move==MOVE_GIGA_DRAIN||move==MOVE_LEECH_LIFE))score=-1000;
         if(career)
             score=AscensionAi_AdjustScore(p,score,distance,
                 move==gArenaCombatTelemetry.lastMove[1],visibleCommitment,
-                gBattleMons[1].hp*2<gBattleMons[1].maxHP,sArena.style);
+                gBattleMons[1].hp*2<gBattleMons[1].maxHP&&!(WildlandsWorld_Active()&&DirectorSoloActive()),sArena.style);
 
         if(score>best){best=score;sArena.bodies[1].moveSlot=i;}
     }
@@ -3443,7 +3452,13 @@ static void ArenaExit(bool8 fainted)
         DirectorDestroy();SquadDestroy();ZoneDestroy();LootDestroy();
         BuildOamBuffer();ArenaRender_Ready();
         gMain.callback1=sArena.savedCB1;
-        RealtimeArena_ResumeBattle(TRUE);
+        if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1 && FlagGet(FLAG_ARENA_PRACTICE) && gBattleMons[0].hp==0)
+        {
+            gRealtimeArenaRestoringFaint=FALSE;
+            RealtimeArena_FinishLoss();   /* V6.6: straight to the whiteout */
+        }
+        else
+            RealtimeArena_ResumeBattle(TRUE);
         SetMainCallback2(BattleMainCB2);
         return;
     }

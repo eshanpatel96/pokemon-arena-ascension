@@ -17,5 +17,6 @@ extern struct ArenaCaptureTelemetry gArenaCaptureTelemetry;
 u32 CalculateBallCatchOdds(u8 target, u16 item);
 u8 CalculateBallCatchShakes(u32 odds, u16 item);
 void RealtimeArena_FinishCapture(void);
+void RealtimeArena_FinishLoss(void);
 
 #endif

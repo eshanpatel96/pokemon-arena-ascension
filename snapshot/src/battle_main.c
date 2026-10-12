@@ -5080,6 +5080,13 @@ void RealtimeArena_ResumeBattle(bool8 fainted)
     gBattleMainFunc = WaitForRealtimeArenaReturn;
 }
 
+void RealtimeArena_FinishLoss(void)
+{
+    gBattleOutcome = B_OUTCOME_LOST;
+    gCurrentActionFuncId = B_ACTION_FINISHED;
+    gBattleMainFunc = HandleEndTurn_FinishBattle;
+}
+
 void RealtimeArena_FinishCapture(void)
 {
     // The arena already presented the catch and used the native party/PC API.
