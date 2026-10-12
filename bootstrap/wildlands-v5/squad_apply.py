@@ -379,13 +379,15 @@ patch('src/arena_moves.c', 'const struct ArenaMoveProfile *ArenaMoves_Get(u16 mo
       'static EWRAM_DATA u8 sProfileMemoIdx[8] = {0};\n'
       'const struct ArenaMoveProfile *ArenaMoves_Get(u16 move)\n{\n    unsigned i, slot = move & 7;\n'
       '    if (sProfileMemoIdx[slot] && sProfileMemoMove[slot] == move)\n'
-      '        return &sProfiles[sProfileMemoIdx[slot] - 1];\n'
+      '        return sProfileMemoIdx[slot] == 255 ? 0 : &sProfiles[sProfileMemoIdx[slot] - 1];\n'
       '    for (i = 0; i < sizeof(sProfiles)/sizeof(sProfiles[0]); i++)\n'
       '        if (sProfiles[i].move == move)\n'
       '        {\n'
-      '            if (i < 255) { sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = i + 1; }\n'
+      '            if (i < 254) { sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = i + 1; }\n'
       '            return &sProfiles[i];\n'
-      '        }\n    return 0;\n}\n')
+      '        }\n'
+      '    sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = 255;   /* V6.4: misses memoised too */\n'
+      '    return 0;\n}\n')
 
 # Locked 30 fps world render: every rendered frame advances exactly two fixed
 # 60 Hz steps, so motion is evenly paced (no 1-2-1 judder) and game time stays

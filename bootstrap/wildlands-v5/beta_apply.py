@@ -284,4 +284,22 @@ void WildlandsBuildOamFast(void)
     sShouldProcessSpriteCopyRequests = TRUE;
 }
 """)
+# V6.4 FPS: the enemy's move scoring re-scanned the whole type chart up to
+# five times per move; memoise per sim frame (target and attacker are fixed
+# within one frame).
+patch(A, 'static s32 AiTypeValue(u16 move)\n{\n', 'static s32 AiTypeValueRaw(u16 move)\n{\n')
+patch(A, '    return value;\n}\n\n#include "ascension_ai_tactics.inc"\n',
+      '    return value;\n}\n'
+      'static u16 sAiTvFrame, sAiTvMove[6];\nstatic s32 sAiTvVal[6];\nstatic u8 sAiTvN;\n'
+      'static s32 AiTypeValue(u16 move)\n{\n    u32 i;\n    s32 v;\n'
+      '    if (sAiTvFrame != (u16)(sArena.frame + 1)) { sAiTvFrame = sArena.frame + 1; sAiTvN = 0; }\n'
+      '    for (i = 0; i < sAiTvN; i++)\n        if (sAiTvMove[i] == move)\n            return sAiTvVal[i];\n'
+      '    v = AiTypeValueRaw(move);\n'
+      '    if (sAiTvN < 6) { sAiTvMove[sAiTvN] = move; sAiTvVal[sAiTvN] = v; sAiTvN++; }\n'
+      '    return v;\n}\n\n#include "ascension_ai_tactics.inc"\n')
+# The aim line's blocked tint: a line-of-sight sweep every rendered frame;
+# in the world every 4th render is plenty.
+patch(A, '    gArenaCombatTelemetry.aimBlocked = !ArenaNav_LineClear(sArena.bodies[0].x/Q,\n        sArena.bodies[0].y/Q, DecoyAim(1,FALSE)/Q, DecoyAim(1,TRUE)/Q, 2);\n',
+      '    {\n        static u8 sAimTick;\n        if (!WildlandsWorld_Active() || !(++sAimTick & 3))\n'
+      '            gArenaCombatTelemetry.aimBlocked = !ArenaNav_LineClear(sArena.bodies[0].x/Q,\n        sArena.bodies[0].y/Q, DecoyAim(1,FALSE)/Q, DecoyAim(1,TRUE)/Q, 2);\n    }\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')
