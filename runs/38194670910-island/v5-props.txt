@@ -1,0 +1,1 @@
+World props installed: writable obstacle slots, streamed breakable cover, local Psychic rocks
