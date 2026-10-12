@@ -28,6 +28,7 @@ struct SquadWing
     u16 fallbackMove, stuckClock, regroups;
     s32 lastX, lastY;
     u16 scale;          // visual size (same art-based rule as the leads)
+    bool8 ownMatrix;    // its OAM matrix is its own (never shared)
 };
 static EWRAM_DATA u16 sSwapCooldown = 0;   // Beta: SELECT lead/partner swap
 
@@ -134,6 +135,30 @@ static void SquadPos(u8 battler, s32 *x, s32 *y)
 // [3] species [4] matrix [5] recoveries (rain dropped to make room)
 EWRAM_DATA u16 gWildlandsWingSpriteDiag[6] = {0};
 static void ZoneFreeRain(void);
+// TRUE when no other live affine sprite uses this sprite's OAM matrix (a
+// failed allocation or a stale free can hand out a matrix that is in use).
+EWRAM_DATA u16 gWildlandsMatrixTelemetry[2] = {0};   // [0] shared matrices found [1] repaired
+static bool8 SquadMatrixExclusive(u8 id)
+{
+    u32 i;
+    u8 m = gSprites[id].oam.matrixNum & 31;
+    if (!(gSprites[id].oam.affineMode & ST_OAM_AFFINE_ON_MASK))
+        return FALSE;
+    for (i = 0; i < MAX_SPRITES; i++)
+        if (i != id && gSprites[i].inUse && (gSprites[i].oam.affineMode & ST_OAM_AFFINE_ON_MASK)
+            && (gSprites[i].oam.matrixNum & 31) == m)
+        {
+            u8 fresh = AllocOamMatrix();
+            gWildlandsMatrixTelemetry[0]++;
+            if (fresh == 0xFF)
+                return FALSE;
+            gSprites[id].oam.matrixNum = fresh;
+            gWildlandsMatrixTelemetry[1]++;
+            return TRUE;
+        }
+    return TRUE;
+}
+
 static void SquadCreateSprites(struct SquadWing *w)
 {
     struct SpriteTemplate t = sMonTemplate;
@@ -163,12 +188,22 @@ static void SquadCreateSprites(struct SquadWing *w)
     }
     w->shadow = CreateSprite(&sShadowTemplate, w->x / Q, w->y / Q + 8, 9);
     w->marker = CreateSprite(&sShotTemplate, w->x / Q, w->y / Q - 27, 0);
+    if (w->sprite == MAX_SPRITES)
+    {
+        // No sprite: nothing to draw or free; the wing still fights.
+        w->active = TRUE; w->ownMatrix = FALSE;
+        return;
+    }
     spr = &gSprites[w->sprite];
     spr->affineAnimPaused = TRUE; spr->affineAnimBeginning = FALSE;
     w->scale = WildlandsArtScale(w->species, w->art);
-    spr->oam.affineMode = ST_OAM_AFFINE_DOUBLE;
+    w->ownMatrix = SquadMatrixExclusive(w->sprite);
+    spr->oam.affineMode = w->ownMatrix ? ST_OAM_AFFINE_DOUBLE : ST_OAM_AFFINE_OFF;
     CalcCenterToCornerVec(spr, spr->oam.shape, spr->oam.size, spr->oam.affineMode);
-    SetOamMatrix(spr->oam.matrixNum, 256 * 256 / w->scale, 0, 0, 256 * 256 / w->scale);
+    if (w->ownMatrix)
+        SetOamMatrix(spr->oam.matrixNum, 256 * 256 / w->scale, 0, 0, 256 * 256 / w->scale);
+    else
+        spr->oam.matrixNum = 0;   // plain sprite (flip bits clear), never a shared matrix
     gSprites[w->marker].oam.paletteNum = IndexOfSpritePaletteTag(w->team ? SHOT_TAG + 1 : SHOT_TAG);
     w->drawnFrame = w->drawnDirection = 255;
     w->active = TRUE;
@@ -245,10 +280,19 @@ static void SquadHideWing(struct SquadWing *w)
 {
     if (!w->active)
         return;
-    FreeOamMatrix(gSprites[w->sprite].oam.matrixNum);
-    DestroySprite(&gSprites[w->sprite]);
-    DestroySprite(&gSprites[w->shadow]);
-    DestroySprite(&gSprites[w->marker]);
+    // Only real sprites: freeing the dummy sprite's matrix (id 64) released
+    // matrix 0 to the next allocation, so the partner shared the lead's
+    // squash/rotate matrix and drew flat or sheared (V6.3 playtest).
+    if (w->sprite < MAX_SPRITES)
+    {
+        if (w->ownMatrix)
+            FreeOamMatrix(gSprites[w->sprite].oam.matrixNum);
+        DestroySprite(&gSprites[w->sprite]);
+    }
+    if (w->shadow < MAX_SPRITES) DestroySprite(&gSprites[w->shadow]);
+    if (w->marker < MAX_SPRITES) DestroySprite(&gSprites[w->marker]);
+    w->sprite = w->shadow = w->marker = MAX_SPRITES;
+    w->ownMatrix = FALSE;
     FreeSpriteTilesByTag(w->tag);
     FreeSpritePaletteByTag(w->tag);
     w->active = FALSE;
@@ -622,7 +666,14 @@ static void SquadThink(struct SquadWing *w)
     }
 }
 
+static void SquadDrawWing(struct SquadWing *w);
 static void SquadDraw(struct SquadWing *w)
+{
+    if (w->sprite >= MAX_SPRITES)
+        return;
+    SquadDrawWing(w);
+}
+static void SquadDrawWing(struct SquadWing *w)
 {
     const struct ArenaSpriteAnimation *anim;
     struct Sprite *spr = &gSprites[w->sprite];
