@@ -327,14 +327,14 @@ print('move profile index:', len(_rows), 'moves')
 # is reused until the player, the direction or the room changes.
 patch(WW, 's8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy)\n{',
       'static s8 SlideNudgeRaw(u8 side, s16 x, s16 y, s8 sx, s8 sy);\n'
-      'static s16 sNudgeX = -1, sNudgeY = -1;\nstatic s8 sNudgeSx, sNudgeSy;\nstatic u32 sNudgeRoom;\nstatic u16 sNudgeSpecies;\n'
+      'static s16 sNudgeX, sNudgeY;\nstatic bool8 sNudgeValid;   /* no initialisers: .data is discarded for this object */\nstatic s8 sNudgeSx, sNudgeSy;\nstatic u32 sNudgeRoom;\nstatic u16 sNudgeSpecies;\n'
       's8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy)\n{\n'
       '    s8 n;\n'
-      '    if (x == sNudgeX && y == sNudgeY && sx == sNudgeSx && sy == sNudgeSy && sNudgeRoom == gWildlandsRoomTelemetry[2] && sNudgeSpecies == gBattleMons[side].species)\n'
+      '    if (sNudgeValid && x == sNudgeX && y == sNudgeY && sx == sNudgeSx && sy == sNudgeSy && sNudgeRoom == gWildlandsRoomTelemetry[2] && sNudgeSpecies == gBattleMons[side].species)\n'
       '        return 0;\n'
       '    n = SlideNudgeRaw(side, x, y, sx, sy);\n'
-      '    if (n)\n        sNudgeX = -1;\n'
-      '    else\n    { sNudgeX = x; sNudgeY = y; sNudgeSx = sx; sNudgeSy = sy; sNudgeRoom = gWildlandsRoomTelemetry[2]; sNudgeSpecies = gBattleMons[side].species; }\n'
+      '    if (n)\n        sNudgeValid = FALSE;\n'
+      '    else\n    { sNudgeValid = TRUE; sNudgeX = x; sNudgeY = y; sNudgeSx = sx; sNudgeSy = sy; sNudgeRoom = gWildlandsRoomTelemetry[2]; sNudgeSpecies = gBattleMons[side].species; }\n'
       '    return n;\n}\n'
       'static s8 SlideNudgeRaw(u8 side, s16 x, s16 y, s8 sx, s8 sy)\n{')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')
