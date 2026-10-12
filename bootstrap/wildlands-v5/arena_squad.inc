@@ -900,7 +900,7 @@ static void WildlandsPaceUpdate(u32 gap)
             sWlFast = 0;
         return;
     }
-    if (sWlFastHold)
+    if (sWlFastHold && gWildlandsFastTest != 2)
     { sWlFastHold--; return; }
     if (calm)
     { sWlFast = 1; sWlFastMiss = 0; }

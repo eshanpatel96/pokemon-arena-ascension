@@ -149,4 +149,82 @@ patch(A, '    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Acti
 # its cooldown was 0; in the world it re-picks every 4th frame.
 patch(A, '        if(!body->cooldown)AiChooseMove(distance);\n',
       '        if(!body->cooldown && (!WildlandsWorld_Active() || !(sArena.frame & 3)))AiChooseMove(distance);\n')
+# FPS: a coarse 32px "anything solid or deep water here?" bitmap lets line
+# and footprint checks over open ground return at once instead of marching
+# a body circle every few pixels (SolidCircle was the top walking cost).
+import re as _re
+_hdr = (root / 'include/wildlands_world_data.h').read_text()
+_W = int(_re.search(r'#define WL_SLICE_W (\d+)', _hdr).group(1))
+_H = int(_re.search(r'#define WL_SLICE_H (\d+)', _hdr).group(1))
+_terr = (root / 'data/wildlands_world/terrain.bin').read_bytes()
+_cw, _ch = (_W + 1) // 2, (_H + 1) // 2
+_bits = bytearray((_cw * _ch + 7) // 8)
+for _by in range(_ch):
+    for _bx in range(_cw):
+        _dirty = False
+        for _j in (0, 1):
+            for _i in (0, 1):
+                _x, _y = _bx * 2 + _i, _by * 2 + _j
+                if _x >= _W or _y >= _H or (_terr[_y * _W + _x] & 3):
+                    _dirty = True
+        if _dirty:
+            _k = _by * _cw + _bx
+            _bits[_k >> 3] |= 1 << (_k & 7)
+(root / 'include/wildlands_coarse.inc').write_text(
+    f'#define WL_COARSE_W {_cw}\n#define WL_COARSE_H {_ch}\n'
+    'static const u8 sWlCoarse[] = {' + ','.join(map(str, _bits)) + '};\n')
+WW = 'src/wildlands_world.c'
+patch(WW, '#include "wildlands_biomes.inc"\n', '#include "wildlands_biomes.inc"\n#include "wildlands_coarse.inc"\n')
+patch(WW, 'static bool8 SolidCircle(s16 x, s16 y, u8 radius)\n{',
+'''// TRUE when the segment's bounding box (grown by r) touches no solid or
+// deep-water metatile: any sweep along it would pass.
+EWRAM_DATA u32 gWildlandsCoarseTelemetry[2] = {0};   // [0] fast passes [1] full sweeps
+static bool8 CoarseClear(s32 x1, s32 y1, s32 x2, s32 y2, s32 r)
+{
+    s32 bx0 = (((x1 < x2 ? x1 : x2) - r) >> 4) - WL_SLICE_BASE_X, bx1 = (((x1 > x2 ? x1 : x2) + r) >> 4) - WL_SLICE_BASE_X;
+    s32 by0 = (((y1 < y2 ? y1 : y2) - r) >> 4) - WL_SLICE_BASE_Y, by1 = (((y1 > y2 ? y1 : y2) + r) >> 4) - WL_SLICE_BASE_Y;
+    s32 bx, by;
+    if (bx0 < 0 || by0 < 0 || bx1 >= WL_SLICE_W || by1 >= WL_SLICE_H)
+        return FALSE;
+    bx0 >>= 1; bx1 >>= 1; by0 >>= 1; by1 >>= 1;
+    if ((bx1 - bx0 + 1) * (by1 - by0 + 1) > 64)
+        return FALSE;
+    for (by = by0; by <= by1; by++)
+        for (bx = bx0; bx <= bx1; bx++)
+        {
+            u32 k = by * WL_COARSE_W + bx;
+            if (sWlCoarse[k >> 3] & (1 << (k & 7)))
+            { gWildlandsCoarseTelemetry[1]++; return FALSE; }
+        }
+    gWildlandsCoarseTelemetry[0]++;
+    return TRUE;
+}
+
+static bool8 SolidCircle(s16 x, s16 y, u8 radius)
+{''')
+patch(WW, '''    if (!sActive)
+        return TRUE;
+    if (radius <= 2)
+        return RayClear(x1, y1, x2, y2);''', '''    if (!sActive)
+        return TRUE;
+    if (CoarseClear(x1, y1, x2, y2, radius))
+        return TRUE;
+    if (radius <= 2)
+        return RayClear(x1, y1, x2, y2);''')
+patch(WW, '''    if (radius > WL_WORLD_BODY_RADIUS)
+        radius = WL_WORLD_BODY_RADIUS;
+''', '''    if (radius > WL_WORLD_BODY_RADIUS)
+        radius = WL_WORLD_BODY_RADIUS;
+    if (CoarseClear(x1, y1, x2, y2, radius))
+        return TRUE;
+''')
+patch(WW, '''    if (!sActive)
+        return distance;
+    if (SolidCircle(x, y, radius))
+        return 0;''', '''    if (!sActive)
+        return distance;
+    if (CoarseClear(x, y, x + dx * distance / 256, y + dy * distance / 256, radius))
+        return distance;
+    if (SolidCircle(x, y, radius))
+        return 0;''')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')
