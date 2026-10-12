@@ -27,6 +27,7 @@ struct SquadWing
     u8 target, flash, stuck;
     u16 fallbackMove, stuckClock, regroups;
     s32 lastX, lastY;
+    u16 scale;          // visual size (same art-based rule as the leads)
 };
 
 static EWRAM_DATA struct SquadWing sSquadWings[2] = {};
@@ -104,11 +105,12 @@ static void WildlandsHudWingBars(void)
     {
         u8 b = 2 + k;
         u32 bar = k ? 129 : 8;
-        HudRect(bar, 22, 102, 2, 12);
+        // Partner / enemy-wing bar: 3px under the main bar (Beta: thicker).
+        HudRect(bar, 21, 102, 3, 12);
         if (SquadAlive(b) && gBattleMons[b].maxHP)
         {
             u32 fill = gBattleMons[b].hp * 102 / gBattleMons[b].maxHP;
-            HudRect(bar, 22, fill ? fill : 1, 2, gBattleMons[b].hp * 5 <= gBattleMons[b].maxHP ? 6 : k ? 7 : 5);
+            HudRect(bar, 21, fill ? fill : 1, 3, gBattleMons[b].hp * 5 <= gBattleMons[b].maxHP ? 6 : k ? 7 : 5);
         }
     }
 }
@@ -137,7 +139,10 @@ static void SquadCreateSprites(struct SquadWing *w)
     w->marker = CreateSprite(&sShotTemplate, w->x / Q, w->y / Q - 27, 0);
     spr = &gSprites[w->sprite];
     spr->affineAnimPaused = TRUE; spr->affineAnimBeginning = FALSE;
-    SetOamMatrix(spr->oam.matrixNum, 256 * 256 / 230, 0, 0, 256 * 256 / 230);
+    w->scale = WildlandsArtScale(w->species, w->art);
+    spr->oam.affineMode = ST_OAM_AFFINE_DOUBLE;
+    CalcCenterToCornerVec(spr, spr->oam.shape, spr->oam.size, spr->oam.affineMode);
+    SetOamMatrix(spr->oam.matrixNum, 256 * 256 / w->scale, 0, 0, 256 * 256 / w->scale);
     gSprites[w->marker].oam.paletteNum = IndexOfSpritePaletteTag(w->team ? SHOT_TAG + 1 : SHOT_TAG);
     w->drawnFrame = w->drawnDirection = 255;
     w->active = TRUE;
@@ -579,7 +584,7 @@ static void SquadDraw(struct SquadWing *w)
             tick = w->shotElapsed < p->windup ? w->shotElapsed * anim->hitTick / p->windup : anim->hitTick;
     }
     frame = ArenaSprites_Frame(anim, tick);
-    spr->y += 8 - w->art->ground[animation * 8 + w->facing] * 230 / 256;
+    spr->y += 8 - w->art->ground[animation * 8 + w->facing] * (w->scale ? w->scale : 230) / 256;
     if (frame != w->drawnFrame || w->facing != w->drawnDirection)
     {
         ArenaSprites_Decode(anim, w->facing, frame, (u32 *)buffer);
@@ -758,6 +763,8 @@ static void SquadSimStep(void)
         SquadPPRegen();
     if (WildlandsWorld_Active())
         SquadRestRegen();
+    if (sSwapCooldown)
+        sSwapCooldown--;
     SquadDoorSim();
     DirectorSim();
     for (i = 0; i < 2; i++)
@@ -813,6 +820,56 @@ static bool8 SquadPromote(u8 side)
     sArena.hudDirty = TRUE;
     PlayCry_Normal(gBattleMons[side].species, 0);
     return TRUE;
+}
+
+// Beta: SELECT swaps you into your partner. Both keep their own HP, PP and
+// stat stages; you take over the partner's body where it stands and the AI
+// takes your old body. 3s cooldown; not mid-attack.
+static EWRAM_DATA u16 sSwapCooldown = 0;
+EWRAM_DATA u16 gWildlandsSwapTelemetry = 0;   // swaps performed
+static void SquadSwapLead(void)
+{
+    struct SquadWing *w = &sSquadWings[0];
+    struct ArenaBody *body = &sArena.bodies[0];
+    struct BattlePokemon lead;
+    u8 leadIndex, leadFacing;
+    s32 lx, ly;
+    if (sSwapCooldown || !w->active || !w->alive || !gBattleMons[0].hp
+        || body->shotTimer || body->actionLife || w->shotTimer)
+        return;
+    lead = gBattleMons[0];
+    leadIndex = gBattlerPartyIndexes[0];
+    leadFacing = body->facing;
+    lx = body->x; ly = body->y;
+    gBattlerPartyIndexes[0] = w->partyIndex;
+    gBattleMons[0] = gBattleMons[w->battler];
+    body->x = w->x; body->y = w->y;
+    body->facing = w->facing;
+    body->art = w->art;
+    body->drawnFrame = body->drawnDirection = 255;
+    body->shotTimer = body->actionLife = body->dash = 0;
+    body->cooldown = 10; body->knockX = body->knockY = 0;
+    body->moveSlot = FirstMove(0, TRUE);
+    LoadPalette(body->art->palette, OBJ_PLTT_ID(0), PLTT_SIZE_4BPP);
+    SquadHideWing(w);
+    gBattleMons[w->battler] = lead;
+    gBattlerPartyIndexes[w->battler] = leadIndex;
+    w->partyIndex = leadIndex;
+    w->species = lead.species;
+    w->art = ArenaSprites_Get(lead.species);
+    w->x = lx; w->y = ly;
+    w->waypointX = lx / Q; w->waypointY = ly / Q;
+    w->lastX = lx; w->lastY = ly;
+    w->facing = leadFacing;
+    w->shotTimer = 0; w->cooldown = 20; w->stuckClock = 0;
+    w->target = 1;
+    w->alive = TRUE;
+    if (w->art)
+        SquadCreateSprites(w);
+    sSwapCooldown = 180;
+    gWildlandsSwapTelemetry++;
+    sArena.hudDirty = TRUE;
+    PlayCry_Normal(gBattleMons[0].species, 0);
 }
 
 static void SquadKO(u8 target, u8 attacker)

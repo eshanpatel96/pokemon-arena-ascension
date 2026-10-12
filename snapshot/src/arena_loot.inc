@@ -214,6 +214,11 @@ static void LootApply(u8 team, u8 type, s32 x, s32 y)
     }
     else
         LootStat(team, type);
+    {
+        u8 logText[24];
+        if (LootPopupText(logText))
+            DirectorLog(logText);
+    }
     for (m = 0; m < 2; m++)
     {
         u8 b = team + m * 2;

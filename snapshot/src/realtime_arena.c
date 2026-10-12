@@ -467,10 +467,31 @@ static u32 MonArtExtent(const struct ArenaSpriteSet *art)
     if (x1 < 0) return 0;
     return max(x1 - x0, y1 - y0) + 1;
 }
+static u16 WildlandsArtScale(u16 species, const struct ArenaSpriteSet *art)
+{
+    u32 extent, target, scale = 230, h;
+    switch (species)
+    {
+    case SPECIES_MEWTWO:
+    case SPECIES_LUGIA:
+    case SPECIES_HO_OH:
+    case SPECIES_KYOGRE:
+    case SPECIES_RAYQUAZA: return 304;
+    }
+    if (art && (extent = MonArtExtent(art)) != 0)
+    {
+        h = gPokedexEntries[SpeciesToNationalPokedexNum(species)].height;
+        target = h <= 6 ? 21 : h <= 12 ? 24 : h <= 20 ? 27 : 30;
+        scale = target * 256 / extent;
+        if (scale < 230) scale = 230;
+        if (scale > 400) scale = 400;
+    }
+    return scale;
+}
 static u16 MonVisualScale(u8 side)
 {
-    u16 species = gBattleMons[side].species, h;
-    u32 extent, target, scale;
+    u16 species = gBattleMons[side].species;
+    u32 scale;
     switch (species)
     {
     case SPECIES_MEWTWO:
@@ -481,15 +502,7 @@ static u16 MonVisualScale(u8 side)
     }
     if (sScaleSpecies[side] == species && sScaleValue[side])
         return sScaleValue[side];
-    scale = 230;
-    if (sArena.bodies[side].art && (extent = MonArtExtent(sArena.bodies[side].art)) != 0)
-    {
-        h = gPokedexEntries[SpeciesToNationalPokedexNum(species)].height;
-        target = h <= 6 ? 21 : h <= 12 ? 24 : h <= 20 ? 27 : 30;
-        scale = target * 256 / extent;
-        if (scale < 230) scale = 230;
-        if (scale > 400) scale = 400;
-    }
+    scale = WildlandsArtScale(species, sArena.bodies[side].art);
     sScaleSpecies[side] = species;
     sScaleValue[side] = scale;
     return scale;
@@ -556,6 +569,12 @@ static u8 DirectorBossDoor(void);
 static void DirectorBossEnter(void);
 static bool8 DirectorLairAnchor(s32 *x, s32 *y);
 static u32 WildlandsCramp(s32 x, s32 y);
+static u8 DirectorLairState(s32 x, s32 y);
+static void DirectorLog(const u8 *text);
+static bool8 LootPopupText(u8 *text);
+static void SquadSwapLead(void);
+static void WildlandsTeamDraw(void);
+static void WildlandsLogDraw(void);
 static void DirectorDestroy(void);
 static void DirRestorePartner(void);
 static bool8 DirectorSoloActive(void);
@@ -1155,6 +1174,7 @@ static void DrawHud(void)
         if(sPausePage==3)
         {
             static const u8 labels[5][18]={_("POKEMON"),_("BAG"),_("MOVES"),_("RESUME"),_("MAP")};
+            static const u8 wlabels[5][18]={_("TEAM"),_("LOG"),_("MOVES"),_("RESUME"),_("MAP")};
             static const u8 title[]=_("PAUSED");
             static const u8 help[]=_("UP/DOWN: CHOOSE   A: OPEN");
             FillWindowPixelBuffer(1,PIXEL_FILL(9));
@@ -1163,12 +1183,14 @@ static void DrawHud(void)
             for(side=0;side<5;side++)
             {
                 if(side==sPauseChoice)WindowRect(1,7,17+side*10,4,7,5);
-                PrintPopup(18,15+side*10,labels[side],side==sPauseChoice?5:4);
+                PrintPopup(18,15+side*10,WildlandsWorld_Active()?wlabels[side]:labels[side],side==sPauseChoice?5:4);
             }
             HudTinyWindow(1,7,67,help,7,52);
             PutWindowTilemap(1);CopyWindowToVram(1,COPYWIN_FULL);
         }
         else if(sPausePage==4)MapDraw();
+        else if(sPausePage==5)WildlandsTeamDraw();
+        else if(sPausePage==6)WildlandsLogDraw();
         else if(sPausePage)
         {
             FillWindowPixelBuffer(1, PIXEL_FILL(9));
@@ -2855,7 +2877,8 @@ static void CB2_Arena(void)
     gArenaFrameTelemetry.updates++;
     if(gap>gArenaFrameTelemetry.maxGap)gArenaFrameTelemetry.maxGap=gap;
     if(gap>1)gArenaFrameTelemetry.missedVBlanks+=gap-1;
-    if (JOY_NEW(SELECT_BUTTON) && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1) && !sArena.resultTimer && sCapture.state==ARENA_CAPTURE_IDLE) { gArenaMenuRequest=2; ArenaExit(FALSE); return; }
+    if (JOY_NEW(SELECT_BUTTON) && WildlandsWorld_Active()) { if (!sArena.paused && !sArena.resultTimer) SquadSwapLead(); }
+    else if (JOY_NEW(SELECT_BUTTON) && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1) && !sArena.resultTimer && sCapture.state==ARENA_CAPTURE_IDLE) { gArenaMenuRequest=2; ArenaExit(FALSE); return; }
     if (JOY_NEW(START_BUTTON) && !sArena.resultTimer && sCapture.state==ARENA_CAPTURE_IDLE)
     {
         sArena.paused ^= TRUE;
@@ -2874,7 +2897,8 @@ static void CB2_Arena(void)
             {sPauseChoice=(sPauseChoice+(JOY_NEW(DPAD_DOWN)?1:4))%5;sArena.hudDirty=TRUE;}
             if(JOY_NEW(A_BUTTON))
             {
-                if(sPauseChoice<2 && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1))
+                if(sPauseChoice<2 && WildlandsWorld_Active()){sPausePage=5+sPauseChoice;sArena.hudDirty=TRUE;}
+                else if(sPauseChoice<2 && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1))
                 {gArenaMenuRequest=sPauseChoice==0?2:1;ArenaExit(FALSE);return;}
                 if(sPauseChoice==2){sPausePage=0;sMoveMenuReady=FALSE;sArena.hudDirty=TRUE;}
                 if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sArena.hudDirty=TRUE;}
