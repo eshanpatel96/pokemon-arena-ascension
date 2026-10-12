@@ -37,8 +37,7 @@ D2. Map polish toward overworld immersion: cleaner edges and transitions, fewer 
 - Floor items reported as "little shiny things": no screenshot yet; recheck in V6 captures.
 
 ## Progress (WildLands Beta, 2026-10-12)
-Done and smoke-verified: A1-A10, B1-B5, C2 (Lab COACH: PICK DUO, MOVES, CONTROLS, DEPLOY), C3 (shinies about 1/64, native shiny data + shiny arena palette).
-C4: summary card (victory/eliminated, place, KOs, time) in build; spectate not started.
-Arena-move sweep: all PC boxes at NEW GAME, duo after PICK DUO and at every deploy.
-ROM file renamed Pokemon-WildLands-Beta.gba.
-Open: C1 status effects, C4 spectate, D1 60 fps exploring, D2 map polish, floor-item "shiny things" (needs screenshot).
+Done and smoke-verified: A1-A10, B1-B5, C2 (Lab COACH: PICK DUO, MOVES, CONTROLS, DEPLOY), C3 (shinies about 1/64, native shiny data + shiny arena palette), C4 summary card, D2 first pass (rounded tree/pond/rock masses, tall-grass patches).
+Also: breakable cover (arena props streamed over the island; Psychic throws nearby rocks), boss placement audit (all five in their rooms, within sight of the entrance), joined legendary never overwrites the lead and always gets a sprite, pickups on their own palette with readable marks.
+Arena-move sweep: all PC boxes at NEW GAME, duo after PICK DUO and at every deploy. ROM file: Pokemon-WildLands-Beta.gba.
+Open: C1 real-time status effects, C4 spectate, D1 60 fps exploring, prop slot VRAM pressure (some activations refused when sprite memory is full).
