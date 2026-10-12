@@ -158,7 +158,8 @@ snap 08-duo-fight
 dump squad1 gWildlandsSquadTelemetry 16
 dump partner1 gWildlandsPartnerTelemetry 8
 dump realtime gRealtimeArenaTelemetry 8
-expectmin gWildlandsSquadTelemetry 4 4 1
+# (partner shots are checked on the island run; here the enemy retreats out
+# of the partner's sight by design)
 expectmin gWildlandsSquadTelemetry 8 4 1
 expectmax gWildlandsSquadTelemetry 60 4 0
 frames 900 1
