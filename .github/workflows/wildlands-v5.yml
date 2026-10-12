@@ -27,6 +27,9 @@ jobs:
         world: [slice, island]
     env:
       WORLD: ${{ matrix.world }}
+      # Single source of the beta version: ROM file, artifact names, manifest,
+      # and the Lab sign in game. Bump this for every build sent to testers.
+      WL_VERSION: '6.2'
     steps:
       - uses: actions/checkout@v4
 
@@ -116,10 +119,10 @@ jobs:
         working-directory: engine
         run: |
           set -o pipefail
-          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-WildLands-Beta-V6-2 2>&1 | tee ../evidence/build.log
-          cp Pokemon-WildLands-Beta-V6-2.gba ../delivery/
-          cp Pokemon-WildLands-Beta-V6-2.elf Pokemon-WildLands-Beta-V6-2.map ../evidence/
-          arm-none-eabi-nm -n Pokemon-WildLands-Beta-V6-2.elf > ../evidence/symbols.txt
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-WildLands-Beta-V${WL_VERSION} 2>&1 | tee ../evidence/build.log
+          cp Pokemon-WildLands-Beta-V${WL_VERSION}.gba ../delivery/
+          cp Pokemon-WildLands-Beta-V${WL_VERSION}.elf Pokemon-WildLands-Beta-V${WL_VERSION}.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-WildLands-Beta-V${WL_VERSION}.elf > ../evidence/symbols.txt
 
       - name: Sprite size survey (read-only)
         continue-on-error: true
@@ -139,7 +142,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,json,os,re
-          p=Path('delivery/Pokemon-WildLands-Beta-V6-2.gba')
+          p=Path('delivery/Pokemon-WildLands-Beta-V'+os.environ['WL_VERSION']+'.gba')
           b=p.read_bytes()
           assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
           log=Path('evidence/build.log').read_text(errors='replace')
@@ -148,7 +151,7 @@ jobs:
               mem[name]={'used_bytes':int(used),'usage_percent':float(pct)}
           world=os.environ.get('WORLD','slice')
           manifest={
-            'name':'Pokemon WildLands Beta V6.2 ('+world+')',
+            'name':'Pokemon WildLands Beta V'+os.environ['WL_VERSION']+' ('+world+')',
             'source_commit':os.environ['GITHUB_SHA'],
             'rom_sha256':hashlib.sha256(b).hexdigest(),
             'rom_bytes':len(b),
@@ -174,7 +177,7 @@ jobs:
           }
           Path('delivery/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           Path('delivery/README.txt').write_text(
-            'Pokemon WildLands Beta V6.2 ('+world+'). NEW GAME -> Research Lab. Talk to the COACH: PICK DUO (two Pokemon), '
+            'Pokemon WildLands Beta V'+os.environ['WL_VERSION']+' ('+world+'). NEW GAME -> Research Lab. Talk to the COACH: PICK DUO (two Pokemon), '
             'MOVES (only moves the arena animates), CONTROLS, DEPLOY. L+R in the Lab also deploys. '
             'In match: D-pad move, A attack, B+direction dodge, L/R change move, L+R throw a ball, SELECT swap lead and partner, '
             'START pause (TEAM, LOG, MOVES, MAP). Stand still out of combat to heal. Stay inside the circle. '
@@ -190,7 +193,7 @@ jobs:
           set +e
           set -o pipefail
           CMDS=bootstrap/wildlands-v5/smoke.commands; [ "$WORLD" = island ] && CMDS=bootstrap/wildlands-v5/smoke_island.commands
-          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-WildLands-Beta-V6-2.gba evidence/symbols.txt evidence/runtime $CMDS - 2>&1 | tee evidence/smoke.log
+          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-WildLands-Beta-V${WL_VERSION}.gba evidence/symbols.txt evidence/runtime $CMDS - 2>&1 | tee evidence/smoke.log
           rc=$?
           python3 - <<'PY2'
           from pathlib import Path
@@ -231,7 +234,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-BETA-${{ matrix.world }}-ROM
+          name: WILDLANDS-BETA-V${{ env.WL_VERSION }}-${{ matrix.world }}-ROM
           path: delivery/
           if-no-files-found: ignore
 
@@ -239,7 +242,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-BETA-${{ matrix.world }}-EVIDENCE
+          name: WILDLANDS-BETA-V${{ env.WL_VERSION }}-${{ matrix.world }}-EVIDENCE
           path: evidence/
           if-no-files-found: warn
 
@@ -247,7 +250,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-BETA-${{ matrix.world }}-RECOVERY
+          name: WILDLANDS-BETA-V${{ env.WL_VERSION }}-${{ matrix.world }}-RECOVERY
           path: recovery/
           if-no-files-found: warn
 

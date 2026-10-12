@@ -110,6 +110,14 @@ old_prof = (' .string "Use the PC to form a TWO-POKEMON\\n"\n'
 if old_prof in s:
     s = s.replace(old_prof, ' .string "Talk to the COACH to pick your\\n"\n'
                             ' .string "duo, set moves and deploy.$"\n', 1)
+# The build's beta version is on the Lab sign (professor), so testers can
+# confirm which ROM they are running.
+import os
+_ver = os.environ.get('WL_VERSION', 'DEV')
+if ' .string "WILDLANDS RESEARCH LAB\\p"' in s:
+    s = s.replace(' .string "WILDLANDS RESEARCH LAB\\p"', ' .string "WILDLANDS BETA V' + _ver + '\\p"', 1)
+else:
+    raise SystemExit('coach: professor title anchor drift')
 s = s.replace(' .string "TWO POKEMON. Use the PC first.$"',
               ' .string "TWO POKEMON. Choose PICK DUO.$"')
 s += r'''
