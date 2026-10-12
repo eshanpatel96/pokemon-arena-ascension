@@ -181,7 +181,9 @@ static void SquadSpawnWing(u8 team)
     memset(w, 0, sizeof(*w));
     w->team = team;
     w->battler = 2 + team;
-    w->partyIndex = 1;
+    // The partner is whichever of the two party slots is not leading (the
+    // lead can be slot 1 after a promotion or a SELECT swap).
+    w->partyIndex = (!team && gBattlerPartyIndexes[0] == 1) ? 0 : 1;
     w->tag = team ? SQUAD_ENEMY_WING_TAG : WILDLANDS_PARTNER_TAG;
     if (team == 0)
     {
@@ -197,7 +199,7 @@ static void SquadSpawnWing(u8 team)
             species = gBattleMons[1].species;
         CreateMon(&gEnemyParty[1], species, level, USE_RANDOM_IVS, FALSE, 0, OT_ID_PLAYER_ID, 0);
     }
-    mon = team ? &gEnemyParty[1] : &gPlayerParty[1];
+    mon = team ? &gEnemyParty[1] : &gPlayerParty[w->partyIndex];
     if (!GetMonData(mon, MON_DATA_HP) || GetMonData(mon, MON_DATA_IS_EGG))
         return;
     w->species = GetMonData(mon, MON_DATA_SPECIES);
@@ -205,7 +207,7 @@ static void SquadSpawnWing(u8 team)
     if (!w->art)
         return;
     SquadFillBattleMon(w->battler, mon);
-    gBattlerPartyIndexes[w->battler] = 1;
+    gBattlerPartyIndexes[w->battler] = w->partyIndex;
     w->x = sArena.bodies[team].x + (team ? -24 : 24) * Q;
     w->y = sArena.bodies[team].y + 20 * Q;
     if (WildlandsWorld_Active() && !WildlandsWorld_CanStandSpecies(w->species, w->x / Q, w->y / Q, 6))
