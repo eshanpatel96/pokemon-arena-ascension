@@ -5,8 +5,7 @@
 #endif
 
 // Rendering, movement, projectiles and AI all use these exact solid rectangles.
-EWRAM_DATA struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] = {};
-static const struct ArenaRect sArenaObstaclesInit[ARENA_OBSTACLES] =
+const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] =
 {
     {2024, 1520, 2049, 1537},
     {1976, 1490, 1997, 1507},
@@ -114,8 +113,6 @@ u16 ArenaNav_Distance(s16 x1, s16 y1, s16 x2, s16 y2)
 void ArenaNav_Init(void)
 {
     u16 i, j;
-    for (i = 0; i < ARENA_OBSTACLES; i++)
-        gArenaObstacles[i] = sArenaObstaclesInit[i];
     sSolidMask=WildlandsWorld_Active()?0:(1<<ARENA_OBSTACLES)-1;
     for (i = 0; i < ARENA_CORNERS; i++)
     {

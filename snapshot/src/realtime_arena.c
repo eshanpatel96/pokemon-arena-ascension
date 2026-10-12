@@ -526,9 +526,6 @@ static s32 WildlandsStrafe(s32 bx, s32 by, s32 px, s32 py);
 static bool8 DirectorBossWindup(void);
 // World: paralysis is a short full stun like sleep and freeze.
 #define WL_STUN_MASK (WildlandsWorld_Active() ? (STATUS1_SLEEP|STATUS1_FREEZE|STATUS1_PARALYSIS) : (STATUS1_SLEEP|STATUS1_FREEZE))
-static void PropsInit(void);
-static void PropsSim(void);
-static void PropsFree(void);
 static void SquadInit(void);
 static void SquadTick(void);
 static void SquadDestroy(void);
@@ -1639,7 +1636,12 @@ static void CB2_ArenaInit(void)
     LootInit();
     BrainInit();
     DirectorInit();
-    PropsInit();
+    if (WildlandsWorld_Active())
+    {
+        u32 k;
+        for (k = 0; k < ARENA_OBSTACLES; k++)
+        { gArenaProps[k].broken = 1; gArenaProps[k].hp = 0; ArenaNav_SetObstacle(k, 0); }
+    }
     sWildlandsEncounterLive = WildlandsWorld_Active();
     sArena.cueSprite = CreateSprite(&sShotTemplate, 120, 32, 0);
     gSprites[sArena.cueSprite].oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG + 1);
@@ -2746,7 +2748,6 @@ static void DestroyShot(struct ArenaShot *shot)
 #include "arena_zone.inc"
 #include "arena_map.inc"
 #include "arena_brain.inc"
-#include "arena_props.inc"
 #include "arena_status.inc"
 #include "arena_director.inc"
 

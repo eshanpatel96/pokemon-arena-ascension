@@ -506,7 +506,7 @@ static void SquadThink(struct SquadWing *w)
         // Regroup is a last resort and never happens in view: a wing walks
         // (and catches up faster than its lead) unless it is far behind or
         // pinned for 2.5s while off screen.
-        if (ld > 400 || (offscreen && (ld > 260 || (ld > 64 && w->stuckClock > 90))))
+        if (ld > 400 || (offscreen && (ld > 180 || (ld > 64 && w->stuckClock > 60))))
             SquadRegroup(w, lead);
     }
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
@@ -790,7 +790,8 @@ static void SquadRestRegen(void)
         struct SquadWing *w = &sSquadWings[team];
         bool8 busy = lead->moving || lead->shotTimer || lead->actionLife
             || (w->active && w->alive && w->shotTimer);
-        if (!SquadAlive(team) || busy || ZoneOutside(lead->x / Q, lead->y / Q, 0))
+        // Legendaries never heal: damage on a boss or roamer sticks.
+        if (!SquadAlive(team) || busy || ZoneOutside(lead->x / Q, lead->y / Q, 0) || (team && DirectorSoloActive()))
         { sRestClock[team] = 0; continue; }
         if (sRestClock[team] < 0xFFF0) sRestClock[team]++;
         if (sRestClock[team] < 180 || (sRestClock[team] - 180) % 60)
@@ -871,7 +872,6 @@ static void SquadSimStep(void)
         sSwapCooldown--;
     SquadDoorSim();
     DirectorSim();
-    PropsSim();
     for (i = 0; i < 2; i++)
         if (sSquadWings[i].active && sSquadWings[i].alive)
             SquadThink(&sSquadWings[i]);

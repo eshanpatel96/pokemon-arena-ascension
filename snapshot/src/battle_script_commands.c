@@ -28,6 +28,8 @@
 #include "m4a.h"
 #include "mail.h"
 #include "event_data.h"
+#include "constants/vars.h"
+#include "constants/flags.h"
 #include "pokemon_storage_system.h"
 #include "task.h"
 #include "naming_screen.h"
@@ -3576,6 +3578,12 @@ static void Cmd_getexp(void)
 
     gBattlerFainted = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);
     sentIn = gSentPokesToOpponent[(gBattlerFainted & 2) >> 1];
+    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE))
+    {
+        gBattleScripting.getexpState = 0;
+        gBattlescriptCurrInstr += 2;
+        return;
+    }
 
     switch (gBattleScripting.getexpState)
     {
