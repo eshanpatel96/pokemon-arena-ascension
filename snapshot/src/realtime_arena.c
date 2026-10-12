@@ -486,6 +486,17 @@ static u16 WildlandsArtScale(u16 species, const struct ArenaSpriteSet *art)
         if (scale < 230) scale = 230;
         if (scale > 400) scale = 400;
     }
+    switch (species)
+    {
+    // Roaming legendaries stand out: about a fifth bigger than their art target.
+    case SPECIES_RAIKOU: case SPECIES_ENTEI: case SPECIES_SUICUNE:
+    case SPECIES_ARTICUNO: case SPECIES_ZAPDOS: case SPECIES_MOLTRES:
+    case SPECIES_REGIROCK: case SPECIES_REGICE: case SPECIES_REGISTEEL:
+        scale = scale * 6 / 5;
+        if (scale < 288) scale = 288;
+        if (scale > 420) scale = 420;
+        break;
+    }
     return scale;
 }
 static u16 MonVisualScale(u8 side)
@@ -3486,6 +3497,9 @@ bool8 RealtimeArena_SetupDemo(void)
     {
         u16 species=sWildlandsRoster[i];
         if(species==SPECIES_CHARIZARD || species==SPECIES_BLASTOISE) continue;
+        if(species==SPECIES_RAIKOU || species==SPECIES_ENTEI || species==SPECIES_SUICUNE
+           || species==SPECIES_ARTICUNO || species==SPECIES_ZAPDOS || species==SPECIES_MOLTRES
+           || species==SPECIES_REGIROCK || species==SPECIES_REGICE || species==SPECIES_REGISTEEL) continue;
         CreateBoxMonAt(j / IN_BOX_COUNT, j % IN_BOX_COUNT,
                        species, 60, 20, TRUE, j * 2, OT_ID_PLAYER_ID, 0);
         j++;
