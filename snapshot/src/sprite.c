@@ -1753,3 +1753,49 @@ bool8 AddSubspritesToOamBuffer(struct Sprite *sprite, struct OamData *destOam, u
 
     return FALSE;
 }
+
+void WildlandsBuildOamFast(void)
+{
+    u32 keys[MAX_SPRITES];
+    u32 n = 0, i, j, k;
+    u8 oamIndex = 0, temp;
+    for (i = 0; i < MAX_SPRITES; i++)
+    {
+        struct Sprite *s = &gSprites[i];
+        s32 x, y;
+        if (!s->inUse || s->invisible)
+            continue;
+        x = s->x + s->x2;
+        y = s->y + s->y2;
+        if (s->coordOffsetEnabled)
+        {
+            x += gSpriteCoordOffsetX;
+            y += gSpriteCoordOffsetY;
+            if (x < -64 || x > 304 || y < -64 || y > 224)
+                continue;   /* far off screen: 9-bit X / 8-bit Y would wrap */
+        }
+        s->oam.x = x + s->centerToCornerVecX;
+        s->oam.y = y + s->centerToCornerVecY;
+        y = s->oam.y;
+        if (y >= DISPLAY_HEIGHT)
+            y -= 256;
+        if (s->oam.affineMode == ST_OAM_AFFINE_DOUBLE && s->oam.size == ST_OAM_SIZE_3
+         && (s->oam.shape == ST_OAM_SQUARE || s->oam.shape == ST_OAM_V_RECTANGLE) && y > 128)
+            y -= 256;
+        k = ((u32)(s->subpriority | (s->oam.priority << 8)) << 15) | ((u32)(255 - y) << 6) | i;
+        for (j = n; j > 0 && keys[j - 1] > k; j--)
+            keys[j] = keys[j - 1];
+        keys[j] = k;
+        n++;
+    }
+    temp = gMain.oamLoadDisabled;
+    gMain.oamLoadDisabled = TRUE;
+    for (i = 0; i < n; i++)
+        if (AddSpriteToOamBuffer(&gSprites[keys[i] & 63], &oamIndex))
+            break;
+    while (oamIndex < gOamLimit)
+        gMain.oamBuffer[oamIndex++] = gDummyOamData;
+    CopyMatricesToOamBuffer();
+    gMain.oamLoadDisabled = temp;
+    sShouldProcessSpriteCopyRequests = TRUE;
+}
