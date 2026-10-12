@@ -898,8 +898,8 @@ static void SquadRestRegen(void)
 
 // V6.4 pacing: 60 fps everywhere in the world (exploring and fighting). The
 // sim is vblank-timed (one step per elapsed vblank), so game speed is the same
-// at 60 and 30; only smoothness changes. An update that overruns its frame
-// three times inside 64 updates drops to the locked 30 for 2s, then retries.
+// at 60 and 30; only smoothness changes. A sustained overrun rate (see the
+// bucket below) drops to the locked 30 for 4s, then retries.
 // Measured after the FPS pass: forced-60 fight 292/300 updates, 8 overruns.
 static EWRAM_DATA u8 sWlFast = 0, sWlFastMiss = 0;
 static EWRAM_DATA u16 sWlFastHold = 0;
@@ -917,13 +917,18 @@ static void WildlandsPaceUpdate(u32 gap)
         gWildlandsFastTelemetry[0]++;
         if (gap >= 2)
             gWildlandsFastTelemetry[1]++;   // overrun frames at 60
-        if (gap >= 2 && ++sWlFastMiss >= 3 && gWildlandsFastTest != 2)
+        // Leaky bucket: an overrun adds 4, a frame that fits drains 1. Only a
+        // sustained overrun rate above ~20% (not a one-off hitch such as a
+        // door load) drops to the locked 30.
+        if (gap >= 2)
+            sWlFastMiss += 4;
+        else if (sWlFastMiss)
+            sWlFastMiss--;
+        if (sWlFastMiss >= 16 && gWildlandsFastTest != 2)
         {
             sWlFast = 0; sWlFastHold = 120;
             return;
         }
-        if (!(gWildlandsFastTelemetry[0] & 63))
-            sWlFastMiss = 0;
         if (!calm)
             sWlFast = 0;
         return;
