@@ -2165,7 +2165,7 @@ static void AiBeginAim(void)
     // This target is locked for the entire visible wind-up.
 }
 
-static s32 AiTypeValue(u16 move)
+static s32 AiTypeValueRaw(u16 move)
 {
     u32 i;
     u8 type=gBattleMoves[move].type;
@@ -2192,6 +2192,21 @@ static s32 AiTypeValue(u16 move)
     if(target->ability==ABILITY_WONDER_GUARD && value<=100)return 0;
     if(type==gBattleMons[1].types[0] || type==gBattleMons[1].types[1])value=value*3/2;
     return value;
+}
+static u16 sAiTvFrame, sAiTvMove[6];
+static s32 sAiTvVal[6];
+static u8 sAiTvN;
+static s32 AiTypeValue(u16 move)
+{
+    u32 i;
+    s32 v;
+    if (sAiTvFrame != (u16)(sArena.frame + 1)) { sAiTvFrame = sArena.frame + 1; sAiTvN = 0; }
+    for (i = 0; i < sAiTvN; i++)
+        if (sAiTvMove[i] == move)
+            return sAiTvVal[i];
+    v = AiTypeValueRaw(move);
+    if (sAiTvN < 6) { sAiTvMove[sAiTvN] = move; sAiTvVal[sAiTvN] = v; sAiTvN++; }
+    return v;
 }
 
 #include "ascension_ai_tactics.inc"
@@ -3280,8 +3295,12 @@ static void CB2_Arena(void)
     }
     now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
     gArenaFrameTelemetry.scanlines[3]=now-phaseStamp;phaseStamp=now;
-    gArenaCombatTelemetry.aimBlocked = !ArenaNav_LineClear(sArena.bodies[0].x/Q,
+    {
+        static u8 sAimTick;
+        if (!WildlandsWorld_Active() || !(++sAimTick & 3))
+            gArenaCombatTelemetry.aimBlocked = !ArenaNav_LineClear(sArena.bodies[0].x/Q,
         sArena.bodies[0].y/Q, DecoyAim(1,FALSE)/Q, DecoyAim(1,TRUE)/Q, 2);
+    }
     gArenaCombatTelemetry.aimVisible = !sArena.paused && !sArena.resultTimer
         && sCapture.state==ARENA_CAPTURE_IDLE
         && !(sArena.bodies[0].shotTimer?sArena.bodies[0].manualAim:JOY_HELD(DPAD_ANY))
