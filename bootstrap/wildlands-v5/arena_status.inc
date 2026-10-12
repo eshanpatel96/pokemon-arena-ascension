@@ -6,7 +6,7 @@
 // Poison and burn block rest regen. One status at a time, 5s immunity after
 // it ends, legendaries suffer half durations. Supplies cure everything.
 // The native Gen III residual clock (TickBurn) is off in the world.
-struct WlStatus { u16 timer, tick, lastHp; u8 code, immune; };
+struct WlStatus { u16 timer, tick, lastHp, immune; u8 code, pad; };
 static EWRAM_DATA struct WlStatus sWlStatus[4] = {0};
 // TEST HOOK ONLY: 1..5 inflicts PAR/SLP/BRN/PSN/FRZ on the player lead once, 6 clears.
 EWRAM_DATA u8 gWildlandsStatusTest = 0;
