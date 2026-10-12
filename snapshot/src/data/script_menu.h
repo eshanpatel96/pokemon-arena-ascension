@@ -569,10 +569,16 @@ static const struct MenuAction MultichoiceList_FrontierGamblerBet[] =
     {gText_Exit},
 };
 
+static const u8 sText_WlCoachDuo[] = _("PICK DUO");
+static const u8 sText_WlCoachMoves[] = _("MOVES");
+static const u8 sText_WlCoachControls[] = _("CONTROLS");
+static const u8 sText_WlCoachDeploy[] = _("DEPLOY");
 static const struct MenuAction MultichoiceList_UnusedSSTidal1[] =
 {
-    {gText_SouthernIsland},
-    {gText_BirthIsland},
+    {sText_WlCoachDuo},
+    {sText_WlCoachMoves},
+    {sText_WlCoachControls},
+    {sText_WlCoachDeploy},
     {gText_Exit},
 };
 

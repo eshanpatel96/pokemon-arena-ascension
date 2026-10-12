@@ -584,6 +584,7 @@ static bool8 DirectorRunning(void);
 static bool8 DirectorPopupActive(void);
 static void DirectorPauseLine(void);
 void Wildlands_ArenaLoadout(struct Pokemon *mon);
+void Wildlands_SweepAllMoves(void);
 void Wildlands_TrimParty(void);
 static u8 BrainWingTarget(u8 picked);
 static bool8 BrainWingFollows(void);
@@ -867,9 +868,18 @@ static bool8 SupportedBattler(u8 side)
     {
         struct Pokemon *mon = side ? &gEnemyParty[gBattlerPartyIndexes[side]] : &gPlayerParty[gBattlerPartyIndexes[side]];
         gArenaCompatibilityReason = ARENA_COMPAT_OK;
-        if (FirstMove(side, FALSE) == ARENA_NO_MOVE || !gBattleMoves[ArenaMoveId(side, FirstMove(side, FALSE))].power)
+        /* Only animated (real-time) moves in the world: the player duo is
+           swept every deploy (legal + arena-supported moves kept, gaps filled). */
+        if (!side)
         {
-            Wildlands_ArenaLoadout(mon);
+            u32 k;
+            for (k = 0; k < PARTY_SIZE; k++)
+                if (GetMonData(&gPlayerParty[k], MON_DATA_SPECIES) && !GetMonData(&gPlayerParty[k], MON_DATA_IS_EGG))
+                    Wildlands_ArenaLoadout(&gPlayerParty[k]);
+        }
+        if (!side || FirstMove(side, FALSE) == ARENA_NO_MOVE || !gBattleMoves[ArenaMoveId(side, FirstMove(side, FALSE))].power)
+        {
+            if (side) Wildlands_ArenaLoadout(mon);
             for (i = 0; i < MAX_MON_MOVES; i++)
             {
                 gBattleMons[side].moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i);
@@ -3477,6 +3487,7 @@ bool8 RealtimeArena_SetupDemo(void)
     AddBagItem(ITEM_X_ATTACK,10);
     AddBagItem(ITEM_X_DEFEND,10);
     AddBagItem(ITEM_X_SPEED,10);
+    Wildlands_SweepAllMoves();   // Beta: every owned Pokemon starts arena-ready
 #endif
     return TRUE;
 }
@@ -3494,6 +3505,11 @@ void Wildlands_QueuePractice(void)
     {
         gSpecialVar_Result = 0;
         return;
+    }
+    {
+        u32 k;
+        for (k = 0; k < 2; k++)
+            Wildlands_ArenaLoadout(&gPlayerParty[k]);
     }
     VarSet(VAR_ASCENSION_FLOOR, sWildlandsPracticeGround);
     sWildlandsPracticeGround = (sWildlandsPracticeGround + 1) % 5;

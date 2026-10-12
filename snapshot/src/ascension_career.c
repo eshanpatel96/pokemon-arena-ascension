@@ -1203,3 +1203,33 @@ void Wildlands_ArenaLoadout(struct Pokemon *mon)
             SetMonMoveSlot(mon, chosen[i], i);
     }
 }
+
+// Beta: party (and optionally every PC box) to arena-supported moves only.
+static void Wildlands_SweepParty(void)
+{
+    u32 k;
+    for (k = 0; k < PARTY_SIZE; k++)
+        if (GetMonData(&gPlayerParty[k], MON_DATA_SPECIES) && !GetMonData(&gPlayerParty[k], MON_DATA_IS_EGG))
+            Wildlands_ArenaLoadout(&gPlayerParty[k]);
+}
+void Wildlands_SweepAllMoves(void)
+{
+    struct Pokemon mon;
+    u32 box, pos;
+    Wildlands_SweepParty();
+    for (box = 0; box < TOTAL_BOXES_COUNT; box++)
+        for (pos = 0; pos < IN_BOX_COUNT; pos++)
+        {
+            struct BoxPokemon *bm = GetBoxedMonPtr(box, pos);
+            if (!GetBoxMonData(bm, MON_DATA_SPECIES) || GetBoxMonData(bm, MON_DATA_IS_EGG))
+                continue;
+            BoxMonToMon(bm, &mon);
+            Wildlands_ArenaLoadout(&mon);
+            SetBoxMonAt(box, pos, &mon.box);
+        }
+}
+// Script special: after the coach's PICK DUO the new duo is swept.
+void Wildlands_SweepMoves(void)
+{
+    Wildlands_SweepParty();
+}
