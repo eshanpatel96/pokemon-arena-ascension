@@ -67,6 +67,7 @@ jobs:
           python3 bootstrap/wildlands-v5/squad_apply.py engine | tee evidence/v5-squad-apply.txt
           python3 bootstrap/wildlands-v5/move_editor_apply.py engine | tee evidence/v5-move-editor.txt
           python3 bootstrap/wildlands-v5/coach_apply.py engine | tee evidence/v5-coach.txt
+          python3 bootstrap/wildlands-v5/props_apply.py engine | tee evidence/v5-props.txt
           python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
           python3 bootstrap/wildlands-v5/title.py engine | tee evidence/title.txt
           git rev-parse HEAD > evidence/source-commit.txt
@@ -197,7 +198,7 @@ jobs:
           cp bootstrap/wildlands-v5/*.py bootstrap/wildlands-v5/*.c bootstrap/wildlands-v5/*.h bootstrap/wildlands-v5/*.commands recovery/bootstrap/ 2>/dev/null || true
           if test -d engine; then
             cp engine/src/realtime_arena.c engine/src/arena_navigation.c engine/src/arena_terrain.c engine/src/wildlands_world.c recovery/src/ 2>/dev/null || true
-            cp engine/src/arena_psychic.inc engine/src/arena_toss.inc engine/src/arena_squad.inc recovery/src/ 2>/dev/null || true
+            cp engine/src/arena_psychic.inc engine/src/arena_toss.inc engine/src/arena_squad.inc engine/src/arena_props.inc recovery/src/ 2>/dev/null || true
             cp engine/include/wildlands_world.h engine/include/wildlands_world_data.h recovery/include/ 2>/dev/null || true
             cp engine/data/wildlands_world/* recovery/data/wildlands_world/ 2>/dev/null || true
           fi

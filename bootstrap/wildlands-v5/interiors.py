@@ -185,8 +185,18 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
                 px, py = (r['x'] + xx) * 16 + 8, (r['y'] + yy) * 16 + 8
                 d = abs(px - ax) + abs(py - ay)
                 if 150 <= d <= 260:
-                    cands.append((d, px, py))
+                    # Clear walk-line from the arrival (no wall or cliff in
+                    # between), so the legendary sees you and engages.
+                    clear = True
+                    for t in range(0, 33):
+                        qx = ax + (px - ax) * t // 32; qy = ay + (py - ay) * t // 32
+                        if terr[(qy // 16) * W + qx // 16] & SOLID:
+                            clear = False
+                            break
+                    cands.append((1 if clear else 0, d, px, py))
             if cands:
+                cands.sort()
+                cands = [c[1:] for c in cands if c[0] == cands[-1][0]]
                 cands.sort()
                 d, cx_, cy_ = cands[-1]
                 bx, by = near_stand(cx_, cy_, (ax, ay), 20, rect=rect)

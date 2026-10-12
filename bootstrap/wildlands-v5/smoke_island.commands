@@ -334,6 +334,10 @@ dumph spikeSimWalk gWildlandsSpikeSim 0 2
 dumph renderPeakWalk gArenaRenderTelemetry 8 4
 dumph loopWalk gWildlandsLoop 0 4
 snap 04-east-far
+# Breakable cover streams around the player
+dumph props gWildlandsPropTelemetry 0 6
+expectmin gWildlandsPropTelemetry 0 2 100
+expectmin gWildlandsPropTelemetry 4 2 1
 ratesym travel-north gWildlandsProfile 20 2 600 64 95
 snap 05-north
 ratesym travel-west gWildlandsProfile 20 2 900 32 95

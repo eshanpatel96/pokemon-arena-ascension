@@ -1195,6 +1195,7 @@ static void DirectorDestroy(void)
         DirRestorePartner();
         Free(sDir);
         sDir = NULL;
+        PropsFree();
         // Back to the Lab ready to play: a won match restores HP, PP and
         // status (a lost one whites out to the Lab, which heals too).
         if (gBattleMons[0].hp)
