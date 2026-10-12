@@ -5,7 +5,6 @@
 #include "arena_render.h"
 #include "arena_psychic.h"
 #include "realtime_arena.h"
-#include "wildlands_world.h"
 #include "sprite.h"
 #include "sound.h"
 #include "constants/songs.h"
@@ -71,15 +70,6 @@ void ArenaTerrain_Init(void)
     struct SpriteSheet blast={sBlast,2048,TAG+ARENA_OBSTACLES+1};
     struct SpriteSheet crater={sCrater,1024,TAG+ARENA_OBSTACLES+2};
     struct SpriteTemplate template=sTemplate;
-    if(WildlandsWorld_Active())
-    {
-        for(i=0;i<ARENA_OBSTACLES;i++)sPropSprite[i]=MAX_SPRITES;
-        for(i=0;i<ARENA_FRAGMENTS;i++)sPieceSprite[i]=MAX_SPRITES;
-        sBlastSprite=sCraterSprite=MAX_SPRITES;
-        sBlastLife=sCraterAge=0;
-        memset(gArenaOamTelemetry,0,sizeof(gArenaOamTelemetry));
-        return;
-    }
     LoadSpritePalette(&pal);LoadSpriteSheet(&pieces);LoadSpriteSheet(&blast);
     LoadSpriteSheet(&crater);
     for(i=0;i<ARENA_OBSTACLES;i++)
@@ -115,7 +105,6 @@ void ArenaTerrain_Crater(s16 x,s16 y)
 void ArenaTerrain_Draw(bool8 paused,bool8 frozen)
 {
     u32 i;
-    if(WildlandsWorld_Active())return;
     if(sCraterSprite!=MAX_SPRITES&&sCraterAge)
     {
         u8 frame=sCraterAge<30?0:1;

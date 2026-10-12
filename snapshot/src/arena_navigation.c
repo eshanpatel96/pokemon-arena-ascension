@@ -1,5 +1,4 @@
 #include "arena_navigation.h"
-#include "wildlands_world.h"
 #ifdef ARENA_NAV_HOST
 #define EWRAM_DATA
 #endif
@@ -82,8 +81,6 @@ s16 ArenaNav_FirstObstacle(s16 x1, s16 y1, s16 x2, s16 y2, u8 radius)
 u8 ArenaNav_LineClear(s16 x1,s16 y1,s16 x2,s16 y2,u8 radius)
 {
     u8 i;
-    if(WildlandsWorld_Active() && !WildlandsWorld_LineClear(x1,y1,x2,y2,radius))
-        return 0;
     // Visibility queries do not need closest-hit sorting or all intersections.
     for(i=0;i<ARENA_OBSTACLES;i++)
         if((sSolidMask&(1<<i))&&IntersectsRect(x1,y1,x2,y2,i,radius))return 0;
@@ -113,7 +110,7 @@ u16 ArenaNav_Distance(s16 x1, s16 y1, s16 x2, s16 y2)
 void ArenaNav_Init(void)
 {
     u16 i, j;
-    sSolidMask=WildlandsWorld_Active()?0:(1<<ARENA_OBSTACLES)-1;
+    sSolidMask=(1<<ARENA_OBSTACLES)-1;
     for (i = 0; i < ARENA_CORNERS; i++)
     {
         const struct ArenaRect *r = &gArenaObstacles[i / 4];

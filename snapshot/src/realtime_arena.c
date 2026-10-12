@@ -9,9 +9,6 @@
 #include "pokedex.h"
 #include "arena_lab.h"
 #include "arena_navigation.h"
-#include "wildlands_world.h"
-#include "wildlands_world_data.h"
-#define WL_BG1(reg, value) do { if (!WildlandsWorld_Active()) SetGpuReg(reg, value); } while (0)
 #include "arena_sprites.h"
 #include "arena_feedback.h"
 #include "arena_moves.h"
@@ -261,9 +258,7 @@ static const struct BgTemplate sArenaBgs[] =
     { .bg = 1, .charBaseIndex = 1, .mapBaseIndex = 30,
       .screenSize = 0, .paletteMode = 1, .priority = 2, .baseTile = 0 },
     { .bg = 2, .charBaseIndex = 3, .mapBaseIndex = 29,
-      .screenSize = 0, .paletteMode = 0, .priority = 2, .baseTile = 0 },
-    { .bg = 3, .charBaseIndex = 1, .mapBaseIndex = 28,
-      .screenSize = 0, .paletteMode = 0, .priority = 3, .baseTile = 0 }
+      .screenSize = 0, .paletteMode = 0, .priority = 2, .baseTile = 0 }
 };
 static const u32 sForestTiles[] = INCBIN_U32(".arena-dev/art/forest.8bpp");
 static const u16 sForestPalette[] = INCBIN_U16(".arena-dev/art/forest.gbapal");
@@ -402,18 +397,13 @@ static void ArenaXL_UpdateCamera(void)
     s32 camX=Clamp(px-ARENA_XL_VIEW_W/2,0,ARENA_XL_WORLD_W-ARENA_XL_VIEW_W);
     s32 camY=Clamp(py-ARENA_XL_VIEW_H/2,0,ARENA_XL_WORLD_H-ARENA_XL_VIEW_H);
     u32 i;
-    if(WildlandsWorld_Active())WildlandsWorld_ClampCamera(px,py,&camX,&camY);
     sArenaXLCameraX=camX;sArenaXLCameraY=camY;
     gSpriteCoordOffsetX=-sArenaXLCameraX;
     gSpriteCoordOffsetY=-sArenaXLCameraY;
     // BG1 is a fully populated 32x32 tilemap in this build. Hardware wrapping
     // gives us an effectively unbounded repeated test floor at zero EWRAM cost.
-    if(WildlandsWorld_Active())WildlandsWorld_UpdateCamera(camX,camY);
-    else
-    {
-        SetGpuReg(REG_OFFSET_BG1HOFS,camX&0xFF);
-        SetGpuReg(REG_OFFSET_BG1VOFS,camY&0xFF);
-    }
+    SetGpuReg(REG_OFFSET_BG1HOFS,camX&0xFF);
+    SetGpuReg(REG_OFFSET_BG1VOFS,camY&0xFF);
     for(i=0;i<MAX_SPRITES;i++)
         if(gSprites[i].inUse)gSprites[i].coordOffsetEnabled=TRUE;
     gArenaXLTelemetry[2]=px;
@@ -429,176 +419,40 @@ static void ArenaXL_UpdateCamera(void)
         ||Abs(sArenaXLCameraY-(sArenaXLStartY/Q-ARENA_XL_VIEW_H/2))>=512)
         gArenaXLTelemetry[1]=1;
 }
-// Visual size from the art itself: the PMD frames vary a lot (Zapdos is
-// drawn 23px wide, Lapras 43px), so small art is scaled up toward a target
-// from the Pokedex height. Never shrinks below the old default; the five
-// lair legendaries keep their tuned boss size. Cached per side.
-extern const struct PokedexEntry gPokedexEntries[];
-static EWRAM_DATA u16 sScaleSpecies[2] = {0};
-static EWRAM_DATA u16 sScaleValue[2] = {0};
-static u32 MonArtExtent(const struct ArenaSpriteSet *art)
-{
-    const struct ArenaSpriteAnimation *anim = &art->animations[ARENA_ANIM_IDLE];
-    const u32 *header = (const u32 *)anim->tiles;
-    const u16 *map = (const u16 *)(anim->tiles + 8);
-    const u32 *dict = (const u32 *)(anim->tiles + header[0]);
-    s32 x0 = 64, x1 = -1, y0 = 64, y1 = -1;
-    u32 t, y, x;
-    for (t = 0; t < 64; t++)
-    {
-        const u32 *src;
-        if (map[t] >= header[1]) continue;
-        src = dict + map[t] * 8;
-        for (y = 0; y < 8; y++)
-        {
-            u32 row = src[y];
-            if (!row) continue;
-            for (x = 0; x < 8; x++)
-                if ((row >> (x * 4)) & 15)
-                {
-                    s32 px = (t % 8) * 8 + x, py = (t / 8) * 8 + y;
-                    if (px < x0) x0 = px;
-                    if (px > x1) x1 = px;
-                    if (py < y0) y0 = py;
-                    if (py > y1) y1 = py;
-                }
-        }
-    }
-    if (x1 < 0) return 0;
-    return max(x1 - x0, y1 - y0) + 1;
-}
-static u16 WildlandsArtScale(u16 species, const struct ArenaSpriteSet *art)
-{
-    u32 extent, target, scale = 230, h;
-    switch (species)
-    {
-    case SPECIES_MEWTWO:
-    case SPECIES_LUGIA:
-    case SPECIES_HO_OH:
-    case SPECIES_KYOGRE:
-    case SPECIES_RAYQUAZA: return 304;
-    }
-    if (art && (extent = MonArtExtent(art)) != 0)
-    {
-        h = gPokedexEntries[SpeciesToNationalPokedexNum(species)].height;
-        target = h <= 6 ? 21 : h <= 12 ? 24 : h <= 20 ? 27 : 30;
-        scale = target * 256 / extent;
-        if (scale < 230) scale = 230;
-        if (scale > 400) scale = 400;
-    }
-    return scale;
-}
 static u16 MonVisualScale(u8 side)
 {
-    u16 species = gBattleMons[side].species;
-    u32 scale;
-    switch (species)
+    switch (gBattleMons[side].species)
     {
     case SPECIES_MEWTWO:
     case SPECIES_LUGIA:
     case SPECIES_HO_OH:
     case SPECIES_KYOGRE:
     case SPECIES_RAYQUAZA: return 304;
+    case SPECIES_ARTICUNO:
+    case SPECIES_ZAPDOS:
+    case SPECIES_RAIKOU:
+    case SPECIES_ENTEI:
+    case SPECIES_SUICUNE:
+    case SPECIES_REGIROCK:
+    case SPECIES_REGICE:
+    case SPECIES_REGISTEEL: return 248;
+    case SPECIES_DRAGONITE:
+    case SPECIES_SNORLAX:
+    case SPECIES_BLASTOISE:
+    case SPECIES_CHARIZARD:
+    case SPECIES_SALAMENCE:
+    case SPECIES_METAGROSS: return 236;
+    default: return 230;
     }
-    if (sScaleSpecies[side] == species && sScaleValue[side])
-        return sScaleValue[side];
-    scale = WildlandsArtScale(species, sArena.bodies[side].art);
-    sScaleSpecies[side] = species;
-    sScaleValue[side] = scale;
-    return scale;
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
-static void SquadInit(void);
-static void SquadTick(void);
-static void SquadDestroy(void);
-static bool8 SquadPromote(u8 side);
-struct ArenaShot;
-static bool8 SquadShotStep(u8 index, struct ArenaShot *shot, const struct ArenaMoveProfile *p, s16 oldX, s16 oldY);
-static void SquadEnemyRetarget(struct ArenaBody *body);
-static bool8 SquadEnemySees(void);
-extern EWRAM_DATA u32 gWildlandsSquadTelemetry[16];
-static EWRAM_DATA u8 sSquadShotOwner[SHOTS_COUNT] = {};
-static void SquadSimStep(void);
-static void ZoneInit(void);
-static void ZoneTick(void);
-static void ZoneDestroy(void);
-static void ZoneSteerEnemy(struct ArenaBody *body);
-static void ZoneHudLine(void);
-static u32 ZoneHudKey(void);
-static bool8 ZoneSteer(s32 x, s32 y, s32 *goalX, s32 *goalY);
-static bool8 ZoneOutside(s32 x, s32 y, s32 margin);
-static EWRAM_DATA u32 sZoneHudKeyShown = 0;
-static EWRAM_DATA bool8 sWildlandsEncounterLive = FALSE;
-static EWRAM_DATA u8 sWildlandsSimSteps = 1;
-static EWRAM_DATA u8 sWildlandsSceneryLit = 0;
-static EWRAM_DATA bool8 sWildlandsHudDrew = FALSE, sWildlandsHudDeferred = FALSE;
-static EWRAM_DATA u16 sWildlandsHeldNew = 0;
-// renders after [0] one VBlank [1] two (the locked pace) [2] three or more (a hitch)
-// [3] latest scanline a render started at
-EWRAM_DATA u16 gWildlandsLoop[4] = {};
-// maxima (scanlines): [0] simulation steps [1] render [2] world VBlank streaming
-// [3] whole callback [4] renders over 400 scanlines [5] last sim length
-EWRAM_DATA u16 gWildlandsSpike[6] = {};
-// maxima (scanlines): [0] SquadSimStep (zone, loot, doors, director, wings) [1] TickEnemy
-EWRAM_DATA u16 gWildlandsSpikeSim[2] = {};
-static void LootInit(void);
-static void LootTick(void);
-static void LootDestroy(void);
-static void WildlandsPauseBoosts(void);
-static void MapDraw(void);
-EWRAM_DATA u32 gWildlandsMapTelemetry[4] = {};
-EWRAM_DATA u16 gWildlandsProfile[12] = {};
-// [0] max render gap (vblanks) [1] frames over 3 vblanks [2] last/[3] max
-// active-slot load cost [4] max biome swap cost (scanlines) [5] steps over cap
-EWRAM_DATA u16 gWildlandsHitch[12] = {};
-// TEST HOOK ONLY: harness sets 1 to hold AI fire/movement while checking
-// map/zone UI; always 0 in normal play.
-EWRAM_DATA u8 gWildlandsTestPeace = 0;
-// TEST HOOK ONLY: 1 = back to start, 2 = onto the current room exit,
-// 3 = onto the last pickup, 10+n = outside door n facing it; 0 in play.
-EWRAM_DATA u8 gWildlandsTestWarp = 0;
-static void LootLastSpot(s16 *x, s16 *y);
-static void BrainDecide(struct ArenaBody *body, u8 seenMask);
-static bool8 BrainAllowsFire(void);
-static void WildlandsBuildOam(void);
-static bool8 DirectorAdvance(void);
-static void DirectorInit(void);
-static void DirectorSim(void);
-static u8 DirectorBossDoor(void);
-static void DirectorBossEnter(void);
-static bool8 DirectorLairAnchor(s32 *x, s32 *y);
-static u32 WildlandsCramp(s32 x, s32 y);
-static u8 DirectorLairState(s32 x, s32 y);
-static void DirectorLog(const u8 *text);
-static bool8 LootPopupText(u8 *text);
-static void SquadSwapLead(void);
-static void WildlandsTeamDraw(void);
-static void WildlandsLogDraw(void);
-static void DirectorDestroy(void);
-static void DirRestorePartner(void);
-static bool8 DirectorSoloActive(void);
-static bool8 DirectorPopupText(u8 *text, u8 *color);
-static u8 DirectorLeft(void);
-static bool8 DirectorRunning(void);
-static bool8 DirectorPopupActive(void);
-static void DirectorPauseLine(void);
-void Wildlands_ArenaLoadout(struct Pokemon *mon);
-void Wildlands_SweepAllMoves(void);
-void Wildlands_TrimParty(void);
-static const u16 *ArenaMonPalette(const struct ArenaSpriteSet *art, struct Pokemon *mon);
-static void WildlandsSummaryDraw(void);
-static EWRAM_DATA bool8 sWildlandsSummary = FALSE;
-static u8 BrainWingTarget(u8 picked);
-static bool8 BrainWingFollows(void);
-static void BrainInit(void);
 struct WildlandsPartnerActor
 {
     s32 x,y;
     u32 animClock;
     const struct ArenaSpriteSet *art;
     u16 species;
-    s16 waypointX,waypointY;
     u8 sprite,shadow,marker,facing,moving,drawnFrame,drawnDirection,active,mode;
 };
 static EWRAM_DATA struct WildlandsPartnerActor sWildlandsPartner = {};
@@ -623,11 +477,7 @@ static void WildlandsPartner_Init(void)
     pal.data=p->art->palette;pal.tag=WILDLANDS_PARTNER_TAG;
     LoadSpritePalette(&pal);
     t.tileTag=WILDLANDS_PARTNER_TAG;t.paletteTag=WILDLANDS_PARTNER_TAG;
-    if(WildlandsWorld_Active())
-    {p->x=sArena.bodies[0].x+16*Q;p->y=sArena.bodies[0].y+16*Q;}
-    else
-    {p->x=sArena.bodies[0].x-36*Q;p->y=sArena.bodies[0].y+28*Q;}
-    p->waypointX=p->x/Q;p->waypointY=p->y/Q;p->facing=FACE_DOWN;
+    p->x=sArena.bodies[0].x-36*Q;p->y=sArena.bodies[0].y+28*Q;p->facing=FACE_DOWN;
     p->sprite=CreateSprite(&t,p->x/Q,p->y/Q,1);
     p->shadow=CreateSprite(&sShadowTemplate,p->x/Q,p->y/Q+8,9);
     p->marker=CreateSprite(&sShotTemplate,p->x/Q,p->y/Q-27,0);
@@ -667,36 +517,18 @@ static void WildlandsPartner_Update(void)
         p->mode=1;
     }
 
-    // Replan the follower at a bounded 1/8 Arena-tick cadence. Replanning
-    // again merely because it reached a waypoint caused almost one swept-route
-    // query per gameplay update and starved the native realtime loop.
-    if(WildlandsWorld_Active() && !(sArena.frame&7))
-    {
-        struct ArenaPoint wp;
-        if(WildlandsWorld_NextWaypointSpecies(p->species,p->x/Q,p->y/Q,tx/Q,ty/Q,&wp))
-        {p->waypointX=wp.x;p->waypointY=wp.y;}
-        else {p->waypointX=p->x/Q;p->waypointY=p->y/Q;}
-    }
-    else if(!WildlandsWorld_Active())
-    {p->waypointX=tx/Q;p->waypointY=ty/Q;}
-
-    dx=p->waypointX*Q-p->x;dy=p->waypointY*Q-p->y;
-    maxd=max(Abs(tx-p->x),Abs(ty-p->y));
+    dx=tx-p->x;dy=ty-p->y;
+    maxd=max(Abs(dx),Abs(dy));
     if(maxd>120*Q){step=520;p->mode=2;} // regroup/catch-up
-    p->moving=Abs(dx)>2*Q||Abs(dy)>2*Q;
+    p->moving=maxd>2*Q;
     if(p->moving)
     {
-        s32 pathd=max(1,max(Abs(dx),Abs(dy)));
-        s32 mx=dx*step/pathd,my=dy*step/pathd;
+        s32 mx=dx*step/max(1,maxd),my=dy*step/max(1,maxd);
         s32 nx=Clamp(p->x+mx,ARENA_MIN_X*Q,ARENA_MAX_X*Q);
         s32 ny=Clamp(p->y+my,ARENA_MIN_Y*Q,ARENA_MAX_Y*Q);
         p->facing=Facing(mx,my);
-        if(ArenaNav_LineClear(p->x/Q,p->y/Q,nx/Q,p->y/Q,10)
-            &&(!WildlandsWorld_Active()||WildlandsWorld_SpeciesLineClear(
-                p->species,p->x/Q,p->y/Q,nx/Q,p->y/Q,10)))p->x=nx;
-        if(ArenaNav_LineClear(p->x/Q,p->y/Q,p->x/Q,ny/Q,10)
-            &&(!WildlandsWorld_Active()||WildlandsWorld_SpeciesLineClear(
-                p->species,p->x/Q,p->y/Q,p->x/Q,ny/Q,10)))p->y=ny;
+        if(ArenaNav_LineClear(p->x/Q,p->y/Q,nx/Q,p->y/Q,10))p->x=nx;
+        if(ArenaNav_LineClear(p->x/Q,p->y/Q,p->x/Q,ny/Q,10))p->y=ny;
     }
 
     spr=&gSprites[p->sprite];
@@ -867,30 +699,6 @@ static u8 FirstMove(u8 side, bool8 needsPP)
 static bool8 SupportedBattler(u8 side)
 {
     u32 i;
-    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE))   /* eligibility runs before the world is initialised */
-    {
-        struct Pokemon *mon = side ? &gEnemyParty[gBattlerPartyIndexes[side]] : &gPlayerParty[gBattlerPartyIndexes[side]];
-        gArenaCompatibilityReason = ARENA_COMPAT_OK;
-        /* Only animated (real-time) moves in the world: the player duo is
-           swept every deploy (legal + arena-supported moves kept, gaps filled). */
-        if (!side)
-        {
-            u32 k;
-            for (k = 0; k < PARTY_SIZE; k++)
-                if (GetMonData(&gPlayerParty[k], MON_DATA_SPECIES) && !GetMonData(&gPlayerParty[k], MON_DATA_IS_EGG))
-                    Wildlands_ArenaLoadout(&gPlayerParty[k]);
-        }
-        if (!side || FirstMove(side, FALSE) == ARENA_NO_MOVE || !gBattleMoves[ArenaMoveId(side, FirstMove(side, FALSE))].power)
-        {
-            if (side) Wildlands_ArenaLoadout(mon);
-            for (i = 0; i < MAX_MON_MOVES; i++)
-            {
-                gBattleMons[side].moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i);
-                gBattleMons[side].pp[i] = GetMonData(mon, MON_DATA_PP1 + i);
-            }
-        }
-        return gBattleMons[side].hp != 0;
-    }
     gArenaCompatibilityReason=ARENA_COMPAT_ITEM|(side<<8);
     // Only tested native damage, stat changes and burns enter the arena.
     // Other status/turn/item mechanics retain the complete classic battle.
@@ -907,7 +715,7 @@ static bool8 SupportedBattler(u8 side)
         || gStatuses3[side] || gBattleMons[side].hp == 0)
         return FALSE;
     gArenaCompatibilityReason=ARENA_COMPAT_MOVES|(side<<8);
-    if(FirstMove(side,!WildlandsWorld_Active())==ARENA_NO_MOVE)return FALSE;
+    if(FirstMove(side,TRUE)==ARENA_NO_MOVE)return FALSE;
     gArenaCompatibilityReason=ARENA_COMPAT_ABILITY|(side<<8);
     switch (gBattleMons[side].ability)
     {
@@ -1004,7 +812,6 @@ void RealtimeArena_ResetBattle(void)
     GuardReset();
     DecoyReset();
     sEnvironmentInitialized=FALSE;
-    sWildlandsEncounterLive=FALSE;
     memset(&sArena, 0, sizeof(sArena));
     gRealtimeArenaTelemetry.active = FALSE;
     gRealtimeArenaRestoringFaint = FALSE;
@@ -1068,7 +875,6 @@ bool8 RealtimeArena_TryStart(void)
 
 static void VBlank_Arena(void)
 {
-    {u16 v0=REG_VCOUNT,d; WildlandsWorld_VBlank(); d=(u16)(REG_VCOUNT-v0); if(d<228&&d>gWildlandsSpike[2])gWildlandsSpike[2]=d;}
     LoadOam();
     ArenaRender_Flush();
     ProcessSpriteCopyRequests();
@@ -1181,30 +987,24 @@ static void DrawHud(void)
     u32 side;
     u8 text[64];
     u8 *end;
-    sWildlandsHudDrew=FALSE;
     DrawStatusHud();
     if (sArena.paused)
     {
         if(sPausePage==3)
         {
-            static const u8 labels[5][18]={_("POKEMON"),_("BAG"),_("MOVES"),_("RESUME"),_("MAP")};
-            static const u8 wlabels[5][18]={_("TEAM"),_("LOG"),_("MOVES"),_("RESUME"),_("MAP")};
+            static const u8 labels[4][18]={_("POKEMON"),_("BAG"),_("MOVES"),_("RESUME")};
             static const u8 title[]=_("PAUSED");
             static const u8 help[]=_("UP/DOWN: CHOOSE   A: OPEN");
             FillWindowPixelBuffer(1,PIXEL_FILL(9));
             PrintPopup(8,3,title,5);
-            WildlandsPauseBoosts();
-            for(side=0;side<5;side++)
+            for(side=0;side<4;side++)
             {
-                if(side==sPauseChoice)WindowRect(1,7,17+side*10,4,7,5);
-                PrintPopup(18,15+side*10,WildlandsWorld_Active()?wlabels[side]:labels[side],side==sPauseChoice?5:4);
+                if(side==sPauseChoice)WindowRect(1,7,18+side*11,4,7,5);
+                PrintPopup(18,16+side*11,labels[side],side==sPauseChoice?5:4);
             }
             HudTinyWindow(1,7,67,help,7,52);
             PutWindowTilemap(1);CopyWindowToVram(1,COPYWIN_FULL);
         }
-        else if(sPausePage==4)MapDraw();
-        else if(sPausePage==5)WildlandsTeamDraw();
-        else if(sPausePage==6)WildlandsLogDraw();
         else if(sPausePage)
         {
             FillWindowPixelBuffer(1, PIXEL_FILL(9));
@@ -1248,9 +1048,8 @@ static void DrawHud(void)
         }
     }
     CopyWindowToVram(0, COPYWIN_GFX);
-    if(!sWildlandsHudDrew||sArena.paused||!WildlandsWorld_Active()||sWildlandsHudDeferred)
-    {CaptureHud();sArena.hudDirty = FALSE;sWildlandsHudDeferred=FALSE;}
-    else {sArena.hudDirty = TRUE;sWildlandsHudDeferred=TRUE;}
+    CaptureHud();
+    sArena.hudDirty = FALSE;
 }
 
 static void LoadAimMarker(void)
@@ -1410,15 +1209,9 @@ static void CB2_ArenaInit(void)
     SetGpuReg(REG_OFFSET_BLDCNT, BLDCNT_TGT1_BG0 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BG1 | BLDCNT_TGT2_OBJ);
     SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(12,4));
     SetGpuReg(REG_OFFSET_BLDY, 0);
-    WildlandsWorld_Init();
     LoadArenaBiome();
-    if(WildlandsWorld_Active())
-        WildlandsWorld_LoadGraphics();
-    else
-    {
-        LoadBgTiles(2, sSpaceTiles, sizeof(sSpaceTiles), 192);
-        LoadBgTilemap(2, sSpaceMap, sizeof(sSpaceMap), 0);
-    }
+    LoadBgTiles(2, sSpaceTiles, sizeof(sSpaceTiles), 192);
+    LoadBgTilemap(2, sSpaceMap, sizeof(sSpaceMap), 0);
     LoadPalette(sArenaPalette, 0, sizeof(sArenaPalette));
     DrawStage();
     ArenaNav_Init();
@@ -1553,7 +1346,7 @@ static void CB2_ArenaInit(void)
             sheet.data = sMonFrameTiles[i];
             sheet.size = 2048; sheet.tag = MON_TAG + i * 2;
             LoadSpriteSheet(&sheet);
-            LoadPalette(ArenaMonPalette(body->art, i ? &gEnemyParty[gBattlerPartyIndexes[1]] : &gPlayerParty[gBattlerPartyIndexes[0]]), OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);
+            LoadPalette(body->art->palette, OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);
             template.tileTag = MON_TAG + i * 2;
         }
         else
@@ -1570,18 +1363,9 @@ static void CB2_ArenaInit(void)
                 gBattleMons[i].otId, gBattleMons[i].personality), OBJ_PLTT_ID(i), PLTT_SIZE_4BPP);
             template.tileTag = MON_TAG + i * 2 + (i ? 1 : 0);
         }
-        if(WildlandsWorld_Active())
-        {
-            body->x=(i?WL_ENEMY_START_X:WL_PLAYER_START_X)*Q;
-            body->y=(i?WL_ENEMY_START_Y:WL_PLAYER_START_Y)*Q;
-            body->facing=i?FACE_LEFT:FACE_RIGHT;
-        }
-        else
-        {
-            body->x = (ARENA_XL_WORLD_W / 2) * Q;
-            body->y = (ARENA_XL_WORLD_H / 2 + (i ? -320 : 320)) * Q;
-            body->facing = i ? FACE_DOWN : FACE_UP;
-        }
+        body->x = (ARENA_XL_WORLD_W / 2) * Q;
+        body->y = (ARENA_XL_WORLD_H / 2 + (i ? -320 : 320)) * Q;
+        body->facing = i ? FACE_DOWN : FACE_UP;
         if(!(sArenaSendoutMask & (1 << i)))
         {
             body->x=sArenaResident[i].x;body->y=sArenaResident[i].y;
@@ -1614,12 +1398,7 @@ static void CB2_ArenaInit(void)
         SetOamMatrix(gSprites[body->sprite].oam.matrixNum, body->art ? 0x100 : 0x200, 0, 0, body->art ? 0x100 : 0x200);
         body->drawnFrame = body->drawnDirection = 255;
     }
-    SquadInit();
-    ZoneInit();
-    LootInit();
-    BrainInit();
-    DirectorInit();
-    sWildlandsEncounterLive = WildlandsWorld_Active();
+    WildlandsPartner_Init();
     sArena.cueSprite = CreateSprite(&sShotTemplate, 120, 32, 0);
     gSprites[sArena.cueSprite].oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG + 1);
     gSprites[sArena.cueSprite].invisible = TRUE;
@@ -1684,7 +1463,6 @@ static void CB2_ArenaInit(void)
     SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_MODE_0 | DISPCNT_OBJ_1D_MAP | DISPCNT_OBJ_ON);
     ShowBg(0);
     ShowBg(1);
-    if(WildlandsWorld_Active()){ShowBg(3);ShowBg(2);}
     SetVBlankCallback(VBlank_Arena);
     SetMainCallback2(CB2_Arena);
 }
@@ -1699,7 +1477,6 @@ static u16 Speed(u8 side)
     speed=speed*gStatStageRatios[stage][0]/gStatStageRatios[stage][1];
     speed=StormSpeed(side,256 + Clamp(speed, 1, 120) * 2);
     speed=speed*MonMassSpeedFactor(side)/256;
-    if(WildlandsWorld_Active())speed=speed*WildlandsWorld_SwimFactor(side,sArena.bodies[side].x/Q,sArena.bodies[side].y/Q)/256;
     return (gBattleMons[side].status1&STATUS1_PARALYSIS)?max(64,speed/4):speed;
 }
 
@@ -1728,36 +1505,16 @@ static void MoveDelta(u8 side, s32 dx, s32 dy)
     y = Clamp(body->y + dy, ARENA_MIN_Y * Q - margin, ARENA_MAX_Y * Q + margin);
     // Axis-separated sliding. Even the fastest dash step is smaller than any
     // solid obstacle; the swept test also prevents corner cutting.
-    if ((ghost || (WildlandsWorld_Active()
-            ? WildlandsWorld_BodyLineClear(side,body->x/Q,body->y/Q,x/Q,body->y/Q,ARENA_BODY_RADIUS)
-            : ArenaNav_LineClear(body->x/Q,body->y/Q,x/Q,body->y/Q,ARENA_BODY_RADIUS)))
+    if ((ghost || ArenaNav_LineClear(body->x / Q, body->y / Q, x / Q, body->y / Q, ARENA_BODY_RADIUS))
         && CoverCanStep(x/Q,body->y/Q)
         && (over || Abs(x - other->x) >= 22 * Q || Abs(body->y - other->y) >= 22 * Q
             || Abs(x - other->x) > Abs(body->x - other->x))) body->x = x;
-    else if (dx)
-    {
-        gArenaAiTelemetry.wallBlocks[side]++;
-        if (WildlandsWorld_Active() && !side && !dy && !ghost)
-        {
-            s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, dx > 0 ? 1 : -1, 0);
-            if (n) body->y += n * Q;
-        }
-    }
-    if ((ghost || (WildlandsWorld_Active()
-            ? WildlandsWorld_BodyLineClear(side,body->x/Q,body->y/Q,body->x/Q,y/Q,ARENA_BODY_RADIUS)
-            : ArenaNav_LineClear(body->x/Q,body->y/Q,body->x/Q,y/Q,ARENA_BODY_RADIUS)))
+    else if (dx) gArenaAiTelemetry.wallBlocks[side]++;
+    if ((ghost || ArenaNav_LineClear(body->x / Q, body->y / Q, body->x / Q, y / Q, ARENA_BODY_RADIUS))
         && CoverCanStep(body->x/Q,y/Q)
         && (over || Abs(body->x - other->x) >= 22 * Q || Abs(y - other->y) >= 22 * Q
             || Abs(y - other->y) > Abs(body->y - other->y))) body->y = y;
-    else if (dy)
-    {
-        gArenaAiTelemetry.wallBlocks[side]++;
-        if (WildlandsWorld_Active() && !side && !dx && !ghost)
-        {
-            s8 n = WildlandsWorld_SlideNudge(side, body->x / Q, body->y / Q, 0, dy > 0 ? 1 : -1);
-            if (n) body->x += n * Q;
-        }
-    }
+    else if (dy) gArenaAiTelemetry.wallBlocks[side]++;
     if (ghost) PhaseWrap(side, dx, dy);
 }
 
@@ -1777,8 +1534,6 @@ static bool8 DashLanding(struct ArenaBody *body)
     x=body->x+body->dashX*speed*10;
     y=body->y+body->dashY*speed*10;
     if(!ArenaNav_CanStand(x/Q,y/Q) || !CoverCanStep(x/Q,y/Q)
-        || (WildlandsWorld_Active() && !WildlandsWorld_CanStandSide(
-            body==&sArena.bodies[1],x/Q,y/Q,ARENA_BODY_RADIUS))
         || (Abs(x-sArena.bodies[1].x)<22*Q && Abs(y-sArena.bodies[1].y)<22*Q))return FALSE;
     // Only phase when the old sweep would hit something; open-ground dash
     // retains its familiar continuous movement.
@@ -1827,7 +1582,6 @@ static void Fire(u8 side, u8 slot, s32 targetX, s32 targetY)
         sArena.shots[i].vx = dx * profile->speed / len;
         sArena.shots[i].vy = dy * profile->speed / len;
         sArena.shots[i].side = side; sArena.shots[i].move = profile->move;
-        sSquadShotOwner[i] = 0;
         sArena.shots[i].life = profile->range * Q / profile->speed;
         sArena.shots[i].direction = body->shotFacing; sArena.shots[i].age = 0;
         sArena.shots[i].elementMask=0;
@@ -2002,11 +1756,7 @@ static void TickPlayer(void)
         body->manualAim=dx||dy;
         // Rollout goes where the body is pointing, not at the rival.
         if(!dx&&!dy&&(ArenaMoveId(0,body->moveSlot)==MOVE_ROLLOUT
-            ||SmokeBlocks(body->x/Q,body->y/Q,sArena.bodies[1].x/Q,sArena.bodies[1].y/Q)
-            ||(WildlandsWorld_Active()
-                &&WildlandsWorld_IsConcealed(sArena.bodies[1].x/Q,sArena.bodies[1].y/Q)
-                &&ArenaNav_Distance(body->x/Q,body->y/Q,
-                    sArena.bodies[1].x/Q,sArena.bodies[1].y/Q)>48)))
+            ||SmokeBlocks(body->x/Q,body->y/Q,sArena.bodies[1].x/Q,sArena.bodies[1].y/Q)))
         {
             static const s8 facing[8][2]={{0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1}};
             dx=facing[body->facing][0];dy=facing[body->facing][1];
@@ -2031,11 +1781,7 @@ static void AiRoute(void)
     struct ArenaBody *body = &sArena.bodies[1];
     // A ghost opponent walks straight through cover rather than around it.
     if (GhostBody(1)) { sArena.waypoint = sArena.goal; return; }
-    if ((WildlandsWorld_Active()
-            ? WildlandsWorld_NextWaypointSide(1,body->x/Q,body->y/Q,
-                sArena.goal.x,sArena.goal.y,&sArena.waypoint)
-            : ArenaNav_NextWaypoint(body->x / Q, body->y / Q,
-                sArena.goal.x, sArena.goal.y, &sArena.waypoint)))
+    if (ArenaNav_NextWaypoint(body->x / Q, body->y / Q, sArena.goal.x, sArena.goal.y, &sArena.waypoint))
         gArenaAiTelemetry.paths++;
     else
     {
@@ -2066,7 +1812,7 @@ static void AiChooseGoal(void)
         // Prefer the eight tactical positions around the observed opponent.
         // Only scan all obstacle corners when those positions are occluded.
         // This bounds routine thinking cost without removing the fallback.
-        if(i==8&&(best!=0x7FFFFFFF||WildlandsWorld_Active()))break;
+        if(i==8&&best!=0x7FFFFFFF)break;
         if (i < 8)
         {
             p.x = Clamp(sArena.observed.x + offsets[i][0] * preferred / Q, ARENA_MIN_X, ARENA_MAX_X);
@@ -2074,11 +1820,9 @@ static void AiChooseGoal(void)
         }
         else p = ArenaNav_Corner(i - 8);
         if (!ArenaNav_CanStand(p.x, p.y) || !CoverCanStep(p.x,p.y)
-            || (WildlandsWorld_Active() && !WildlandsWorld_CanStandSide(1,p.x,p.y,ARENA_BODY_RADIUS))
             || !ArenaNav_LineClear(p.x, p.y, sArena.observed.x, sArena.observed.y, 2)) continue;
         score = Abs(ArenaNav_Distance(p.x,p.y,sArena.observed.x,sArena.observed.y) - preferred) * 3
-            + ArenaNav_Distance(body->x/Q,body->y/Q,p.x,p.y) + AiRandom() % 24
-            + (WildlandsWorld_Active() ? WildlandsCramp(p.x,p.y) * 18 : 0);
+            + ArenaNav_Distance(body->x/Q,body->y/Q,p.x,p.y) + AiRandom() % 24;
         if (score < best) { best = score; sArena.goal = p; }
     }
     sArena.goalTimer = 55;
@@ -2111,7 +1855,6 @@ static bool8 AiTryEvade(void)
             goal.x = body->x/Q + sign * -shot->vy * 26 / len;
             goal.y = body->y/Q + sign * shot->vx * 26 / len;
             if (ArenaNav_CanStand(goal.x,goal.y)
-                && (!WildlandsWorld_Active() || WildlandsWorld_CanStandSide(1,goal.x,goal.y,ARENA_BODY_RADIUS))
                 && ArenaNav_LineClear(body->x/Q,body->y/Q,goal.x,goal.y,ARENA_BODY_RADIUS))
             {
                 sArena.goal = sArena.waypoint = goal;
@@ -2244,7 +1987,6 @@ static void TickEnemy(void)
     struct ArenaBody *body = &sArena.bodies[1];
     s32 dx, dy, len;
     body->moving = FALSE;
-    if (gWildlandsTestPeace) return;
     if(SpecialBusy(1)||GuardBusy())return;
     if(gBattleMons[1].status1&(STATUS1_SLEEP|STATUS1_FREEZE))return;
     if (body->cooldown && !body->shotTimer && !body->actionLife) body->cooldown--;
@@ -2266,13 +2008,9 @@ static void TickEnemy(void)
         s32 distance;
         sArena.thinkTimer = sArena.reaction;
         sArena.previous = sArena.observed;
-        if(!SmokeBlocks(body->x/Q,body->y/Q,sArena.bodies[0].x/Q,sArena.bodies[0].y/Q)
-            && !(WildlandsWorld_Active()
-                && WildlandsWorld_IsConcealed(sArena.bodies[0].x/Q,sArena.bodies[0].y/Q)
-                && ArenaNav_Distance(body->x/Q,body->y/Q,
-                    sArena.bodies[0].x/Q,sArena.bodies[0].y/Q)>48))
-        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;SquadEnemyRetarget(body);}
-        else {gArenaCoverTelemetry[5]++;SquadEnemyRetarget(body);}
+        if(!SmokeBlocks(body->x/Q,body->y/Q,sArena.bodies[0].x/Q,sArena.bodies[0].y/Q))
+        {sArena.observed.x = sArena.bodies[0].x / Q;sArena.observed.y = sArena.bodies[0].y / Q;}
+        else gArenaCoverTelemetry[5]++;
         if(sDecoys[0].life && sDecoys[0].age>=24 && !SmokeBlocks(body->x/Q,body->y/Q,sDecoys[0].x,sDecoys[0].y))
         {
             sArena.observed.x=sDecoys[0].x;
@@ -2292,7 +2030,7 @@ static void TickEnemy(void)
                 else BeginShot(1,body->x,body->y-Q);
                 sArena.aiState=AI_RECOVER;return;
             }
-            if (!body->cooldown && ArenaMovePP(1,body->moveSlot) && SquadEnemySees()
+            if (!body->cooldown && ArenaMovePP(1,body->moveSlot)
                 && distance < p->range && distance > 8
                 && ArenaNav_LineClear(body->x/Q,body->y/Q,sArena.observed.x,sArena.observed.y,2))
             {
@@ -2307,8 +2045,7 @@ static void TickEnemy(void)
         }
     }
     if (ArenaNav_Distance(body->x/Q,body->y/Q,sArena.waypoint.x,sArena.waypoint.y) < 3
-        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4 && !(sArena.frame & 7)) AiRoute();
-    ZoneSteerEnemy(body);
+        && ArenaNav_Distance(body->x/Q,body->y/Q,sArena.goal.x,sArena.goal.y) >= 4) AiRoute();
     dx = sArena.waypoint.x * Q - body->x;
     dy = sArena.waypoint.y * Q - body->y;
     len = max(Abs(dx), Abs(dy)) + min(Abs(dx), Abs(dy)) / 2;
@@ -2443,7 +2180,7 @@ static void ApplyResolvedHit(u8 side,u16 move,s32 damage)
         }
         sArena.hudDirty=TRUE;
         PlaySE(move==MOVE_ABSORB?SE_M_ABSORB_2:SE_M_COMET_PUNCH);
-        if(!hp && !SquadPromote(targetSide))
+        if(!hp)
         {
             // Let a committed beam finish its visual release after a KO.
             // Damage/PP are already resolved; no further hits or input run.
@@ -2604,9 +2341,6 @@ static void TickActions(void)
                     gArenaFlameTelemetry[3]++;
                 }
             }
-            if(WildlandsWorld_Active())
-                reach=min(reach,WildlandsWorld_ClipRay(oldX,oldY,
-                    body->attackX,body->attackY,reach,1));
             sFlameReach[side]=reach;gArenaFlameTelemetry[1]++;
             if(gBattleMoves[p->move].type==TYPE_ELECTRIC&&!body->connected)
             {
@@ -2719,13 +2453,6 @@ static void DestroyShot(struct ArenaShot *shot)
     shot->life=0;
 }
 
-#include "arena_squad.inc"
-#include "arena_loot.inc"
-#include "arena_zone.inc"
-#include "arena_map.inc"
-#include "arena_brain.inc"
-#include "arena_director.inc"
-
 static void TickShots(void)
 {
     u32 i;
@@ -2741,16 +2468,12 @@ static void TickShots(void)
         oldX=shot->x/Q;oldY=shot->y/Q;
         target = &sArena.bodies[shot->side ^ 1];
         obstacle=ArenaNav_FirstObstacle(shot->x/Q,shot->y/Q,(shot->x+shot->vx)/Q,(shot->y+shot->vy)/Q,2);
-        if (obstacle>=0
-            || (WildlandsWorld_Active()
-                && !WildlandsWorld_LineClear(shot->x/Q,shot->y/Q,
-                    (shot->x+shot->vx)/Q,(shot->y+shot->vy)/Q,2)))
+        if (obstacle>=0)
         {
             gArenaAiTelemetry.blockedShots[shot->side]++;
             ArenaFeedback_Wall(shot->x/Q,shot->y/Q);
             PlaySE(SE_WALL_HIT);
-            if(obstacle>=0)HitTerrain(obstacle,p,shot->vx,shot->vy);
-            else WildlandsWorld_RecordProjectileBlock();
+            HitTerrain(obstacle,p,shot->vx,shot->vy);
             DestroyShot(shot);
             continue;
         }
@@ -2760,14 +2483,12 @@ static void TickShots(void)
         {DestroyShot(shot);continue;}
         if(DecoySegment(shot->side^1,oldX,oldY,shot->x/Q,shot->y/Q,p->radius))
         {DestroyShot(shot);continue;}
-        if (SquadShotStep(i,shot,p,oldX,oldY)) {}
-        else if (ArenaMoves_SegmentHit(oldX,oldY,shot->x/Q,shot->y/Q,target->x/Q,target->y/Q,p->radius) && !target->dash)
+        if (ArenaMoves_SegmentHit(oldX,oldY,shot->x/Q,shot->y/Q,target->x/Q,target->y/Q,p->radius) && !target->dash)
         {
             if(SpecialInvulnerable(shot->side^1))gArenaWarpTossTelemetry[7]++;
             else{ApplyMoveHit(shot->side,shot->move);shot->life = 1;}
         }
-        if (shot->x < ARENA_MIN_X * Q || shot->x > ARENA_MAX_X * Q
-            || shot->y < ARENA_MIN_Y * Q || shot->y > ARENA_MAX_Y * Q) shot->life = 1;
+        if (shot->x < 3 * Q || shot->x > 237 * Q || shot->y < 19 * Q || shot->y > 157 * Q) shot->life = 1;
         if (--shot->life == 0) DestroyShot(shot);
         else
         {
@@ -2884,15 +2605,11 @@ static void CB2_Arena(void)
     u32 stamp=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,phaseStamp=stamp,now;
     u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;
     if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}
-    if(WildlandsWorld_Active()&&gap<2){sWildlandsHeldNew|=gMain.newKeys;return;}
-    gMain.newKeys|=sWildlandsHeldNew;sWildlandsHeldNew=0;
-    {u16 ln=(REG_VCOUNT+68)%228; if(ln>gWildlandsLoop[3])gWildlandsLoop[3]=ln; gWildlandsLoop[gap>=3?2:gap>=2?1:0]++;}
     gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;
     gArenaFrameTelemetry.updates++;
     if(gap>gArenaFrameTelemetry.maxGap)gArenaFrameTelemetry.maxGap=gap;
     if(gap>1)gArenaFrameTelemetry.missedVBlanks+=gap-1;
-    if (JOY_NEW(SELECT_BUTTON) && WildlandsWorld_Active()) { if (!sArena.paused && !sArena.resultTimer) SquadSwapLead(); }
-    else if (JOY_NEW(SELECT_BUTTON) && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1) && !sArena.resultTimer && sCapture.state==ARENA_CAPTURE_IDLE) { gArenaMenuRequest=2; ArenaExit(FALSE); return; }
+    if (JOY_NEW(SELECT_BUTTON) && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1) && !sArena.resultTimer && sCapture.state==ARENA_CAPTURE_IDLE) { gArenaMenuRequest=2; ArenaExit(FALSE); return; }
     if (JOY_NEW(START_BUTTON) && !sArena.resultTimer && sCapture.state==ARENA_CAPTURE_IDLE)
     {
         sArena.paused ^= TRUE;
@@ -2900,7 +2617,7 @@ static void CB2_Arena(void)
         DrawStage();
         sArena.hudDirty = TRUE;
     }
-    if(!WildlandsWorld_Active()&&!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();
+    if(!ClashBusy()&&!GuardBusy()&&!SpecialBusy(0)&&!SpecialBusy(1))CaptureInput();
     if(sArena.paused)
     {
         u16 keys=gMain.newKeys&DPAD_ANY;
@@ -2908,18 +2625,16 @@ static void CB2_Arena(void)
         if(sPausePage==3)
         {
             if(JOY_NEW(DPAD_UP|DPAD_DOWN))
-            {sPauseChoice=(sPauseChoice+(JOY_NEW(DPAD_DOWN)?1:4))%5;sArena.hudDirty=TRUE;}
+            {sPauseChoice=(sPauseChoice+(JOY_NEW(DPAD_DOWN)?1:3))%4;sArena.hudDirty=TRUE;}
             if(JOY_NEW(A_BUTTON))
             {
-                if(sPauseChoice<2 && WildlandsWorld_Active()){sPausePage=5+sPauseChoice;sArena.hudDirty=TRUE;}
-                else if(sPauseChoice<2 && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1))
+                if(sPauseChoice<2 && !ClashBusy() && !GuardBusy() && !SpecialBusy(0) && !SpecialBusy(1))
                 {gArenaMenuRequest=sPauseChoice==0?2:1;ArenaExit(FALSE);return;}
                 if(sPauseChoice==2){sPausePage=0;sMoveMenuReady=FALSE;sArena.hudDirty=TRUE;}
                 if(sPauseChoice==3){sArena.paused=FALSE;DrawStage();sArena.hudDirty=TRUE;}
-                if(sPauseChoice==4){sPausePage=4;sArena.hudDirty=TRUE;}
             }
         }
-        else if(sPausePage<3 && JOY_NEW(L_BUTTON|R_BUTTON))
+        else if(JOY_NEW(L_BUTTON|R_BUTTON))
         {
             sPausePage=(sPausePage+(JOY_NEW(R_BUTTON)?1:2))%3;
             sMoveMenuReady=FALSE;sArena.hudDirty=TRUE;
@@ -2948,38 +2663,20 @@ static void CB2_Arena(void)
             && !PsychicBusy(0) && !PsychicBusy(1)
             && !sArena.bodies[0].shotTimer && !sArena.bodies[1].shotTimer
             && !sArena.bodies[0].actionLife && !sArena.bodies[1].actionLife
-            && !WildlandsWorld_Active()
             && (FirstMove(0,TRUE)==ARENA_NO_MOVE || FirstMove(1,TRUE)==ARENA_NO_MOVE))
         {
             bool8 flying=FALSE;
             for(i=0;i<SHOTS_COUNT;i++)if(sArena.shots[i].life)flying=TRUE;
             if(!flying){ArenaExit(FALSE);return;}
         }
-        {
-        u8 simStep, simSteps = WildlandsWorld_Active() ? (gap >= 6 ? 6 : gap >= 2 ? gap : 1) : 1;
-        u16 savedNewKeys = gMain.newKeys;
-        if (gap > gWildlandsHitch[0]) gWildlandsHitch[0] = gap;
-        if (gap > 3) gWildlandsHitch[1]++;
-        if (gap > 6) gWildlandsHitch[5] += gap - 6;
-        sWildlandsSimSteps = simSteps;
-        gWildlandsProfile[10] += simSteps; gWildlandsProfile[11]++;
-        for (simStep = 0; simStep < simSteps; simStep++)
-        {
-        if (simStep) { if (sArena.resultTimer || !sArena.active) break; gMain.newKeys = 0; }
         sArena.frame++;
-        {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; SquadSimStep();
-         q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[0])gWildlandsSpikeSim[0]=q1-q0;}
         for(i=0;i<2;i++)
             if(!sArena.bodies[i].shotTimer && !sArena.bodies[i].actionLife
                 && !ArenaMovePP(i,sArena.bodies[i].moveSlot))
-                {u8 m=FirstMove(i,TRUE); sArena.bodies[i].moveSlot=(m==ARENA_NO_MOVE&&WildlandsWorld_Active())?ARENA_STRUGGLE_SLOT:m;}
+                sArena.bodies[i].moveSlot=FirstMove(i,TRUE);
         gRealtimeArenaTelemetry.frames++;
         if (sArena.resultTimer)
         {
-            if (WildlandsWorld_Active() && !sWildlandsSummary)
-            { sWildlandsSummary = TRUE; sArena.resultTimer = 240; WildlandsSummaryDraw(); }
-            if (sWildlandsSummary && sArena.resultTimer > 2 && JOY_NEW(A_BUTTON))
-                sArena.resultTimer = 2;
             SpecialTick();GuardTick();
             for(i=0;i<2;i++)if(sArena.bodies[i].actionLife)
             {
@@ -3006,13 +2703,7 @@ static void CB2_Arena(void)
                 now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
                 gArenaFrameTelemetry.scanlines[0]=now-phaseStamp;phaseStamp=now;
                 if(sCapture.state!=ARENA_CAPTURE_AIM)TickPlayer();
-                {u32 q0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,q1; TickEnemy();
-                 q1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228; if(q1-q0>gWildlandsSpikeSim[1])gWildlandsSpikeSim[1]=q1-q0;}
-                if(WildlandsWorld_Active())
-                {
-                    WildlandsWorld_TickBody(0,sArena.bodies[0].x/Q,sArena.bodies[0].y/Q);
-                    WildlandsWorld_TickBody(1,sArena.bodies[1].x/Q,sArena.bodies[1].y/Q);
-                }
+                TickEnemy();
                 now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
                 gArenaFrameTelemetry.scanlines[1]=now-phaseStamp;phaseStamp=now;
                 TickPendingShots(); ClashDetect();
@@ -3071,11 +2762,7 @@ static void CB2_Arena(void)
                 }
             }
         }
-        }
-        gMain.newKeys = savedNewKeys;
-        }
     }
-    {u16 t=(u16)(gMain.vblankCounter1*228+(REG_VCOUNT+68)%228-stamp); gWildlandsSpike[5]=t; if(t>gWildlandsSpike[0])gWildlandsSpike[0]=t;}
     CaptureTick();
     if(!sArena.active)return;
     frozen |= CaptureLocked();
@@ -3130,7 +2817,7 @@ static void CB2_Arena(void)
                 gArenaSpriteTelemetry.uploads[i]++;
             }
             if (!sArena.paused && !sArena.resultTimer && !frozen)
-                body->animClock += (animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q) * sWildlandsSimSteps;
+                body->animClock += animation == ARENA_ANIM_WALK ? Clamp(Speed(i) * Q / 220, 128, 512) : Q;
             if (RollBallVisible(i))
             {
                 // Curled into a ball: its own frames stand in for the pose.
@@ -3236,12 +2923,7 @@ static void CB2_Arena(void)
                 warmth=max(warmth,b->actionAge<8?4:b->actionLife<10?1:2);
         }
         // Brief warm light on the scenery only, never the HUD or HP palettes.
-        {
-            u8 lit = sArena.paused ? 0 : warmth;
-            if (lit || sWildlandsSceneryLit)
-                BlendPalette(16,240,lit,RGB(31,16,4));
-            sWildlandsSceneryLit = lit;
-        }
+        BlendPalette(16,240,sArena.paused?0:warmth,RGB(31,16,4));
     }
     now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
     gArenaFrameTelemetry.scanlines[3]=now-phaseStamp;phaseStamp=now;
@@ -3262,7 +2944,7 @@ static void CB2_Arena(void)
     DecoyDraw();
     SpecialDraw();
     MonVisualScaleApply();
-    SquadTick();
+    WildlandsPartner_Update();
     CoverDraw();
     BarrierDraw();
     GuardDraw();
@@ -3290,14 +2972,9 @@ static void CB2_Arena(void)
     if (sArena.hudDirty || sHudRecovery!=RecoveryPips() || JOY_NEW(START_BUTTON | L_BUTTON | R_BUTTON)) DrawHud();
     gArenaRenderTelemetry[1]=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228-now;
     now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
-    {u32 p0=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,p1;
     ArenaXL_UpdateCamera();
-    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[6]=p1-p0;p0=p1;
     AnimateSprites();
-    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[7]=p1-p0;p0=p1;
-    WildlandsBuildOam();
-    p1=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;gWildlandsProfile[8]=p1-p0;
-    {u32 n=0,k;for(k=0;k<MAX_SPRITES;k++)if(gSprites[k].inUse)n++;gWildlandsProfile[9]=n;}}
+    BuildOamBuffer();
     // BG0's paused picker must cover actors and attack sprites. Change only
     // this frame's OAM, so normal priorities return automatically on resume.
     for(i=0;i<128;i++)
@@ -3312,8 +2989,6 @@ static void CB2_Arena(void)
     now=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228;
     gArenaFrameTelemetry.scanlines[4]=now-phaseStamp;
     gArenaFrameTelemetry.scanlines[5]=now-stamp;
-    {u16 t=(u16)(now-stamp); if(t>gWildlandsSpike[3])gWildlandsSpike[3]=t; if(t>400)gWildlandsSpike[4]++;
-     if(t>gWildlandsSpike[5]&&(u16)(t-gWildlandsSpike[5])>gWildlandsSpike[1])gWildlandsSpike[1]=t-gWildlandsSpike[5];}
     for(i=0;i<6;i++)if(gArenaFrameTelemetry.scanlines[i]>gArenaFrameTelemetry.peak[i])
         gArenaFrameTelemetry.peak[i]=gArenaFrameTelemetry.scanlines[i];
 }
@@ -3354,12 +3029,6 @@ static void ArenaExit(bool8 fainted)
             VarSet(VAR_ASCENSION_CHAMPION_WINS,min(9999,VarGet(VAR_ASCENSION_CHAMPION_WINS)+1));
             VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCENSION_MASTERS_BEST)+1));
         }
-        if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1 && FlagGet(FLAG_ARENA_PRACTICE) && gBattleMons[0].hp==0)
-        {
-            u16 zero=0; u32 k;
-            for(k=0;k<PARTY_SIZE;k++)
-                if(GetMonData(&gPlayerParty[k],MON_DATA_SPECIES))SetMonData(&gPlayerParty[k],MON_DATA_HP,&zero);
-        }
         sArena.active=FALSE;sArena.classic=FALSE;
         gRealtimeArenaTelemetry.active=FALSE;
         gRealtimeArenaTelemetry.exits++;
@@ -3375,7 +3044,7 @@ static void ArenaExit(bool8 fainted)
         }
         gSprites[sArena.aimSprite].invisible=TRUE;
         gSprites[sArena.cueSprite].invisible=TRUE;
-        DirectorDestroy();SquadDestroy();ZoneDestroy();LootDestroy();
+        WildlandsPartner_Destroy();
         BuildOamBuffer();ArenaRender_Ready();
         gMain.callback1=sArena.savedCB1;
         RealtimeArena_ResumeBattle(TRUE);
@@ -3384,7 +3053,7 @@ static void ArenaExit(bool8 fainted)
     }
     SetVBlankCallback(NULL);
     ArenaFeedback_Destroy();
-    DirectorDestroy();SquadDestroy();ZoneDestroy();LootDestroy();
+    WildlandsPartner_Destroy();
     for (i = 0; i < 2; i++)
     {
         struct Sprite *sprite = &gSprites[sArena.bodies[i].sprite];
@@ -3494,7 +3163,6 @@ bool8 RealtimeArena_SetupDemo(void)
     AddBagItem(ITEM_X_ATTACK,10);
     AddBagItem(ITEM_X_DEFEND,10);
     AddBagItem(ITEM_X_SPEED,10);
-    Wildlands_SweepAllMoves();   // Beta: every owned Pokemon starts arena-ready
 #endif
     return TRUE;
 }
@@ -3512,11 +3180,6 @@ void Wildlands_QueuePractice(void)
     {
         gSpecialVar_Result = 0;
         return;
-    }
-    {
-        u32 k;
-        for (k = 0; k < 2; k++)
-            Wildlands_ArenaLoadout(&gPlayerParty[k]);
     }
     VarSet(VAR_ASCENSION_FLOOR, sWildlandsPracticeGround);
     sWildlandsPracticeGround = (sWildlandsPracticeGround + 1) % 5;

@@ -6429,8 +6429,3 @@ void IsLastMonThatKnowsSurf(void)
             gSpecialVar_Result = TRUE;
     }
 }
-
-bool8 Wildlands_CanLearnTutor(u16 species, u8 tutor)
-{
-    return CanLearnTutorMove(species, tutor);
-}

@@ -150,26 +150,6 @@ static void TossLayout(void)
 static void TossSpaceStep(u8 step)
 {
     struct ArenaToss *t = &sArena.toss;
-    if(WildlandsWorld_Active())
-    {
-        switch(step)
-        {
-        case 0:t->space=TRUE;t->blackout=TRUE;break;
-        case 1:HideBg(3);HideBg(2);HideBg(1);HideBg(0);break;
-        case 2:break;
-        case 3:t->blackout=FALSE;break;
-        case 4:t->blackout=TRUE;break;
-        case 5:break;
-        case 6:t->blackout=FALSE;break;
-        case 7:
-            ShowBg(3);ShowBg(2);ShowBg(1);ShowBg(0);
-            WildlandsWorld_RestorePalettes();
-            LoadPalette(sArenaPalette,0,sizeof(sArenaPalette));
-            t->space=FALSE;
-            break;
-        }
-        return;
-    }
     switch (step)
     {
     case 0: t->space = TRUE; t->blackout = TRUE; LoadPalette(&sSpaceBackdrop, 0, sizeof(u16)); break;
@@ -268,7 +248,7 @@ static void TossEnd(void)
     }
     t->phase = 0;
     t->height[0] = t->height[1] = 0;
-    WL_BG1(REG_OFFSET_BG1VOFS, 0);
+    SetGpuReg(REG_OFFSET_BG1VOFS, 0);
     // The attacker's recovery from Fire() is still pending; the victim needs a
     // moment to get up. Neither can act during the landing frames themselves.
     attacker->cooldown = max(attacker->cooldown, 20);
@@ -422,5 +402,5 @@ static void TossDraw(void)
     if (t->phase == TOSS_LAND && t->timer < TOSS_SQUASH_FRAMES + 2)
         ArenaMoveFx_Action(t->attacker, &sTossImpactFx, victim->x / Q, victim->y / Q - 14,
                            FACE_DOWN, t->timer, TRUE, sArena.paused);
-    WL_BG1(REG_OFFSET_BG1VOFS, t->shake && !sArena.paused ? ((t->shake & 1) ? (t->shake / 4 + 1) : (0x200 - t->shake / 4 - 1)) : 0);
+    SetGpuReg(REG_OFFSET_BG1VOFS, t->shake && !sArena.paused ? ((t->shake & 1) ? (t->shake / 4 + 1) : (0x200 - t->shake / 4 - 1)) : 0);
 }

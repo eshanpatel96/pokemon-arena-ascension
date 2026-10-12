@@ -15,12 +15,7 @@ typedef int32_t s32;
 #define ARENA_MIN_X 32
 #define ARENA_MAX_X 4064
 #define ARENA_MIN_Y 32
-#include "wildlands_world_data.h"
-#ifdef WL_ARENA_MAX_Y
-#define ARENA_MAX_Y WL_ARENA_MAX_Y
-#else
 #define ARENA_MAX_Y 3040
-#endif
 #define ARENA_BODY_RADIUS 10
 #define ARENA_OBSTACLES 7
 #define ARENA_CORNERS (ARENA_OBSTACLES * 4)

@@ -360,14 +360,10 @@ static void (*const sMovementStatusHandler[])(struct LinkPlayerObjectEvent *, st
 void DoWhiteOut(void)
 {
     RunScriptImmediately(EventScript_WhiteOut);
-    if (!(VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE)))
-        SetMoney(&gSaveBlock1Ptr->money, GetMoney(&gSaveBlock1Ptr->money) / 2);
+    SetMoney(&gSaveBlock1Ptr->money, GetMoney(&gSaveBlock1Ptr->money) / 2);
     HealPlayerParty();
     Overworld_ResetStateAfterWhiteOut();
-    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE))
-        SetWarpDestination(MAP_GROUP(MAP_ASCENSION_TEAM_LAB), MAP_NUM(MAP_ASCENSION_TEAM_LAB), WARP_ID_NONE, 6, 10);
-    else
-        SetWarpDestinationToLastHealLocation();
+    SetWarpDestinationToLastHealLocation();
     WarpIntoMap();
 }
 
