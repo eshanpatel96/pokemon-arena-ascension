@@ -10,9 +10,6 @@ static const u8 sHudPPLabel[] = _("PP ");
 static EWRAM_DATA bool8 sHudCached=FALSE;
 static EWRAM_DATA u16 sHudLastHp[2]={},sHudLastMax[2]={},sHudLastSpecies[2]={};
 static EWRAM_DATA u8 sHudLastLevel[2]={};
-static EWRAM_DATA u32 sHudWingKey=0;
-static u32 WildlandsHudWingKey(void);
-static void WildlandsHudWingBars(void);
 static void HudTinyWindow(u8 window,u32 x,u32 y,const u8 *text,u8 color,u32 maxChars)
 {
     u32 n=0;
@@ -43,28 +40,7 @@ static void DrawStatusHud(void)
     if(sHudCached && sHudLastHp[0]==gBattleMons[0].hp && sHudLastHp[1]==gBattleMons[1].hp
         && sHudLastMax[0]==gBattleMons[0].maxHP && sHudLastMax[1]==gBattleMons[1].maxHP
         && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species
-        && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level
-        && sHudWingKey==WildlandsHudWingKey())return;
-    if(sHudCached && sHudLastMax[0]==gBattleMons[0].maxHP && sHudLastMax[1]==gBattleMons[1].maxHP
-        && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species
-        && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level
-        && sHudWingKey==WildlandsHudWingKey())
-    {
-        for(side=0;side<2;side++)
-        {
-            const struct BattlePokemon *mon=&gBattleMons[side];
-            u32 bar=side?129:8,fill=mon->maxHP?mon->hp*102/mon->maxHP:0;
-            u8 color=mon->hp*5<=mon->maxHP?6:mon->hp*2<=mon->maxHP?7:5;
-            if(sHudLastHp[side]==mon->hp)continue;
-            if(mon->hp&&!fill)fill=1;
-            HudRect(side?126:5,15,109,7,1);
-            HudRect(bar,13,102,8,12);HudRect(bar,13,fill,1,4);HudRect(bar,14,fill,7,color);
-            ConvertIntToDecimalStringN(text,mon->hp,STR_CONV_MODE_LEFT_ALIGN,3);
-            HudTiny(bar+46,16,text,9,3);HudTiny(bar+45,15,text,4,3);
-            sHudLastHp[side]=mon->hp;
-        }
-        return;
-    }
+        && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level)return;
     // One small authored background; preserve the terrain through alpha corners.
     FillWindowPixelBuffer(0,0);
     CpuFastCopy(sHudPanelTiles,gWindows[0].tileData,30*2*32);
@@ -98,8 +74,5 @@ static void DrawStatusHud(void)
         HudRect(118,8,5,2,4);HudRect(119,10,3,1,4);
         HudRect(120,7,1,1,4);
     }
-    WildlandsHudWingBars();
-    sHudWingKey=WildlandsHudWingKey();
     sHudCached=TRUE;
-    sWildlandsHudDrew=TRUE;
 }
