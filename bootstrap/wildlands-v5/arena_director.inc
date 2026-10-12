@@ -1130,7 +1130,7 @@ static void DirRoamersSpawn(void)
 
 // ---- V6.2 boss AI: telegraphed slam, enrage at half HP ----------------------
 // A legendary (lair boss or roamer) stops, flashes and roars, then slams:
-// every player Pokemon within 64px takes its strongest move and is knocked
+// every player Pokemon within 64px takes a Strength (roamers: Stomp) and is knocked
 // back. Lair bosses slam every 7s (5s enraged), roamers every 9s. At half HP
 // a boss enrages once (+1 Speed, Attack, Sp. Atk).
 // [0] slams [1] enrages [2] windups started
@@ -1146,14 +1146,9 @@ static bool8 DirectorBossWindup(void)
 static void DirBossSlam(void)
 {
     struct ArenaBody *boss = &sArena.bodies[1];
-    u16 move = MOVE_NONE, best = 0;
-    u32 k, t;
-    for (k = 0; k < MAX_MON_MOVES; k++)
-    {
-        u16 m = gBattleMons[1].moves[k];
-        if (m && ArenaMoves_Get(m) && gBattleMoves[m].power > best)
-        { best = gBattleMoves[m].power; move = m; }
-    }
+    // A fixed physical slam (not the boss's best move): telegraphed and fair.
+    u16 move = (sDir->active != DIR_NONE && sDir->duo[sDir->active].legend == DIR_ROAMER) ? MOVE_STOMP : MOVE_STRENGTH;
+    u32 t;
     PlaySE(SE_M_EARTHQUAKE);
     ArenaFeedback_Dust(boss->x / Q, boss->y / Q, TRUE);
     gWildlandsBossAiTelemetry[0]++;
