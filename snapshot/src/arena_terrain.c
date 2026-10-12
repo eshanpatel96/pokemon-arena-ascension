@@ -42,7 +42,7 @@ static EWRAM_DATA u8 sPropSprite[ARENA_OBSTACLES]={};
 static EWRAM_DATA u8 sPieceSprite[ARENA_FRAGMENTS]={};
 static EWRAM_DATA u8 sPropFrame[ARENA_OBSTACLES]={};
 #define WL_PROP_BLOCK_TAG (TAG+ARENA_OBSTACLES+3)
-#define WL_PROP_BLOCK_SLOTS 5
+#define WL_PROP_BLOCK_SLOTS 7
 // Per slot: which prop art (0..6) from which biome set. Classic: i, biome.
 static EWRAM_DATA u8 sPropArt[ARENA_OBSTACLES]={};
 static EWRAM_DATA u8 sPropSet[ARENA_OBSTACLES]={};

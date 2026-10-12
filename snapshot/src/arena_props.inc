@@ -6,7 +6,7 @@
 // Psychic lifting rocks, pod chains) works out in the world unchanged.
 // Damage persists per site for the whole match.
 #include "wildlands_props.inc"
-#define WL_PROP_SLOTS 5
+#define WL_PROP_SLOTS 7
 
 bool8 ArenaTerrain_WorldSlot(u8 i, s16 x, s16 y, u8 set, u8 art, u8 kind, u8 hp, u8 maxHp);
 void ArenaTerrain_WorldRelease(u8 i);
@@ -18,6 +18,12 @@ static EWRAM_DATA u16 sPropSlotSite[WL_PROP_SLOTS] = {0};   // site + 1, 0 = fre
 static const u8 sPropKind[7] = {ARENA_PROP_ROCK, ARENA_PROP_ROCK, ARENA_PROP_ROCK, ARENA_PROP_WOOD,
                                 ARENA_PROP_BUSH, ARENA_PROP_CRYSTAL, ARENA_PROP_POD};
 static const u8 sPropStrength[7] = {3, 2, 2, 1, 1, 2, 1};
+
+// Ruin columns (set 4) are sturdy: they take several hits.
+static u8 PropStrength(const struct WlPropSite *site)
+{
+    return (site->set == 4 && site->art <= 2) ? 4 : sPropStrength[site->art];
+}
 
 static void PropsFree(void)
 {
@@ -48,7 +54,7 @@ static void PropsInit(void)
         sPropHp = Alloc(WL_PROP_SITES);
         if (sPropHp)
             for (i = 0; i < WL_PROP_SITES; i++)
-                sPropHp[i] = sPropStrength[sWlPropSites[i].art];
+                sPropHp[i] = PropStrength(&sWlPropSites[i]);
         memset(gWildlandsPropTelemetry, 0, sizeof(gWildlandsPropTelemetry));
     }
     gWildlandsPropTelemetry[0] = WL_PROP_SITES;
@@ -111,7 +117,7 @@ static void PropsSim(void)
         const struct WlPropSite *site = &sWlPropSites[pick];
         u8 hp = sPropHp[pick];
         if (!ArenaTerrain_WorldSlot(slot, site->x, site->y, site->set, site->art, sPropKind[site->art],
-                                    hp ? hp : 1, sPropStrength[site->art]))
+                                    hp ? hp : 1, PropStrength(site)))
         {
             // Out of sprites: storm rain is cosmetic, cover is gameplay.
             gWildlandsPropTelemetry[5]++;
