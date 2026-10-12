@@ -828,10 +828,6 @@ static void SquadDrawWing(struct SquadWing *w)
 static void ZoneSim(void);
 static void LootSim(void);
 
-// OAM only has 9-bit X / 8-bit Y: an actor ~100-250px off screen wraps
-// around and appears on the far side (the "enemy appears when it is not
-// near me" playtest report). Hide every world sprite well outside the view
-// for the OAM build only, then restore it, so no gameplay flag changes.
 // World sprite animation: parked pool sprites (hidden, no callback: rain,
 // loot, markers, shot pools) skip the per-frame callback + animation step.
 static void WildlandsAnimateSprites(void)
@@ -854,34 +850,15 @@ static void WildlandsAnimateSprites(void)
 }
 
 void WildlandsBuildOamFast(void);
+// World OAM build: one pass that culls far off-screen sprites (OAM has only
+// 9-bit X / 8-bit Y, so they would wrap onto the far side), sets coords and
+// sorts the visible ones (see WildlandsBuildOamFast in sprite.c).
 static void WildlandsBuildOam(void)
 {
-    u32 hidden[2] = {0, 0}, i;
-    // V6.4: one pass (cull + coords + key) and a sort over visible sprites only.
     if (WildlandsWorld_Active())
-    {
         WildlandsBuildOamFast();
-        return;
-    }
-    if (WildlandsWorld_Active())
-        for (i = 0; i < MAX_SPRITES; i++)
-        {
-            struct Sprite *s = &gSprites[i];
-            s32 sx, sy;
-            if (!s->inUse || s->invisible || !s->coordOffsetEnabled)
-                continue;
-            sx = s->x + s->x2 + gSpriteCoordOffsetX;
-            sy = s->y + s->y2 + gSpriteCoordOffsetY;
-            if (sx < -64 || sx > 304 || sy < -64 || sy > 224)
-            {
-                s->invisible = TRUE;
-                hidden[i >> 5] |= 1u << (i & 31);
-            }
-        }
-    BuildOamBuffer();
-    for (i = 0; i < MAX_SPRITES; i++)
-        if (hidden[i >> 5] & (1u << (i & 31)))
-            gSprites[i].invisible = FALSE;
+    else
+        BuildOamBuffer();
 }
 // Doors: the player walks into a house / lair door (or back onto a room's
 // exit) and the duo moves together; the region swap itself happens in the

@@ -556,75 +556,6 @@ world, terrain, TOTAL_H, rooms_src, room_loot, rooms_manifest = build_rooms(
     root, world, terrain, W, H, (0, 0), ('General', 'Fortree'), doors, ROOMS)
 loot = loot[:64 - len(room_loot)] + room_loot
 (root / 'include/wildlands_rooms.inc').write_text(rooms_src)
-# ---- Breakable cover: arena props streamed around the player -------------
-# Rocks, logs, bushes, crystals and pods from the arena's own prop art, on
-# open ground (5x5 walkable) away from doors, loot and the spawn, denser in
-# clearings. Psychic lifts the rocks; everything breaks.
-PROP_SET = {bp.FORTREE: 0, bp.MAUVILLE: 3, bp.FALLARBOR: 2, bp.LAVARIDGE: 2, bp.SLATEPORT: 1}
-# Natural sets: one rock shape (the three rock arts are the same boulder),
-# crates, bushes/coral, crystals, pods. Set 4 is the arena's ruin set:
-# columns, a carved panel, a planter, an obelisk and urns.
-PROP_MIX = {0: [(0, 15), (3, 25), (4, 35), (5, 10), (6, 15)],
-            1: [(0, 20), (3, 35), (4, 25), (5, 5), (6, 15)],
-            2: [(0, 25), (3, 10), (4, 10), (5, 40), (6, 15)],
-            3: [(0, 30), (3, 15), (4, 15), (5, 20), (6, 20)],
-            4: [(0, 20), (1, 15), (2, 15), (3, 10), (4, 10), (5, 15), (6, 15)]}
-# Share of ruin props per biome (desert ruins, highland and volcano shrines).
-RUIN_SHARE = {bp.FORTREE: 18, bp.MAUVILLE: 50, bp.FALLARBOR: 40, bp.LAVARIDGE: 30, bp.SLATEPORT: 15}
-prng = random.Random(23)
-def prop_open(x, y, r=2):
-    for yy in range(y - r, y + r + 1):
-        for xx in range(x - r, x + r + 1):
-            if (xx, yy) not in seen or terrain[yy * W + xx] & 8:
-                return False
-    return True
-prop_avoid = [(lx, ly) for lx, ly, _ in loot] + [(d['cell'][0] * 16 + 8, d['cell'][1] * 16 + 8) for d in doors] \
-    + [(P[0] * 16 + 8, P[1] * 16 + 8)]
-prop_sites = []
-def prop_ok(px, py, gap):
-    return all(abs(px - ax) + abs(py - ay) > 64 for ax, ay in prop_avoid) \
-        and all(max(abs(px - sx), abs(py - sy)) > gap for sx, sy, _, _ in prop_sites)
-def prop_add(x, y):
-    b = des[y * W + x]
-    st = 4 if prng.randrange(100) < RUIN_SHARE.get(b, 15) else PROP_SET.get(b, 0)
-    roll, acc = prng.randrange(100), 0
-    for art, wgt in PROP_MIX[st]:
-        acc += wgt
-        if roll < acc:
-            break
-    prop_sites.append((x * 16 + 8, y * 16 + 8, st, art))
-    # Columns come as a colonnade: a second (and sometimes third) column
-    # beside the first, so ruins read as ruins.
-    if st == 4 and art <= 2:
-        for k in (1, 2):
-            nx = x + 3 * k
-            if k == 2 and prng.randrange(100) >= 45:
-                break
-            px, py = nx * 16 + 8, y * 16 + 8
-            if nx < W - 3 and prop_open(nx, y) and all(abs(px - ax) + abs(py - ay) > 64 for ax, ay in prop_avoid):
-                prop_sites.append((px, py, 4, prng.choice((0, 1, 2))))
-            else:
-                break
-for c in clearings:
-    n = 0
-    for _ in range(300):
-        if n >= 5:
-            break
-        x = c['cx'] + prng.randint(-c['r'] + 2, c['r'] - 2); y = c['cy'] + prng.randint(-c['r'] + 2, c['r'] - 2)
-        if 0 < x < W - 1 and 0 < y < H - 1 and prop_open(x, y) and prop_ok(x * 16 + 8, y * 16 + 8, 80):
-            prop_add(x, y); n += 1
-pcells = sorted(c for c in seen if c[1] < H)
-prng.shuffle(pcells)
-for (x, y) in pcells:
-    if len(prop_sites) >= 360:
-        break
-    if 2 <= x < W - 2 and 2 <= y < H - 2 and prop_open(x, y) and prop_ok(x * 16 + 8, y * 16 + 8, 144):
-        prop_add(x, y)
-(root / 'include/wildlands_props.inc').write_text(
-    f'#define WL_PROP_SITES {len(prop_sites)}\n'
-    'struct WlPropSite { u16 x, y; u8 set, art; };\n'
-    'static const struct WlPropSite sWlPropSites[WL_PROP_SITES] = {\n'
-    + ''.join(f'    {{{x}, {y}, {st}, {a}}},\n' for x, y, st, a in prop_sites) + '};\n')
 (root / 'include/wildlands_loot.inc').write_text(''.join(f'    {{{x}, {y}, {t}}},\n' for x, y, t in loot))
 
 # ---- runtime biome streaming tables -------------------------------------
@@ -705,7 +636,7 @@ manifest = {
                   'reachable': lair_reach[k] > 0, 'reachable_cells': lair_reach[k],
                   'prefab': stamped.get(k, [None])[-1] if k in stamped else None}
               for k, v in boxes.items()},
-    'bridge_fallbacks': fixed, 'pond_puddle_fixes': puddle_fix, 'invisible_walls_cleared': invisible_walls_cleared, 'invisible_walls_left': invisible_walls_left, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot), 'prop_sites': len(prop_sites), 'organic_cells_changed': organic_changed,
+    'bridge_fallbacks': fixed, 'pond_puddle_fixes': puddle_fix, 'invisible_walls_cleared': invisible_walls_cleared, 'invisible_walls_left': invisible_walls_left, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot), 'organic_cells_changed': organic_changed,
     'player_start': P, 'enemy_start': E,
     'interiors': rooms_manifest, 'doors_reachable': door_audit,
     'biomes': {bp.BIOME_NAMES[k]: sum(1 for v in core if v == k) for k in bp.BIOME_NAMES},

@@ -29,7 +29,7 @@ jobs:
       WORLD: ${{ matrix.world }}
       # Single source of the beta version: ROM file, artifact names, manifest,
       # and the Lab sign in game. Bump this for every build sent to testers.
-      WL_VERSION: '6.6'
+      WL_VERSION: '6.7'
     steps:
       - uses: actions/checkout@v4
 
@@ -198,9 +198,12 @@ jobs:
           PY2
           grep -c "CHECK FAIL" evidence/smoke.log | xargs -I{} echo "::notice::smoke failed checks: {}"
           grep "CHECK FAIL" evidence/smoke.log | head -10 | sed 's/^/::notice::/'
-          # Gate results are a ledger, not a red build: failed checks exit 1
-          # and are reported above; only a harness/emulator crash fails CI.
-          if [ "$rc" -ge 2 ]; then exit $rc; fi
+          # V6.7: any failed check fails the build (ROM, evidence and recovery
+          # still upload: those steps run always()). A harness crash too.
+          fails=$(grep -c "CHECK FAIL" evidence/smoke.log || true)
+          passes=$(grep -c "CHECK PASS" evidence/smoke.log || true)
+          echo "::notice::smoke checks: ${passes} passed, ${fails} failed (rc=${rc})"
+          if [ "$rc" -ge 2 ] || [ "${fails:-0}" -gt 0 ] || [ "${passes:-0}" -eq 0 ]; then exit 1; fi
           exit 0
 
       - name: Recovery package
