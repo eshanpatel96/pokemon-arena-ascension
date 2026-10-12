@@ -147,7 +147,7 @@ static void ZoneCreateRain(void)
             r->invisible = TRUE;
             r->animPaused = TRUE;
             r->oam.tileNum = start + LOOT_TYPES * 4;
-            r->oam.paletteNum = IndexOfSpritePaletteTag(SHOT_TAG);
+            r->oam.paletteNum = LootPaletteNum();
         }
     }
 }

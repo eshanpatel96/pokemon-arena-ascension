@@ -70,8 +70,24 @@ static const u16 sLootColors[10] = {
     RGB(26, 10, 31), RGB(14, 2, 20),  // CACHE violet
 };
 
+// Beta: loot owns its palette when a slot is free (the shared shot palette
+// gets rewritten by move effects, which turned every pickup into the same
+// odd-coloured sparkle). Falls back to the shared palette otherwise.
+static EWRAM_DATA u8 sLootPal = 0xFF;
+EWRAM_DATA u8 gWildlandsLootPalDiag = 0;
+static u8 LootPaletteNum(void)
+{
+    return sLootPal != 0xFF ? sLootPal : IndexOfSpritePaletteTag(SHOT_TAG);
+}
 static void LootLoadGraphics(void)
 {
+    static const u16 sLootPalette[16] = {
+        0, RGB(31, 31, 31), RGB(31, 31, 31), RGB(4, 5, 8), RGB(31, 31, 31),
+        RGB(31, 8, 6), RGB(20, 2, 2), RGB(8, 16, 31), RGB(2, 6, 20),
+        RGB(31, 27, 4), RGB(20, 14, 0), RGB(8, 28, 10), RGB(2, 14, 4),
+        RGB(26, 10, 31), RGB(14, 2, 20), RGB(20, 26, 31),
+    };
+    struct SpritePalette ownPal = {sLootPalette, LOOT_TAG};
     u32 tiles[LOOT_TYPES * 32 + 8] = {0};
     // Extra tile for the storm rain streak (arena_zone.inc): blue tail, white head.
     static const u32 sRainStreak[8] = {
@@ -95,6 +111,10 @@ static void LootLoadGraphics(void)
                 // Supplies read as a cross, caches as a gem with a bright core.
                 if (t == LOOT_HEAL && d <= 11 && (Abs(dx) <= 1 || Abs(dy) <= 1)) c = 2;
                 if (t == LOOT_CACHE && d <= 4) c = 2;
+                // Readable marks: ATK up-arrow, DEF ring, SPD chevrons.
+                if (t == 0 && ((Abs(dx) <= 1 && dy >= -7 && dy <= 7) || (dy == -8 + Abs(dx) && Abs(dx) <= 7))) c = 2;
+                if (t == 1 && d >= 6 && d <= 8) c = 2;
+                if (t == 2 && Abs(dy) <= 7 && (dx == 4 - Abs(dy) || dx == -2 - Abs(dy))) c = 2;
                 if (c)
                 {
                     u32 tile = t * 4 + (y / 8) * 2 + x / 8;
@@ -103,7 +123,11 @@ static void LootLoadGraphics(void)
             }
     memcpy(&tiles[LOOT_TYPES * 32], sRainStreak, sizeof(sRainStreak));
     LoadSpriteSheet(&sheet);
-    if (IndexOfSpritePaletteTag(SHOT_TAG) != 0xFF)
+    sLootPal = IndexOfSpritePaletteTag(LOOT_TAG);
+    if (sLootPal == 0xFF)
+        sLootPal = LoadSpritePalette(&ownPal);
+    gWildlandsLootPalDiag = sLootPal;   // own palette slot (0xFF = shared)
+    if (sLootPal == 0xFF && IndexOfSpritePaletteTag(SHOT_TAG) != 0xFF)
         LoadPalette(sLootColors, OBJ_PLTT_ID(IndexOfSpritePaletteTag(SHOT_TAG)) + 5, sizeof(sLootColors));
 }
 
@@ -124,7 +148,7 @@ static void LootInit(void)
     for (i = 0; i < LOOT_SPRITES; i++)
     {
         sLoot.sprite[i] = CreateSprite(&sLootTemplate, 0, 0, 3);
-        if (sLoot.sprite[i] != MAX_SPRITES) { gSprites[sLoot.sprite[i]].invisible = TRUE; gSprites[sLoot.sprite[i]].animPaused = TRUE; }
+        if (sLoot.sprite[i] != MAX_SPRITES) { gSprites[sLoot.sprite[i]].invisible = TRUE; gSprites[sLoot.sprite[i]].animPaused = TRUE; gSprites[sLoot.sprite[i]].oam.paletteNum = LootPaletteNum(); }
     }
 }
 
@@ -135,6 +159,8 @@ static void LootDestroy(void)
         if (sLoot.sprite[i] != MAX_SPRITES)
         { DestroySprite(&gSprites[sLoot.sprite[i]]); sLoot.sprite[i] = MAX_SPRITES; }
     FreeSpriteTilesByTag(LOOT_TAG);
+    FreeSpritePaletteByTag(LOOT_TAG);
+    sLootPal = 0xFF;
 }
 
 static const u8 sLootStats[3][2] = {{STAT_ATK, STAT_SPATK}, {STAT_DEF, STAT_SPDEF}, {STAT_SPEED, STAT_SPEED}};

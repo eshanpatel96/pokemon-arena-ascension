@@ -76,7 +76,7 @@ void ArenaTerrain_Init(void)
     struct SpriteTemplate template=sTemplate;
     if(WildlandsWorld_Active())
     {
-        LoadSpritePalette(&pal);LoadSpriteSheet(&pieces);
+        LoadSpriteSheet(&pieces);   /* fragments take their material palette per frame */
         for(i=0;i<ARENA_OBSTACLES;i++){sPropSprite[i]=MAX_SPRITES;sPropFrame[i]=255;sPropArt[i]=i;sPropSet[i]=0;}
         for(i=0;i<ARENA_FRAGMENTS;i++)sPieceSprite[i]=MAX_SPRITES;
         sBlastSprite=sCraterSprite=MAX_SPRITES;
