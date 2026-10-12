@@ -125,6 +125,10 @@ jobs:
         continue-on-error: true
         run: python3 bootstrap/wildlands-v5/sprite_survey.py engine > evidence/sprite-survey.txt 2>&1
 
+      - name: Prop art sheets (read-only)
+        continue-on-error: true
+        run: python3 bootstrap/wildlands-v5/render_props.py engine evidence/prop-sheets.png
+
       - name: Build manifest and memory report
         run: |
           python3 - <<'PY'
