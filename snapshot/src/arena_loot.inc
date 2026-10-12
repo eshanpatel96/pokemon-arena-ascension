@@ -106,11 +106,19 @@ static void LootLoadGraphics(void)
         RGB(26, 10, 31), RGB(14, 2, 20), RGB(20, 26, 31),
     };
     struct SpritePalette ownPal = {sLootPalette, LOOT_TAG};
-    u32 tiles[LOOT_TYPES * 32 + 8] = {0};
+    u32 tiles[LOOT_TYPES * 32 + 24] = {0};
     // Extra tile for the storm rain streak (arena_zone.inc): blue tail, white head.
     static const u32 sRainStreak[8] = {
         0x77000000, 0x07700000, 0x07700000, 0x00770000,
         0x00226000, 0x00022000, 0x00022000, 0x00002200,
+    };
+    // Biome weather particles: a desert sand streak (gold) and a volcano ash
+    // flake (dark), drawn by the same streak sprites as the storm rain.
+    static const u32 sSandStreak[8] = {
+        0x00000000, 0x00000000, 0x00099999, 0x09999A00, 0x0AA00000, 0x00000000, 0x00000000, 0x00000000,
+    };
+    static const u32 sAshFlake[8] = {
+        0x00000000, 0x00030000, 0x00333000, 0x00030300, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
     };
     struct SpriteSheet sheet = {tiles, sizeof(tiles), LOOT_TAG};
     u32 t, x, y;
@@ -140,6 +148,8 @@ static void LootLoadGraphics(void)
                 }
             }
     memcpy(&tiles[LOOT_TYPES * 32], sRainStreak, sizeof(sRainStreak));
+    memcpy(&tiles[LOOT_TYPES * 32 + 8], sSandStreak, sizeof(sSandStreak));
+    memcpy(&tiles[LOOT_TYPES * 32 + 16], sAshFlake, sizeof(sAshFlake));
     LoadSpriteSheet(&sheet);
     (void)ownPal;   // OBJ palette slots are all needed by move effects: share
     sLootPal = 0xFF;
@@ -231,6 +241,15 @@ static void LootApply(u8 team, u8 type, s32 x, s32 y)
             hp = min(gBattleMons[b].maxHP, gBattleMons[b].hp + gBattleMons[b].maxHP * 2 / 5);
             gBattleMons[b].hp = hp;
             SetMonData(SquadPartyMon(b), MON_DATA_HP, &hp);
+            // Supplies cure status too (burn, poison, paralysis, sleep, freeze).
+            if (gBattleMons[b].status1)
+            {
+                u32 none = 0;
+                gBattleMons[b].status1 = 0;
+                SetMonData(SquadPartyMon(b), MON_DATA_STATUS, &none);
+                if (b < 2) sArena.bodies[b].burnClock = 0;
+                gWildlandsStatusTelemetry[2]++;
+            }
             // Supplies also restock PP (+4 per move, up to its maximum).
             {
                 u32 k;
@@ -372,7 +391,7 @@ static bool8 LootPopupText(u8 *text)
 {
     static const u8 sWho[2][6] = {_("TEAM "), _("FOES ")};
     static const u8 sStat[3][5] = {_(" ATK"), _(" DEF"), _(" SPD")};
-    static const u8 sHeal[] = _("HEALED 40% +PP");
+    static const u8 sHeal[] = _("HEAL +PP +CURE");
     static const u8 sCache[] = _("+1 ATK DEF SPD");
     u8 *end;
     if (!sLoot.popupTimer)

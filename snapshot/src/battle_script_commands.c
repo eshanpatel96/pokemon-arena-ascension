@@ -1312,6 +1312,7 @@ static void Cmd_damagecalc(void)
 // Synchronous adapter for the arena's physical collision. These are the SAME
 // accuracy/critical/damage/STAB/type/variance commands used by normal moves.
 // Eligibility excludes unsupported script, status, weather or item effects.
+u16 Wildlands_WeatherPercent(u8 type);
 s32 RealtimeArena_ResolveDamage(u8 attacker, u8 target, u16 move)
 {
     const u8 *savedScript = gBattlescriptCurrInstr;
@@ -1384,6 +1385,8 @@ s32 RealtimeArena_ResolveDamage(u8 attacker, u8 target, u16 move)
         }
     }
     result = (gMoveResultFlags & MOVE_RESULT_NO_EFFECT) ? 0 : gBattleMoveDamage;
+    if (result > 0)
+        result = max(1, result * Wildlands_WeatherPercent(gBattleMoves[move].type) / 100);   // biome weather
     if (attacker == 0) gBattleResults.lastUsedMovePlayer = move;
     else gBattleResults.lastUsedMoveOpponent = move;
     gBattlescriptCurrInstr = savedScript;

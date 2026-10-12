@@ -2884,6 +2884,13 @@ static void TickBurn(void)
                 body->flash=5;
                 if(!gBattleMons[side].hp)
                 {
+                    if(WildlandsWorld_Active())
+                    {
+                        // The squad decides: partner takes over / next duo.
+                        gWildlandsStatusTelemetry[1]++;
+                        SquadKO(side,side^1);
+                        continue;
+                    }
                     sArena.resultTimer=12;sArena.lastAttacker=side^1;sArena.lastTarget=side;
                     gArenaResultTelemetry.started=gMain.vblankCounter1;
                 }

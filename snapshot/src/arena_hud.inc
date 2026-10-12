@@ -10,6 +10,18 @@ static const u8 sHudPPLabel[] = _("PP ");
 static EWRAM_DATA bool8 sHudCached=FALSE;
 static EWRAM_DATA u16 sHudLastHp[2]={},sHudLastMax[2]={},sHudLastSpecies[2]={};
 static EWRAM_DATA u8 sHudLastLevel[2]={};
+static EWRAM_DATA u8 sHudStatusKey=0;
+extern u16 gWildlandsStatusTelemetry[4];
+// 0 none, 1 PAR, 2 SLP, 3 BRN, 4 PSN, 5 FRZ
+static u8 HudStatusCode(u32 s)
+{
+    return (s&STATUS1_PARALYSIS)?1:(s&STATUS1_SLEEP)?2:(s&STATUS1_BURN)?3:(s&STATUS1_PSN_ANY)?4:(s&STATUS1_FREEZE)?5:0;
+}
+static u8 HudStatusKey(void)
+{
+    return HudStatusCode(gBattleMons[0].status1)|(HudStatusCode(gBattleMons[1].status1)<<4);
+}
+
 static EWRAM_DATA u32 sHudWingKey=0;
 static u32 WildlandsHudWingKey(void);
 static void WildlandsHudWingBars(void);
@@ -44,11 +56,11 @@ static void DrawStatusHud(void)
         && sHudLastMax[0]==gBattleMons[0].maxHP && sHudLastMax[1]==gBattleMons[1].maxHP
         && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species
         && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level
-        && sHudWingKey==WildlandsHudWingKey())return;
+        && sHudWingKey==WildlandsHudWingKey() && sHudStatusKey==HudStatusKey())return;
     if(sHudCached && sHudLastMax[0]==gBattleMons[0].maxHP && sHudLastMax[1]==gBattleMons[1].maxHP
         && sHudLastSpecies[0]==gBattleMons[0].species && sHudLastSpecies[1]==gBattleMons[1].species
         && sHudLastLevel[0]==gBattleMons[0].level && sHudLastLevel[1]==gBattleMons[1].level
-        && sHudWingKey==WildlandsHudWingKey())
+        && sHudWingKey==WildlandsHudWingKey() && sHudStatusKey==HudStatusKey())
     {
         for(side=0;side<2;side++)
         {
@@ -80,6 +92,16 @@ static void DrawStatusHud(void)
         StringCopy(text,sQualityLevel);
         ConvertIntToDecimalStringN(text+4,mon->level,STR_CONV_MODE_LEFT_ALIGN,3);
         HudTiny(side?205:84,3,text,4,7);
+        {
+            static const u8 sStatusTag[5][4]={_("PAR"),_("SLP"),_("BRN"),_("PSN"),_("FRZ")};
+            static const u8 sStatusColor[5]={7,4,6,6,4};
+            u8 code=HudStatusCode(mon->status1);
+            if(code)
+            {
+                HudTiny(side?189:68,3,sStatusTag[code-1],sStatusColor[code-1],3);
+                gWildlandsStatusTelemetry[0]++;
+            }
+        }
         if(mon->hp&&!fill)fill=1;
         HudRect(bar,13,102,8,12);
         HudRect(bar,13,fill,1,4);
@@ -100,6 +122,7 @@ static void DrawStatusHud(void)
     }
     WildlandsHudWingBars();
     sHudWingKey=WildlandsHudWingKey();
+    sHudStatusKey=HudStatusKey();
     sHudCached=TRUE;
     sWildlandsHudDrew=TRUE;
 }

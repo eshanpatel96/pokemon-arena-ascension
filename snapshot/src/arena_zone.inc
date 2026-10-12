@@ -152,13 +152,49 @@ static void ZoneCreateRain(void)
     }
 }
 
+// Biome weather inside the circle: 1 = sandstorm (desert: Rock/Ground/Steel
+// moves +20%), 2 = ashfall (volcano: Fire +20%). Outside the circle the storm
+// rain replaces it (Water +20%, Fire -20%).
+EWRAM_DATA u8 gWildlandsWeather = 0;   // 0 none, 1 sand, 2 ash, 3 storm rain (at the camera)
+static EWRAM_DATA u8 sShownWeather = 0;
+static void DirPopup(const u8 *a, const u8 *b, u8 color);
+static u8 ZoneBiomeWeather(void)
+{
+    u32 b = gWildlandsBiomeTelemetry[0];
+    return b == 2 ? 1 : b == 4 ? 2 : 0;
+}
+u16 Wildlands_WeatherPercent(u8 type)
+{
+    if (!WildlandsWorld_Active())
+        return 100;
+    switch (gWildlandsWeather)
+    {
+    case 1: return (type == TYPE_ROCK || type == TYPE_GROUND || type == TYPE_STEEL) ? 120 : 100;
+    case 2: return type == TYPE_FIRE ? 120 : 100;
+    case 3: return type == TYPE_WATER ? 120 : type == TYPE_FIRE ? 80 : 100;
+    }
+    return 100;
+}
 static void ZoneDrawRain(void)
 {
+    static const u8 sSandName[] = _("SANDSTORM");
+    static const u8 sAshName[] = _("ASHFALL");
+    static const u8 sRockUp[] = _(" ROCK UP");
+    static const u8 sFireUp[] = _(" FIRE UP");
     u32 i, n = 0;
     s32 camX = sArenaXLCameraX, camY = sArenaXLCameraY;
     s32 r = sZone.r >> 8;
     bool8 show = sZone.active && !sArena.paused && WildlandsWorld_Active()
         && !WildlandsWorld_InRoom(camX + 120, camY + 80);
+    u8 biome = show ? ZoneBiomeWeather() : 0;
+    u16 start = GetSpriteTileStartByTag(LOOT_TAG);
+    {
+        s32 cdx = camX + 120 - sZone.cx, cdy = camY + 80 - sZone.cy;
+        gWildlandsWeather = !show ? 0 : (r > 0 && cdx * cdx + cdy * cdy > r * r) ? 3 : biome;
+    }
+    if (gWildlandsWeather != sShownWeather && (gWildlandsWeather == 1 || gWildlandsWeather == 2))
+        DirPopup(gWildlandsWeather == 1 ? sSandName : sAshName, gWildlandsWeather == 1 ? sRockUp : sFireUp, 7);
+    sShownWeather = gWildlandsWeather;
     if (sZone.rain[0] == MAX_SPRITES && show && !(sArena.frame & 31))
         ZoneCreateRain();
     for (i = 0; i < ZONE_RAIN; i++)
@@ -174,6 +210,29 @@ static void ZoneDrawRain(void)
         sx = (s32)((i * 101 + 40 - (sArena.frame + i * 29) / 2) & 255) - 8;
         wx = camX + sx; wy = camY + sy;
         dx = wx - sZone.cx; dy = wy - sZone.cy;
+        if (show && biome && sx <= 244 && !(r > 0 && dx * dx + dy * dy > r * r))
+        {
+            // Inside the circle: the biome's own weather.
+            if (biome == 1)
+            {
+                sx = (s32)((i * 101 + sArena.frame * (6 + (i & 1))) & 255) - 8;
+                sy = (s32)((i * 53 + sArena.frame / 3) % 176) - 8;
+            }
+            else
+            {
+                sy = (s32)((i * 53 + sArena.frame / (2 + (i & 1))) % 176) - 8;
+                sx = (s32)((i * 101 + ((sArena.frame >> 3) + i) % 6) & 255) - 8;
+            }
+            wx = camX + sx; wy = camY + sy;
+            dx = wx - sZone.cx; dy = wy - sZone.cy;
+            if (sx > 244 || (r > 0 && dx * dx + dy * dy > r * r))
+            { spr->invisible = TRUE; continue; }
+            if (start != 0xFFFF) spr->oam.tileNum = start + LOOT_TYPES * 4 + biome;
+            spr->x = wx; spr->y = wy;
+            spr->invisible = FALSE;
+            continue;
+        }
+        if (start != 0xFFFF) spr->oam.tileNum = start + LOOT_TYPES * 4;
         if (!show || sx > 244 || (r > 0 && dx * dx + dy * dy <= r * r))
         { spr->invisible = TRUE; continue; }
         spr->x = wx; spr->y = wy;
