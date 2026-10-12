@@ -100,7 +100,7 @@ patch(B, '    result = (gMoveResultFlags & MOVE_RESULT_NO_EFFECT) ? 0 : gBattleM
 print('Beta status/weather installed: squad-routed status KOs, HUD status tags, biome weather damage')
 
 # V6.2 status: short world statuses for all four battlers (arena_status.inc).
-patch(A, '#include "arena_props.inc"\n', '#include "arena_props.inc"\n#include "arena_status.inc"\n')
+patch(A, '#include "arena_director.inc"\n', '#include "arena_status.inc"\n#include "arena_director.inc"\n')
 patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n'
       '// World: paralysis is a short full stun like sleep and freeze.\n'
@@ -131,4 +131,18 @@ patch(A, '    if(WildlandsWorld_Active()&&gap<2){sWildlandsHeldNew|=gMain.newKey
       '    WildlandsPaceUpdate(gap);\n')
 patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\nstatic bool8 WildlandsFastPace(void);\nstatic void WildlandsPaceUpdate(u32 gap);\n')
+# V6.3: no EXP in Wildlands (fixed levels; a won match used to pop
+# "+914 EXP" in the Lab and level the duo past the match level).
+patch(B, '#include "event_data.h"\n', '#include "event_data.h"\n#include "constants/vars.h"\n#include "constants/flags.h"\n')
+patch(B, '    gBattlerFainted = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);\n    sentIn = gSentPokesToOpponent[(gBattlerFainted & 2) >> 1];\n',
+      '    gBattlerFainted = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);\n    sentIn = gSentPokesToOpponent[(gBattlerFainted & 2) >> 1];\n'
+      '    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE))\n'
+      '    {\n        gBattleScripting.getexpState = 0;\n        gBattlescriptCurrInstr += 2;\n        return;\n    }\n')
+# The classic arena's 7 fixed props do not exist in the world: retire them
+# so Psychic / toss chains never reach for an invisible rock.
+patch(A, '    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n',
+      '    DirectorInit();\n'
+      '    if (WildlandsWorld_Active())\n    {\n        u32 k;\n        for (k = 0; k < ARENA_OBSTACLES; k++)\n'
+      '        { gArenaProps[k].broken = 1; gArenaProps[k].hp = 0; ArenaNav_SetObstacle(k, 0); }\n    }\n'
+      '    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')

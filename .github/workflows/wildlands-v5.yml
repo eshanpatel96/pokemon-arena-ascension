@@ -29,7 +29,7 @@ jobs:
       WORLD: ${{ matrix.world }}
       # Single source of the beta version: ROM file, artifact names, manifest,
       # and the Lab sign in game. Bump this for every build sent to testers.
-      WL_VERSION: '6.2'
+      WL_VERSION: '6.3'
     steps:
       - uses: actions/checkout@v4
 
@@ -70,7 +70,6 @@ jobs:
           python3 bootstrap/wildlands-v5/squad_apply.py engine | tee evidence/v5-squad-apply.txt
           python3 bootstrap/wildlands-v5/move_editor_apply.py engine | tee evidence/v5-move-editor.txt
           python3 bootstrap/wildlands-v5/coach_apply.py engine | tee evidence/v5-coach.txt
-          python3 bootstrap/wildlands-v5/props_apply.py engine | tee evidence/v5-props.txt
           python3 bootstrap/wildlands-v5/beta_apply.py engine | tee evidence/v5-beta.txt
           python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
           python3 bootstrap/wildlands-v5/title.py engine | tee evidence/title.txt
@@ -128,9 +127,6 @@ jobs:
         continue-on-error: true
         run: python3 bootstrap/wildlands-v5/sprite_survey.py engine > evidence/sprite-survey.txt 2>&1
 
-      - name: Prop art sheets (read-only)
-        continue-on-error: true
-        run: python3 bootstrap/wildlands-v5/render_props.py engine evidence/prop-sheets.png
 
       - name: Full island render (read-only)
         if: matrix.world == 'island'
@@ -168,7 +164,6 @@ jobs:
             'thirty_duo_simulation':True,
             'legendary_boss_battles':True,
             'shiny_palettes':'about 1 in 64 AI Pokemon (legendaries included), native shiny data and shiny arena palette',
-            'breakable_cover':'arena props incl. ruin columns, obelisks and urns streamed over ~300 island sites; Psychic throws nearby rocks and columns',
             'roaming_legendaries':'one dog, bird and Regi per match, staggered spawns inside the circle; beat one and it joins',
             'weather':'desert sandstorm (Rock/Ground/Steel +20%), volcano ashfall (Fire +20%), storm rain (Water +20%, Fire -20%)',
             'match_summary':'victory or eliminated, place, knockouts, time survived',
@@ -181,7 +176,7 @@ jobs:
             'MOVES (only moves the arena animates), CONTROLS, DEPLOY. L+R in the Lab also deploys. '
             'In match: D-pad move, A attack, B+direction dodge, L/R change move, L+R throw a ball, SELECT swap lead and partner, '
             'START pause (TEAM, LOG, MOVES, MAP). Stand still out of combat to heal. Stay inside the circle. '
-            + ('Full island: 30 duos, five legendary lairs (bosses), three roaming legendaries, breakable ruins and cover, desert sandstorm and volcano ashfall, houses with supplies. ' if world=='island' else 'Route 120 validation slice. ')
+            + ('Full island: 30 duos, five legendary lairs (bosses), three roaming legendaries, desert sandstorm and volcano ashfall, houses with supplies. ' if world=='island' else 'Route 120 validation slice. ')
             + 'Automated mGBA tests only; please report how it feels on Delta.\n')
           Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           print(json.dumps(manifest,indent=2))
@@ -215,7 +210,7 @@ jobs:
           cp bootstrap/wildlands-v5/*.py bootstrap/wildlands-v5/*.c bootstrap/wildlands-v5/*.h bootstrap/wildlands-v5/*.commands recovery/bootstrap/ 2>/dev/null || true
           if test -d engine; then
             cp engine/src/realtime_arena.c engine/src/arena_navigation.c engine/src/arena_terrain.c engine/src/wildlands_world.c recovery/src/ 2>/dev/null || true
-            cp engine/src/arena_psychic.inc engine/src/arena_toss.inc engine/src/arena_squad.inc engine/src/arena_props.inc recovery/src/ 2>/dev/null || true
+            cp engine/src/arena_psychic.inc engine/src/arena_toss.inc engine/src/arena_squad.inc recovery/src/ 2>/dev/null || true
             cp engine/include/wildlands_world.h engine/include/wildlands_world_data.h recovery/include/ 2>/dev/null || true
             cp engine/data/wildlands_world/* recovery/data/wildlands_world/ 2>/dev/null || true
           fi
