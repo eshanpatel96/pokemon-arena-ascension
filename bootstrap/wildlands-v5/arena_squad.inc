@@ -38,6 +38,8 @@ static EWRAM_DATA struct SquadWing sSquadWings[2] = {};
 // [11] wing KOs [12] enemy lead retargets to partner [13..14] wing0/1 target
 // [15] friendly hits (must stay 0)
 EWRAM_DATA u32 gWildlandsSquadTelemetry[16] = {};
+// Status: [0] HUD status tags drawn [1] status KOs routed through the squad [2] cures by supplies [3] statuses inflicted on the player lead
+EWRAM_DATA u16 gWildlandsStatusTelemetry[4] = {0};
 
 static const u16 sSquadWingSpecies[] = {
     SPECIES_SCYTHER, SPECIES_PIDGEOT, SPECIES_ARCANINE, SPECIES_VAPOREON,

@@ -68,6 +68,7 @@ jobs:
           python3 bootstrap/wildlands-v5/move_editor_apply.py engine | tee evidence/v5-move-editor.txt
           python3 bootstrap/wildlands-v5/coach_apply.py engine | tee evidence/v5-coach.txt
           python3 bootstrap/wildlands-v5/props_apply.py engine | tee evidence/v5-props.txt
+          python3 bootstrap/wildlands-v5/beta_apply.py engine | tee evidence/v5-beta.txt
           python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
           python3 bootstrap/wildlands-v5/title.py engine | tee evidence/title.txt
           git rev-parse HEAD > evidence/source-commit.txt

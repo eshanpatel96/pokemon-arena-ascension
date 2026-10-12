@@ -126,6 +126,7 @@ poke gWildlandsTestWarp 0 1 16
 frames 90 0
 snap 09-lair-mewtwo
 dumph boss-09-lair-mewtwo gWildlandsBossAudit 6 6
+expectmax gWildlandsBossAudit 12 2 180
 expect gWildlandsBossAudit 8 2 1
 expect gWildlandsBossAudit 6 2 1
 dump rooms gWildlandsRoomTelemetry 8
@@ -154,6 +155,7 @@ poke gWildlandsTestWarp 0 1 15
 frames 90 0
 snap 10-lair-rayquaza
 dumph boss-10-lair-rayquaza gWildlandsBossAudit 6 6
+expectmax gWildlandsBossAudit 12 2 180
 expect gWildlandsBossAudit 8 2 5
 expect gWildlandsBossAudit 6 2 5
 expect gWildlandsRoomTelemetry 8 4 5
@@ -163,6 +165,7 @@ poke gWildlandsTestWarp 0 1 21
 frames 90 0
 snap 11-lair-lugia
 dumph boss-11-lair-lugia gWildlandsBossAudit 6 6
+expectmax gWildlandsBossAudit 12 2 180
 expect gWildlandsBossAudit 8 2 2
 expect gWildlandsBossAudit 6 2 2
 expect gWildlandsRoomTelemetry 8 4 2
@@ -172,6 +175,7 @@ poke gWildlandsTestWarp 0 1 18
 frames 90 0
 snap 12-lair-hooh
 dumph boss-12-lair-hooh gWildlandsBossAudit 6 6
+expectmax gWildlandsBossAudit 12 2 180
 expect gWildlandsBossAudit 8 2 3
 expect gWildlandsBossAudit 6 2 3
 expect gWildlandsRoomTelemetry 8 4 3
@@ -181,6 +185,7 @@ poke gWildlandsTestWarp 0 1 20
 frames 90 0
 snap 13-lair-kyogre
 dumph boss-13-lair-kyogre gWildlandsBossAudit 6 6
+expectmax gWildlandsBossAudit 12 2 180
 expect gWildlandsBossAudit 8 2 4
 expect gWildlandsBossAudit 6 2 4
 expect gWildlandsRoomTelemetry 8 4 4
@@ -470,3 +475,9 @@ snap 31-after-loss
 map 26 110
 dumph summary gWildlandsSummaryTelemetry 0 4
 expectmin gWildlandsSummaryTelemetry 0 2 1
+# A lost match whites out to the Lab fully healed
+dumph partyHP gPlayerParty 86 1
+expectmin gPlayerParty 86 2 1
+expectmin gPlayerParty 186 2 1
+dumph status gWildlandsStatusTelemetry 0 4
+dumph weather gWildlandsWeather 0 1

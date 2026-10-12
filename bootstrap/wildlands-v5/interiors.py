@@ -179,12 +179,12 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
             bx, by = near_stand(picked[0][0], picked[0][1] - 24, picked[0], 20, rect=rect)
         # Beta: the boss waits within sight of the arrival (big rooms put the
         # farthest cache 700+ px away, so the legendary never engaged).
-        if r['lair'] and abs(bx - ax) + abs(by - ay) > 300:
+        if r['lair']:
             cands = []
             for (xx, yy) in floor:
                 px, py = (r['x'] + xx) * 16 + 8, (r['y'] + yy) * 16 + 8
                 d = abs(px - ax) + abs(py - ay)
-                if 150 <= d <= 260:
+                if 96 <= d <= 170 and abs(px - ax) <= 104 and abs(py - ay) <= 64:   # on screen at arrival
                     # Clear walk-line from the arrival (no wall or cliff in
                     # between), so the legendary sees you and engages.
                     clear = True

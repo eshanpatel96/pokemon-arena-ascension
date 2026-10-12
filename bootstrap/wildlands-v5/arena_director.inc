@@ -1316,16 +1316,21 @@ static void DirectorDestroy(void)
 {
     // A finished match (result shown) restores the player's real partner;
     // a menu round trip keeps the lobby and the legendary partner.
-    if (sArena.resultTimer && sDir)
+    // (resultTimer has already run down to 0 when the arena exits, so the
+    // summary flag is what marks a finished match.)
+    if ((sArena.resultTimer || sWildlandsSummary) && sDir)
     {
         DirRestorePartner();
         Free(sDir);
         sDir = NULL;
         PropsFree();
-        // Back to the Lab ready to play: a won match restores HP, PP and
-        // status (a lost one whites out to the Lab, which heals too).
+        // Back to the Lab ready to play: a won match heals here (full HP, PP
+        // and status); a lost one whites out to the Lab, which heals too.
         if (gBattleMons[0].hp)
+        {
             HealPlayerParty();
+            gWildlandsStatusTelemetry[3] |= 0x100;   // diag: post-win heal ran
+        }
     }
 }
 
