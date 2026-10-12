@@ -1355,7 +1355,7 @@ s32 RealtimeArena_ResolveDamage(u8 attacker, u8 target, u16 move)
         {
             u16 hp=min(gBattleMons[target].maxHP,gBattleMons[target].hp+max(1,gBattleMons[target].maxHP/4));
             gBattleMons[target].hp=hp;
-            SetMonData(target?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);
+            SetMonData((target&1)?&gEnemyParty[gBattlerPartyIndexes[target]]:&gPlayerParty[gBattlerPartyIndexes[target]],MON_DATA_HP,&hp);
         }
         gMoveResultFlags|=MOVE_RESULT_DOESNT_AFFECT_FOE;
         if (attacker == 0) gBattleResults.lastUsedMovePlayer = move;
