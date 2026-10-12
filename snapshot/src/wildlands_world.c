@@ -1041,6 +1041,12 @@ struct WildlandsNavScratch
     u16 heap[WL_NAV_HEAP];
     u16 key[WL_NAV_HEAP];
     u16 gen;
+    // Recent searches (start, goal -> first step, frame): an actor asking for
+    // the same route every frame (often an unreachable goal) reuses the answer
+    // for ~1/3 s instead of re-running a 320-expansion search each time.
+    u16 memoS[4], memoT[4], memoR[4];
+    u32 memoAt[4];
+    u8 memoNext;
 };
 static EWRAM_DATA struct WildlandsNavScratch *sNav = NULL;
 static const s8 sNavDx[8] = {1, 1, 0, -1, -1, -1, 0, 1};
@@ -1068,7 +1074,22 @@ static u16 NavHeuristic(u16 a, u16 b)
 
 // First node after `start` on a cheapest path toward `goal` (or toward the
 // closest expanded node if the bounded search does not reach it).
+static u16 NavSearchRun(u16 start, u16 goal);
 static u16 NavSearch(u16 start, u16 goal)
+{
+    u32 k, now = gMain.vblankCounter1;
+    u16 r;
+    if (!sNav)
+        return 0xFFFF;
+    for (k = 0; k < 4; k++)
+        if (sNav->memoS[k] == start && sNav->memoT[k] == goal && sNav->memoAt[k] && now - sNav->memoAt[k] < 20)
+        return sNav->memoR[k];
+    r = NavSearchRun(start, goal);
+    k = sNav->memoNext; sNav->memoNext = (k + 1) & 3;
+    sNav->memoS[k] = start; sNav->memoT[k] = goal; sNav->memoR[k] = r; sNav->memoAt[k] = now ? now : 1;
+    return r;
+}
+static u16 NavSearchRun(u16 start, u16 goal)
 {
     u16 n = 0, best = start, bestH = 0xFFFF, expansions = 0, u, v, i;
     if (!sNav)
