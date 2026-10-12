@@ -76,3 +76,12 @@ Open: spectate, boss/AI feel from playtests, "enemy team stuck" repro (no captur
 ## V6.7 Beta (2026-10-12): ready for testing
 - Backend cleanup only, no gameplay change: CI now fails on any failed smoke check (ROM/evidence still upload); dead breakable-prop pipeline removed (props_apply, arena_props, render_props, prop-site table); OAM wrapper simplified; stray .pyc untracked.
 - Build: run 38259663834, commit b42e7ad, island ROM sha256 261aefb7...d37e. Island 175/175, slice 45/45.
+
+## V6.8 Beta (2026-10-12)
+- 40 teams (WL_DIRECTOR_DUOS 40). Off-screen steps, skirmish and storm damage scale with the field size (DIR_STEP, tuned at 38 slots), so pace matches V6.7.
+- Third parties: during a real fight (foe within 240 px, after the first minute) a 6% check about once a second, 90 s cooldown, arms the nearest healthy duo 320-1100 px away on a different side (>60 degrees from the foe). It closes in and waits about 280 px out, takes the field only when the foe falls, never within 240 px of where the foe died (no entry is placed there either), pops "THIRD PARTY!" and hunts the weaker player Pokemon for 15 s.
+- Shiny Shop at the professor: 10 wins buys a shiny for a non-legendary in the duo (nature, gender, ability, IVs, EVs, moves, level, nickname, OT kept). Wins pay into a balance (VAR 0x404E); 5 wins in a row pays 2 more (streak VAR 0x4083, reset on a loss).
+- Lair bosses and roamers shiny 1 in 16 (others 1 in 64); a beaten shiny legendary joins shiny.
+- Hunting enemies (legendaries, third parties) only re-goal when the target moved 24+ px while out of sight.
+- Diagnostics: gWildlandsCost (sim/enemy/director/wing scanlines, goal picks, HUD redraws) around the 60 fps windows.
+- Build: run 38282545550, commit be2c248, island ROM sha256 ec1109fb...1697. Island 198/198, slice 45/45. Shop core self-test PASS (shiny, traits kept, 10 wins spent); third party armed 1, arrived 1.
