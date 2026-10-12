@@ -186,6 +186,9 @@ frames 300 0
 dumph pp gBattleMons 36 2
 expectmin gBattleMons 36 1 2
 # ---- Rest regen: standing still and not attacking heals the duo ----
+# Peace for the rest/swap/pause checks: the lead stands still at low HP and
+# would otherwise be KO'd by the fight in progress.
+poke gWildlandsTestPeace 0 1 1
 poke gBattleMons 40 2 60
 frames 420 0
 dumph rest gWildlandsRestTelemetry 0 2
@@ -214,6 +217,8 @@ snap 18-log-page
 press 2
 press 2
 frames 20 0
+poke gBattleMons 40 2 150
+poke gWildlandsTestPeace 0 1 0
 frames 120 16
 snap 03-east
 frames 1 16

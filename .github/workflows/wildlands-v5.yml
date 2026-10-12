@@ -66,6 +66,7 @@ jobs:
           python3 bootstrap/wildlands-v5/apply.py engine | tee evidence/v5-world-apply.txt
           python3 bootstrap/wildlands-v5/squad_apply.py engine | tee evidence/v5-squad-apply.txt
           python3 bootstrap/wildlands-v5/move_editor_apply.py engine | tee evidence/v5-move-editor.txt
+          python3 bootstrap/wildlands-v5/coach_apply.py engine | tee evidence/v5-coach.txt
           python3 bootstrap/wildlands-v4/generate_ui.py engine | tee evidence/ui-generation.txt
           python3 bootstrap/wildlands-v5/title.py engine | tee evidence/title.txt
           git rev-parse HEAD > evidence/source-commit.txt
@@ -113,10 +114,10 @@ jobs:
         working-directory: engine
         run: |
           set -o pipefail
-          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-Wildlands-V5-World-Validation 2>&1 | tee ../evidence/build.log
-          cp Pokemon-Wildlands-V5-World-Validation.gba ../delivery/
-          cp Pokemon-Wildlands-V5-World-Validation.elf Pokemon-Wildlands-V5-World-Validation.map ../evidence/
-          arm-none-eabi-nm -n Pokemon-Wildlands-V5-World-Validation.elf > ../evidence/symbols.txt
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-WildLands-Beta 2>&1 | tee ../evidence/build.log
+          cp Pokemon-WildLands-Beta.gba ../delivery/
+          cp Pokemon-WildLands-Beta.elf Pokemon-WildLands-Beta.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-WildLands-Beta.elf > ../evidence/symbols.txt
 
       - name: Sprite size survey (read-only)
         continue-on-error: true
@@ -127,7 +128,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,json,os,re
-          p=Path('delivery/Pokemon-Wildlands-V5-World-Validation.gba')
+          p=Path('delivery/Pokemon-WildLands-Beta.gba')
           b=p.read_bytes()
           assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
           log=Path('evidence/build.log').read_text(errors='replace')
@@ -136,7 +137,7 @@ jobs:
               mem[name]={'used_bytes':int(used),'usage_percent':float(pct)}
           world=os.environ.get('WORLD','slice')
           manifest={
-            'name':'Pokemon Wildlands V5 ('+world+')',
+            'name':'Pokemon WildLands Beta ('+world+')',
             'source_commit':os.environ['GITHUB_SHA'],
             'rom_sha256':hashlib.sha256(b).hexdigest(),
             'rom_bytes':len(b),
@@ -146,9 +147,9 @@ jobs:
             'controller':'native realtime Arena movement/dodge/attack/cooldown/hit path; fixed-timestep catch-up keeps game time real-time',
             'true_2v2':'yes (first slice): player+AI partner vs enemy lead+wing; all four attack, take damage, KO; lead KO promotes the living wing',
             'closing_zone':'world-coordinate circle, 90s explore / 45s warning / 75s shrink per phase, violet tint and edge markers, time-based exposure damage to all actors',
-            'loot':'collect-once team ATK/DEF/SPD stages, cap +2',
-            'live_map':'START -> MAP',
-            'move_editor':'lab MOVE EDITOR sign (native relearner UI, Arena-supported legal moves)',
+            'loot':'team ATK/DEF/SPD stages, cap +3; capped pickups heal 40% and restore PP',
+            'live_map':'START -> MAP (storm shading, next circle, lair state)',
+            'move_editor':'Lab COACH: PICK DUO, MOVES (native relearner UI, arena-supported legal moves), CONTROLS, DEPLOY; all owned Pokemon swept to arena moves',
             'title':'approved Charizard/Blastoise/Rayquaza concept at native 240x160',
             'thirty_duo_simulation':True,
             'legendary_boss_battles':True,
@@ -158,12 +159,11 @@ jobs:
           }
           Path('delivery/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           Path('delivery/README.txt').write_text(
-            'Pokemon Wildlands V5 ('+world+'). NEW GAME -> Research Lab. PC: pick a TWO-Pokemon squad. '
-            'MOVE EDITOR sign: change moves (no TMs/HMs). Assistant or L+R: deploy. '
-            'In match: D-pad move, A attack, B+direction dodge, L/R cycle moves, START -> MAP. '
-            'Your AI partner fights with you; a lead that faints is replaced by its living partner. '
-            'The storm closes after 60s; stay inside the circle. Glowing orbs: team ATK/DEF/SPD. '
-            + ('This build is the full 4096x3072 island prototype with five enterable legendary lairs and enterable houses with supplies (no boss fights yet). ' if world=='island' else 'This build is the 640x768 Route 120 validation slice. ')
+            'Pokemon WildLands Beta ('+world+'). NEW GAME -> Research Lab. Talk to the COACH: PICK DUO (two Pokemon), '
+            'MOVES (only moves the arena animates), CONTROLS, DEPLOY. L+R in the Lab also deploys. '
+            'In match: D-pad move, A attack, B+direction dodge, L/R change move, L+R throw a ball, SELECT swap lead and partner, '
+            'START pause (TEAM, LOG, MOVES, MAP). Stand still out of combat to heal. Stay inside the circle. '
+            + ('Full island: 30 duos, five legendary lairs (bosses), houses with supplies. ' if world=='island' else 'Route 120 validation slice. ')
             + 'Automated mGBA tests only; please report how it feels on Delta.\n')
           Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           print(json.dumps(manifest,indent=2))
@@ -175,7 +175,7 @@ jobs:
           set +e
           set -o pipefail
           CMDS=bootstrap/wildlands-v5/smoke.commands; [ "$WORLD" = island ] && CMDS=bootstrap/wildlands-v5/smoke_island.commands
-          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-Wildlands-V5-World-Validation.gba evidence/symbols.txt evidence/runtime $CMDS - 2>&1 | tee evidence/smoke.log
+          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-WildLands-Beta.gba evidence/symbols.txt evidence/runtime $CMDS - 2>&1 | tee evidence/smoke.log
           rc=$?
           python3 - <<'PY2'
           from pathlib import Path
@@ -216,7 +216,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-V5-${{ matrix.world }}-ROM
+          name: WILDLANDS-BETA-${{ matrix.world }}-ROM
           path: delivery/
           if-no-files-found: ignore
 
@@ -224,7 +224,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-V5-${{ matrix.world }}-EVIDENCE
+          name: WILDLANDS-BETA-${{ matrix.world }}-EVIDENCE
           path: evidence/
           if-no-files-found: warn
 
@@ -232,7 +232,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: WILDLANDS-V5-${{ matrix.world }}-RECOVERY
+          name: WILDLANDS-BETA-${{ matrix.world }}-RECOVERY
           path: recovery/
           if-no-files-found: warn
 
