@@ -26,7 +26,7 @@ def patch(path, old, new, count=1):
 shutil.copy(here / 'arena_props.inc', root / 'src/arena_props.inc')
 inc = root / 'include/wildlands_props.inc'
 if not inc.exists():   # the Route 120 slice has no prop sites
-    inc.write_text('#define WL_PROP_SITES 0\n')
+    inc.write_text('#define WL_PROP_SITES 0\nstruct WlPropSite { u16 x, y; u8 set, art; };\n')
 
 # Writable obstacle rectangles (the classic arena keeps its initial layout).
 patch('include/arena_navigation.h', 'extern const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES];',
@@ -80,7 +80,7 @@ patch(T, '''            s->oam.priority=r->state?0:1;''',
       '''            s->oam.priority=r->state?0:1;
             if(WildlandsWorld_Active())s->oam.tileNum=GetSpriteTileStartByTag(WL_PROP_BLOCK_TAG)+i*16;''')
 patch(T, '''static EWRAM_DATA u8 sPropFrame[ARENA_OBSTACLES]={};\n''',
-      '''static EWRAM_DATA u8 sPropFrame[ARENA_OBSTACLES]={};\n#define WL_PROP_BLOCK_TAG (TAG+ARENA_OBSTACLES+3)\n#define WL_PROP_BLOCK_SLOTS 5\n''')
+      '''static EWRAM_DATA u8 sPropFrame[ARENA_OBSTACLES]={};\n#define WL_PROP_BLOCK_TAG (TAG+ARENA_OBSTACLES+3)\n#define WL_PROP_BLOCK_SLOTS 7\n''')
 s = (root / T).read_text()
 s += r'''
 // WildLands Beta: one prop slot moved onto a world site (see arena_props.inc).

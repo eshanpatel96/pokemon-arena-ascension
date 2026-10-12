@@ -116,10 +116,10 @@ jobs:
         working-directory: engine
         run: |
           set -o pipefail
-          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-WildLands-Beta 2>&1 | tee ../evidence/build.log
-          cp Pokemon-WildLands-Beta.gba ../delivery/
-          cp Pokemon-WildLands-Beta.elf Pokemon-WildLands-Beta.map ../evidence/
-          arm-none-eabi-nm -n Pokemon-WildLands-Beta.elf > ../evidence/symbols.txt
+          make -j2 COMPARE=0 ARENA_LAB=0 FILE_NAME=Pokemon-WildLands-Beta-V6-1 2>&1 | tee ../evidence/build.log
+          cp Pokemon-WildLands-Beta-V6-1.gba ../delivery/
+          cp Pokemon-WildLands-Beta-V6-1.elf Pokemon-WildLands-Beta-V6-1.map ../evidence/
+          arm-none-eabi-nm -n Pokemon-WildLands-Beta-V6-1.elf > ../evidence/symbols.txt
 
       - name: Sprite size survey (read-only)
         continue-on-error: true
@@ -134,7 +134,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,json,os,re
-          p=Path('delivery/Pokemon-WildLands-Beta.gba')
+          p=Path('delivery/Pokemon-WildLands-Beta-V6-1.gba')
           b=p.read_bytes()
           assert len(b)==33554432 and b[0xac:0xb0]==b'BPEE'
           log=Path('evidence/build.log').read_text(errors='replace')
@@ -143,7 +143,7 @@ jobs:
               mem[name]={'used_bytes':int(used),'usage_percent':float(pct)}
           world=os.environ.get('WORLD','slice')
           manifest={
-            'name':'Pokemon WildLands Beta ('+world+')',
+            'name':'Pokemon WildLands Beta V6.1 ('+world+')',
             'source_commit':os.environ['GITHUB_SHA'],
             'rom_sha256':hashlib.sha256(b).hexdigest(),
             'rom_bytes':len(b),
@@ -160,18 +160,20 @@ jobs:
             'thirty_duo_simulation':True,
             'legendary_boss_battles':True,
             'shiny_palettes':'about 1 in 64 AI Pokemon (legendaries included), native shiny data and shiny arena palette',
-            'breakable_cover':'arena props streamed over ~190 island sites; Psychic throws nearby rocks',
+            'breakable_cover':'arena props incl. ruin columns, obelisks and urns streamed over ~300 island sites; Psychic throws nearby rocks and columns',
+            'roaming_legendaries':'one dog, bird and Regi per match, staggered spawns inside the circle; beat one and it joins',
+            'weather':'desert sandstorm (Rock/Ground/Steel +20%), volcano ashfall (Fire +20%), storm rain (Water +20%, Fire -20%)',
             'match_summary':'victory or eliminated, place, knockouts, time survived',
             'memory':mem,
             'verification':'mGBA automated runtime only; iPhone Delta requires owner playtest'
           }
           Path('delivery/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           Path('delivery/README.txt').write_text(
-            'Pokemon WildLands Beta ('+world+'). NEW GAME -> Research Lab. Talk to the COACH: PICK DUO (two Pokemon), '
+            'Pokemon WildLands Beta V6.1 ('+world+'). NEW GAME -> Research Lab. Talk to the COACH: PICK DUO (two Pokemon), '
             'MOVES (only moves the arena animates), CONTROLS, DEPLOY. L+R in the Lab also deploys. '
             'In match: D-pad move, A attack, B+direction dodge, L/R change move, L+R throw a ball, SELECT swap lead and partner, '
             'START pause (TEAM, LOG, MOVES, MAP). Stand still out of combat to heal. Stay inside the circle. '
-            + ('Full island: 30 duos, five legendary lairs (bosses), houses with supplies. ' if world=='island' else 'Route 120 validation slice. ')
+            + ('Full island: 30 duos, five legendary lairs (bosses), three roaming legendaries, breakable ruins and cover, desert sandstorm and volcano ashfall, houses with supplies. ' if world=='island' else 'Route 120 validation slice. ')
             + 'Automated mGBA tests only; please report how it feels on Delta.\n')
           Path('evidence/build-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
           print(json.dumps(manifest,indent=2))
@@ -183,7 +185,7 @@ jobs:
           set +e
           set -o pipefail
           CMDS=bootstrap/wildlands-v5/smoke.commands; [ "$WORLD" = island ] && CMDS=bootstrap/wildlands-v5/smoke_island.commands
-          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-WildLands-Beta.gba evidence/symbols.txt evidence/runtime $CMDS - 2>&1 | tee evidence/smoke.log
+          timeout 1500 evidence/wildlands-v5-smoke delivery/Pokemon-WildLands-Beta-V6-1.gba evidence/symbols.txt evidence/runtime $CMDS - 2>&1 | tee evidence/smoke.log
           rc=$?
           python3 - <<'PY2'
           from pathlib import Path

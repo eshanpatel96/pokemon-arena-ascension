@@ -554,10 +554,16 @@ loot = loot[:64 - len(room_loot)] + room_loot
 # open ground (5x5 walkable) away from doors, loot and the spawn, denser in
 # clearings. Psychic lifts the rocks; everything breaks.
 PROP_SET = {bp.FORTREE: 0, bp.MAUVILLE: 3, bp.FALLARBOR: 2, bp.LAVARIDGE: 2, bp.SLATEPORT: 1}
-PROP_MIX = {0: [(0, 12), (1, 12), (2, 11), (3, 25), (4, 30), (5, 3), (6, 7)],
-            1: [(0, 14), (1, 13), (2, 13), (3, 30), (4, 20), (6, 10)],
-            2: [(0, 19), (1, 18), (2, 18), (3, 5), (4, 5), (5, 25), (6, 10)],
-            3: [(0, 20), (1, 20), (2, 20), (3, 5), (4, 10), (5, 10), (6, 15)]}
+# Natural sets: one rock shape (the three rock arts are the same boulder),
+# crates, bushes/coral, crystals, pods. Set 4 is the arena's ruin set:
+# columns, a carved panel, a planter, an obelisk and urns.
+PROP_MIX = {0: [(0, 15), (3, 25), (4, 35), (5, 10), (6, 15)],
+            1: [(0, 20), (3, 35), (4, 25), (5, 5), (6, 15)],
+            2: [(0, 25), (3, 10), (4, 10), (5, 40), (6, 15)],
+            3: [(0, 30), (3, 15), (4, 15), (5, 20), (6, 20)],
+            4: [(0, 20), (1, 15), (2, 15), (3, 10), (4, 10), (5, 15), (6, 15)]}
+# Share of ruin props per biome (desert ruins, highland and volcano shrines).
+RUIN_SHARE = {bp.FORTREE: 18, bp.MAUVILLE: 50, bp.FALLARBOR: 40, bp.LAVARIDGE: 30, bp.SLATEPORT: 15}
 prng = random.Random(23)
 def prop_open(x, y, r=2):
     for yy in range(y - r, y + r + 1):
@@ -572,13 +578,26 @@ def prop_ok(px, py, gap):
     return all(abs(px - ax) + abs(py - ay) > 64 for ax, ay in prop_avoid) \
         and all(max(abs(px - sx), abs(py - sy)) > gap for sx, sy, _, _ in prop_sites)
 def prop_add(x, y):
-    st = PROP_SET.get(des[y * W + x], 0)
+    b = des[y * W + x]
+    st = 4 if prng.randrange(100) < RUIN_SHARE.get(b, 15) else PROP_SET.get(b, 0)
     roll, acc = prng.randrange(100), 0
     for art, wgt in PROP_MIX[st]:
         acc += wgt
         if roll < acc:
             break
     prop_sites.append((x * 16 + 8, y * 16 + 8, st, art))
+    # Columns come as a colonnade: a second (and sometimes third) column
+    # beside the first, so ruins read as ruins.
+    if st == 4 and art <= 2:
+        for k in (1, 2):
+            nx = x + 3 * k
+            if k == 2 and prng.randrange(100) >= 45:
+                break
+            px, py = nx * 16 + 8, y * 16 + 8
+            if nx < W - 3 and prop_open(nx, y) and all(abs(px - ax) + abs(py - ay) > 64 for ax, ay in prop_avoid):
+                prop_sites.append((px, py, 4, prng.choice((0, 1, 2))))
+            else:
+                break
 for c in clearings:
     n = 0
     for _ in range(300):
@@ -590,7 +609,7 @@ for c in clearings:
 pcells = sorted(c for c in seen if c[1] < H)
 prng.shuffle(pcells)
 for (x, y) in pcells:
-    if len(prop_sites) >= 320:
+    if len(prop_sites) >= 360:
         break
     if 2 <= x < W - 2 and 2 <= y < H - 2 and prop_open(x, y) and prop_ok(x * 16 + 8, y * 16 + 8, 144):
         prop_add(x, y)

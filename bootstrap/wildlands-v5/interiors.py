@@ -180,25 +180,30 @@ def build(root, world, terrain, W, H, base, outdoor_pair, doors, rooms_spec):
         # Beta: the boss waits within sight of the arrival (big rooms put the
         # farthest cache 700+ px away, so the legendary never engaged).
         if r['lair']:
-            cands = []
-            for (xx, yy) in floor:
-                px, py = (r['x'] + xx) * 16 + 8, (r['y'] + yy) * 16 + 8
-                d = abs(px - ax) + abs(py - ay)
-                if 96 <= d <= 170 and abs(px - ax) <= 104 and abs(py - ay) <= 64:   # on screen at arrival
-                    # Clear walk-line from the arrival (no wall or cliff in
-                    # between), so the legendary sees you and engages.
-                    clear = True
-                    for t in range(0, 33):
-                        qx = ax + (px - ax) * t // 32; qy = ay + (py - ay) * t // 32
-                        if terr[(qy // 16) * W + qx // 16] & SOLID:
-                            clear = False
-                            break
-                    cands.append((1 if clear else 0, d, px, py))
-            if cands:
-                cands.sort()
-                cands = [c[1:] for c in cands if c[0] == cands[-1][0]]
-                cands.sort()
-                d, cx_, cy_ = cands[-1]
+            def los(px, py):
+                for t in range(0, 33):
+                    qx = ax + (px - ax) * t // 32; qy = ay + (py - ay) * t // 32
+                    if terr[(qy // 16) * W + qx // 16] & SOLID:
+                        return False
+                return True
+            pick = None
+            # Tiers: on screen at arrival first, then just past the edge. A
+            # clear line from the arrival beats distance within a tier.
+            for lo, hi, mx, my in ((96, 170, 104, 64), (80, 210, 112, 112), (64, 250, 120, 168)):
+                cands = []
+                for (xx, yy) in floor:
+                    px, py = (r['x'] + xx) * 16 + 8, (r['y'] + yy) * 16 + 8
+                    d = abs(px - ax) + abs(py - ay)
+                    if lo <= d <= hi and abs(px - ax) <= mx and abs(py - ay) <= my:
+                        cands.append((1 if los(px, py) else 0, d, px, py))
+                clear = [c for c in cands if c[0]]
+                if clear:
+                    pick = max(clear)[1:]
+                    break
+                if cands and pick is None:
+                    pick = max(cands)[1:]
+            if pick:
+                d, cx_, cy_ = pick
                 bx, by = near_stand(cx_, cy_, (ax, ay), 20, rect=rect)
         room_rows.append((r['x'], r['y'], r['w'], r['h'], r['pair'], ex, ey, 1 if down else 0, 1 if r['lair'] else 0, ax, ay, r['legend'], bx, by))
         for (px, py), t in zip(picked, r['loot']):
