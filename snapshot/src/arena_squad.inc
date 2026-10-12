@@ -854,6 +854,7 @@ static bool8 SquadPromote(u8 side)
 // stat stages; you take over the partner's body where it stands and the AI
 // takes your old body. 3s cooldown; not mid-attack.
 EWRAM_DATA u16 gWildlandsSwapTelemetry = 0;   // swaps performed
+EWRAM_DATA u8 gWildlandsSwapReject = 0;      // last refusal reason (diagnostic)
 static void SquadSwapLead(void)
 {
     struct SquadWing *w = &sSquadWings[0];
@@ -861,8 +862,9 @@ static void SquadSwapLead(void)
     struct BattlePokemon lead;
     u8 leadIndex, leadFacing;
     s32 lx, ly;
-    if (sSwapCooldown || !w->active || !w->alive || !gBattleMons[0].hp
-        || body->shotTimer || body->actionLife || w->shotTimer)
+    gWildlandsSwapReject = sSwapCooldown ? 1 : !w->active ? 2 : !w->alive ? 3 : !gBattleMons[0].hp ? 4
+        : body->shotTimer ? 5 : body->actionLife ? 6 : w->shotTimer ? 7 : 0;
+    if (gWildlandsSwapReject)
         return;
     lead = gBattleMons[0];
     leadIndex = gBattlerPartyIndexes[0];
