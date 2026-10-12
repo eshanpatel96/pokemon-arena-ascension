@@ -161,6 +161,8 @@ static void DirFeedOut(const struct DirDuo *d);
 // Beta shinies: about 1 in 64 AI Pokemon (legendaries included) is shiny.
 // pad2 holds a per-duo salt rolled at match start; shininess is a function
 // of salt and species, so it survives promotion and re-creation.
+// [0] legends placed [1] placed correctly [2] bad-room mask [3..8] live boss
+EWRAM_DATA u16 gWildlandsBossAudit[10] = {0};
 EWRAM_DATA u8 gWildlandsShinyTest = 0;          // test hook: every AI mon shiny
 EWRAM_DATA u16 gWildlandsShinyTelemetry[2] = {0}; // shiny mons made, shiny palettes built
 static bool8 DirShiny(const struct DirDuo *d, u16 sp)
@@ -1007,6 +1009,17 @@ static void DirectorSim(void)
     if (sDirPopup.timer && !--sDirPopup.timer)
         sArena.hudDirty = TRUE;
     sDir->clock++;
+    if (sDir->active != DIR_NONE && sDir->duo[sDir->active].legend)
+    {
+        // Live boss check: [3] player room+1 [4] boss room+1 [5] boss species
+        // [6] distance to the player [7] boss x [8] boss y
+        s32 bx = sArena.bodies[1].x / Q, by = sArena.bodies[1].y / Q;
+        gWildlandsBossAudit[3] = WildlandsWorld_RoomIndexAt(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q) + 1;
+        gWildlandsBossAudit[4] = WildlandsWorld_RoomIndexAt(bx, by) + 1;
+        gWildlandsBossAudit[5] = gBattleMons[1].species;
+        gWildlandsBossAudit[6] = ArenaNav_Distance(sArena.bodies[0].x / Q, sArena.bodies[0].y / Q, bx, by);
+        gWildlandsBossAudit[7] = bx; gWildlandsBossAudit[8] = by;
+    }
     if (sDir->bossCooldown)
         sDir->bossCooldown--;
     if (sDir->count > 1)
@@ -1089,6 +1102,7 @@ static void DirectorInit(void)
     if (sWildlandsEncounterLive && sDir)
         return;   // menu round trip: same lobby
     sWildlandsSummary = FALSE;
+    memset(gWildlandsBossAudit, 0, sizeof(gWildlandsBossAudit));
     if (sDir)
     {
         DirRestorePartner();
@@ -1153,6 +1167,14 @@ static void DirectorInit(void)
         d->room = i;
         d->state = DIR_LAIR;
         { s32 bx, by; WildlandsWorld_RoomBoss(i, &bx, &by); d->x = bx; d->y = by; }
+        // Audit: the boss stands in its own room, the room names this legend,
+        // and the spot is standable for its species.
+        gWildlandsBossAudit[0]++;
+        if (WildlandsWorld_RoomIndexAt(d->x, d->y) == (s8)i && WildlandsWorld_RoomLegend(i) == sp
+            && WildlandsWorld_CanStandSpecies(sp, d->x, d->y, 6))
+            gWildlandsBossAudit[1]++;
+        else
+            gWildlandsBossAudit[2] |= 1 << i;
         sDir->count++;
     }
     // The practice duo already on the field becomes AI duo 1 at its spawn,
