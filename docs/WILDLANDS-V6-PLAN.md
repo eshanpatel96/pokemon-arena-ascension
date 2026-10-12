@@ -54,3 +54,13 @@ Open: C4 spectate, D1 60 fps exploring, partner status, cliff/biome-belt straigh
 - 60 fps: measured walking updates at ~1.3 vblanks; adaptive 60 overran repeatedly, parked behind WL_FAST_PACE=0. Needs a ~30% per-frame cut (top costs: AI type values, circle fills, sprite sort, frame decode).
 - Memory: debris pool 32 -> 20 (EWRAM 99.90%).
 Open: 60 fps optimisation, biome-belt straight borders, spectate, partner-shot coverage in the slice.
+
+## V6.3 (2026-10-12)
+- No EXP popup in the Lab; bosses and roamers never rest-heal; breakable props removed (FPS); partner flat-sprite fix (shared OAM matrix); boss slam uses fixed Strength/Stomp.
+
+## V6.4 (2026-10-12): 60 fps
+- WL_FAST_PACE=1: the world renders at 60 fps exploring and fighting. Sim stays vblank-timed, so game speed is unchanged.
+- Fallback: leaky bucket (overrun +4, fit -1, >=16 drops to 30 for 4s). Only a sustained >20% overrun rate falls back.
+- Cuts: one-pass world OAM build (27 -> 8 scanlines), lean sprite animation, coarse collision bitmap, route memo, periodic AI/route/loot/target work staggered across frames (was all on frame 0 mod 8), per-frame type-chart memo, direct move-profile index, aim LOS every 4th render, wing palettes blend only while flashing, corner-assist cache.
+- Smoke (run 38251237090): biome tour 1546 updates at 60 / 63 overruns; forced-60 fight 291/300 (9 overruns); heavy late-match walk 252/300 at 60 (auto pacing 256/42). Island 175/175, slice 45/45.
+Open: spectate, biome-belt straight borders, heavy late-match walk still ~16% overruns (SolidCircle, frame decode, CB2 inline).
