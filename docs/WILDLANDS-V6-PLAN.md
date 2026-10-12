@@ -36,8 +36,13 @@ D2. Map polish toward overworld immersion: cleaner edges and transitions, fewer 
 ## Open
 - Floor items reported as "little shiny things": no screenshot yet; recheck in V6 captures.
 
-## Progress (WildLands Beta, 2026-10-12)
-Done and smoke-verified: A1-A10, B1-B5, C2 (Lab COACH: PICK DUO, MOVES, CONTROLS, DEPLOY), C3 (shinies about 1/64, native shiny data + shiny arena palette), C4 summary card, D2 first pass (rounded tree/pond/rock masses, tall-grass patches).
-Also: breakable cover (arena props streamed over the island; Psychic throws nearby rocks), boss placement audit (all five in their rooms, within sight of the entrance), joined legendary never overwrites the lead and always gets a sprite, pickups on their own palette with readable marks.
-Arena-move sweep: all PC boxes at NEW GAME, duo after PICK DUO and at every deploy. ROM file: Pokemon-WildLands-Beta.gba.
-Open: C1 real-time status effects, C4 spectate, D1 60 fps exploring, prop slot VRAM pressure (some activations refused when sprite memory is full).
+## Progress (WildLands Beta V6.1, 2026-10-12)
+Shipped in V6.1 (all smoke-verified, island 148/148, slice 46/46):
+- A1-A10, B1-B5, C2 Lab COACH, C3 shinies, C4 summary card, D2 first pass (rounded masses, tall grass).
+- Status: HUD tags, supplies cure, burn/poison KOs routed through the squad. Partners are status-immune.
+- Breakable cover: arena prop sets incl. ruins (columns in colonnades, obelisks, urns), 7 streamed slots, Psychic throws rocks/columns.
+- Roaming legendaries: one dog, bird and Regi per match, staggered spawns in the circle, join when beaten; removed from the PC.
+- Biome weather: desert sandstorm (Rock/Ground/Steel +20%), volcano ashfall (Fire +20%), storm rain outside the circle (Water +20%, Fire -20%).
+- Bosses: Mewtwo moved to Terra Cave; all five bosses on screen at lair entry (audited, <= 180 px).
+- Post-win heal fixed; loss heals via whiteout.
+Open: C4 spectate, D1 60 fps exploring, partner status, cliff/biome-belt straightness, EWRAM headroom (~20 bytes left).
