@@ -46,3 +46,11 @@ Shipped in V6.1 (all smoke-verified, island 148/148, slice 46/46):
 - Bosses: Mewtwo moved to Terra Cave; all five bosses on screen at lair entry (audited, <= 180 px).
 - Post-win heal fixed; loss heals via whiteout.
 Open: C4 spectate, D1 60 fps exploring, partner status, cliff/biome-belt straightness, EWRAM headroom (~20 bytes left).
+
+## V6.2 (2026-10-12)
+- Status (all four battlers): PAR 3s stun, SLP 4s (hit wakes), FRZ 5s (fire thaws), PSN 30s, TOX 60s, BRN 40s; DoT every 5s; no rest regen while PSN/BRN; one status, 5s immunity, legends half duration; HUD tag + countdown; supplies cure.
+- AI: enemy duos strafe around targets, back off when outnumbered; partner steps out of the player's line of fire once in range, tighter leash when the player is hurt; bosses telegraph a slam every 7s (5s enraged; roamers 9s) with knockback, enrage once at half HP.
+- Map: rounded coastline, oval oases, rounded tall grass, denser stone/sand features; full-island render in evidence (world-half.png).
+- 60 fps: measured walking updates at ~1.3 vblanks; adaptive 60 overran repeatedly, parked behind WL_FAST_PACE=0. Needs a ~30% per-frame cut (top costs: AI type values, circle fills, sprite sort, frame decode).
+- Memory: debris pool 32 -> 20 (EWRAM 99.90%).
+Open: 60 fps optimisation, biome-belt straight borders, spectate, partner-shot coverage in the slice.
