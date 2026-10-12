@@ -337,4 +337,19 @@ patch(WW, 's8 WildlandsWorld_SlideNudge(u8 side, s16 x, s16 y, s8 sx, s8 sy)\n{'
       '    else\n    { sNudgeValid = TRUE; sNudgeX = x; sNudgeY = y; sNudgeSx = sx; sNudgeSy = sy; sNudgeRoom = gWildlandsRoomTelemetry[2]; sNudgeSpecies = gBattleMons[side].species; }\n'
       '    return n;\n}\n'
       'static s8 SlideNudgeRaw(u8 side, s16 x, s16 y, s8 sx, s8 sy)\n{')
+# V6.5: effects that count down once per drawn frame (hit flash, rollout
+# squash, damage numbers, hit sparks) were tuned at the locked 30. At 60 they
+# would run twice as fast, so in the world they advance at a steady 30/s.
+patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
+      '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\nstatic u8 sWlDrawAcc;\nstatic bool8 sWlDrawTick;\n')
+patch(A, '    WildlandsPaceUpdate(gap);\n',
+      '    WildlandsPaceUpdate(gap);\n'
+      '    if (!WildlandsWorld_Active())\n        sWlDrawTick = TRUE;\n'
+      '    else\n    {\n        sWlDrawAcc += gap >= 2 ? 2 : 1;\n        sWlDrawTick = sWlDrawAcc >= 2;\n        if (sWlDrawTick)\n            sWlDrawAcc -= 2;\n    }\n')
+patch(A, '                if (!sArena.paused && !frozen && !--body->flat)\n',
+      '                if (!sArena.paused && !frozen && sWlDrawTick && !--body->flat)\n')
+patch(A, '        if (body->flash && !sArena.paused && !frozen) body->flash--;\n',
+      '        if (body->flash && !sArena.paused && !frozen && sWlDrawTick) body->flash--;\n')
+patch(A, '    ArenaFeedback_Update(sArena.paused, frozen && !CaptureLocked() && !ClashBusy());\n',
+      '    ArenaFeedback_Update(sArena.paused, (frozen && !CaptureLocked() && !ClashBusy()) || !sWlDrawTick);\n')
 print('V6.2 status installed: short stuns, timed burn/poison, partners included, HUD countdown, debris pool 20')

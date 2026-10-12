@@ -706,7 +706,8 @@ static void SquadDrawWing(struct SquadWing *w)
     if (w->flash)
     {
         BlendPalette(OBJ_PLTT_ID(IndexOfSpritePaletteTag(w->tag)), 16, w->flash + 3, RGB_WHITE);
-        w->flash--;
+        if (sWlDrawTick)
+            w->flash--;
         w->blended = TRUE;
     }
     else if (w->blended)
