@@ -520,6 +520,8 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+static u8 sWlDrawAcc;
+static bool8 sWlDrawTick;
 static void WildlandsAnimateSprites(void);
 static bool8 WildlandsFastPace(void);
 static void WildlandsPaceUpdate(u32 gap);
@@ -2935,6 +2937,15 @@ static void CB2_Arena(void)
     if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}
     if(WildlandsWorld_Active()&&gap<(WildlandsFastPace()?1:2)){sWildlandsHeldNew|=gMain.newKeys;return;}
     WildlandsPaceUpdate(gap);
+    if (!WildlandsWorld_Active())
+        sWlDrawTick = TRUE;
+    else
+    {
+        sWlDrawAcc += gap >= 2 ? 2 : 1;
+        sWlDrawTick = sWlDrawAcc >= 2;
+        if (sWlDrawTick)
+            sWlDrawAcc -= 2;
+    }
     gMain.newKeys|=sWildlandsHeldNew;sWildlandsHeldNew=0;
     {u16 ln=(REG_VCOUNT+68)%228; if(ln>gWildlandsLoop[3])gWildlandsLoop[3]=ln; gWildlandsLoop[gap>=3?2:gap>=2?1:0]++;}
     gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;
@@ -3237,7 +3248,7 @@ static void CB2_Arena(void)
                 s32 f = body->flat >= ROLLOUT_FLAT_SPRING ? 256 : body->flat * 256 / ROLLOUT_FLAT_SPRING;
                 SetOamMatrix(sprite->oam.matrixNum, 65536 / (256 + 72 * f / 256), 0, 0, 65536 / (256 - 150 * f / 256));
                 sprite->y += 8 * f / 256;
-                if (!sArena.paused && !frozen && !--body->flat)
+                if (!sArena.paused && !frozen && sWlDrawTick && !--body->flat)
                     SetOamMatrix(sprite->oam.matrixNum, 0x100, 0, 0, 0x100);
             }
             sprite->subpriority = body->flat ? 1 : 0;
@@ -3258,7 +3269,7 @@ static void CB2_Arena(void)
         gSprites[body->shadow].invisible = sprite->invisible;
         if (body->flash) BlendPalette(OBJ_PLTT_ID(i), 16, body->flash + 3, RGB_WHITE);
         else BlendPalette(OBJ_PLTT_ID(i), 16, gArenaGhostTelemetry.phasing[i] ? 7 : 0, RGB(22, 26, 31));
-        if (body->flash && !sArena.paused && !frozen) body->flash--;
+        if (body->flash && !sArena.paused && !frozen && sWlDrawTick) body->flash--;
         gRealtimeArenaTelemetry.x[i] = sprite->x;
         gRealtimeArenaTelemetry.y[i] = body->y / Q;
         gRealtimeArenaTelemetry.speed[i] = Speed(i);
@@ -3327,7 +3338,7 @@ static void CB2_Arena(void)
     gArenaAiTelemetry.waypointX = sArena.waypoint.x; gArenaAiTelemetry.waypointY = sArena.waypoint.y;
     gRealtimeArenaTelemetry.paused = sArena.paused;
     gRealtimeArenaTelemetry.selectedMove = sArena.bodies[0].moveSlot;
-    ArenaFeedback_Update(sArena.paused, frozen && !CaptureLocked() && !ClashBusy());
+    ArenaFeedback_Update(sArena.paused, (frozen && !CaptureLocked() && !ClashBusy()) || !sWlDrawTick);
     ArenaTerrain_Draw(sArena.paused,frozen);
     ElementsDraw();
     {
