@@ -49,6 +49,17 @@ g = bp.biome_ground(g, des)
 g = bp.texture_fields(g, des, rng)
 g = despeckle(g, sweeps=2, keep=(BRIDGE, LAIR, OCEAN))
 g = min_blocks(g, {WATER, TREE, ROCK})
+# Beta map polish: round the corners and bite the long straight edges of tree
+# masses, ponds and rock fields (thin rivers/ridges/tree lines untouched), and
+# scatter irregular tall-grass patches in the woodland, so the island reads
+# like an overworld route instead of a grid of blocks.
+from organic import organic_edges, tall_blobs
+_oc = dict(TREE=TREE, WATER=WATER, ROCK=ROCK, OCEAN=OCEAN, LAIR=LAIR, BRIDGE=BRIDGE, GRASS=GRASS, TALL=TALL, FORTREE=bp.FORTREE)
+_before = g[:]
+g = organic_edges(g, W, H, _oc, random.Random(31))
+g = tall_blobs(g, W, H, des, _oc, random.Random(37))
+g = min_blocks(g, {WATER, TREE, ROCK})
+organic_changed = sum(1 for i in range(W * H) if _before[i] != g[i])
 g = connect_land(g, rng)
 plan = g
 # Crossings are natural land necks (grass fords): shores get real edge art.
@@ -668,7 +679,7 @@ manifest = {
                   'reachable': lair_reach[k] > 0, 'reachable_cells': lair_reach[k],
                   'prefab': stamped.get(k, [None])[-1] if k in stamped else None}
               for k, v in boxes.items()},
-    'bridge_fallbacks': fixed, 'pond_puddle_fixes': puddle_fix, 'invisible_walls_cleared': invisible_walls_cleared, 'invisible_walls_left': invisible_walls_left, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot), 'prop_sites': len(prop_sites),
+    'bridge_fallbacks': fixed, 'pond_puddle_fixes': puddle_fix, 'invisible_walls_cleared': invisible_walls_cleared, 'invisible_walls_left': invisible_walls_left, 'seam_violations': [seam_before, seam_after], 'nav_anchors': len(nav), 'nav_edges': edges, 'nav_giant_component_pct': comp_ok, 'loot_spots': len(loot), 'prop_sites': len(prop_sites), 'organic_cells_changed': organic_changed,
     'player_start': P, 'enemy_start': E,
     'interiors': rooms_manifest, 'doors_reachable': door_audit,
     'biomes': {bp.BIOME_NAMES[k]: sum(1 for v in core if v == k) for k in bp.BIOME_NAMES},

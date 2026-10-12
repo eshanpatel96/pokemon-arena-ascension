@@ -31,8 +31,14 @@ if not inc.exists():   # the Route 120 slice has no prop sites
 # Writable obstacle rectangles (the classic arena keeps its initial layout).
 patch('include/arena_navigation.h', 'extern const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES];',
       'extern struct ArenaRect gArenaObstacles[ARENA_OBSTACLES];')
+# (.data is discarded for this object by the linker script: keep the classic
+# layout in ROM and copy it into an EWRAM table at every arena init.)
 patch('src/arena_navigation.c', 'const struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] =',
-      'struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] =')
+      'EWRAM_DATA struct ArenaRect gArenaObstacles[ARENA_OBSTACLES] = {};\n'
+      'static const struct ArenaRect sArenaObstaclesInit[ARENA_OBSTACLES] =')
+patch('src/arena_navigation.c', 'void ArenaNav_Init(void)\n{\n    u16 i, j;\n',
+      'void ArenaNav_Init(void)\n{\n    u16 i, j;\n'
+      '    for (i = 0; i < ARENA_OBSTACLES; i++)\n        gArenaObstacles[i] = sArenaObstaclesInit[i];\n')
 
 T = 'src/arena_terrain.c'
 patch(T, 'static EWRAM_DATA u8 sPropFrame[ARENA_OBSTACLES]={};\n',
