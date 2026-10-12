@@ -118,21 +118,103 @@ u8 ArenaMoves_Beam(u16 move)
 #if defined(ARENA_MOVES_HOST) && !defined(EWRAM_DATA)
 #define EWRAM_DATA
 #endif
-static EWRAM_DATA u16 sProfileMemoMove[8] = {0};
-static EWRAM_DATA u8 sProfileMemoIdx[8] = {0};
+static const u8 sProfileIndex[MOVES_COUNT] =
+{
+    [MOVE_STRUGGLE] = 1,
+    [MOVE_BIDE] = 2,
+    [MOVE_SPLASH] = 3,
+    [MOVE_PROTECT] = 4,
+    [MOVE_HYPER_BEAM] = 5,
+    [MOVE_RAIN_DANCE] = 6,
+    [MOVE_SOLAR_BEAM] = 7,
+    [MOVE_HYDRO_PUMP] = 8,
+    [MOVE_AURORA_BEAM] = 9,
+    [MOVE_FIRE_BLAST] = 10,
+    [MOVE_SACRED_FIRE] = 11,
+    [MOVE_AEROBLAST] = 12,
+    [MOVE_METEOR_MASH] = 13,
+    [MOVE_SUPERPOWER] = 14,
+    [MOVE_CROSS_CHOP] = 15,
+    [MOVE_MEGAHORN] = 16,
+    [MOVE_CRABHAMMER] = 17,
+    [MOVE_AERIAL_ACE] = 18,
+    [MOVE_POUND] = 19,
+    [MOVE_TACKLE] = 20,
+    [MOVE_QUICK_ATTACK] = 21,
+    [MOVE_ABSORB] = 22,
+    [MOVE_LEER] = 23,
+    [MOVE_WATER_GUN] = 24,
+    [MOVE_SURF] = 25,
+    [MOVE_ICY_WIND] = 26,
+    [MOVE_SHOCK_WAVE] = 27,
+    [MOVE_WING_ATTACK] = 28,
+    [MOVE_SLAM] = 29,
+    [MOVE_PECK] = 30,
+    [MOVE_SCRATCH] = 31,
+    [MOVE_LEAF_BLADE] = 32,
+    [MOVE_MACH_PUNCH] = 33,
+    [MOVE_MEGA_DRAIN] = 34,
+    [MOVE_BITE] = 35,
+    [MOVE_HEADBUTT] = 36,
+    [MOVE_BODY_SLAM] = 37,
+    [MOVE_STEEL_WING] = 38,
+    [MOVE_THUNDER_SHOCK] = 39,
+    [MOVE_DRAGON_BREATH] = 40,
+    [MOVE_BLIZZARD] = 41,
+    [MOVE_ROCK_SLIDE] = 42,
+    [MOVE_SHADOW_PUNCH] = 43,
+    [MOVE_FAINT_ATTACK] = 44,
+    [MOVE_NIGHT_SHADE] = 45,
+    [MOVE_ACID] = 46,
+    [MOVE_MUD_SLAP] = 47,
+    [MOVE_MUD_SHOT] = 48,
+    [MOVE_ROCK_THROW] = 49,
+    [MOVE_ROCK_TOMB] = 50,
+    [MOVE_BUBBLE] = 51,
+    [MOVE_GUST] = 52,
+    [MOVE_SWIFT] = 53,
+    [MOVE_LEECH_LIFE] = 54,
+    [MOVE_ASTONISH] = 55,
+    [MOVE_CUT] = 56,
+    [MOVE_SLASH] = 57,
+    [MOVE_FALSE_SWIPE] = 58,
+    [MOVE_GIGA_DRAIN] = 59,
+    [MOVE_GROWL] = 60,
+    [MOVE_TAIL_WHIP] = 61,
+    [MOVE_SAND_ATTACK] = 62,
+    [MOVE_STRING_SHOT] = 63,
+    [MOVE_SCREECH] = 64,
+    [MOVE_HARDEN] = 65,
+    [MOVE_DEFENSE_CURL] = 66,
+    [MOVE_HOWL] = 67,
+    [MOVE_GROWTH] = 68,
+    [MOVE_AGILITY] = 69,
+    [MOVE_DOUBLE_TEAM] = 70,
+    [MOVE_SUBSTITUTE] = 71,
+    [MOVE_REFLECT] = 72,
+    [MOVE_LIGHT_SCREEN] = 73,
+    [MOVE_SMOKESCREEN] = 74,
+    [MOVE_TELEPORT] = 75,
+    [MOVE_SEISMIC_TOSS] = 76,
+    [MOVE_ROLLOUT] = 77,
+    [MOVE_DIG] = 78,
+    [MOVE_FLY] = 79,
+    [MOVE_FOCUS_ENERGY] = 80,
+    [MOVE_EMBER] = 81,
+    [MOVE_FLAMETHROWER] = 82,
+    [MOVE_FIRE_PUNCH] = 83,
+    [MOVE_BLAZE_KICK] = 84,
+    [MOVE_PSYCHIC] = 85,
+    [MOVE_SHADOW_BALL] = 86,
+    [MOVE_DRAGON_CLAW] = 87,
+    [MOVE_CRUNCH] = 88,
+    [MOVE_EXTREME_SPEED] = 89,
+};
 const struct ArenaMoveProfile *ArenaMoves_Get(u16 move)
 {
-    unsigned i, slot = move & 7;
-    if (sProfileMemoIdx[slot] && sProfileMemoMove[slot] == move)
-        return sProfileMemoIdx[slot] == 255 ? 0 : &sProfiles[sProfileMemoIdx[slot] - 1];
-    for (i = 0; i < sizeof(sProfiles)/sizeof(sProfiles[0]); i++)
-        if (sProfiles[i].move == move)
-        {
-            if (i < 254) { sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = i + 1; }
-            return &sProfiles[i];
-        }
-    sProfileMemoMove[slot] = move; sProfileMemoIdx[slot] = 255;   /* V6.4: misses memoised too */
-    return 0;
+    if (move >= MOVES_COUNT || !sProfileIndex[move])
+        return 0;
+    return &sProfiles[sProfileIndex[move] - 1];
 }
 
 bool8 ArenaMoves_InCone(s16 dx, s16 dy, s16 aimX, s16 aimY, u8 range, u8 cone)
