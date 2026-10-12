@@ -40,6 +40,12 @@ static EWRAM_DATA struct SquadWing sSquadWings[2] = {};
 EWRAM_DATA u32 gWildlandsSquadTelemetry[16] = {};
 // Status: [0] HUD status tags drawn [1] status KOs routed through the squad [2] cures by supplies [3] statuses inflicted on the player lead
 EWRAM_DATA u16 gWildlandsStatusTelemetry[4] = {0};
+static void StatusSim(void);
+static void StatusSecondary(u8 attacker, u8 target, u16 move);
+static bool8 StatusBlocksHealing(u8 b);
+static u32 BrainHpPct(u8 b);
+// Stunned: asleep or frozen (and, in the world, paralysed: a short full stun).
+#define WL_STUNNED(b) (gBattleMons[b].status1 & (WildlandsWorld_Active() ? (STATUS1_SLEEP | STATUS1_FREEZE | STATUS1_PARALYSIS) : (STATUS1_SLEEP | STATUS1_FREEZE)))
 
 static const u16 sSquadWingSpecies[] = {
     SPECIES_SCYTHER, SPECIES_PIDGEOT, SPECIES_ARCANINE, SPECIES_VAPOREON,
@@ -480,6 +486,7 @@ static void SquadRegroup(struct SquadWing *w, struct ArenaBody *lead)
 static void SquadThink(struct SquadWing *w)
 {
     if (gWildlandsTestPeace) { w->moving = FALSE; w->shotTimer = 0; return; }
+    if (WL_STUNNED(w->battler)) { w->moving = FALSE; return; }
     {
     struct ArenaBody *lead = &sArena.bodies[w->team];
     s32 tx, ty, goalX, goalY, step;
@@ -552,7 +559,7 @@ static void SquadThink(struct SquadWing *w)
     if (p && w->target != 0xFF && !w->cooldown
         && dist < (p->kind == ARENA_MOVE_PROJECTILE ? p->range : 30) && dist > 6
         && (!WildlandsWorld_Active() || WildlandsWorld_LineClear(w->x / Q, w->y / Q, tx / Q, ty / Q, 2))
-        && !(gBattleMons[w->battler].status1 & (STATUS1_SLEEP | STATUS1_FREEZE)))
+        && !WL_STUNNED(w->battler))
     {
         gWildlandsPartnerTelemetry[6] += w->team ? 0x10000 : 1;   // diag: fire attempts
         w->shotSlot = slot;
@@ -571,12 +578,32 @@ static void SquadThink(struct SquadWing *w)
     // a far target (it still shoots anything in range from formation).
     if (w->target != 0xFF && dist < 220 && !(w->team && BrainWingFollows())
         && (w->team || !SquadAlive(0)
-            || ArenaNav_Distance(w->x / Q, w->y / Q, lead->x / Q, lead->y / Q) < 140))
+            || ArenaNav_Distance(w->x / Q, w->y / Q, lead->x / Q, lead->y / Q) < (BrainHpPct(0) < 40 ? 90 : 140)))
     {
         // Engage: close to ~2/3 of range, never closer than 24px.
         u16 want = p ? max(24, (p->kind == ARENA_MOVE_PROJECTILE ? p->range : 26) * 2 / 3) : 40;
         if (dist > want) { goalX = tx; goalY = ty; }
         else { goalX = w->x + (w->x - tx) / 4; goalY = w->y + (w->y - ty) / 4; }
+        // Partner: never stand in the player's line of fire; step aside.
+        if (!w->team && SquadAlive(0))
+        {
+            s32 lx = lead->x / Q, ly = lead->y / Q, ax = tx / Q - lx, ay = ty / Q - ly;
+            s32 qx = w->x / Q - lx, qy = w->y / Q - ly, len2 = ax * ax + ay * ay;
+            if (len2 > 64)
+            {
+                s32 dot = qx * ax + qy * ay;
+                if (dot > 0 && dot < len2)
+                {
+                    s32 cross = qx * ay - qy * ax, len = Abs(ax) + Abs(ay);
+                    if (Abs(cross) < 16 * len)
+                    {
+                        s32 sgn = cross >= 0 ? 1 : -1;
+                        goalX = w->x + sgn * ay * 28 * Q / len;
+                        goalY = w->y - sgn * ax * 28 * Q / len;
+                    }
+                }
+            }
+        }
     }
     else if (SquadAlive(w->team))
     {
@@ -771,7 +798,7 @@ static void SquadRestRegen(void)
         {
             u8 b = team + m * 2;
             u16 hp;
-            if (!SquadAlive(b) || gBattleMons[b].hp >= gBattleMons[b].maxHP)
+            if (!SquadAlive(b) || gBattleMons[b].hp >= gBattleMons[b].maxHP || StatusBlocksHealing(b))
                 continue;
             hp = min(gBattleMons[b].maxHP, gBattleMons[b].hp + max(1, gBattleMons[b].maxHP / 50));
             gWildlandsRestTelemetry[team] += hp - gBattleMons[b].hp;
@@ -793,6 +820,7 @@ static void SquadSimStep(void)
         SquadPPRegen();
     if (WildlandsWorld_Active())
         SquadRestRegen();
+    StatusSim();
     if (sSwapCooldown)
         sSwapCooldown--;
     SquadDoorSim();
@@ -952,6 +980,8 @@ static void SquadApplyHit(u8 attacker, u8 target, u16 move)
     PlaySE(SE_M_COMET_PUNCH);
     if (!hp)
         SquadKO(target, attacker);
+    else
+        StatusSecondary(attacker, target, move);
 }
 
 // Called from TickShots before the native 1v1 hit test. Returns TRUE when the

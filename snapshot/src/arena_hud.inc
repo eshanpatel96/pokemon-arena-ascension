@@ -10,16 +10,18 @@ static const u8 sHudPPLabel[] = _("PP ");
 static EWRAM_DATA bool8 sHudCached=FALSE;
 static EWRAM_DATA u16 sHudLastHp[2]={},sHudLastMax[2]={},sHudLastSpecies[2]={};
 static EWRAM_DATA u8 sHudLastLevel[2]={};
-static EWRAM_DATA u8 sHudStatusKey=0;
+static EWRAM_DATA u32 sHudStatusKey=0;
+static u8 WlStatusSeconds(u8 b);
 extern u16 gWildlandsStatusTelemetry[4];
 // 0 none, 1 PAR, 2 SLP, 3 BRN, 4 PSN, 5 FRZ
 static u8 HudStatusCode(u32 s)
 {
     return (s&STATUS1_PARALYSIS)?1:(s&STATUS1_SLEEP)?2:(s&STATUS1_BURN)?3:(s&STATUS1_PSN_ANY)?4:(s&STATUS1_FREEZE)?5:0;
 }
-static u8 HudStatusKey(void)
+static u32 HudStatusKey(void)
 {
-    return HudStatusCode(gBattleMons[0].status1)|(HudStatusCode(gBattleMons[1].status1)<<4);
+    return HudStatusCode(gBattleMons[0].status1)|(HudStatusCode(gBattleMons[1].status1)<<4)
+        |((u32)WlStatusSeconds(0)<<8)|((u32)WlStatusSeconds(1)<<16);
 }
 
 static EWRAM_DATA u32 sHudWingKey=0;
@@ -98,7 +100,9 @@ static void DrawStatusHud(void)
             u8 code=HudStatusCode(mon->status1);
             if(code)
             {
-                HudTiny(side?189:68,3,sStatusTag[code-1],sStatusColor[code-1],3);
+                u8 tag[8],*e=StringCopy(tag,sStatusTag[code-1]);
+                if(WlStatusSeconds(side))ConvertIntToDecimalStringN(e,WlStatusSeconds(side),STR_CONV_MODE_LEFT_ALIGN,2);
+                HudTiny(side?183:62,3,tag,sStatusColor[code-1],5);
                 gWildlandsStatusTelemetry[0]++;
             }
         }

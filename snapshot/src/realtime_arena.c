@@ -520,6 +520,10 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+static s32 WildlandsStrafe(s32 bx, s32 by, s32 px, s32 py);
+static bool8 DirectorBossWindup(void);
+// World: paralysis is a short full stun like sleep and freeze.
+#define WL_STUN_MASK (WildlandsWorld_Active() ? (STATUS1_SLEEP|STATUS1_FREEZE|STATUS1_PARALYSIS) : (STATUS1_SLEEP|STATUS1_FREEZE))
 static void PropsInit(void);
 static void PropsSim(void);
 static void PropsFree(void);
@@ -1910,7 +1914,7 @@ static void BeginShot(u8 side, s32 targetX, s32 targetY)
     const struct ArenaMoveProfile *profile = ArenaMoves_Get(ArenaMoveId(side,body->moveSlot));
     s32 dx,dy,len;
     if (!profile || body->shotTimer || PsychicBusy(side) || SpecialBusy(side) || !ArenaMovePP(side,body->moveSlot)
-        || (gBattleMons[side].status1&(STATUS1_SLEEP|STATUS1_FREEZE))) return;
+        || (gBattleMons[side].status1&WL_STUN_MASK)) return;
     if((gBattleMons[side].status1&STATUS1_PARALYSIS) && Random()%4==0)
     {
         body->cooldown=30;
@@ -1940,7 +1944,7 @@ static void TickPendingShots(void)
     {
         struct ArenaBody *body = &sArena.bodies[side];
         const struct ArenaMoveProfile *profile;
-        if(gBattleMons[side].status1&(STATUS1_SLEEP|STATUS1_FREEZE))
+        if(gBattleMons[side].status1&WL_STUN_MASK)
         {body->shotTimer=body->actionLife=body->dash=0;continue;}
         if (!body->shotTimer) continue;
         profile = ArenaMoves_Get(ArenaMoveId(side,body->shotSlot));
@@ -1986,7 +1990,7 @@ static void TickPlayer(void)
     s32 dx = (JOY_HELD(DPAD_RIGHT) != 0) - (JOY_HELD(DPAD_LEFT) != 0);
     s32 dy = (JOY_HELD(DPAD_DOWN) != 0) - (JOY_HELD(DPAD_UP) != 0);
     if(SpecialBusy(0)||GuardBusy())return;
-    if(gBattleMons[0].status1&(STATUS1_SLEEP|STATUS1_FREEZE))
+    if(gBattleMons[0].status1&WL_STUN_MASK)
     {body->moving=FALSE;sArena.attackBuffer=sArena.dashBuffer=0;return;}
     if (body->dashCooldown) body->dashCooldown--;
     if (sArena.dashBuffer && !body->dashCooldown && !body->actionLife)
@@ -2093,7 +2097,7 @@ static void AiChooseGoal(void)
             || !ArenaNav_LineClear(p.x, p.y, sArena.observed.x, sArena.observed.y, 2)) continue;
         score = Abs(ArenaNav_Distance(p.x,p.y,sArena.observed.x,sArena.observed.y) - preferred) * 3
             + ArenaNav_Distance(body->x/Q,body->y/Q,p.x,p.y) + AiRandom() % 24
-            + (WildlandsWorld_Active() ? WildlandsCramp(p.x,p.y) * 18 : 0);
+            + (WildlandsWorld_Active() ? WildlandsCramp(p.x,p.y) * 18 - WildlandsStrafe(body->x/Q,body->y/Q,p.x,p.y) : 0);
         if (score < best) { best = score; sArena.goal = p; }
     }
     sArena.goalTimer = 55;
@@ -2260,8 +2264,9 @@ static void TickEnemy(void)
     s32 dx, dy, len;
     body->moving = FALSE;
     if (gWildlandsTestPeace) return;
+    if (DirectorBossWindup()) return;
     if(SpecialBusy(1)||GuardBusy())return;
-    if(gBattleMons[1].status1&(STATUS1_SLEEP|STATUS1_FREEZE))return;
+    if(gBattleMons[1].status1&WL_STUN_MASK)return;
     if (body->cooldown && !body->shotTimer && !body->actionLife) body->cooldown--;
     if (sArena.goalTimer) sArena.goalTimer--;
     if (body->shotTimer) return;
@@ -2740,6 +2745,7 @@ static void DestroyShot(struct ArenaShot *shot)
 #include "arena_map.inc"
 #include "arena_brain.inc"
 #include "arena_props.inc"
+#include "arena_status.inc"
 #include "arena_director.inc"
 
 static void TickShots(void)
@@ -2830,6 +2836,7 @@ static void TickPhysics(void)
 static void TickBurn(void)
 {
     u32 side;
+    if(WildlandsWorld_Active())return;   // the world runs its own status clock (arena_status.inc)
     // One native Gen III 1/8-max-HP burn pulse per 300 active gameplay ticks.
     // Pausing, capture animation and hitstop do not advance this clock.
     for(side=0;side<2&&!sArena.resultTimer;side++)
