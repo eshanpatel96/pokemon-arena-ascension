@@ -64,7 +64,7 @@ patch(A, '#define WILDLANDS_PARTNER_TAG (MON_TAG + 4)\n',
       'static void DirectorDestroy(void);\nstatic void DirRestorePartner(void);\nstatic bool8 DirectorSoloActive(void);\n'
       'static bool8 DirectorPopupText(u8 *text, u8 *color);\nstatic u8 DirectorLeft(void);\nstatic bool8 DirectorRunning(void);\n'
       'static bool8 DirectorPopupActive(void);\nstatic void DirectorPauseLine(void);\n'
-      'void Wildlands_ArenaLoadout(struct Pokemon *mon);\n'
+      'void Wildlands_ArenaLoadout(struct Pokemon *mon);\nvoid Wildlands_TrimParty(void);\n'
       'static u8 BrainWingTarget(u8 picked);\nstatic bool8 BrainWingFollows(void);\nstatic void BrainInit(void);\n')
 # The follower actor is superseded by real squad wings.
 patch(A, '    WildlandsPartner_Init();\n', '    SquadInit();\n    ZoneInit();\n    LootInit();\n    BrainInit();\n    DirectorInit();\n    sWildlandsEncounterLive = WildlandsWorld_Active();\n')
@@ -218,6 +218,31 @@ t = p.read_text()
 if 'Wildlands_ArenaLoadout' not in t:
     p.write_text(t + r'''
 #include "arena_moves.h"
+// Beta: a Wildlands match is a duo. Anything beyond the first two party
+// slots goes back to the PC before the match (the PC's move mode could
+// place a third).
+#include "pokemon_storage_system.h"
+void Wildlands_TrimParty(void)
+{
+    u32 k, box;
+    for (k = 2; k < PARTY_SIZE; k++)
+    {
+        if (!GetMonData(&gPlayerParty[k], MON_DATA_SPECIES))
+            continue;
+        for (box = 0; box < TOTAL_BOXES_COUNT; box++)
+        {
+            s16 pos = GetFirstFreeBoxSpot(box);
+            if (pos >= 0)
+            {
+                SetBoxMonAt(box, pos, &gPlayerParty[k].box);
+                break;
+            }
+        }
+        ZeroMonData(&gPlayerParty[k]);
+    }
+    CompactPartySlots();
+    CalculatePlayerPartyCount();
+}
 // Wildlands loadout: species-legal moves (Ascension studio bank) that the
 // real-time Arena can actually perform. Keeps the current moves that qualify
 // (player choices survive), then fills by power + STAB + type coverage.
@@ -481,7 +506,7 @@ patch(A, '        score = Abs(ArenaNav_Distance(p.x,p.y,sArena.observed.x,sArena
 # abilities the arena does not model are tolerated instead of disqualifying.
 patch(A, 'static bool8 SupportedBattler(u8 side)\n{\n    u32 i;\n',
       'static bool8 SupportedBattler(u8 side)\n{\n    u32 i;\n'
-      '    if (WildlandsWorld_Active())\n'
+      '    if (VarGet(VAR_ASCENSION_CAREER_ACTIVE) == 1 && FlagGet(FLAG_ARENA_PRACTICE))   /* eligibility runs before the world is initialised */\n'
       '    {\n'
       '        struct Pokemon *mon = side ? &gEnemyParty[gBattlerPartyIndexes[side]] : &gPlayerParty[gBattlerPartyIndexes[side]];\n'
       '        gArenaCompatibilityReason = ARENA_COMPAT_OK;\n'

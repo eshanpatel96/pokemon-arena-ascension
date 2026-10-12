@@ -1072,6 +1072,7 @@ static void DirectorInit(void)
 #ifdef WL_ISLAND
     DirRandomSpawn();
 #endif
+    Wildlands_TrimParty();
     level = gBattleMons[0].level ? gBattleMons[0].level : 50;
     px = sArena.bodies[0].x / Q; py = sArena.bodies[0].y / Q;
     sDir->duo[0].state = DIR_PLAYER;
