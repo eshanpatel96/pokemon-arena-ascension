@@ -135,11 +135,11 @@ void ArenaTerrain_Draw(bool8 paused,bool8 frozen)
     {
         const struct ArenaProp*p=&gArenaProps[i];
         u8 frame=p->broken?2:p->hp<p->maxHp?1:0;
-        if(WildlandsWorld_Active()&&sPropSprite[i]==MAX_SPRITES)continue;
         const struct ArenaRect *ground=&gArenaObstacles[i];
         bool8 wet=!gArenaPsychicRocks[i].state && RealtimeArena_IsFlooded((ground->left+ground->right)/2,ground->bottom);
         const u8 *source=wet?(const u8*)sWetProps+sPropSet[i]*7*3*512:(const u8*)sBiomeProps[sPropSet[i]];
         u8 key=frame+(wet?3:0);
+        if(WildlandsWorld_Active()&&sPropSprite[i]==MAX_SPRITES)continue;   /* C89: after the declarations */
         if(sPropFrame[i]!=key)
         {
             ArenaRender_Copy(source+(sPropArt[i]*3+frame)*512,
