@@ -52,7 +52,7 @@ patch(T, '''    if(WildlandsWorld_Active())
         for(i=0;i<ARENA_OBSTACLES;i++)sPropSprite[i]=MAX_SPRITES;''',
       '''    if(WildlandsWorld_Active())
     {
-        LoadSpriteSheet(&pieces);   /* fragments take their material palette per frame */
+        LoadSpriteSheet(&pieces);   /* fragments take their material palette per frame */\n        {struct SpriteSheet block={(const u8*)sBiomeProps[0],WL_PROP_BLOCK_SLOTS*512,WL_PROP_BLOCK_TAG};LoadSpriteSheet(&block);}   /* one up-front block: slots never allocate later */
         for(i=0;i<ARENA_OBSTACLES;i++){sPropSprite[i]=MAX_SPRITES;sPropFrame[i]=255;sPropArt[i]=i;sPropSet[i]=0;}''')
 patch(T, '''        struct SpriteSheet sheet={(const u8*)sBiomeProps[gArenaBiome]+i*3*512,512,TAG+i};''',
       '''        struct SpriteSheet sheet={(const u8*)sBiomeProps[gArenaBiome]+i*3*512,512,TAG+i};
@@ -74,6 +74,13 @@ patch(T, '''        const u8 *source=wet?(const u8*)sWetProps+gArenaBiome*7*3*51
       '''        const u8 *source=wet?(const u8*)sWetProps+sPropSet[i]*7*3*512:(const u8*)sBiomeProps[sPropSet[i]];''')
 patch(T, '''            ArenaRender_Copy(source+(i*3+frame)*512,''',
       '''            ArenaRender_Copy(source+(sPropArt[i]*3+frame)*512,''')
+patch(T, '''                (u8*)OBJ_VRAM0+GetSpriteTileStartByTag(TAG+i)*32,512);''',
+      '''                (u8*)OBJ_VRAM0+(WildlandsWorld_Active()?GetSpriteTileStartByTag(WL_PROP_BLOCK_TAG)+i*16:GetSpriteTileStartByTag(TAG+i))*32,512);''')
+patch(T, '''            s->oam.priority=r->state?0:1;''',
+      '''            s->oam.priority=r->state?0:1;
+            if(WildlandsWorld_Active())s->oam.tileNum=GetSpriteTileStartByTag(WL_PROP_BLOCK_TAG)+i*16;''')
+patch(T, '''static EWRAM_DATA u8 sPropFrame[ARENA_OBSTACLES]={};\n''',
+      '''static EWRAM_DATA u8 sPropFrame[ARENA_OBSTACLES]={};\n#define WL_PROP_BLOCK_TAG (TAG+ARENA_OBSTACLES+3)\n#define WL_PROP_BLOCK_SLOTS 5\n''')
 s = (root / T).read_text()
 s += r'''
 // WildLands Beta: one prop slot moved onto a world site (see arena_props.inc).
@@ -92,14 +99,15 @@ bool8 ArenaTerrain_WorldSlot(u8 i,s16 x,s16 y,u8 set,u8 art,u8 kind,u8 hp,u8 max
     struct SpriteTemplate template=sTemplate;
     struct SpriteSheet sheet;
     struct ArenaRect *r;
-    if(i>=ARENA_OBSTACLES||art>6||set>4)return FALSE;
+    if(i>=WL_PROP_BLOCK_SLOTS||art>6||set>4)return FALSE;
     ArenaTerrain_WorldRelease(i);
-    sheet.data=(const u8*)sBiomeProps[set]+art*3*512;sheet.size=512;sheet.tag=TAG+i;
-    LoadSpriteSheet(&sheet);
-    if(GetSpriteTileStartByTag(TAG+i)==0xFFFF)return FALSE;
-    template.tileTag=TAG+i;
+    (void)sheet;
+    if(GetSpriteTileStartByTag(WL_PROP_BLOCK_TAG)==0xFFFF)return FALSE;
+    template.tileTag=WL_PROP_BLOCK_TAG;
     sPropSprite[i]=CreateSprite(&template,x,y,8);
-    if(sPropSprite[i]==MAX_SPRITES){FreeSpriteTilesByTag(TAG+i);return FALSE;}
+    if(sPropSprite[i]==MAX_SPRITES)return FALSE;
+    gSprites[sPropSprite[i]].animPaused=TRUE;
+    gSprites[sPropSprite[i]].oam.tileNum=GetSpriteTileStartByTag(WL_PROP_BLOCK_TAG)+i*16;
     gSprites[sPropSprite[i]].oam.paletteNum=ArenaMoveFx_Palette(kind);
     gSprites[sPropSprite[i]].coordOffsetEnabled=TRUE;
     r=&gArenaObstacles[i];
