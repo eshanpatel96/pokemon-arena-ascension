@@ -520,6 +520,10 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+#define VAR_WL_SHOP_WINS VAR_UNUSED_0x404E
+#define VAR_WL_STREAK VAR_UNUSED_0x4083
+static bool8 DirectorTpFocus(void);
+void Wildlands_ShopSelfTest(void);
 static u8 sWlDrawAcc;
 static bool8 sWlDrawTick;
 static void WildlandsAnimateSprites(void);
@@ -3427,10 +3431,17 @@ static void ArenaExit(bool8 fainted)
             VarSet(VAR_ASCENSION_RANK,min(9999,VarGet(VAR_ASCENSION_RANK)+1));
             VarSet(VAR_ASCENSION_CHAMPION_WINS,min(9999,VarGet(VAR_ASCENSION_CHAMPION_WINS)+1));
             VarSet(VAR_ASCENSION_MASTERS_BEST,min(9999,VarGet(VAR_ASCENSION_MASTERS_BEST)+1));
+            if(gBattleMons[0].hp)
+            {
+                u16 streak=min(9999,VarGet(VAR_WL_STREAK)+1);
+                VarSet(VAR_WL_STREAK,streak);
+                VarSet(VAR_WL_SHOP_WINS,min(9999,VarGet(VAR_WL_SHOP_WINS)+1+(streak%5==0?2:0)));
+            }
         }
         if(VarGet(VAR_ASCENSION_CAREER_ACTIVE)==1 && FlagGet(FLAG_ARENA_PRACTICE) && gBattleMons[0].hp==0)
         {
             u16 zero=0; u32 k;
+            VarSet(VAR_WL_STREAK,0);
             for(k=0;k<PARTY_SIZE;k++)
                 if(GetMonData(&gPlayerParty[k],MON_DATA_SPECIES))SetMonData(&gPlayerParty[k],MON_DATA_HP,&zero);
         }
@@ -3615,3 +3626,109 @@ void Wildlands_BufferStats(void)
     ConvertIntToDecimalStringN(gStringVar3, VarGet(VAR_ASCENSION_MASTERS_BEST), STR_CONV_MODE_LEFT_ALIGN, 4);
 }
 
+
+// ---- V6.8 Shiny Shop (Lab professor) -------------------------------------
+// STR_VAR_1 balance, STR_VAR_2 streak; VAR_RESULT = can buy (10 wins).
+void Wildlands_BufferShop(void)
+{
+    ConvertIntToDecimalStringN(gStringVar1, VarGet(VAR_WL_SHOP_WINS), STR_CONV_MODE_LEFT_ALIGN, 4);
+    ConvertIntToDecimalStringN(gStringVar2, VarGet(VAR_WL_STREAK), STR_CONV_MODE_LEFT_ALIGN, 4);
+    gSpecialVar_Result = VarGet(VAR_WL_SHOP_WINS) >= 10;
+}
+
+static bool8 WlShopLegend(u16 sp)
+{
+    switch (sp)
+    {
+    case SPECIES_ARTICUNO: case SPECIES_ZAPDOS: case SPECIES_MOLTRES: case SPECIES_MEWTWO: case SPECIES_MEW:
+    case SPECIES_RAIKOU: case SPECIES_ENTEI: case SPECIES_SUICUNE: case SPECIES_LUGIA: case SPECIES_HO_OH:
+    case SPECIES_CELEBI: case SPECIES_REGIROCK: case SPECIES_REGICE: case SPECIES_REGISTEEL:
+    case SPECIES_LATIAS: case SPECIES_LATIOS: case SPECIES_KYOGRE: case SPECIES_GROUDON:
+    case SPECIES_RAYQUAZA: case SPECIES_JIRACHI: case SPECIES_DEOXYS:
+        return TRUE;
+    }
+    return FALSE;
+}
+
+// The party Pokemon in VAR_0x8004 becomes shiny for 10 wins. Its nature,
+// gender, ability, IVs, EVs, moves, level, nickname and OT are kept (a new
+// personality with the same nature and low byte is chosen).
+// VAR_RESULT: 1 done, 2 legendary, 3 already shiny, 4 not enough wins, 0 none.
+void Wildlands_MakeShiny(void)
+{
+    static const u8 sKeep[] = {
+        MON_DATA_LANGUAGE, MON_DATA_OT_GENDER, MON_DATA_EXP, MON_DATA_FRIENDSHIP, MON_DATA_HELD_ITEM,
+        MON_DATA_MOVE1, MON_DATA_MOVE2, MON_DATA_MOVE3, MON_DATA_MOVE4,
+        MON_DATA_PP1, MON_DATA_PP2, MON_DATA_PP3, MON_DATA_PP4, MON_DATA_PP_BONUSES,
+        MON_DATA_HP_EV, MON_DATA_ATK_EV, MON_DATA_DEF_EV, MON_DATA_SPEED_EV, MON_DATA_SPATK_EV, MON_DATA_SPDEF_EV,
+        MON_DATA_HP_IV, MON_DATA_ATK_IV, MON_DATA_DEF_IV, MON_DATA_SPEED_IV, MON_DATA_SPATK_IV, MON_DATA_SPDEF_IV,
+        MON_DATA_ABILITY_NUM, MON_DATA_POKEBALL, MON_DATA_MET_LOCATION, MON_DATA_MET_LEVEL, MON_DATA_MET_GAME,
+        MON_DATA_MARKINGS,
+    };
+    struct Pokemon old, *mon;
+    u8 buf[POKEMON_NAME_LENGTH + 2];
+    u16 sp, hp;
+    u32 p, otId, lo, hi, np = 0, b, k, v;
+    gSpecialVar_Result = 0;
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
+    mon = &gPlayerParty[gSpecialVar_0x8004];
+    sp = GetMonData(mon, MON_DATA_SPECIES);
+    if (!sp || GetMonData(mon, MON_DATA_IS_EGG))
+        return;
+    StringCopy(gStringVar1, gSpeciesNames[sp]);
+    if (WlShopLegend(sp)) { gSpecialVar_Result = 2; return; }
+    if (IsMonShiny(mon)) { gSpecialVar_Result = 3; return; }
+    if (VarGet(VAR_WL_SHOP_WINS) < 10) { gSpecialVar_Result = 4; return; }
+    p = GetMonData(mon, MON_DATA_PERSONALITY);
+    otId = GetMonData(mon, MON_DATA_OT_ID);
+    for (b = 0; b < 256 && !np; b++)
+        for (k = 0; k < 8; k++)
+        {
+            lo = (p & 0xFF) | (b << 8);
+            hi = ((otId >> 16) ^ (otId & 0xFFFF) ^ lo ^ k) & 0xFFFF;
+            if (((hi << 16) | lo) % 25 == p % 25)
+            { np = (hi << 16) | lo; break; }
+        }
+    if (!np)
+        return;
+    old = *mon;
+    CreateMon(mon, sp, GetMonData(&old, MON_DATA_LEVEL), 0, TRUE, np, OT_ID_PRESET, otId);
+    GetMonData(&old, MON_DATA_NICKNAME, buf); SetMonData(mon, MON_DATA_NICKNAME, buf);
+    GetMonData(&old, MON_DATA_OT_NAME, buf); SetMonData(mon, MON_DATA_OT_NAME, buf);
+    for (k = 0; k < ARRAY_COUNT(sKeep); k++)
+    {
+        v = GetMonData(&old, sKeep[k]);
+        SetMonData(mon, sKeep[k], &v);
+    }
+    CalculateMonStats(mon);
+    hp = GetMonData(mon, MON_DATA_MAX_HP);
+    SetMonData(mon, MON_DATA_HP, &hp);
+    VarSet(VAR_WL_SHOP_WINS, VarGet(VAR_WL_SHOP_WINS) - 10);
+    gSpecialVar_Result = IsMonShiny(mon) ? 1 : 0;
+}
+
+// TEST HOOK ONLY: nonzero runs the shop core on party slot 1 at the next
+// match start; [0] result [1] shiny [2] species/level/move/nature/IV kept [3] balance after.
+EWRAM_DATA u8 gWildlandsShopTest = 0;
+EWRAM_DATA u16 gWildlandsShopTelemetry[4] = {0};
+void Wildlands_ShopSelfTest(void)
+{
+    struct Pokemon *mon = &gPlayerParty[1];
+    u32 sp, lv, mv, nat, iv;
+    if (!gWildlandsShopTest)
+        return;
+    gWildlandsShopTest = 0;
+    sp = GetMonData(mon, MON_DATA_SPECIES); lv = GetMonData(mon, MON_DATA_LEVEL);
+    mv = GetMonData(mon, MON_DATA_MOVE1); nat = GetMonData(mon, MON_DATA_PERSONALITY) % 25;
+    iv = GetMonData(mon, MON_DATA_ATK_IV);
+    VarSet(VAR_WL_SHOP_WINS, 10);
+    gSpecialVar_0x8004 = 1;
+    Wildlands_MakeShiny();
+    gWildlandsShopTelemetry[0] = gSpecialVar_Result;
+    gWildlandsShopTelemetry[1] = IsMonShiny(mon);
+    gWildlandsShopTelemetry[2] = sp == GetMonData(mon, MON_DATA_SPECIES) && lv == GetMonData(mon, MON_DATA_LEVEL)
+        && mv == GetMonData(mon, MON_DATA_MOVE1) && nat == GetMonData(mon, MON_DATA_PERSONALITY) % 25
+        && iv == GetMonData(mon, MON_DATA_ATK_IV);
+    gWildlandsShopTelemetry[3] = VarGet(VAR_WL_SHOP_WINS);
+}
