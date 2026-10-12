@@ -20,7 +20,7 @@
 #define LOOT_CACHE 4  // lair cache: +1 ATK, DEF and SPD at once (caps apply)
 #define LOOT_TYPES 5
 #define LOOT_MAX 64
-#define LOOT_CAP 2
+#define LOOT_CAP 3
 #define LOOT_TAG 0xA7C0
 #define LOOT_SPRITES 4
 
@@ -155,6 +155,10 @@ static void LootStat(u8 team, u8 type)
 
 static bool8 LootUseless(u8 team, u8 type)
 {
+    // Beta: no dead pickups. A capped stat orb or cache heals the team
+    // instead (LootApply), so every pickup is worth walking to.
+    if (WildlandsWorld_Active())
+        return FALSE;
     if (type < 3)
         return sLoot.boost[team][type] >= LOOT_CAP;
     if (type == LOOT_CACHE)
@@ -166,6 +170,10 @@ static bool8 LootUseless(u8 team, u8 type)
 static void LootApply(u8 team, u8 type, s32 x, s32 y)
 {
     u32 m, t;
+    if (WildlandsWorld_Active() && ((type < 3 && sLoot.boost[team][type] >= LOOT_CAP)
+        || (type == LOOT_CACHE && sLoot.boost[team][0] >= LOOT_CAP && sLoot.boost[team][1] >= LOOT_CAP
+            && sLoot.boost[team][2] >= LOOT_CAP)))
+        type = LOOT_HEAL;
     sLoot.popupTimer = 150;
     sLoot.popupType = type;
     sLoot.popupTeam = team;
@@ -181,6 +189,20 @@ static void LootApply(u8 team, u8 type, s32 x, s32 y)
             hp = min(gBattleMons[b].maxHP, gBattleMons[b].hp + gBattleMons[b].maxHP * 2 / 5);
             gBattleMons[b].hp = hp;
             SetMonData(SquadPartyMon(b), MON_DATA_HP, &hp);
+            // Supplies also restock PP (+4 per move, up to its maximum).
+            {
+                u32 k;
+                for (k = 0; k < MAX_MON_MOVES; k++)
+                {
+                    u16 move = gBattleMons[b].moves[k];
+                    u8 max, pp;
+                    if (!move) continue;
+                    max = CalculatePPWithBonus(move, gBattleMons[b].ppBonuses, k);
+                    pp = min(max, gBattleMons[b].pp[k] + 4);
+                    gBattleMons[b].pp[k] = pp;
+                    SetMonData(SquadPartyMon(b), MON_DATA_PP1 + k, &pp);
+                }
+            }
         }
     }
     else if (type == LOOT_CACHE)
@@ -301,7 +323,7 @@ static bool8 LootPopupText(u8 *text)
 {
     static const u8 sWho[2][6] = {_("TEAM "), _("FOES ")};
     static const u8 sStat[3][5] = {_(" ATK"), _(" DEF"), _(" SPD")};
-    static const u8 sHeal[] = _("HEALED 40%");
+    static const u8 sHeal[] = _("HEALED 40% +PP");
     static const u8 sCache[] = _("+1 ATK DEF SPD");
     u8 *end;
     if (!sLoot.popupTimer)

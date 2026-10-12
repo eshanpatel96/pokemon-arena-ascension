@@ -555,6 +555,7 @@ static void DirectorSim(void);
 static u8 DirectorBossDoor(void);
 static void DirectorBossEnter(void);
 static bool8 DirectorLairAnchor(s32 *x, s32 *y);
+static u32 WildlandsCramp(s32 x, s32 y);
 static void DirectorDestroy(void);
 static void DirRestorePartner(void);
 static bool8 DirectorSoloActive(void);
@@ -842,6 +843,21 @@ static u8 FirstMove(u8 side, bool8 needsPP)
 static bool8 SupportedBattler(u8 side)
 {
     u32 i;
+    if (WildlandsWorld_Active())
+    {
+        struct Pokemon *mon = side ? &gEnemyParty[gBattlerPartyIndexes[side]] : &gPlayerParty[gBattlerPartyIndexes[side]];
+        gArenaCompatibilityReason = ARENA_COMPAT_OK;
+        if (FirstMove(side, FALSE) == ARENA_NO_MOVE || !gBattleMoves[ArenaMoveId(side, FirstMove(side, FALSE))].power)
+        {
+            Wildlands_ArenaLoadout(mon);
+            for (i = 0; i < MAX_MON_MOVES; i++)
+            {
+                gBattleMons[side].moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i);
+                gBattleMons[side].pp[i] = GetMonData(mon, MON_DATA_PP1 + i);
+            }
+        }
+        return gBattleMons[side].hp != 0;
+    }
     gArenaCompatibilityReason=ARENA_COMPAT_ITEM|(side<<8);
     // Only tested native damage, stat changes and burns enter the arena.
     // Other status/turn/item mechanics retain the complete classic battle.
@@ -2024,7 +2040,8 @@ static void AiChooseGoal(void)
             || (WildlandsWorld_Active() && !WildlandsWorld_CanStandSide(1,p.x,p.y,ARENA_BODY_RADIUS))
             || !ArenaNav_LineClear(p.x, p.y, sArena.observed.x, sArena.observed.y, 2)) continue;
         score = Abs(ArenaNav_Distance(p.x,p.y,sArena.observed.x,sArena.observed.y) - preferred) * 3
-            + ArenaNav_Distance(body->x/Q,body->y/Q,p.x,p.y) + AiRandom() % 24;
+            + ArenaNav_Distance(body->x/Q,body->y/Q,p.x,p.y) + AiRandom() % 24
+            + (WildlandsWorld_Active() ? WildlandsCramp(p.x,p.y) * 18 : 0);
         if (score < best) { best = score; sArena.goal = p; }
     }
     sArena.goalTimer = 55;

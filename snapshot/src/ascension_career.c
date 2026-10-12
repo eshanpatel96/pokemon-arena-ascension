@@ -1112,7 +1112,69 @@ void Ascension_V11EnsureSafeEntry(void)
 
 #include "ascension_v111_services.inc"
 
+#include "arena_moves.h"
+// Wildlands loadout: species-legal moves (Ascension studio bank) that the
+// real-time Arena can actually perform. Keeps the current moves that qualify
+// (player choices survive), then fills by power + STAB + type coverage.
+static bool8 WildlandsRealtimeMove(u16 move)
+{
+    return move && ArenaMoves_Get(move) != NULL;
+}
 void Wildlands_ArenaLoadout(struct Pokemon *mon)
 {
-    V111Loadout(mon, NULL);
+    u16 species = GetMonData(mon, MON_DATA_SPECIES), chosen[4] = {0}, i, j, n = 0;
+    const struct AscensionStudioEntry *e = V111LegalEntry(species);
+    bool8 damaging = FALSE;
+    if (!e || GetMonData(mon, MON_DATA_IS_EGG))
+    {
+        V111Loadout(mon, NULL);
+        return;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        u16 move = GetMonData(mon, MON_DATA_MOVE1 + i);
+        if (!V111LegalMove(e, move) || !WildlandsRealtimeMove(move))
+            continue;
+        for (j = 0; j < n; j++) if (chosen[j] == move) break;
+        if (j == n) chosen[n++] = move;
+    }
+    while (n < 4)
+    {
+        s16 best = -32767;
+        u16 pick = MOVE_NONE;
+        for (i = 0; i < e->count; i++)
+        {
+            u16 move = sAscensionStudioMoveBank[e->start + i];
+            u8 type = gBattleMoves[move].type;
+            s16 score = gBattleMoves[move].power;
+            if (!WildlandsRealtimeMove(move))
+                continue;
+            for (j = 0; j < n; j++) if (chosen[j] == move) break;
+            if (j < n) continue;
+            if (score > 120) score = 120;
+            if (score)
+            {
+                if (type == gSpeciesInfo[species].types[0] || type == gSpeciesInfo[species].types[1]) score += 35;
+                for (j = 0; j < n; j++) if (gBattleMoves[chosen[j]].power && gBattleMoves[chosen[j]].type == type) break;
+                if (j == n) score += 25;
+            }
+            else if (move == MOVE_PROTECT) score = 25;
+            if (score > best) { best = score; pick = move; }
+        }
+        if (!pick) break;
+        chosen[n++] = pick;
+    }
+    for (i = 0; i < n; i++)
+        if (gBattleMoves[chosen[i]].power) damaging = TRUE;
+    if (!damaging)
+    {
+        V111Loadout(mon, NULL);   // no real-time attack in the bank: legacy pick
+        return;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        u16 cur = GetMonData(mon, MON_DATA_MOVE1 + i);
+        if (cur != chosen[i])
+            SetMonMoveSlot(mon, chosen[i], i);
+    }
 }

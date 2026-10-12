@@ -110,6 +110,19 @@ static bool8 BrainCanGo(s32 x, s32 y)
     return WildlandsWorld_CanStandSide(1, x, y, 6);
 }
 
+// How boxed-in a spot is: 0 (open) .. 8 (dead end). Probes 8 headings at
+// 24px; firing or fleeing spots against walls make a duo stand and camp.
+static u32 WildlandsCramp(s32 x, s32 y)
+{
+    static const s8 dx[8] = {3, 2, 0, -2, -3, -2, 0, 2};
+    static const s8 dy[8] = {0, 2, 3, 2, 0, -2, -3, -2};
+    u32 i, n = 0;
+    for (i = 0; i < 8; i++)
+        if (!WildlandsWorld_CanStandSide(1, x + dx[i] * 8, y + dy[i] * 8, 6))
+            n++;
+    return n;
+}
+
 // Flee point: 12 headings at ~110px, scored by distance from the threat,
 // concealment and staying inside the circle; must be directly reachable.
 static bool8 BrainFleePoint(struct ArenaBody *body, s32 tx, s32 ty, s32 *gx, s32 *gy)
@@ -128,6 +141,7 @@ static bool8 BrainFleePoint(struct ArenaBody *body, s32 tx, s32 ty, s32 *gx, s32
         if (WildlandsWorld_IsConcealed(cx, cy)) score += 90;
         if (ZoneOutside(cx, cy, 16)) score -= 220;
         if (!WildlandsWorld_LineClear(cx, cy, tx, ty, 2)) score += 60; // breaks line of sight
+        score -= WildlandsCramp(cx, cy) * 45;      // keep an exit: no backing into walls
         if (score > best) { best = score; *gx = cx; *gy = cy; found = TRUE; }
     }
     return found;
@@ -299,7 +313,9 @@ static void BrainDecide(struct ArenaBody *body, u8 seenMask)
         // Disengage on damage, not on paper: a fresh duo fights even an
         // overlevelled team; it breaks off when hurt (and then goes for
         // supplies), sooner when the matchup is bad.
-        bool8 losing = (BrainHpPct(1) < 35 && adv < 140) || (adv < 60 && BrainHpPct(1) < 60);
+        // Legendary bosses hold their lair and never run.
+        bool8 losing = !DirectorSoloActive()
+            && ((BrainHpPct(1) < 35 && adv < 140) || (adv < 60 && BrainHpPct(1) < 60));
         u16 inMode = sArena.frame - sBrain.modeStart;
         u16 sinceRetreat = sArena.frame - sBrain.retreatEnd;
         bool8 cornered = FALSE;

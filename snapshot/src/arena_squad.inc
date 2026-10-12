@@ -464,7 +464,7 @@ static void SquadThink(struct SquadWing *w)
         // Regroup is a last resort and never happens in view: a wing walks
         // (and catches up faster than its lead) unless it is far behind or
         // pinned for 2.5s while off screen.
-        if (ld > 480 || (offscreen && (ld > 300 || (ld > 64 && w->stuckClock > 150))))
+        if (ld > 400 || (offscreen && (ld > 260 || (ld > 64 && w->stuckClock > 90))))
             SquadRegroup(w, lead);
     }
     if (!(sArena.frame & 15) || w->target == 0xFF || !SquadAlive(w->target))
@@ -472,6 +472,15 @@ static void SquadThink(struct SquadWing *w)
         w->target = SquadPickTarget(w->team, w->x, w->y);
         if (w->team && w->target != 0xFF)
             w->target = BrainWingTarget(w->target);   // enemy duo focuses fire
+        // Partner: focus whatever the player is fighting (the enemy lead the
+        // player is aiming at) when it is in sight.
+        if (!w->team && SquadAlive(1) && (sArena.bodies[0].shotTimer || sArena.bodies[0].cooldown))
+        {
+            s32 ex, ey;
+            SquadPos(1, &ex, &ey);
+            if (ArenaNav_Distance(w->x / Q, w->y / Q, ex / Q, ey / Q) <= SQUAD_SIGHT)
+                w->target = 1;
+        }
     }
     gWildlandsSquadTelemetry[13 + w->team] = w->target;
     if (w->shotTimer)
@@ -523,7 +532,11 @@ static void SquadThink(struct SquadWing *w)
         w->moving = FALSE;
         return;
     }
-    if (w->target != 0xFF && dist < 220 && !(w->team && BrainWingFollows()))
+    // Partner leash: it fights near its lead instead of wandering off after
+    // a far target (it still shoots anything in range from formation).
+    if (w->target != 0xFF && dist < 220 && !(w->team && BrainWingFollows())
+        && (w->team || !SquadAlive(0)
+            || ArenaNav_Distance(w->x / Q, w->y / Q, lead->x / Q, lead->y / Q) < 140))
     {
         // Engage: close to ~2/3 of range, never closer than 24px.
         u16 want = p ? max(24, (p->kind == ARENA_MOVE_PROJECTILE ? p->range : 26) * 2 / 3) : 40;
@@ -701,6 +714,39 @@ static void SquadPPRegen(void)
     sArena.hudDirty = TRUE;
 }
 
+// Rest: a duo whose lead stands still and does not attack for 3s heals 2%
+// max HP per second on both members (never inside the storm).
+static EWRAM_DATA u16 sRestClock[2] = {0};
+EWRAM_DATA u16 gWildlandsRestTelemetry[2] = {0};   // HP points healed by rest, per team
+static void SquadRestRegen(void)
+{
+    u32 team, m;
+    for (team = 0; team < 2; team++)
+    {
+        struct ArenaBody *lead = &sArena.bodies[team];
+        struct SquadWing *w = &sSquadWings[team];
+        bool8 busy = lead->moving || lead->shotTimer || lead->actionLife
+            || (w->active && w->alive && w->shotTimer);
+        if (!SquadAlive(team) || busy || ZoneOutside(lead->x / Q, lead->y / Q, 0))
+        { sRestClock[team] = 0; continue; }
+        if (sRestClock[team] < 0xFFF0) sRestClock[team]++;
+        if (sRestClock[team] < 180 || (sRestClock[team] - 180) % 60)
+            continue;
+        for (m = 0; m < 2; m++)
+        {
+            u8 b = team + m * 2;
+            u16 hp;
+            if (!SquadAlive(b) || gBattleMons[b].hp >= gBattleMons[b].maxHP)
+                continue;
+            hp = min(gBattleMons[b].maxHP, gBattleMons[b].hp + max(1, gBattleMons[b].maxHP / 50));
+            gWildlandsRestTelemetry[team] += hp - gBattleMons[b].hp;
+            gBattleMons[b].hp = hp;
+            SetMonData(SquadPartyMon(b), MON_DATA_HP, &hp);
+            sArena.hudDirty = TRUE;
+        }
+    }
+}
+
 static void SquadSimStep(void)
 {
     u32 i;
@@ -710,6 +756,8 @@ static void SquadSimStep(void)
         return;
     if (WildlandsWorld_Active() && !(sArena.frame % 120))
         SquadPPRegen();
+    if (WildlandsWorld_Active())
+        SquadRestRegen();
     SquadDoorSim();
     DirectorSim();
     for (i = 0; i < 2; i++)
