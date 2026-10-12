@@ -584,8 +584,9 @@ static void SquadThink(struct SquadWing *w)
         u16 want = p ? max(24, (p->kind == ARENA_MOVE_PROJECTILE ? p->range : 26) * 2 / 3) : 40;
         if (dist > want) { goalX = tx; goalY = ty; }
         else { goalX = w->x + (w->x - tx) / 4; goalY = w->y + (w->y - ty) / 4; }
-        // Partner: never stand in the player's line of fire; step aside.
-        if (!w->team && SquadAlive(0))
+        // Partner: never stand in the player's line of fire; step aside
+        // (only once in range: closing in comes first).
+        if (!w->team && SquadAlive(0) && dist <= want + 16)
         {
             s32 lx = lead->x / Q, ly = lead->y / Q, ax = tx / Q - lx, ay = ty / Q - ly;
             s32 qx = w->x / Q - lx, qy = w->y / Q - ly, len2 = ax * ax + ay * ay;
@@ -848,7 +849,11 @@ static void WildlandsPaceUpdate(u32 gap)
     if (calm)
     { sWlFast = 1; sWlFastMiss = 0; }
 }
-static bool8 WildlandsFastPace(void) { return sWlFast; }
+// Off until a walking update fits one vblank: V6.2 measurement showed ~1.3
+// vblanks per walking update, so 60 fps attempts kept overrunning (14
+// fallbacks in one smoke run) and would hitch. Flip to 1 after optimising.
+#define WL_FAST_PACE 0
+static bool8 WildlandsFastPace(void) { return WL_FAST_PACE && sWlFast; }
 
 static void SquadSimStep(void)
 {
