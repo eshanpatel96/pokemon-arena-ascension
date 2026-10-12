@@ -520,6 +520,8 @@ static u16 MonVisualScale(u8 side)
 }
 static u8 Facing(s32 dx, s32 dy);
 #define WILDLANDS_PARTNER_TAG (MON_TAG + 4)
+static bool8 WildlandsFastPace(void);
+static void WildlandsPaceUpdate(u32 gap);
 static s32 WildlandsStrafe(s32 bx, s32 by, s32 px, s32 py);
 static bool8 DirectorBossWindup(void);
 // World: paralysis is a short full stun like sleep and freeze.
@@ -2914,7 +2916,8 @@ static void CB2_Arena(void)
     u32 stamp=gMain.vblankCounter1*228+(REG_VCOUNT+68)%228,phaseStamp=stamp,now;
     u32 gap=gMain.vblankCounter1-gArenaFrameTelemetry.lastVBlank;
     if(sSendout.active){gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;StormDraw(40);SendoutTick();return;}
-    if(WildlandsWorld_Active()&&gap<2){sWildlandsHeldNew|=gMain.newKeys;return;}
+    if(WildlandsWorld_Active()&&gap<(WildlandsFastPace()?1:2)){sWildlandsHeldNew|=gMain.newKeys;return;}
+    WildlandsPaceUpdate(gap);
     gMain.newKeys|=sWildlandsHeldNew;sWildlandsHeldNew=0;
     {u16 ln=(REG_VCOUNT+68)%228; if(ln>gWildlandsLoop[3])gWildlandsLoop[3]=ln; gWildlandsLoop[gap>=3?2:gap>=2?1:0]++;}
     gArenaFrameTelemetry.lastVBlank=gMain.vblankCounter1;
