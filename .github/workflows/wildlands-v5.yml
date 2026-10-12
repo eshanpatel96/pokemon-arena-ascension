@@ -129,6 +129,11 @@ jobs:
         continue-on-error: true
         run: python3 bootstrap/wildlands-v5/render_props.py engine evidence/prop-sheets.png
 
+      - name: Full island render (read-only)
+        if: matrix.world == 'island'
+        continue-on-error: true
+        run: python3 bootstrap/wildlands-v5/render_world.py engine evidence
+
       - name: Build manifest and memory report
         run: |
           python3 - <<'PY'
